@@ -138,7 +138,17 @@ export default function UsersPage() {
 
   function onEdit(data: UpdateUser) {
     if (!editingUser) return;
-    updateMutation.mutate({ id: editingUser.id, data });
+
+    // Ensure we're sending both email and roleId
+    const updateData = {
+      email: data.email,
+      roleId: data.roleId,
+    };
+
+    updateMutation.mutate({ 
+      id: editingUser.id, 
+      data: updateData
+    });
   }
 
   function handleEdit(user: User) {
