@@ -7,7 +7,6 @@ import { pool } from "./db";
 
 const PostgresSessionStore = connectPg(session);
 
-// Expanded storage interface with role management
 export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
@@ -22,6 +21,12 @@ export interface IStorage {
   getRoleByName(name: string): Promise<Role | undefined>;
   createRole(role: InsertRole): Promise<Role>;
   getAllRoles(): Promise<Role[]>;
+
+  // New methods for password reset
+  setResetToken(userId: number, token: string, expiry: Date): Promise<void>;
+  getUserByResetToken(token: string): Promise<User | undefined>;
+  clearResetToken(userId: number): Promise<void>;
+  updatePassword(userId: number, hashedPassword: string): Promise<void>;
 
   // Session store
   sessionStore: session.Store;
@@ -100,6 +105,46 @@ export class DatabaseStorage implements IStorage {
 
   async getAllRoles(): Promise<Role[]> {
     return db.select().from(roles);
+  }
+
+  async setResetToken(userId: number, token: string, expiry: Date): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        resetToken: token,
+        resetTokenExpiry: expiry,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+  }
+
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.resetToken, token));
+    return user;
+  }
+
+  async clearResetToken(userId: number): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        resetToken: null,
+        resetTokenExpiry: null,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+  }
+
+  async updatePassword(userId: number, hashedPassword: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        password: hashedPassword,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
   }
 }
 

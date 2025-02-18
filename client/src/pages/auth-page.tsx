@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,20 +29,24 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 type LoginData = Pick<InsertUser, "username" | "password">;
 
-// Create a separate login schema without password confirmation
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
 });
 
+const resetPasswordRequestSchema = z.object({
+  email: z.string().email("Invalid email"),
+});
+
 export default function AuthPage() {
   const [, setLocation] = useLocation();
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { user, loginMutation, registerMutation, requestResetMutation } = useAuth();
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
-  // Redirect if already logged in
   useEffect(() => {
     if (user) {
       setLocation("/");
@@ -57,12 +61,21 @@ export default function AuthPage() {
     resolver: zodResolver(insertUserSchema),
   });
 
+  const resetForm = useForm<{ email: string }>({
+    resolver: zodResolver(resetPasswordRequestSchema),
+  });
+
   function onLogin(data: LoginData) {
     loginMutation.mutate(data);
   }
 
   function onRegister(data: InsertUser) {
     registerMutation.mutate(data);
+  }
+
+  function onRequestReset(data: { email: string }) {
+    requestResetMutation.mutate(data);
+    setResetDialogOpen(false);
   }
 
   return (
@@ -114,6 +127,50 @@ export default function AuthPage() {
                         </FormItem>
                       )}
                     />
+                    <div className="flex justify-between items-center mt-2">
+                      <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="link" className="px-0">
+                            Forgot password?
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Reset Password</DialogTitle>
+                          </DialogHeader>
+                          <Form {...resetForm}>
+                            <form
+                              onSubmit={resetForm.handleSubmit(onRequestReset)}
+                              className="space-y-4"
+                            >
+                              <FormField
+                                control={resetForm.control}
+                                name="email"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Email</FormLabel>
+                                    <FormControl>
+                                      <Input type="email" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={requestResetMutation.isPending}
+                              >
+                                {requestResetMutation.isPending && (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                )}
+                                Send Reset Link
+                              </Button>
+                            </form>
+                          </Form>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                     <Button
                       type="submit"
                       className="w-full"

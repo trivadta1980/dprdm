@@ -6,6 +6,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
+import { resetPasswordRequestSchema, resetPasswordSchema } from "@shared/schema";
 
 declare global {
   namespace Express {
@@ -26,6 +27,10 @@ async function comparePasswords(supplied: string, stored: string) {
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
+}
+
+async function generateResetToken() {
+  return randomBytes(32).toString("hex");
 }
 
 export function setupAuth(app: Express) {
@@ -96,6 +101,55 @@ export function setupAuth(app: Express) {
     res.json(req.user);
   });
 
+  // Password reset request
+  app.post("/api/reset-password/request", async (req, res) => {
+    const result = resetPasswordRequestSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json(result.error);
+    }
+
+    const user = await storage.getUserByEmail(result.data.email);
+    if (!user) {
+      // Don't reveal whether the email exists
+      return res.sendStatus(200);
+    }
+
+    const token = await generateResetToken();
+    const expiry = new Date();
+    expiry.setHours(expiry.getHours() + 1); // Token expires in 1 hour
+
+    await storage.setResetToken(user.id, token, expiry);
+
+    // TODO: Send email with reset link
+    // For development, we'll just return the token
+    if (process.env.NODE_ENV === "development") {
+      res.json({ token });
+    } else {
+      res.sendStatus(200);
+    }
+  });
+
+  // Reset password with token
+  app.post("/api/reset-password", async (req, res) => {
+    const result = resetPasswordSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json(result.error);
+    }
+
+    const { token, password } = result.data;
+    const user = await storage.getUserByResetToken(token);
+
+    if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
+      return res.status(400).send("Invalid or expired reset token");
+    }
+
+    const hashedPassword = await hashPassword(password);
+    await storage.updatePassword(user.id, hashedPassword);
+    await storage.clearResetToken(user.id);
+
+    res.sendStatus(200);
+  });
+
   // Role management (admin only)
   app.post("/api/roles", async (req, res) => {
     if (!req.isAuthenticated() || req.user.roleId !== 1) {
@@ -133,7 +187,7 @@ export function setupAuth(app: Express) {
 
   app.patch("/api/users/:id", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const userId = Number(req.params.id);
     // Only allow users to update their own profile unless they're an admin
     if (req.user.id !== userId && req.user.roleId !== 1) {
