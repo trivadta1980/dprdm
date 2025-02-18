@@ -81,6 +81,7 @@ export function setupAuth(app: Express) {
       ...req.body,
       password: hashedPassword,
       requirePasswordChange: true,
+      roleId: 2 // Set default role to 'user'
     });
 
     req.login(user, (err) => {
