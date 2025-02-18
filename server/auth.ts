@@ -33,6 +33,8 @@ async function generateResetToken() {
   return randomBytes(32).toString("hex");
 }
 
+const DEFAULT_PASSWORD = "password123";
+
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || randomBytes(32).toString("hex"),
@@ -74,9 +76,11 @@ export function setupAuth(app: Express) {
       return res.status(400).send("Email already exists");
     }
 
+    const hashedPassword = await hashPassword(DEFAULT_PASSWORD);
     const user = await storage.createUser({
       ...req.body,
-      password: await hashPassword(req.body.password),
+      password: hashedPassword,
+      requirePasswordChange: true,
     });
 
     req.login(user, (err) => {
@@ -200,5 +204,29 @@ export function setupAuth(app: Express) {
     } else {
       res.sendStatus(404);
     }
+  });
+
+  // Add password change endpoint
+  app.post("/api/change-password", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    const user = await storage.getUser(req.user.id);
+
+    if (!user) {
+      return res.sendStatus(404);
+    }
+
+    if (!(await comparePasswords(currentPassword, user.password))) {
+      return res.status(400).send("Current password is incorrect");
+    }
+
+    const hashedNewPassword = await hashPassword(newPassword);
+    await storage.updatePassword(user.id, hashedNewPassword);
+    await storage.updateRequirePasswordChange(user.id, false);
+
+    res.sendStatus(200);
   });
 }

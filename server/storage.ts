@@ -31,6 +31,8 @@ export interface IStorage {
 
   // Session store
   sessionStore: session.Store;
+  // Add new method
+  updateRequirePasswordChange(userId: number, requireChange: boolean): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -150,6 +152,16 @@ export class DatabaseStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     return db.select().from(users);
+  }
+
+  async updateRequirePasswordChange(userId: number, requireChange: boolean): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        requirePasswordChange: requireChange,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
   }
 }
 

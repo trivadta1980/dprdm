@@ -19,6 +19,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   roleId: serial("role_id").references(() => roles.id),
   isActive: boolean("is_active").default(true).notNull(),
+  requirePasswordChange: boolean("require_password_change").default(false).notNull(),
   resetToken: text("reset_token"),
   resetTokenExpiry: timestamp("reset_token_expiry"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -83,8 +84,8 @@ export const resetPasswordSchema = z.object({
 });
 
 // Update schema without password fields
-export const updateUserSchema = baseUserSchema.omit({ 
-  password: true 
+export const updateUserSchema = baseUserSchema.omit({
+  password: true
 });
 
 // Validation schemas
@@ -93,9 +94,26 @@ export const insertRoleSchema = createInsertSchema(roles).pick({
   description: true,
 });
 
+// Add password change schema
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+    ),
+  confirmNewPassword: z.string(),
+}).refine((data) => data.newPassword === data.confirmNewPassword, {
+  message: "Passwords don't match",
+  path: ["confirmNewPassword"],
+});
+
 // Types
 export type InsertRole = z.infer<typeof insertRoleSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpdateUser = z.infer<typeof updateUserSchema>;
 export type Role = typeof roles.$inferSelect;
 export type User = typeof users.$inferSelect;
+export type ChangePassword = z.infer<typeof changePasswordSchema>;
