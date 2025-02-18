@@ -8,7 +8,7 @@ import { Loader2, UserX, Plus, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { User, Role, InsertUser, UpdateUser } from "@shared/schema";
-import { insertUserSchema } from "@shared/schema";
+import { insertUserSchema, updateUserSchema } from "@shared/schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -48,7 +48,7 @@ export default function UsersPage() {
 
   // Separate form for editing
   const editForm = useForm<UpdateUser>({
-    resolver: zodResolver(insertUserSchema.pick({ email: true, roleId: true })),
+    resolver: zodResolver(updateUserSchema),
   });
 
   const { data: users, isLoading: loadingUsers } = useQuery<User[]>({
