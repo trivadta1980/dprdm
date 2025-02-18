@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Plus, Pencil, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { ReferenceDataType, InsertReferenceDataType } from "@shared/schema";
+import type { ReferenceDataType, InsertReferenceDataType, ReferenceDataTypeSchema } from "@shared/schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertReferenceDataTypeSchema } from "@shared/schema";
@@ -37,12 +37,14 @@ export default function ReferenceTypesPage() {
   const form = useForm<InsertReferenceDataType>({
     resolver: zodResolver(insertReferenceDataTypeSchema),
     defaultValues: {
+      name: "",
+      description: "",
       schemas: [{ name: "", dataType: "" }],
     },
   });
 
   // Load schemas when editing
-  const { data: schemas = [], isLoading: schemasLoading } = useQuery({
+  const { data: schemas = [], isLoading: schemasLoading } = useQuery<ReferenceDataTypeSchema[]>({
     queryKey: ["/api/reference-types", editingType?.id, "schemas"],
     enabled: !!editingType,
   });
@@ -53,7 +55,10 @@ export default function ReferenceTypesPage() {
       form.reset({
         name: editingType.name,
         description: editingType.description || "",
-        schemas: schemas.length > 0 ? schemas : [{ name: "", dataType: "" }],
+        schemas: schemas.length > 0 ? schemas.map(schema => ({
+          name: schema.name,
+          dataType: schema.dataType
+        })) : [{ name: "", dataType: "" }],
       });
     }
   }, [editingType, schemas, form]);
@@ -64,6 +69,7 @@ export default function ReferenceTypesPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertReferenceDataType) => {
+      console.log("Creating with data:", data); // Debug log
       const res = await apiRequest("POST", "/api/reference-types", data);
       return res.json();
     },
@@ -87,6 +93,7 @@ export default function ReferenceTypesPage() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: InsertReferenceDataType }) => {
+      console.log("Updating with data:", data); // Debug log
       const res = await apiRequest("PATCH", `/api/reference-types/${id}`, data);
       return res.json();
     },
@@ -110,10 +117,17 @@ export default function ReferenceTypesPage() {
   });
 
   function onSubmit(data: InsertReferenceDataType) {
+    // Filter out empty schema entries
+    const validSchemas = data.schemas.filter(schema => schema.name && schema.dataType);
+    const submissionData = {
+      ...data,
+      schemas: validSchemas,
+    };
+
     if (editingType) {
-      updateMutation.mutate({ id: editingType.id, data });
+      updateMutation.mutate({ id: editingType.id, data: submissionData });
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(submissionData);
     }
   }
 
@@ -200,7 +214,7 @@ export default function ReferenceTypesPage() {
                         <FormItem>
                           <FormLabel>Description</FormLabel>
                           <FormControl>
-                            <Input {...field} />
+                            <Input {...field} value={field.value || ""} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
