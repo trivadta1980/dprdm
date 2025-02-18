@@ -75,16 +75,24 @@ export default function ReferenceTypesPage() {
   useEffect(() => {
     if (editingType && schemas) {
       console.log('Setting form values for editing:', { editingType, schemas });
-      form.reset({
-        name: editingType.name,
-        description: editingType.description || "",
-        schemas: schemas.length > 0 ? schemas.map(schema => ({
-          name: schema.name,
-          dataType: schema.dataType
-        })) : [{ name: "", dataType: "" }],
-      });
+      console.log('Current schemas length:', schemas.length);
+
+      // Only reset if we have schemas data
+      if (!schemasLoading) {
+        form.reset({
+          name: editingType.name,
+          description: editingType.description || "",
+          schemas: schemas.length > 0 
+            ? schemas.map(schema => ({
+                name: schema.name,
+                dataType: schema.dataType
+              })) 
+            : [{ name: "", dataType: "" }],
+        });
+        console.log('Form reset with schemas:', form.getValues('schemas'));
+      }
     }
-  }, [editingType, schemas, form]);
+  }, [editingType, schemas, schemasLoading, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertReferenceDataType) => {
@@ -158,6 +166,7 @@ export default function ReferenceTypesPage() {
 
   function handleEdit(type: ReferenceDataType) {
     console.log('Editing type:', type);
+    console.log('Current schemas in type:', schemasMap[type.id]);
     setEditingType(type);
     setDialogOpen(true);
   }
