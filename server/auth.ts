@@ -230,4 +230,54 @@ export function setupAuth(app: Express) {
 
     res.sendStatus(200);
   });
+
+  // Add these routes after the existing role routes in setupAuth function
+  app.patch("/api/roles/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.roleId !== 1) {
+      return res.sendStatus(403);
+    }
+
+    const roleId = Number(req.params.id);
+
+    // Prevent modifying admin role
+    if (roleId === 1) {
+      return res.status(403).send("Cannot modify admin role");
+    }
+
+    const existingRole = await storage.getRole(roleId);
+    if (!existingRole) {
+      return res.status(404).send("Role not found");
+    }
+
+    // Check if name is being changed and if it already exists
+    if (req.body.name !== existingRole.name) {
+      const roleWithName = await storage.getRoleByName(req.body.name);
+      if (roleWithName) {
+        return res.status(400).send("Role name already exists");
+      }
+    }
+
+    const role = await storage.updateRole(roleId, req.body);
+    res.json(role);
+  });
+
+  app.delete("/api/roles/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.roleId !== 1) {
+      return res.sendStatus(403);
+    }
+
+    const roleId = Number(req.params.id);
+
+    // Prevent deleting admin role
+    if (roleId === 1) {
+      return res.status(403).send("Cannot delete admin role");
+    }
+
+    const success = await storage.deleteRole(roleId);
+    if (success) {
+      res.sendStatus(200);
+    } else {
+      res.sendStatus(404);
+    }
+  });
 }

@@ -22,6 +22,8 @@ export interface IStorage {
   getRoleByName(name: string): Promise<Role | undefined>;
   createRole(role: InsertRole): Promise<Role>;
   getAllRoles(): Promise<Role[]>;
+  updateRole(id: number, role: Partial<InsertRole>): Promise<Role>;
+  deleteRole(id: number): Promise<boolean>;
 
   // New methods for password reset
   setResetToken(userId: number, token: string, expiry: Date): Promise<void>;
@@ -162,6 +164,23 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .where(eq(users.id, userId));
+  }
+
+  async updateRole(id: number, updates: Partial<InsertRole>): Promise<Role> {
+    const [role] = await db
+      .update(roles)
+      .set(updates)
+      .where(eq(roles.id, id))
+      .returning();
+    return role;
+  }
+
+  async deleteRole(id: number): Promise<boolean> {
+    const [role] = await db
+      .delete(roles)
+      .where(eq(roles.id, id))
+      .returning();
+    return !!role;
   }
 }
 

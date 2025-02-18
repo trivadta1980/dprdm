@@ -19,7 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Role } from "@shared/schema";
@@ -53,6 +53,7 @@ const availableRoutes = [
 export default function RolesPage() {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingRole, setEditingRole] = useState<Role | null>(null);
 
   const form = useForm<InsertRole>({
     resolver: zodResolver(insertRoleSchema),
@@ -88,8 +89,82 @@ export default function RolesPage() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: InsertRole }) => {
+      const res = await apiRequest("PATCH", `/api/roles/${id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
+      setDialogOpen(false);
+      setEditingRole(null);
+      form.reset();
+      toast({
+        title: "Role updated",
+        description: "The role has been successfully updated.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to update role",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/roles/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
+      toast({
+        title: "Role deleted",
+        description: "The role has been successfully deleted.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete role",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   function onSubmit(data: InsertRole) {
-    createMutation.mutate(data);
+    if (editingRole) {
+      updateMutation.mutate({ id: editingRole.id, data });
+    } else {
+      createMutation.mutate(data);
+    }
+  }
+
+  function handleEdit(role: Role) {
+    setEditingRole(role);
+    form.reset({
+      name: role.name,
+      description: role.description || "",
+      routes: role.routes || [],
+    });
+    setDialogOpen(true);
+  }
+
+  function handleDelete(role: Role) {
+    if (window.confirm(`Are you sure you want to delete the role "${role.name}"?`)) {
+      deleteMutation.mutate(role.id);
+    }
+  }
+
+  function handleCreateNew() {
+    setEditingRole(null);
+    form.reset({
+      name: "",
+      description: "",
+      routes: [],
+    });
+    setDialogOpen(true);
   }
 
   if (isLoading) {
@@ -110,14 +185,16 @@ export default function RolesPage() {
             <CardTitle>Role Management</CardTitle>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button onClick={handleCreateNew}>
                   <Plus className="h-4 w-4 mr-2" />
                   New Role
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Create New Role</DialogTitle>
+                  <DialogTitle>
+                    {editingRole ? "Edit Role" : "Create New Role"}
+                  </DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -193,12 +270,12 @@ export default function RolesPage() {
                     <Button
                       type="submit"
                       className="w-full"
-                      disabled={createMutation.isPending}
+                      disabled={createMutation.isPending || updateMutation.isPending}
                     >
-                      {createMutation.isPending && (
+                      {(createMutation.isPending || updateMutation.isPending) && (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       )}
-                      Create Role
+                      {editingRole ? "Update Role" : "Create Role"}
                     </Button>
                   </form>
                 </Form>
@@ -212,6 +289,7 @@ export default function RolesPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Accessible Routes</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -225,6 +303,24 @@ export default function RolesPage() {
                           {availableRoutes.find((r) => r.value === route)?.label}
                         </Badge>
                       ))}
+                    </TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(role)}
+                        disabled={role.id === 1} // Prevent editing admin role
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(role)}
+                        disabled={role.id === 1} // Prevent deleting admin role
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
