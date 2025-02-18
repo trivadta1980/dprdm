@@ -16,8 +16,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(users);
   });
 
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+  // Update user route
+  app.patch("/api/users/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const userId = Number(req.params.id);
+    // Only allow users to update their own profile unless they're an admin
+    if (req.user.id !== userId && req.user.roleId !== 1) {
+      return res.sendStatus(403);
+    }
+
+    const user = await storage.updateUser(userId, req.body);
+    if (user) {
+      res.json(user);
+    } else {
+      res.sendStatus(404);
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

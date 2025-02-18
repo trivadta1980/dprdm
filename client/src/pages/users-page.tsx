@@ -139,9 +139,10 @@ export default function UsersPage() {
   function onEdit(data: UpdateUser) {
     if (!editingUser) return;
 
-    // Ensure we're sending both email and roleId
+    // Ensure we're sending both email and username
     const updateData = {
       email: data.email,
+      username: editingUser.username, // Keep the existing username
       roleId: data.roleId,
     };
 
