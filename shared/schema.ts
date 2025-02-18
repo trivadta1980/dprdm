@@ -35,33 +35,41 @@ export const rolesRelations = relations(roles, ({ many }) => ({
   users: many(users),
 }));
 
+// Base schema without password confirmation
+const baseUserSchema = createInsertSchema(users).pick({
+  email: true,
+  username: true,
+  password: true,
+  roleId: true,
+});
+
+// Registration schema with password requirements and confirmation
+export const insertUserSchema = baseUserSchema.extend({
+  email: z.string().email("Invalid email format"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+    ),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+// Update schema without password fields
+export const updateUserSchema = baseUserSchema.omit({ 
+  password: true 
+});
+
 // Validation schemas
 export const insertRoleSchema = createInsertSchema(roles).pick({
   name: true,
   description: true,
 });
 
-export const insertUserSchema = createInsertSchema(users)
-  .pick({
-    email: true,
-    username: true,
-    password: true,
-    roleId: true,
-  })
-  .extend({
-    email: z.string().email("Invalid email format"),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        "Password must contain at least one uppercase letter, one lowercase letter, and one number"
-      ),
-  });
-
-export const updateUserSchema = insertUserSchema
-  .partial()
-  .omit({ password: true });
 
 // Types
 export type InsertRole = z.infer<typeof insertRoleSchema>;

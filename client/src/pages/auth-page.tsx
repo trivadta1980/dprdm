@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { insertUserSchema, type InsertUser } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,12 @@ import { Loader2 } from "lucide-react";
 
 type LoginData = Pick<InsertUser, "username" | "password">;
 
+// Create a separate login schema without password confirmation
+const loginSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
 export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { user, loginMutation, registerMutation } = useAuth();
@@ -43,9 +50,7 @@ export default function AuthPage() {
   }, [user, setLocation]);
 
   const loginForm = useForm<LoginData>({
-    resolver: zodResolver(
-      insertUserSchema.pick({ username: true, password: true })
-    ),
+    resolver: zodResolver(loginSchema),
   });
 
   const registerForm = useForm<InsertUser>({
@@ -161,6 +166,19 @@ export default function AuthPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={registerForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm Password</FormLabel>
                           <FormControl>
                             <Input type="password" {...field} />
                           </FormControl>
