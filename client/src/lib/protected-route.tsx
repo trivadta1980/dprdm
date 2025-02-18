@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
+import { availableRoutes } from "@shared/schema";
 
 export function ProtectedRoute({
   path,
@@ -23,10 +24,27 @@ export function ProtectedRoute({
     );
   }
 
-  if (!user || (adminOnly && user.roleId !== 1)) {
+  if (!user) {
     return (
       <Route path={path}>
         <Redirect to="/auth" />
+      </Route>
+    );
+  }
+
+  // Admin users have access to all routes
+  if (user.roleId === 1) {
+    return <Route path={path} component={Component} />;
+  }
+
+  // For non-admin users, check if they have permission to access this route
+  const route = availableRoutes.find(r => r.path === path);
+
+  // If route is admin-only or user's role doesn't have permission, redirect to home
+  if (adminOnly || route?.adminOnly || !user.role?.routePermissions?.includes(path)) {
+    return (
+      <Route path={path}>
+        <Redirect to="/" />
       </Route>
     );
   }
