@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -17,7 +17,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  roleId: serial("role_id").references(() => roles.id),
+  roleId: integer("role_id").references(() => roles.id).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   requirePasswordChange: boolean("require_password_change").default(false).notNull(),
   resetToken: text("reset_token"),
