@@ -144,8 +144,16 @@ export default function UsersPage() {
   function onEdit(data: UpdateUser) {
     if (!editingUser) return;
 
+    // Show immediate feedback
+    toast({
+      title: "Processing Update",
+      description: "Attempting to update user information...",
+    });
+
     // Debug log
-    console.log('Editing user with data:', data);
+    console.log('Starting user update process');
+    console.log('Edit form data:', data);
+    console.log('Current editing user:', editingUser);
 
     // Ensure we're sending both email and username
     const updateData = {
@@ -157,8 +165,8 @@ export default function UsersPage() {
     // Debug log
     console.log('Sending update request with:', updateData);
 
-    updateMutation.mutate({ 
-      id: editingUser.id, 
+    updateMutation.mutate({
+      id: editingUser.id,
       data: updateData
     });
   }
@@ -331,7 +339,13 @@ export default function UsersPage() {
             <DialogTitle>Edit User</DialogTitle>
           </DialogHeader>
           <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(onEdit)} className="space-y-4">
+            <form
+              onSubmit={(e) => {
+                console.log('Form submit event triggered');
+                editForm.handleSubmit(onEdit)(e);
+              }}
+              className="space-y-4"
+            >
               <FormField
                 control={editForm.control}
                 name="email"
@@ -376,6 +390,7 @@ export default function UsersPage() {
                 type="submit"
                 className="w-full"
                 disabled={updateMutation.isPending}
+                onClick={() => console.log('Update button clicked')}
               >
                 {updateMutation.isPending ? (
                   <>
