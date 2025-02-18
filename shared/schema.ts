@@ -3,11 +3,22 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// Roles table
+// Add routes type and array
+const availableRoutes = [
+  "/reference-types",
+  "/reference-data",
+  "/relationships",
+  "/crosswalks",
+] as const;
+
+export type AvailableRoute = typeof availableRoutes[number];
+
+// Roles table with routes
 export const roles = pgTable("roles", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
   description: text("description"),
+  routes: text("routes").array(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -92,6 +103,8 @@ export const updateUserSchema = baseUserSchema.omit({
 export const insertRoleSchema = createInsertSchema(roles).pick({
   name: true,
   description: true,
+}).extend({
+  routes: z.array(z.string()),
 });
 
 // Add password change schema

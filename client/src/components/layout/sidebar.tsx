@@ -33,23 +33,34 @@ export function Sidebar({ className }: SidebarProps) {
       title: "Reference Data Types",
       href: "/reference-types",
       icon: Settings,
+      requiresPermission: true,
     },
     {
       title: "Reference Data",
       href: "/reference-data",
       icon: Settings,
+      requiresPermission: true,
     },
     {
       title: "Relationships",
       href: "/relationships",
       icon: Settings,
+      requiresPermission: true,
     },
     {
       title: "Crosswalks",
       href: "/crosswalks",
       icon: Settings,
+      requiresPermission: true,
     },
   ];
+
+  // Filter menu items based on user role and permissions
+  const filteredMenuItems = menuItems.filter(item => {
+    if (!item.requiresPermission) return true;
+    if (isAdmin) return true;
+    return user?.routes?.includes(item.href);
+  });
 
   return (
     <div className={cn("pb-12 border-r bg-sidebar", className)}>
@@ -58,7 +69,7 @@ export function Sidebar({ className }: SidebarProps) {
           <h2 className="mb-2 px-4 text-lg font-semibold">Management Console</h2>
           <ScrollArea className="px-1">
             <div className="space-y-1">
-              {menuItems.map((item) => {
+              {filteredMenuItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Button

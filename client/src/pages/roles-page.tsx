@@ -27,6 +27,28 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertRoleSchema, type InsertRole } from "@shared/schema";
 import { useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+
+// Add available routes constant
+const availableRoutes = [
+  {
+    value: "/reference-types",
+    label: "Reference Data Types",
+  },
+  {
+    value: "/reference-data",
+    label: "Reference Data",
+  },
+  {
+    value: "/relationships",
+    label: "Relationships",
+  },
+  {
+    value: "/crosswalks",
+    label: "Crosswalks",
+  },
+];
 
 export default function RolesPage() {
   const { toast } = useToast();
@@ -34,6 +56,9 @@ export default function RolesPage() {
 
   const form = useForm<InsertRole>({
     resolver: zodResolver(insertRoleSchema),
+    defaultValues: {
+      routes: [],
+    },
   });
 
   const { data: roles, isLoading } = useQuery<Role[]>({
@@ -122,6 +147,49 @@ export default function RolesPage() {
                         </FormItem>
                       )}
                     />
+                    <FormField
+                      control={form.control}
+                      name="routes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="mb-4">
+                            <FormLabel>Route Access</FormLabel>
+                          </div>
+                          <div className="space-y-2">
+                            {availableRoutes.map((route) => (
+                              <FormField
+                                key={route.value}
+                                control={form.control}
+                                name="routes"
+                                render={({ field }) => (
+                                  <FormItem
+                                    key={route.value}
+                                    className="flex flex-row items-start space-x-3 space-y-0"
+                                  >
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={field.value?.includes(route.value)}
+                                        onCheckedChange={(checked) => {
+                                          return checked
+                                            ? field.onChange([...field.value, route.value])
+                                            : field.onChange(
+                                                field.value?.filter((value) => value !== route.value)
+                                              );
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">
+                                      {route.label}
+                                    </FormLabel>
+                                  </FormItem>
+                                )}
+                              />
+                            ))}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <Button
                       type="submit"
                       className="w-full"
@@ -143,6 +211,7 @@ export default function RolesPage() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Description</TableHead>
+                  <TableHead>Accessible Routes</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -150,6 +219,13 @@ export default function RolesPage() {
                   <TableRow key={role.id}>
                     <TableCell>{role.name}</TableCell>
                     <TableCell>{role.description}</TableCell>
+                    <TableCell>
+                      {role.routes?.map((route) => (
+                        <Badge key={route} className="mr-1 mb-1">
+                          {availableRoutes.find((r) => r.value === route)?.label}
+                        </Badge>
+                      ))}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
