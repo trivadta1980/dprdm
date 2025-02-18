@@ -87,6 +87,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/reference-types/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const referenceType = await storage.updateReferenceDataType(
+        Number(req.params.id),
+        req.body
+      );
+      res.json(referenceType);
+    } catch (error) {
+      console.error('Error updating reference type:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

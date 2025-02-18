@@ -44,6 +44,8 @@ export interface IStorage {
   getReferenceDataType(id: number): Promise<ReferenceDataType | undefined>;
   getAllReferenceDataTypes(): Promise<ReferenceDataType[]>;
   getReferenceDataTypeSchemas(typeId: number): Promise<ReferenceDataTypeSchema[]>;
+  // Add new update method
+  updateReferenceDataType(id: number, data: InsertReferenceDataType): Promise<ReferenceDataType>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -242,6 +244,40 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(referenceDataTypeSchemas)
       .where(eq(referenceDataTypeSchemas.referenceDataTypeId, typeId));
+  }
+
+  async updateReferenceDataType(id: number, data: InsertReferenceDataType): Promise<ReferenceDataType> {
+    const { schemas, ...typeData } = data;
+
+    return await db.transaction(async (tx) => {
+      // Update the reference data type
+      const [referenceType] = await tx
+        .update(referenceDataTypes)
+        .set({
+          ...typeData,
+          updatedAt: new Date()
+        })
+        .where(eq(referenceDataTypes.id, id))
+        .returning();
+
+      // Delete existing schemas
+      await tx
+        .delete(referenceDataTypeSchemas)
+        .where(eq(referenceDataTypeSchemas.referenceDataTypeId, id));
+
+      // Create new schema entries
+      if (schemas && schemas.length > 0) {
+        await tx.insert(referenceDataTypeSchemas).values(
+          schemas.map((schema) => ({
+            referenceDataTypeId: id,
+            name: schema.name,
+            dataType: schema.dataType,
+          }))
+        );
+      }
+
+      return referenceType;
+    });
   }
 }
 

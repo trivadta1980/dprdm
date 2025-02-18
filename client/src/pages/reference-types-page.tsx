@@ -19,19 +19,20 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, Plus, X } from "lucide-react";
+import { Loader2, Plus, Pencil, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { ReferenceDataType, InsertReferenceDataType } from "@shared/schema";
-import { insertReferenceDataTypeSchema } from "@shared/schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { insertReferenceDataTypeSchema } from "@shared/schema";
+import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function ReferenceTypesPage() {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingType, setEditingType] = useState<ReferenceDataType | null>(null);
 
   const form = useForm<InsertReferenceDataType>({
     resolver: zodResolver(insertReferenceDataTypeSchema),
@@ -39,6 +40,23 @@ export default function ReferenceTypesPage() {
       schemas: [{ name: "", dataType: "" }],
     },
   });
+
+  // Load schemas when editing
+  const { data: schemas = [], isLoading: schemasLoading } = useQuery({
+    queryKey: ["/api/reference-types", editingType?.id, "schemas"],
+    enabled: !!editingType,
+  });
+
+  // Set form values when editing
+  useEffect(() => {
+    if (editingType) {
+      form.reset({
+        name: editingType.name,
+        description: editingType.description || "",
+        schemas: schemas.length > 0 ? schemas : [{ name: "", dataType: "" }],
+      });
+    }
+  }, [editingType, schemas, form]);
 
   const { data: referenceTypes, isLoading } = useQuery<ReferenceDataType[]>({
     queryKey: ["/api/reference-types"],
@@ -67,8 +85,51 @@ export default function ReferenceTypesPage() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: InsertReferenceDataType }) => {
+      const res = await apiRequest("PATCH", `/api/reference-types/${id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
+      setDialogOpen(false);
+      setEditingType(null);
+      form.reset();
+      toast({
+        title: "Success",
+        description: "Reference Data Type has been updated.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update Reference Data Type.",
+        variant: "destructive",
+      });
+    },
+  });
+
   function onSubmit(data: InsertReferenceDataType) {
-    createMutation.mutate(data);
+    if (editingType) {
+      updateMutation.mutate({ id: editingType.id, data });
+    } else {
+      createMutation.mutate(data);
+    }
+  }
+
+  function handleEdit(type: ReferenceDataType) {
+    setEditingType(type);
+    setDialogOpen(true);
+  }
+
+  function handleCreateNew() {
+    setEditingType(null);
+    form.reset({
+      name: "",
+      description: "",
+      schemas: [{ name: "", dataType: "" }],
+    });
+    setDialogOpen(true);
   }
 
   // Function to add a new schema field
@@ -106,14 +167,16 @@ export default function ReferenceTypesPage() {
             <CardTitle>Reference Data Types</CardTitle>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button onClick={handleCreateNew}>
                   <Plus className="h-4 w-4 mr-2" />
                   New Type
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Create New Reference Data Type</DialogTitle>
+                  <DialogTitle>
+                    {editingType ? "Edit Reference Data Type" : "Create New Reference Data Type"}
+                  </DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -143,7 +206,7 @@ export default function ReferenceTypesPage() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <FormLabel>Schema Fields</FormLabel>
@@ -198,12 +261,12 @@ export default function ReferenceTypesPage() {
                     <Button
                       type="submit"
                       className="w-full"
-                      disabled={createMutation.isPending}
+                      disabled={createMutation.isPending || updateMutation.isPending}
                     >
-                      {createMutation.isPending && (
+                      {(createMutation.isPending || updateMutation.isPending) && (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       )}
-                      Create Reference Data Type
+                      {editingType ? "Update Reference Data Type" : "Create Reference Data Type"}
                     </Button>
                   </form>
                 </Form>
@@ -217,6 +280,7 @@ export default function ReferenceTypesPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Created At</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -226,6 +290,15 @@ export default function ReferenceTypesPage() {
                     <TableCell>{type.description}</TableCell>
                     <TableCell>
                       {new Date(type.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(type)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
