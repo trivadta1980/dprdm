@@ -44,17 +44,22 @@ export default function ReferenceTypesPage() {
     },
   });
 
-  // Load schemas when editing
+  // First, fetch all reference types
+  const { data: referenceTypes, isLoading } = useQuery<ReferenceDataType[]>({
+    queryKey: ["/api/reference-types"],
+  });
+
+  // Then, load schemas when editing
   const { data: schemas = [], isLoading: schemasLoading } = useQuery<ReferenceDataTypeSchema[]>({
     queryKey: ["/api/reference-types", editingType?.id, "schemas"],
     enabled: !!editingType,
   });
 
-  // Get schemas for all reference types
-  const schemaQueries = useQuery<{ [key: number]: ReferenceDataTypeSchema[] }>({
+  // Finally, get schemas for all reference types
+  const { data: schemasMap = {} } = useQuery<{ [key: number]: ReferenceDataTypeSchema[] }>({
     queryKey: ["/api/reference-types/schemas"],
     queryFn: async () => {
-      if (!referenceTypes) return {};
+      if (!referenceTypes?.length) return {};
 
       const schemasMap: { [key: number]: ReferenceDataTypeSchema[] } = {};
       for (const type of referenceTypes) {
@@ -63,7 +68,7 @@ export default function ReferenceTypesPage() {
       }
       return schemasMap;
     },
-    enabled: !!referenceTypes,
+    enabled: !!referenceTypes?.length,
   });
 
   // Set form values when editing
@@ -79,10 +84,6 @@ export default function ReferenceTypesPage() {
       });
     }
   }, [editingType, schemas, form]);
-
-  const { data: referenceTypes, isLoading } = useQuery<ReferenceDataType[]>({
-    queryKey: ["/api/reference-types"],
-  });
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertReferenceDataType) => {
@@ -322,7 +323,7 @@ export default function ReferenceTypesPage() {
               </TableHeader>
               <TableBody>
                 {referenceTypes?.map((type) => {
-                  const typeSchemas = schemaQueries.data?.[type.id] || [];
+                  const typeSchemas = schemasMap[type.id] || [];
                   return (
                     <TableRow key={type.id}>
                       <TableCell>{type.name}</TableCell>
