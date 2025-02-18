@@ -2,6 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
+import { db } from "./db";
+import { users, roles } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication and user management routes
@@ -16,8 +18,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(users);
   });
 
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+  // Get current user with role information
+  app.get("/api/user", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+    const user = await storage.getUserWithRole(req.user.id);
+    res.json(user);
+  });
 
   const httpServer = createServer(app);
   return httpServer;

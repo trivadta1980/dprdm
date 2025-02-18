@@ -33,6 +33,8 @@ export interface IStorage {
   sessionStore: session.Store;
   // Add new method
   updateRequirePasswordChange(userId: number, requireChange: boolean): Promise<void>;
+  // Add this to the IStorage interface
+  getUserWithRole(id: number): Promise<(User & { role: Role | null }) | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -162,6 +164,27 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .where(eq(users.id, userId));
+  }
+
+  // Add this method to the DatabaseStorage class implementation
+  async getUserWithRole(id: number): Promise<(User & { role: Role | null }) | undefined> {
+    const [user] = await db
+      .select({
+        ...users,
+        role: roles,
+      })
+      .from(users)
+      .leftJoin(roles, eq(users.roleId, roles.id))
+      .where(eq(users.id, id));
+
+    if (!user) return undefined;
+
+    // Restructure the result to match the expected format
+    const { role, ...userData } = user;
+    return {
+      ...userData,
+      role,
+    };
   }
 }
 

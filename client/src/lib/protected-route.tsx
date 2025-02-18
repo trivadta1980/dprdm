@@ -39,9 +39,10 @@ export function ProtectedRoute({
 
   // For non-admin users, check if they have permission to access this route
   const route = availableRoutes.find(r => r.path === path);
+  const userRole = user.role;
 
-  // If route is admin-only or user's role doesn't have permission, redirect to home
-  if (adminOnly || route?.adminOnly || !user.role?.routePermissions?.includes(path)) {
+  // If route is admin-only or user doesn't have permission, redirect to home
+  if (adminOnly || route?.adminOnly || !userRole?.routePermissions?.includes(path)) {
     return (
       <Route path={path}>
         <Redirect to="/" />
