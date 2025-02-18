@@ -139,12 +139,18 @@ export default function UsersPage() {
   function onEdit(data: UpdateUser) {
     if (!editingUser) return;
 
+    // Debug log
+    console.log('Editing user with data:', data);
+
     // Ensure we're sending both email and username
     const updateData = {
       email: data.email,
       username: editingUser.username, // Keep the existing username
       roleId: data.roleId,
     };
+
+    // Debug log
+    console.log('Sending update request with:', updateData);
 
     updateMutation.mutate({ 
       id: editingUser.id, 
@@ -153,6 +159,7 @@ export default function UsersPage() {
   }
 
   function handleEdit(user: User) {
+    console.log('Starting edit for user:', user);
     setEditingUser(user);
     editForm.reset({
       email: user.email,
