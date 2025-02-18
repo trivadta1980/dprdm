@@ -203,6 +203,7 @@ export class DatabaseStorage implements IStorage {
 
   async createReferenceDataType(data: InsertReferenceDataType): Promise<ReferenceDataType> {
     const { schemas, ...typeData } = data;
+    console.log('Storage: Creating reference type with data:', data);
 
     // Start a transaction
     return await db.transaction(async (tx) => {
@@ -212,15 +213,22 @@ export class DatabaseStorage implements IStorage {
         .values(typeData)
         .returning();
 
+      console.log('Storage: Created reference type:', referenceType);
+
       // Create the schema entries
       if (schemas && schemas.length > 0) {
-        await tx.insert(referenceDataTypeSchemas).values(
-          schemas.map((schema) => ({
-            referenceDataTypeId: referenceType.id,
-            name: schema.name,
-            dataType: schema.dataType,
-          }))
-        );
+        console.log('Storage: Creating schemas:', schemas);
+        const createdSchemas = await tx
+          .insert(referenceDataTypeSchemas)
+          .values(
+            schemas.map((schema) => ({
+              referenceDataTypeId: referenceType.id,
+              name: schema.name,
+              dataType: schema.dataType,
+            }))
+          )
+          .returning();
+        console.log('Storage: Created schemas:', createdSchemas);
       }
 
       return referenceType;
@@ -248,6 +256,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateReferenceDataType(id: number, data: InsertReferenceDataType): Promise<ReferenceDataType> {
     const { schemas, ...typeData } = data;
+    console.log('Storage: Updating reference type with data:', data);
 
     return await db.transaction(async (tx) => {
       // Update the reference data type
@@ -260,6 +269,8 @@ export class DatabaseStorage implements IStorage {
         .where(eq(referenceDataTypes.id, id))
         .returning();
 
+      console.log('Storage: Updated reference type:', referenceType);
+
       // Delete existing schemas
       await tx
         .delete(referenceDataTypeSchemas)
@@ -267,13 +278,18 @@ export class DatabaseStorage implements IStorage {
 
       // Create new schema entries
       if (schemas && schemas.length > 0) {
-        await tx.insert(referenceDataTypeSchemas).values(
-          schemas.map((schema) => ({
-            referenceDataTypeId: id,
-            name: schema.name,
-            dataType: schema.dataType,
-          }))
-        );
+        console.log('Storage: Creating new schemas:', schemas);
+        const createdSchemas = await tx
+          .insert(referenceDataTypeSchemas)
+          .values(
+            schemas.map((schema) => ({
+              referenceDataTypeId: id,
+              name: schema.name,
+              dataType: schema.dataType,
+            }))
+          )
+          .returning();
+        console.log('Storage: Created new schemas:', createdSchemas);
       }
 
       return referenceType;

@@ -119,10 +119,14 @@ export default function ReferenceTypesPage() {
   function onSubmit(data: InsertReferenceDataType) {
     // Filter out empty schema entries
     const validSchemas = data.schemas.filter(schema => schema.name && schema.dataType);
+    console.log("Form schemas before filtering:", data.schemas);
+    console.log("Valid schemas after filtering:", validSchemas);
+
     const submissionData = {
       ...data,
       schemas: validSchemas,
     };
+    console.log("Final submission data:", submissionData);
 
     if (editingType) {
       updateMutation.mutate({ id: editingType.id, data: submissionData });

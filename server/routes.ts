@@ -67,7 +67,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
+      console.log('Creating reference type with data:', req.body);
       const referenceType = await storage.createReferenceDataType(req.body);
+      console.log('Created reference type:', referenceType);
       res.status(201).json(referenceType);
     } catch (error) {
       console.error('Error creating reference type:', error);
@@ -91,10 +93,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
+      console.log('Updating reference type with data:', req.body);
       const referenceType = await storage.updateReferenceDataType(
         Number(req.params.id),
         req.body
       );
+      console.log('Updated reference type:', referenceType);
       res.json(referenceType);
     } catch (error) {
       console.error('Error updating reference type:', error);
