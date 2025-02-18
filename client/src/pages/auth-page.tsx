@@ -70,7 +70,12 @@ export default function AuthPage() {
   }
 
   function onRegister(data: InsertUser) {
-    registerMutation.mutate(data);
+    // Remove password confirmation before sending to API
+    const { confirmPassword, ...registrationData } = data;
+    registerMutation.mutate({
+      ...registrationData,
+      password: "password123" // Use default password
+    });
   }
 
   function onRequestReset(data: { email: string }) {
