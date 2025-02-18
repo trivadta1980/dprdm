@@ -73,7 +73,8 @@ export default function ReferenceTypesPage() {
 
   // Set form values when editing
   useEffect(() => {
-    if (editingType) {
+    if (editingType && schemas) {
+      console.log('Setting form values for editing:', { editingType, schemas });
       form.reset({
         name: editingType.name,
         description: editingType.description || "",
@@ -87,12 +88,13 @@ export default function ReferenceTypesPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertReferenceDataType) => {
-      console.log("Creating with data:", data); // Debug log
+      console.log("Creating with data:", data);
       const res = await apiRequest("POST", "/api/reference-types", data);
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/reference-types/schemas"] });
       setDialogOpen(false);
       form.reset();
       toast({
@@ -111,7 +113,7 @@ export default function ReferenceTypesPage() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: InsertReferenceDataType }) => {
-      console.log("Updating with data:", data); // Debug log
+      console.log("Updating with data:", data);
       const res = await apiRequest("PATCH", `/api/reference-types/${id}`, data);
       return res.json();
     },
@@ -155,6 +157,7 @@ export default function ReferenceTypesPage() {
   }
 
   function handleEdit(type: ReferenceDataType) {
+    console.log('Editing type:', type);
     setEditingType(type);
     setDialogOpen(true);
   }
@@ -254,7 +257,7 @@ export default function ReferenceTypesPage() {
                       </div>
                       <ScrollArea className="h-[200px] rounded-md border p-4">
                         <div className="space-y-4">
-                          {form.watch("schemas")?.map((_, index) => (
+                          {form.watch("schemas")?.map((schema, index) => (
                             <div key={index} className="flex gap-4 items-start">
                               <FormField
                                 control={form.control}
