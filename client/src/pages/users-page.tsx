@@ -96,11 +96,12 @@ export default function UsersPage() {
   });
 
   function onSubmit(data: InsertUser) {
-    // Remove password confirmation before sending to API
-    const { confirmPassword, ...userData } = data;
     createMutation.mutate({
-      ...userData,
-      password: "password123" // Use default password
+      email: data.email,
+      username: data.username,
+      password: "password123", // Use default password
+      confirmPassword: "password123", // Add confirmPassword
+      roleId: data.roleId ?? 2, // Default to user role if not selected
     });
   }
 
@@ -182,6 +183,32 @@ export default function UsersPage() {
                               ))}
                             </SelectContent>
                           </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
