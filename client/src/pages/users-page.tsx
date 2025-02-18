@@ -101,7 +101,7 @@ export default function UsersPage() {
       username: data.username,
       password: "password123", // Use default password
       confirmPassword: "password123", // Add confirmPassword
-      roleId: data.roleId ?? 2, // Default to user role if not selected
+      roleId: data.roleId ?? 3, // Default to user role (ID 3) if not selected
     });
   }
 
