@@ -28,6 +28,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertReferenceDataTypeSchema } from "@shared/schema";
 import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 export default function ReferenceTypesPage() {
   const { toast } = useToast();
@@ -47,6 +48,22 @@ export default function ReferenceTypesPage() {
   const { data: schemas = [], isLoading: schemasLoading } = useQuery<ReferenceDataTypeSchema[]>({
     queryKey: ["/api/reference-types", editingType?.id, "schemas"],
     enabled: !!editingType,
+  });
+
+  // Get schemas for all reference types
+  const schemaQueries = useQuery<{ [key: number]: ReferenceDataTypeSchema[] }>({
+    queryKey: ["/api/reference-types/schemas"],
+    queryFn: async () => {
+      if (!referenceTypes) return {};
+
+      const schemasMap: { [key: number]: ReferenceDataTypeSchema[] } = {};
+      for (const type of referenceTypes) {
+        const res = await apiRequest("GET", `/api/reference-types/${type.id}/schemas`);
+        schemasMap[type.id] = await res.json();
+      }
+      return schemasMap;
+    },
+    enabled: !!referenceTypes,
   });
 
   // Set form values when editing
@@ -99,6 +116,7 @@ export default function ReferenceTypesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/reference-types/schemas"] });
       setDialogOpen(false);
       setEditingType(null);
       form.reset();
@@ -297,29 +315,47 @@ export default function ReferenceTypesPage() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Description</TableHead>
+                  <TableHead>Schema Attributes</TableHead>
                   <TableHead>Created At</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {referenceTypes?.map((type) => (
-                  <TableRow key={type.id}>
-                    <TableCell>{type.name}</TableCell>
-                    <TableCell>{type.description}</TableCell>
-                    <TableCell>
-                      {new Date(type.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(type)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {referenceTypes?.map((type) => {
+                  const typeSchemas = schemaQueries.data?.[type.id] || [];
+                  return (
+                    <TableRow key={type.id}>
+                      <TableCell>{type.name}</TableCell>
+                      <TableCell>{type.description}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {typeSchemas.map((schema, index) => (
+                            <Badge key={index} variant="secondary">
+                              {schema.name}: {schema.dataType}
+                            </Badge>
+                          ))}
+                          {typeSchemas.length > 0 && (
+                            <Badge variant="outline">
+                              Total: {typeSchemas.length}
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(type.createdAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(type)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </CardContent>
