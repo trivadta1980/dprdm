@@ -249,7 +249,12 @@ export default function ReferenceTypesPage() {
 
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
-                        <FormLabel>Schema Fields</FormLabel>
+                        <div className="flex items-center gap-2">
+                          <FormLabel>Schema Fields</FormLabel>
+                          <Badge variant="secondary">
+                            {form.watch("schemas")?.length || 0} Fields
+                          </Badge>
+                        </div>
                         <Button type="button" variant="outline" size="sm" onClick={addSchemaField}>
                           <Plus className="h-4 w-4 mr-2" />
                           Add Field
