@@ -17,17 +17,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Role } from "@shared/schema";
-import { insertRoleSchema, type InsertRole, availableRoutes } from "@shared/schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { insertRoleSchema, type InsertRole } from "@shared/schema";
 import { useState } from "react";
 
 export default function RolesPage() {
@@ -36,9 +34,6 @@ export default function RolesPage() {
 
   const form = useForm<InsertRole>({
     resolver: zodResolver(insertRoleSchema),
-    defaultValues: {
-      routePermissions: []
-    }
   });
 
   const { data: roles, isLoading } = useQuery<Role[]>({
@@ -95,12 +90,12 @@ export default function RolesPage() {
                   New Role
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Create New Role</DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField
                       control={form.control}
                       name="name"
@@ -127,58 +122,6 @@ export default function RolesPage() {
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={form.control}
-                      name="routePermissions"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Route Permissions</FormLabel>
-                          <FormDescription>
-                            Select which routes this role can access
-                          </FormDescription>
-                          <div className="grid gap-4 mt-2">
-                            {availableRoutes.map((route) => (
-                              <FormField
-                                key={route.path}
-                                control={form.control}
-                                name="routePermissions"
-                                render={({ field }) => (
-                                  <FormItem
-                                    key={route.path}
-                                    className="flex flex-row items-start space-x-3 space-y-0"
-                                  >
-                                    <FormControl>
-                                      <Checkbox
-                                        checked={field.value?.includes(route.path)}
-                                        onCheckedChange={(checked) => {
-                                          return checked
-                                            ? field.onChange([...field.value || [], route.path])
-                                            : field.onChange(
-                                                field.value?.filter((value) => value !== route.path) || []
-                                              )
-                                        }}
-                                      />
-                                    </FormControl>
-                                    <div className="space-y-1 leading-none">
-                                      <FormLabel>
-                                        {route.name}
-                                        {route.adminOnly && (
-                                          <span className="ml-2 text-xs text-muted-foreground">(Admin Only)</span>
-                                        )}
-                                      </FormLabel>
-                                      <FormDescription>
-                                        {route.description}
-                                      </FormDescription>
-                                    </div>
-                                  </FormItem>
-                                )}
-                              />
-                            ))}
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                     <Button
                       type="submit"
                       className="w-full"
@@ -200,7 +143,6 @@ export default function RolesPage() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Description</TableHead>
-                  <TableHead>Permissions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -208,15 +150,6 @@ export default function RolesPage() {
                   <TableRow key={role.id}>
                     <TableCell>{role.name}</TableCell>
                     <TableCell>{role.description}</TableCell>
-                    <TableCell>
-                      <div className="text-sm text-muted-foreground">
-                        {role.routePermissions?.length
-                          ? role.routePermissions.map((path) =>
-                              availableRoutes.find((r) => r.path === path)?.name
-                            ).join(", ")
-                          : "No permissions set"}
-                      </div>
-                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

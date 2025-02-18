@@ -3,48 +3,11 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// Add available routes type
-export const availableRoutes = [
-  {
-    path: "/users",
-    name: "User Management",
-    description: "Manage system users",
-    adminOnly: true
-  },
-  {
-    path: "/roles",
-    name: "Role Management",
-    description: "Manage user roles and permissions",
-    adminOnly: true
-  },
-  {
-    path: "/reference-types",
-    name: "Reference Data Types",
-    description: "Manage reference data types"
-  },
-  {
-    path: "/reference-data",
-    name: "Reference Data",
-    description: "Manage reference data"
-  },
-  {
-    path: "/relationships",
-    name: "Relationships",
-    description: "Manage data relationships"
-  },
-  {
-    path: "/crosswalks",
-    name: "Crosswalks",
-    description: "Manage data crosswalks"
-  }
-] as const;
-
-// Roles table with route permissions
+// Roles table
 export const roles = pgTable("roles", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
   description: text("description"),
-  routePermissions: text("route_permissions").array(), // Store array of permitted route paths
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -129,9 +92,6 @@ export const updateUserSchema = baseUserSchema.omit({
 export const insertRoleSchema = createInsertSchema(roles).pick({
   name: true,
   description: true,
-  routePermissions: true,
-}).extend({
-  routePermissions: z.array(z.string()).default([])
 });
 
 // Add password change schema
@@ -157,4 +117,3 @@ export type UpdateUser = z.infer<typeof updateUserSchema>;
 export type Role = typeof roles.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type ChangePassword = z.infer<typeof changePasswordSchema>;
-export type RouteConfig = typeof availableRoutes[number];
