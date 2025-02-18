@@ -82,25 +82,30 @@ export default function UsersPage() {
     },
   });
 
+  // Update the mutation definition to add more feedback
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: UpdateUser }) => {
+      console.log('Starting mutation with:', { id, data });
       const res = await apiRequest("PATCH", `/api/users/${id}`, data);
+      console.log('Received response:', res);
       return res.json();
     },
     onSuccess: () => {
+      console.log('Update successful, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       setEditDialogOpen(false);
       setEditingUser(null);
       editForm.reset();
       toast({
-        title: "User updated",
-        description: "The user has been successfully updated.",
+        title: "Success",
+        description: "User has been successfully updated.",
       });
     },
     onError: (error: Error) => {
+      console.error('Update failed:', error);
       toast({
-        title: "Failed to update user",
-        description: error.message,
+        title: "Update failed",
+        description: error.message || "Failed to update user. Please try again.",
         variant: "destructive",
       });
     },
@@ -372,10 +377,14 @@ export default function UsersPage() {
                 className="w-full"
                 disabled={updateMutation.isPending}
               >
-                {updateMutation.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {updateMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update User"
                 )}
-                Update User
               </Button>
             </form>
           </Form>
