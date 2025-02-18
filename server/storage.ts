@@ -15,6 +15,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: UpdateUser): Promise<User | undefined>;
   deleteUser(id: number): Promise<boolean>;
+  getAllUsers(): Promise<User[]>; // Add this method
 
   // Role operations
   getRole(id: number): Promise<Role | undefined>;
@@ -110,7 +111,7 @@ export class DatabaseStorage implements IStorage {
   async setResetToken(userId: number, token: string, expiry: Date): Promise<void> {
     await db
       .update(users)
-      .set({ 
+      .set({
         resetToken: token,
         resetTokenExpiry: expiry,
         updatedAt: new Date()
@@ -129,7 +130,7 @@ export class DatabaseStorage implements IStorage {
   async clearResetToken(userId: number): Promise<void> {
     await db
       .update(users)
-      .set({ 
+      .set({
         resetToken: null,
         resetTokenExpiry: null,
         updatedAt: new Date()
@@ -140,11 +141,15 @@ export class DatabaseStorage implements IStorage {
   async updatePassword(userId: number, hashedPassword: string): Promise<void> {
     await db
       .update(users)
-      .set({ 
+      .set({
         password: hashedPassword,
         updatedAt: new Date()
       })
       .where(eq(users.id, userId));
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return db.select().from(users);
   }
 }
 
