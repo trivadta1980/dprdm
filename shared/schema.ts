@@ -1,7 +1,7 @@
 import { pgTable, text, serial, timestamp, boolean, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { relations } from "drizzle-orm";
+import { relations, type InferModel } from "drizzle-orm";
 
 // Add routes type and array
 const availableRoutes = [
@@ -47,6 +47,37 @@ export const usersRelations = relations(users, ({ one }) => ({
 
 export const rolesRelations = relations(roles, ({ many }) => ({
   users: many(users),
+}));
+
+// Add after the existing tables
+export const referenceDataTypes = pgTable("reference_data_types", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const referenceDataTypeSchemas = pgTable("reference_data_type_schemas", {
+  id: serial("id").primaryKey(),
+  referenceDataTypeId: integer("reference_data_type_id")
+    .references(() => referenceDataTypes.id)
+    .notNull(),
+  name: text("name").notNull(),
+  dataType: text("data_type").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Add relations
+export const referenceDataTypesRelations = relations(referenceDataTypes, ({ many }) => ({
+  schemas: many(referenceDataTypeSchemas),
+}));
+
+export const referenceDataTypeSchemasRelations = relations(referenceDataTypeSchemas, ({ one }) => ({
+  referenceDataType: one(referenceDataTypes, {
+    fields: [referenceDataTypeSchemas.referenceDataTypeId],
+    references: [referenceDataTypes.id],
+  }),
 }));
 
 // Base schema without password confirmation
@@ -123,6 +154,16 @@ export const changePasswordSchema = z.object({
   path: ["confirmNewPassword"],
 });
 
+// Add after the existing schemas
+export const insertReferenceDataTypeSchema = createInsertSchema(referenceDataTypes).extend({
+  schemas: z.array(
+    z.object({
+      name: z.string().min(1, "Name is required"),
+      dataType: z.string().min(1, "Data type is required"),
+    })
+  ),
+});
+
 // Types
 export type InsertRole = z.infer<typeof insertRoleSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -130,3 +171,8 @@ export type UpdateUser = z.infer<typeof updateUserSchema>;
 export type Role = typeof roles.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type ChangePassword = z.infer<typeof changePasswordSchema>;
+
+// Add after the existing types
+export type InsertReferenceDataType = z.infer<typeof insertReferenceDataTypeSchema>;
+export type ReferenceDataType = typeof referenceDataTypes.$inferSelect;
+export type ReferenceDataTypeSchema = typeof referenceDataTypeSchemas.$inferSelect;

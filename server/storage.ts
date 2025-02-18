@@ -4,6 +4,9 @@ import { eq } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
+import { type ReferenceDataType, type InsertReferenceDataType, type ReferenceDataTypeSchema } from "@shared/schema"; // Import necessary types
+import { referenceDataTypes, referenceDataTypeSchemas } from "@shared/schema"; //Import necessary tables
+
 
 const PostgresSessionStore = connectPg(session);
 
@@ -15,7 +18,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: UpdateUser): Promise<User | undefined>;
   deleteUser(id: number): Promise<boolean>;
-  getAllUsers(): Promise<User[]>; // Add this method
+  getAllUsers(): Promise<User[]>; 
 
   // Role operations
   getRole(id: number): Promise<Role | undefined>;
@@ -35,6 +38,12 @@ export interface IStorage {
   sessionStore: session.Store;
   // Add new method
   updateRequirePasswordChange(userId: number, requireChange: boolean): Promise<void>;
+
+  // Reference Data Type operations
+  createReferenceDataType(data: InsertReferenceDataType): Promise<ReferenceDataType>;
+  getReferenceDataType(id: number): Promise<ReferenceDataType | undefined>;
+  getAllReferenceDataTypes(): Promise<ReferenceDataType[]>;
+  getReferenceDataTypeSchemas(typeId: number): Promise<ReferenceDataTypeSchema[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -188,6 +197,51 @@ export class DatabaseStorage implements IStorage {
       .where(eq(roles.id, id))
       .returning();
     return !!role;
+  }
+
+  async createReferenceDataType(data: InsertReferenceDataType): Promise<ReferenceDataType> {
+    const { schemas, ...typeData } = data;
+
+    // Start a transaction
+    return await db.transaction(async (tx) => {
+      // Create the reference data type
+      const [referenceType] = await tx
+        .insert(referenceDataTypes)
+        .values(typeData)
+        .returning();
+
+      // Create the schema entries
+      if (schemas && schemas.length > 0) {
+        await tx.insert(referenceDataTypeSchemas).values(
+          schemas.map((schema) => ({
+            referenceDataTypeId: referenceType.id,
+            name: schema.name,
+            dataType: schema.dataType,
+          }))
+        );
+      }
+
+      return referenceType;
+    });
+  }
+
+  async getReferenceDataType(id: number): Promise<ReferenceDataType | undefined> {
+    const [type] = await db
+      .select()
+      .from(referenceDataTypes)
+      .where(eq(referenceDataTypes.id, id));
+    return type;
+  }
+
+  async getAllReferenceDataTypes(): Promise<ReferenceDataType[]> {
+    return db.select().from(referenceDataTypes);
+  }
+
+  async getReferenceDataTypeSchemas(typeId: number): Promise<ReferenceDataTypeSchema[]> {
+    return db
+      .select()
+      .from(referenceDataTypeSchemas)
+      .where(eq(referenceDataTypeSchemas.referenceDataTypeId, typeId));
   }
 }
 

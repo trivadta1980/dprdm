@@ -50,6 +50,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reference Data Types routes
+  app.get("/api/reference-types", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const types = await storage.getAllReferenceDataTypes();
+      res.json(types);
+    } catch (error) {
+      console.error('Error fetching reference types:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.post("/api/reference-types", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const referenceType = await storage.createReferenceDataType(req.body);
+      res.status(201).json(referenceType);
+    } catch (error) {
+      console.error('Error creating reference type:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.get("/api/reference-types/:id/schemas", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const schemas = await storage.getReferenceDataTypeSchemas(Number(req.params.id));
+      res.json(schemas);
+    } catch (error) {
+      console.error('Error fetching reference type schemas:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

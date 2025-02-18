@@ -1,0 +1,239 @@
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { MainLayout } from "@/components/layout/main-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Loader2, Plus, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { ReferenceDataType, InsertReferenceDataType } from "@shared/schema";
+import { insertReferenceDataTypeSchema } from "@shared/schema";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+export default function ReferenceTypesPage() {
+  const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const form = useForm<InsertReferenceDataType>({
+    resolver: zodResolver(insertReferenceDataTypeSchema),
+    defaultValues: {
+      schemas: [{ name: "", dataType: "" }],
+    },
+  });
+
+  const { data: referenceTypes, isLoading } = useQuery<ReferenceDataType[]>({
+    queryKey: ["/api/reference-types"],
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: InsertReferenceDataType) => {
+      const res = await apiRequest("POST", "/api/reference-types", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
+      setDialogOpen(false);
+      form.reset();
+      toast({
+        title: "Success",
+        description: "Reference Data Type has been created.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create Reference Data Type.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  function onSubmit(data: InsertReferenceDataType) {
+    createMutation.mutate(data);
+  }
+
+  // Function to add a new schema field
+  function addSchemaField() {
+    const schemas = form.getValues("schemas") || [];
+    form.setValue("schemas", [...schemas, { name: "", dataType: "" }]);
+  }
+
+  // Function to remove a schema field
+  function removeSchemaField(index: number) {
+    const schemas = form.getValues("schemas") || [];
+    if (schemas.length > 1) {
+      form.setValue(
+        "schemas",
+        schemas.filter((_, i) => i !== index)
+      );
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center min-h-[200px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </MainLayout>
+    );
+  }
+
+  return (
+    <MainLayout>
+      <div className="max-w-6xl mx-auto space-y-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Reference Data Types</CardTitle>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Type
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Create New Reference Data Type</DialogTitle>
+                </DialogHeader>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <FormLabel>Schema Fields</FormLabel>
+                        <Button type="button" variant="outline" size="sm" onClick={addSchemaField}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Field
+                        </Button>
+                      </div>
+                      <ScrollArea className="h-[200px] rounded-md border p-4">
+                        <div className="space-y-4">
+                          {form.watch("schemas")?.map((_, index) => (
+                            <div key={index} className="flex gap-4 items-start">
+                              <FormField
+                                control={form.control}
+                                name={`schemas.${index}.name`}
+                                render={({ field }) => (
+                                  <FormItem className="flex-1">
+                                    <FormControl>
+                                      <Input {...field} placeholder="Field Name" />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name={`schemas.${index}.dataType`}
+                                render={({ field }) => (
+                                  <FormItem className="flex-1">
+                                    <FormControl>
+                                      <Input {...field} placeholder="Data Type" />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeSchemaField(index)}
+                                disabled={index === 0 && form.watch("schemas")?.length === 1}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={createMutation.isPending}
+                    >
+                      {createMutation.isPending && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Create Reference Data Type
+                    </Button>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Created At</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {referenceTypes?.map((type) => (
+                  <TableRow key={type.id}>
+                    <TableCell>{type.name}</TableCell>
+                    <TableCell>{type.description}</TableCell>
+                    <TableCell>
+                      {new Date(type.createdAt).toLocaleDateString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </MainLayout>
+  );
+}
