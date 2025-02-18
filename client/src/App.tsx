@@ -8,6 +8,7 @@ import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import UsersPage from "@/pages/users-page";
 import RolesPage from "@/pages/roles-page";
+import ReferenceTypesPage from "@/pages/reference-types-page";
 import PlaceholderPage from "@/pages/placeholder-page";
 import NotFound from "@/pages/not-found";
 
@@ -17,10 +18,7 @@ function Router() {
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/users" component={UsersPage} adminOnly />
       <ProtectedRoute path="/roles" component={RolesPage} adminOnly />
-      <ProtectedRoute 
-        path="/reference-types" 
-        component={() => <PlaceholderPage title="Reference Data Type Management" />} 
-      />
+      <ProtectedRoute path="/reference-types" component={ReferenceTypesPage} />
       <ProtectedRoute 
         path="/reference-data" 
         component={() => <PlaceholderPage title="Reference Data Management" />} 
