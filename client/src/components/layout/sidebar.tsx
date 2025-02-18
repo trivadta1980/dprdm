@@ -2,13 +2,8 @@ import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Users,
-  Database,
-  List,
-  GitBranch,
-  ArrowLeftRight,
-} from "lucide-react";
+import { Users, Settings, UserCog } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 interface SidebarProps {
   className?: string;
@@ -16,32 +11,43 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const [location] = useLocation();
+  const { user } = useAuth();
+  const isAdmin = user?.roleId === 1;
 
   const menuItems = [
-    {
-      title: "User Management",
-      href: "/users",
-      icon: Users,
-    },
+    ...(isAdmin
+      ? [
+          {
+            title: "User Management",
+            href: "/users",
+            icon: Users,
+          },
+          {
+            title: "Role Management",
+            href: "/roles",
+            icon: UserCog,
+          },
+        ]
+      : []),
     {
       title: "Reference Data Types",
       href: "/reference-types",
-      icon: Database,
+      icon: Settings,
     },
     {
       title: "Reference Data",
       href: "/reference-data",
-      icon: List,
+      icon: Settings,
     },
     {
       title: "Relationships",
       href: "/relationships",
-      icon: GitBranch,
+      icon: Settings,
     },
     {
       title: "Crosswalks",
       href: "/crosswalks",
-      icon: ArrowLeftRight,
+      icon: Settings,
     },
   ];
 

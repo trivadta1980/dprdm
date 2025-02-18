@@ -6,6 +6,8 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
+import UsersPage from "@/pages/users-page";
+import RolesPage from "@/pages/roles-page";
 import PlaceholderPage from "@/pages/placeholder-page";
 import NotFound from "@/pages/not-found";
 
@@ -13,10 +15,8 @@ function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={HomePage} />
-      <ProtectedRoute 
-        path="/users" 
-        component={() => <PlaceholderPage title="User Management" />} 
-      />
+      <ProtectedRoute path="/users" component={UsersPage} adminOnly />
+      <ProtectedRoute path="/roles" component={RolesPage} adminOnly />
       <ProtectedRoute 
         path="/reference-types" 
         component={() => <PlaceholderPage title="Reference Data Type Management" />} 
