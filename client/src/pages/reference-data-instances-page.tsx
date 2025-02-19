@@ -3,7 +3,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -50,15 +50,21 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     refetchOnWindowFocus: false
   });
 
+  console.log('Debug: Raw dataset:', dataSet);
+
   // Get schema fields from the first instance
   const schemaFields = (() => {
     if (!dataSet?.data || Object.keys(dataSet.data).length === 0) {
+      console.log('Debug: No data found in dataset');
       return [];
     }
     // Get the first instance
     const firstInstance = Object.values(dataSet.data)[0] as ReferenceDataInstance;
+    console.log('Debug: First instance:', firstInstance);
     return Object.keys(firstInstance).filter(key => key !== '_history');
   })();
+
+  console.log('Debug: Schema fields:', schemaFields);
 
   // Create a dynamic schema based on the fields
   const instanceSchema = z.object(
@@ -81,14 +87,17 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   // Process instances for tabular display
   const instances = (() => {
     if (!dataSet?.data) {
+      console.log('Debug: No data in dataset');
       return [];
     }
 
     try {
-      return Object.entries(dataSet.data).map(([id, data]) => ({
+      const processedInstances = Object.entries(dataSet.data).map(([id, data]) => ({
         id,
         ...data as ReferenceDataInstance
       }));
+      console.log('Debug: Processed instances:', processedInstances);
+      return processedInstances;
     } catch (error) {
       console.error('Error processing instance data:', error);
       return [];
