@@ -40,7 +40,7 @@ export default function ReferenceTypesPage() {
     defaultValues: {
       name: "",
       description: "",
-      schemas: [{ name: "", dataType: "" }],
+      schemas: [{ name: "", dataType: "", description: "" }],
     },
   });
 
@@ -81,12 +81,13 @@ export default function ReferenceTypesPage() {
       form.reset({
         name: editingType.name,
         description: editingType.description || "",
-        schemas: typeSchemas.length > 0 
+        schemas: typeSchemas.length > 0
           ? typeSchemas.map(schema => ({
-              name: schema.name,
-              dataType: schema.dataType
-            }))
-          : [{ name: "", dataType: "" }],
+            name: schema.name,
+            dataType: schema.dataType,
+            description: schema.description || ""
+          }))
+          : [{ name: "", dataType: "", description: "" }],
       });
       console.log('Form reset with schemas:', form.getValues('schemas'));
     }
@@ -174,7 +175,7 @@ export default function ReferenceTypesPage() {
     form.reset({
       name: "",
       description: "",
-      schemas: [{ name: "", dataType: "" }],
+      schemas: [{ name: "", dataType: "", description: "" }],
     });
     setDialogOpen(true);
   }
@@ -182,7 +183,7 @@ export default function ReferenceTypesPage() {
   // Function to add a new schema field
   function addSchemaField() {
     const schemas = form.getValues("schemas") || [];
-    form.setValue("schemas", [...schemas, { name: "", dataType: "" }]);
+    form.setValue("schemas", [...schemas, { name: "", dataType: "", description: "" }]);
   }
 
   // Function to remove a schema field
@@ -267,43 +268,63 @@ export default function ReferenceTypesPage() {
                           Add Field
                         </Button>
                       </div>
-                      <ScrollArea className="h-[200px] rounded-md border p-4">
-                        <div className="space-y-4">
+                      <ScrollArea className="h-[300px] rounded-md border p-4">
+                        <div className="space-y-6">
                           {form.watch("schemas")?.map((schema, index) => (
-                            <div key={index} className="flex gap-4 items-start">
-                              <FormField
-                                control={form.control}
-                                name={`schemas.${index}.name`}
-                                render={({ field }) => (
-                                  <FormItem className="flex-1">
-                                    <FormControl>
-                                      <Input {...field} placeholder="Field Name" />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={form.control}
-                                name={`schemas.${index}.dataType`}
-                                render={({ field }) => (
-                                  <FormItem className="flex-1">
-                                    <FormControl>
-                                      <Input {...field} placeholder="Data Type" />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => removeSchemaField(index)}
-                                disabled={index === 0 && form.watch("schemas")?.length === 1}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
+                            <div key={index} className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-sm font-medium">Field {index + 1}</h4>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => removeSchemaField(index)}
+                                  disabled={index === 0 && form.watch("schemas")?.length === 1}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              <div className="grid gap-4">
+                                <FormField
+                                  control={form.control}
+                                  name={`schemas.${index}.name`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Field Name</FormLabel>
+                                      <FormControl>
+                                        <Input {...field} placeholder="e.g., Country_Name" />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name={`schemas.${index}.dataType`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Data Type</FormLabel>
+                                      <FormControl>
+                                        <Input {...field} placeholder="e.g., String" />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name={`schemas.${index}.description`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Description</FormLabel>
+                                      <FormControl>
+                                        <Input {...field} placeholder="e.g., Full name of the country" />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -346,9 +367,14 @@ export default function ReferenceTypesPage() {
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {typeSchemas.map((schema, index) => (
-                            <Badge key={index} variant="secondary">
-                              {schema.name}: {schema.dataType}
-                            </Badge>
+                            <div key={index} className="space-y-1">
+                              <Badge variant="secondary" className="mr-1">
+                                {schema.name}: {schema.dataType}
+                              </Badge>
+                              {schema.description && (
+                                <p className="text-xs text-muted-foreground">{schema.description}</p>
+                              )}
+                            </div>
                           ))}
                           {typeSchemas.length > 0 && (
                             <Badge variant="outline">
