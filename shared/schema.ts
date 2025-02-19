@@ -102,6 +102,34 @@ export const referenceDataSetsRelations = relations(referenceDataSets, ({ one })
   }),
 }));
 
+// Add Relationships table
+export const relationships = pgTable("relationships", {
+  id: serial("id").primaryKey(),
+  sourceDataSetId: integer("source_dataset_id")
+    .references(() => referenceDataSets.id)
+    .notNull(),
+  targetDataSetId: integer("target_dataset_id")
+    .references(() => referenceDataSets.id)
+    .notNull(),
+  relationshipType: text("relationship_type").notNull(), // Parent-Child, Reference, Association
+  cardinality: text("cardinality").notNull(), // One-to-One, One-to-Many, Many-to-Many
+  sourceField: text("source_field").notNull(),
+  targetField: text("target_field").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Add relationships relations
+export const relationshipsRelations = relations(relationships, ({ one }) => ({
+  sourceDataSet: one(referenceDataSets, {
+    fields: [relationships.sourceDataSetId],
+    references: [referenceDataSets.id],
+  }),
+  targetDataSet: one(referenceDataSets, {
+    fields: [relationships.targetDataSetId],
+    references: [referenceDataSets.id],
+  }),
+}));
 
 // Base schema without password confirmation
 const baseUserSchema = createInsertSchema(users).pick({
