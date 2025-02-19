@@ -42,6 +42,19 @@ export default function ReferenceDataInstancesPage() {
     enabled: !!dataSet?.typeId,
   });
 
+  useEffect(() => {
+    if (dataSet) {
+      console.log('DataSet loaded:', {
+        id: dataSet.id,
+        name: dataSet.name,
+        typeId: dataSet.typeId,
+        rawData: dataSet.data,
+        dataType: typeof dataSet.data,
+        hasData: !!dataSet.data,
+        keys: dataSet.data ? Object.keys(dataSet.data) : [],
+      });
+    }
+  }, [dataSet]);
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -94,10 +107,24 @@ export default function ReferenceDataInstancesPage() {
     window.location.href = `/api/reference-data/${dataSetId}/template`;
   };
 
-  // Safely get the instances count and data
-  const instancesCount = dataSet?.data ? Object.keys(dataSet.data).length : 0;
-  const instances = dataSet?.data ? Object.entries(dataSet.data) : [];
+  // Parse and prepare the instance data
+  const parseInstances = () => {
+    if (!dataSet?.data) return [];
 
+    try {
+      const data = typeof dataSet.data === 'string' 
+        ? JSON.parse(dataSet.data) 
+        : dataSet.data;
+
+      return Object.entries(data);
+    } catch (error) {
+      console.error('Error parsing instance data:', error);
+      return [];
+    }
+  };
+
+  const instances = parseInstances();
+  const instancesCount = instances.length;
 
   if (isLoadingDataSet || isLoadingType || isLoadingSchemas) {
     return (
