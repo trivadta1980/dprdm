@@ -102,6 +102,13 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
               </div>
 
               <div>
+                <h3 className="font-medium mb-2">Raw Data Column:</h3>
+                <pre className="bg-white p-2 rounded">
+                  {JSON.stringify(dataSet?.data, null, 2)}
+                </pre>
+              </div>
+
+              <div>
                 <h3 className="font-medium mb-2">Processed Instances:</h3>
                 <pre className="bg-white p-2 rounded">
                   {JSON.stringify({
