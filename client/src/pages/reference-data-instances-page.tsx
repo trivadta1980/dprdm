@@ -16,6 +16,13 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   const [_, setLocation] = useLocation();
   const dataSetId = Number(params.id);
 
+  // Add effect to log data loading
+  useEffect(() => {
+    console.log('=== REFERENCE DATA INSTANCE PAGE MOUNT ===');
+    console.log('URL Parameters:', params);
+    console.log('Parsed Dataset ID:', dataSetId);
+  }, [params, dataSetId]);
+
   // Add effect to log auth status
   useEffect(() => {
     const checkAuth = async () => {
@@ -35,21 +42,23 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     checkAuth();
   }, []);
 
-  // Fetch the reference data set
+  // Fetch the reference data set with logging
   const { data: dataSet, isLoading, error } = useQuery<ReferenceDataSet>({
     queryKey: ["/api/reference-data", dataSetId],
     enabled: !!dataSetId && !isNaN(dataSetId),
   });
 
-  // Add immediate logging after query with clear markers
-  console.log('=== REFERENCE DATA INSTANCE DEBUG ===');
-  console.log('Query Response:', {
-    dataSetId,
-    hasData: !!dataSet,
-    dataSetName: dataSet?.name,
-    fullData: dataSet,
-    dataContent: dataSet?.data
-  });
+  // Add immediate logging after query
+  useEffect(() => {
+    console.log('=== REFERENCE DATA QUERY UPDATE ===');
+    console.log('Query State:', {
+      dataSetId,
+      hasData: !!dataSet,
+      dataSetName: dataSet?.name,
+      fullData: dataSet,
+      error: error ? String(error) : null
+    });
+  }, [dataSet, dataSetId, error]);
 
   // Update the data parsing logic to handle the correct data structure
   const instances = (() => {
@@ -134,14 +143,18 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
             <CardTitle>Reference Data Instances - {dataSet?.name || 'Loading...'}</CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Add debug info */}
+            {/* Debug information panel */}
             <div className="mb-4 p-4 bg-gray-100 rounded">
-              <p>Debug Info:</p>
-              <pre className="text-sm">
+              <p className="font-medium mb-2">Debug Information:</p>
+              <pre className="text-sm whitespace-pre-wrap">
                 {JSON.stringify({
-                  dataSetId,
-                  dataSetName: dataSet?.name,
-                  instanceCount: instances.length,
+                  pageInfo: {
+                    dataSetId,
+                    dataSetName: dataSet?.name,
+                    hasData: !!dataSet,
+                    instanceCount: instances.length,
+                  },
+                  rawData: dataSet?.data
                 }, null, 2)}
               </pre>
             </div>
