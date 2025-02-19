@@ -124,13 +124,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/reference-data/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/reference-data/:id - Not authenticated');
+      return res.sendStatus(401);
+    }
 
     try {
+      console.log('GET /api/reference-data/:id - Fetching dataset:', req.params.id);
       const dataSet = await storage.getReferenceDataSet(Number(req.params.id));
       if (dataSet) {
+        console.log('GET /api/reference-data/:id - Dataset found:', dataSet);
         res.json(dataSet);
       } else {
+        console.log('GET /api/reference-data/:id - Dataset not found');
         res.sendStatus(404);
       }
     } catch (error) {
