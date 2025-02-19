@@ -166,32 +166,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get schemas to know the structure
       const schemas = await storage.getReferenceDataTypeSchemas(dataSet.typeId);
 
-      // Sample country data matching the exact schema field names
-      const sampleData = [
-        { Country: "United States", Country_Code: "US" },
-        { Country: "United Kingdom", Country_Code: "GB" },
-        { Country: "Canada", Country_Code: "CA" },
-        { Country: "Australia", Country_Code: "AU" },
-        { Country: "Germany", Country_Code: "DE" },
-        { Country: "France", Country_Code: "FR" },
-        { Country: "Japan", Country_Code: "JP" },
-        { Country: "Brazil", Country_Code: "BR" },
-        { Country: "India", Country_Code: "IN" },
-        { Country: "China", Country_Code: "CN" }
-      ];
-
-      // Create CSV content with exact schema field names
+      // Create CSV content with just headers for the template
       const headers = schemas.map(s => s.name).join(",");
-      const rows = sampleData.map(country =>
-        schemas.map(schema => country[schema.name] || "").join(",")
-      );
 
-      const csvContent = [headers, ...rows].join("\n");
-
-      // Send as CSV file
+      // Send as CSV file with just the headers
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename=${dataSet.name}_template.csv`);
-      res.send(csvContent);
+      res.send(headers);
     } catch (error) {
       console.error('Error generating template:', error);
       res.status(500).json({ error: String(error) });
