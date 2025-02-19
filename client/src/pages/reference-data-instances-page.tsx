@@ -1,11 +1,32 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Loader2, ArrowLeft, Plus, Pencil, Trash2 } from "lucide-react";
 import type { ReferenceDataSet, ReferenceDataInstance } from "@shared/schema";
 import { useLocation } from "wouter";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface Params {
   id: string;
@@ -13,6 +34,7 @@ interface Params {
 
 export default function ReferenceDataInstancesPage({ params }: { params: Params }) {
   const [_, setLocation] = useLocation();
+  const { toast } = useToast();
   const dataSetId = Number(params.id);
 
   // Fetch the reference data set with the correct endpoint
@@ -32,6 +54,24 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     return Object.keys(firstInstance);
   })();
 
+  // Create a dynamic schema based on the fields
+  const instanceSchema = z.object(
+    schemaFields.reduce((acc, field) => ({
+      ...acc,
+      [field]: z.string().min(1, `${field} is required`)
+    }), {})
+  );
+
+  type InstanceFormData = z.infer<typeof instanceSchema>;
+
+  const form = useForm<InstanceFormData>({
+    resolver: zodResolver(instanceSchema),
+    defaultValues: schemaFields.reduce((acc, field) => ({
+      ...acc,
+      [field]: ""
+    }), {})
+  });
+
   // Process instances for tabular display
   const instances = (() => {
     if (!dataSet?.data) {
@@ -48,6 +88,121 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
       return [];
     }
   })();
+
+  // Mutations for CRUD operations
+  const addMutation = useMutation({
+    mutationFn: async (data: InstanceFormData) => {
+      const currentData = { ...dataSet?.data } || {};
+      const newInstanceId = `instance_${Object.keys(currentData).length + 1}`;
+      const updatedData = {
+        ...currentData,
+        [newInstanceId]: data
+      };
+
+      const res = await apiRequest(
+        "PATCH",
+        `/api/reference-data/${dataSetId}`,
+        { data: updatedData }
+      );
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
+      toast({
+        title: "Success",
+        description: "Instance added successfully",
+      });
+      form.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add instance",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const editMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: InstanceFormData }) => {
+      const currentData = { ...dataSet?.data };
+      const updatedData = {
+        ...currentData,
+        [id]: data
+      };
+
+      const res = await apiRequest(
+        "PATCH",
+        `/api/reference-data/${dataSetId}`,
+        { data: updatedData }
+      );
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
+      toast({
+        title: "Success",
+        description: "Instance updated successfully",
+      });
+      form.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update instance",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (instanceId: string) => {
+      const currentData = { ...dataSet?.data };
+      delete currentData[instanceId];
+
+      const res = await apiRequest(
+        "PATCH",
+        `/api/reference-data/${dataSetId}`,
+        { data: currentData }
+      );
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
+      toast({
+        title: "Success",
+        description: "Instance deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete instance",
+        variant: "destructive",
+      });
+    },
+  });
+
+  function onSubmit(data: InstanceFormData) {
+    addMutation.mutate(data);
+  }
+
+  function handleEdit(instance: { id: string } & ReferenceDataInstance) {
+    // Pre-fill form with instance data
+    Object.entries(instance).forEach(([key, value]) => {
+      if (key !== 'id') {
+        form.setValue(key, value);
+      }
+    });
+    // Update submit handler to use edit mutation
+    form.handleSubmit((data) => editMutation.mutate({ id: instance.id, data }))();
+  }
+
+  function handleDelete(instanceId: string) {
+    if (window.confirm("Are you sure you want to delete this instance?")) {
+      deleteMutation.mutate(instanceId);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -83,7 +238,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   return (
     <MainLayout>
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between">
           <Button
             variant="ghost"
             onClick={() => setLocation("/reference-data")}
@@ -91,6 +246,50 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Reference Data
           </Button>
+
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Instance
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Instance</DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  {schemaFields.map((field) => (
+                    <FormField
+                      key={field}
+                      control={form.control}
+                      name={field}
+                      render={({ field: { value, onChange } }) => (
+                        <FormItem>
+                          <FormLabel>{field}</FormLabel>
+                          <FormControl>
+                            <Input value={value} onChange={onChange} placeholder={`Enter ${field}`} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={addMutation.isPending || editMutation.isPending}
+                  >
+                    {(addMutation.isPending || editMutation.isPending) && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Save Instance
+                  </Button>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <Card>
@@ -106,6 +305,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
                     {schemaFields.map((field) => (
                       <TableHead key={field}>{field}</TableHead>
                     ))}
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -115,6 +315,22 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
                       {schemaFields.map((field) => (
                         <TableCell key={field}>{instance[field]}</TableCell>
                       ))}
+                      <TableCell className="text-right space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(instance)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(instance.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
