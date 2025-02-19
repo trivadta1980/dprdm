@@ -87,17 +87,8 @@ export default function ReferenceDataInstancesPage() {
   };
 
   const downloadTemplate = () => {
-    // Create CSV header from schema
-    const headers = schemas.map(s => s.name).join(",");
-    const blob = new Blob([headers + "\n"], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${type?.name}_template.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    // Download the pre-filled template with sample data
+    window.location.href = `/api/reference-data/${dataSetId}/template`;
   };
 
   if (isLoadingDataSet || isLoadingType || isLoadingSchemas) {

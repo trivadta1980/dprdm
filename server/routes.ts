@@ -215,6 +215,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New route to get sample data template
+  app.get("/api/reference-data/:id/template", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const dataSetId = Number(req.params.id);
+      const dataSet = await storage.getReferenceDataSet(dataSetId);
+
+      if (!dataSet) {
+        return res.status(404).json({ error: "Reference Data Set not found" });
+      }
+
+      // Get schemas to know the structure
+      const schemas = await storage.getReferenceDataTypeSchemas(dataSet.typeId);
+
+      // Sample country data
+      const sampleData = [
+        { name: "United States", code: "US", phoneCode: "+1", region: "North America", currency: "USD" },
+        { name: "United Kingdom", code: "GB", phoneCode: "+44", region: "Europe", currency: "GBP" },
+        { name: "Canada", code: "CA", phoneCode: "+1", region: "North America", currency: "CAD" },
+        { name: "Australia", code: "AU", phoneCode: "+61", region: "Oceania", currency: "AUD" },
+        { name: "Germany", code: "DE", phoneCode: "+49", region: "Europe", currency: "EUR" },
+        { name: "France", code: "FR", phoneCode: "+33", region: "Europe", currency: "EUR" },
+        { name: "Japan", code: "JP", phoneCode: "+81", region: "Asia", currency: "JPY" },
+        { name: "Brazil", code: "BR", phoneCode: "+55", region: "South America", currency: "BRL" },
+        { name: "India", code: "IN", phoneCode: "+91", region: "Asia", currency: "INR" },
+        { name: "China", code: "CN", phoneCode: "+86", region: "Asia", currency: "CNY" }
+      ];
+
+      // Create CSV content
+      const headers = schemas.map(s => s.name).join(",");
+      const rows = sampleData.map(country => 
+        schemas.map(schema => country[schema.name.toLowerCase()] || "").join(",")
+      );
+
+      const csvContent = [headers, ...rows].join("\n");
+
+      // Send as CSV file
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename=${dataSet.name}_template.csv`);
+      res.send(csvContent);
+    } catch (error) {
+      console.error('Error generating template:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   app.patch("/api/reference-data/:id", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
