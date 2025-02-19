@@ -16,6 +16,7 @@ import ReferenceDataCreatePage from "@/pages/reference-data-create-page";
 import ReferenceDataInstancesPage from "@/pages/reference-data-instances-page";
 
 function Router() {
+  console.log('Router: Initializing routes');
   return (
     <Switch>
       <ProtectedRoute path="/" component={HomePage} />
@@ -40,6 +41,7 @@ function Router() {
 }
 
 function App() {
+  console.log('App: Initializing application');
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
