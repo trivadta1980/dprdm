@@ -22,16 +22,27 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     refetchOnWindowFocus: false
   });
 
-  // Process instances from the typed data
+  // Get schema fields from the first instance
+  const schemaFields = (() => {
+    if (!dataSet?.data || Object.keys(dataSet.data).length === 0) {
+      return [];
+    }
+    // Get the first instance
+    const firstInstance = Object.values(dataSet.data)[0] as ReferenceDataInstance;
+    return Object.keys(firstInstance);
+  })();
+
+  // Process instances for tabular display
   const instances = (() => {
     if (!dataSet?.data) {
       return [];
     }
 
     try {
-      // Convert the strongly typed data to entries
-      const entries = Object.entries(dataSet.data);
-      return entries;
+      return Object.entries(dataSet.data).map(([id, data]) => ({
+        id,
+        ...data as ReferenceDataInstance
+      }));
     } catch (error) {
       console.error('Error processing instance data:', error);
       return [];
@@ -72,55 +83,6 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   return (
     <MainLayout>
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* Debug Information Card */}
-        <Card className="bg-slate-50">
-          <CardHeader>
-            <CardTitle>Query Debug Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium mb-2">Query Parameters:</h3>
-                <pre className="bg-white p-2 rounded">
-                  {JSON.stringify({ dataSetId, isValidId: !isNaN(dataSetId) }, null, 2)}
-                </pre>
-              </div>
-
-              <div>
-                <h3 className="font-medium mb-2">Raw Dataset:</h3>
-                <pre className="bg-white p-2 rounded">
-                  {JSON.stringify({
-                    id: dataSet?.id,
-                    name: dataSet?.name,
-                    typeId: dataSet?.typeId,
-                    description: dataSet?.description,
-                    dataType: typeof dataSet?.data,
-                    hasData: !!dataSet?.data,
-                    data: dataSet?.data
-                  }, null, 2)}
-                </pre>
-              </div>
-
-              <div>
-                <h3 className="font-medium mb-2">Raw Data Column:</h3>
-                <pre className="bg-white p-2 rounded">
-                  {JSON.stringify(dataSet?.data, null, 2)}
-                </pre>
-              </div>
-
-              <div>
-                <h3 className="font-medium mb-2">Processed Instances:</h3>
-                <pre className="bg-white p-2 rounded">
-                  {JSON.stringify({
-                    count: instances.length,
-                    sample: instances[0],
-                  }, null, 2)}
-                </pre>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -141,23 +103,18 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
                 <TableHeader>
                   <TableRow>
                     <TableHead>Instance ID</TableHead>
-                    <TableHead>Fields</TableHead>
+                    {schemaFields.map((field) => (
+                      <TableHead key={field}>{field}</TableHead>
+                    ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {instances.map(([instanceId, instanceData]) => (
-                    <TableRow key={instanceId}>
-                      <TableCell className="font-medium">{instanceId}</TableCell>
-                      <TableCell>
-                        <div className="space-y-2">
-                          {Object.entries(instanceData as ReferenceDataInstance).map(([field, value]) => (
-                            <div key={field} className="flex gap-2">
-                              <span className="font-medium">{field}:</span>
-                              <span>{value}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </TableCell>
+                  {instances.map((instance) => (
+                    <TableRow key={instance.id}>
+                      <TableCell className="font-medium">{instance.id}</TableCell>
+                      {schemaFields.map((field) => (
+                        <TableCell key={field}>{instance[field]}</TableCell>
+                      ))}
                     </TableRow>
                   ))}
                 </TableBody>
