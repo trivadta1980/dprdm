@@ -13,7 +13,7 @@ import type {
   ReferenceDataTypeSchema
 } from "@shared/schema";
 import { useLocation } from "wouter";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface Params {
   id: string;
@@ -26,11 +26,28 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
+  console.log('ReferenceDataInstancesPage: Rendering with dataSetId:', dataSetId);
+
   // Fetch the reference data set
   const { data: dataSet, isLoading: isLoadingDataSet } = useQuery<ReferenceDataSet>({
     queryKey: ["/api/reference-data", dataSetId],
     enabled: !!dataSetId && !isNaN(dataSetId),
   });
+
+  // Log when dataSet changes
+  useEffect(() => {
+    if (dataSet) {
+      console.log('DataSet loaded:', {
+        id: dataSet.id,
+        name: dataSet.name,
+        typeId: dataSet.typeId,
+        dataType: typeof dataSet.data,
+        hasData: !!dataSet.data,
+        dataKeys: dataSet.data ? Object.keys(dataSet.data) : [],
+        rawData: dataSet.data
+      });
+    }
+  }, [dataSet]);
 
   // Fetch the reference type and its schemas
   const { data: type, isLoading: isLoadingType } = useQuery<ReferenceDataType>({
@@ -96,13 +113,17 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
 
   // Parse and prepare the instance data
   const parseInstances = () => {
-    if (!dataSet?.data) return [];
+    if (!dataSet?.data) {
+      console.log('No data in dataset');
+      return [];
+    }
 
     try {
       const data = typeof dataSet.data === 'string'
         ? JSON.parse(dataSet.data)
         : dataSet.data;
 
+      console.log('Parsed instances:', data);
       return Object.entries(data);
     } catch (error) {
       console.error('Error parsing instance data:', error);
@@ -112,6 +133,8 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
 
   const instances = parseInstances();
   const instancesCount = instances.length;
+
+  console.log('Rendered instances count:', instancesCount);
 
   if (isLoadingDataSet || isLoadingType || isLoadingSchemas) {
     return (
@@ -124,6 +147,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   }
 
   if (!dataSet) {
+    console.log('No dataset found for id:', dataSetId);
     return (
       <MainLayout>
         <div className="max-w-3xl mx-auto space-y-6">
