@@ -16,26 +16,73 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   const [_, setLocation] = useLocation();
   const dataSetId = Number(params.id);
 
+  // Log initial mount and params
+  useEffect(() => {
+    console.log('=== Component Mount ===');
+    console.log('Params:', params);
+    console.log('Parsed dataSetId:', dataSetId);
+  }, [params, dataSetId]);
+
   // Fetch the reference data set
   const { data: dataSet, isLoading, error } = useQuery<ReferenceDataSet>({
     queryKey: ["/api/reference-data", dataSetId],
     enabled: !!dataSetId && !isNaN(dataSetId),
   });
 
-  // Add debug logging
+  // Log raw data from API
   useEffect(() => {
     if (dataSet) {
-      console.log('Reference Data Set:', {
-        id: dataSet.id,
-        name: dataSet.name,
-        data: dataSet.data,
-        dataType: typeof dataSet.data
-      });
+      console.log('=== Raw Data from API ===');
+      console.log('Full dataset:', dataSet);
+      console.log('Data column type:', typeof dataSet.data);
+      console.log('Raw data content:', dataSet.data);
     }
   }, [dataSet]);
 
-  // Process instances from the JSONB data
-  const instances = dataSet?.data ? Object.entries(dataSet.data) : [];
+  // Process instances with detailed logging
+  const instances = (() => {
+    console.log('=== Processing Data ===');
+
+    if (!dataSet?.data) {
+      console.log('No data available in dataset');
+      return [];
+    }
+
+    try {
+      // Log the data type we're working with
+      console.log('Data type received:', typeof dataSet.data);
+
+      if (typeof dataSet.data === 'string') {
+        console.log('Parsing string data...');
+        const parsed = JSON.parse(dataSet.data);
+        console.log('Parsed result:', parsed);
+        const entries = Object.entries(parsed);
+        console.log('Entries from string:', entries);
+        return entries;
+      }
+
+      if (typeof dataSet.data === 'object' && dataSet.data !== null) {
+        console.log('Processing object data...');
+        const entries = Object.entries(dataSet.data);
+        console.log('Entries from object:', entries);
+        console.log('Number of instances:', entries.length);
+        return entries;
+      }
+
+      console.log('Unexpected data format:', typeof dataSet.data);
+      return [];
+    } catch (error) {
+      console.error('Error processing data:', error);
+      return [];
+    }
+  })();
+
+  // Log final processed data
+  useEffect(() => {
+    console.log('=== Final Data Structure ===');
+    console.log('Total instances:', instances.length);
+    console.log('Instances array:', instances);
+  }, [instances]);
 
   if (isLoading) {
     return (
@@ -86,15 +133,20 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
             <CardTitle>Reference Data Instances - {dataSet?.name}</CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Debug information */}
+            {/* Detailed debug information */}
             <div className="mb-4 p-4 bg-gray-100 rounded">
               <p className="font-medium mb-2">Debug Information:</p>
               <pre className="text-sm whitespace-pre-wrap">
                 {JSON.stringify({
-                  dataSet: {
-                    id: dataSet?.id,
-                    name: dataSet?.name,
+                  metadata: {
+                    dataSetId,
+                    dataSetName: dataSet?.name,
                     hasData: !!dataSet?.data,
+                  },
+                  dataAnalysis: {
+                    dataType: typeof dataSet?.data,
+                    isString: typeof dataSet?.data === 'string',
+                    isObject: typeof dataSet?.data === 'object',
                     instanceCount: instances.length,
                   },
                   rawData: dataSet?.data
