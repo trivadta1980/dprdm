@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,7 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, ArrowLeft, Plus, Pencil, Trash2, History } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Pencil, Trash2, History, Database } from "lucide-react";
 import type { ReferenceDataSet, ReferenceDataInstance, HistoryEntry, ReferenceDataTypeSchema } from "@shared/schema";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
@@ -56,7 +56,6 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     enabled: !!dataSet?.typeId,
   });
 
-  console.log('Debug: Schema fields:', schemaFields);
 
   // Create a dynamic schema based on the schema fields
   const instanceSchema = z.object(
@@ -79,7 +78,6 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   // Process instances for tabular display
   const instances = (() => {
     if (!dataSet?.data) {
-      console.log('Debug: No data in dataset');
       return [];
     }
 
@@ -88,7 +86,6 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
         id,
         ...data as ReferenceDataInstance
       }));
-      console.log('Debug: Processed instances:', processedInstances);
       return processedInstances;
     } catch (error) {
       console.error('Error processing instance data:', error);
@@ -266,7 +263,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   if (isLoadingDataSet || isLoadingSchema) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center min-h-[200px]">
+        <div className="flex items-center justify-center min-h-[200px] bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </MainLayout>
@@ -275,11 +272,12 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
 
   return (
     <MainLayout>
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="max-w-7xl mx-auto space-y-8 px-4 py-6">
+        <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow-sm">
           <Button
             variant="ghost"
             onClick={() => setLocation("/reference-data")}
+            className="hover:bg-blue-50 transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Reference Data
@@ -287,19 +285,19 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
 
           <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="bg-primary hover:bg-primary/90 text-white shadow-sm">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Instance
+                Add New Instance
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
-                <DialogTitle>
+                <DialogTitle className="text-xl font-semibold text-gray-900">
                   {editingDataSet ? "Edit Instance" : "Add New Instance"}
                 </DialogTitle>
               </DialogHeader>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   {schemaFields.map((field) => (
                     <FormField
                       key={field.name}
@@ -307,18 +305,23 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
                       name={field.name}
                       render={({ field: { value, onChange } }) => (
                         <FormItem>
-                          <FormLabel>{field.name}</FormLabel>
+                          <FormLabel className="text-sm font-medium text-gray-700">{field.name}</FormLabel>
                           <FormControl>
-                            <Input value={value} onChange={onChange} placeholder={`Enter ${field.name}`} />
+                            <Input 
+                              value={value} 
+                              onChange={onChange} 
+                              placeholder={`Enter ${field.name}`}
+                              className="focus:ring-2 focus:ring-primary/20"
+                            />
                           </FormControl>
-                          <FormMessage />
+                          <FormMessage className="text-xs" />
                         </FormItem>
                       )}
                     />
                   ))}
                   <Button
                     type="submit"
-                    className="w-full"
+                    className="w-full bg-primary hover:bg-primary/90 text-white shadow-sm"
                     disabled={addMutation.isPending || editMutation.isPending}
                   >
                     {(addMutation.isPending || editMutation.isPending) && (
@@ -332,51 +335,61 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
           </Dialog>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Reference Data Instances - {dataSet?.name}</CardTitle>
+        <Card className="shadow-lg border-0">
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
+            <CardTitle className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
+              <Database className="h-5 w-5 text-primary" />
+              Reference Data Instances - {dataSet?.name}
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             {instances.length > 0 ? (
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Instance ID</TableHead>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="text-sm font-semibold text-gray-700">Instance ID</TableHead>
                     {schemaFields.map((field) => (
-                      <TableHead key={field.name}>{field.name}</TableHead>
+                      <TableHead key={field.name} className="text-sm font-semibold text-gray-700">
+                        {field.name}
+                      </TableHead>
                     ))}
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-right text-sm font-semibold text-gray-700">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {instances.map((instance) => (
-                    <TableRow key={instance.id}>
-                      <TableCell className="font-medium">{instance.id}</TableCell>
+                    <TableRow key={instance.id} className="hover:bg-gray-50 transition-colors">
+                      <TableCell className="font-medium text-gray-900">{instance.id}</TableCell>
                       {schemaFields.map((field) => (
-                        <TableCell key={field.name}>{instance[field.name]}</TableCell>
+                        <TableCell key={field.name} className="text-gray-700">
+                          {instance[field.name]}
+                        </TableCell>
                       ))}
-                      <TableCell className="text-right space-x-2">
+                      <TableCell className="text-right space-x-1">
                         <Button
                           variant="ghost"
-                          size="icon"
+                          size="sm"
                           onClick={() => handleShowHistory(instance)}
+                          className="hover:bg-blue-50"
                           title="View History"
                         >
-                          <History className="h-4 w-4" />
+                          <History className="h-4 w-4 text-blue-600" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon"
+                          size="sm"
                           onClick={() => handleEdit(instance)}
+                          className="hover:bg-green-50"
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Pencil className="h-4 w-4 text-green-600" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon"
+                          size="sm"
                           onClick={() => handleDelete(instance.id)}
+                          className="hover:bg-red-50"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4 text-red-600" />
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -384,37 +397,49 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
                 </TableBody>
               </Table>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                No instances available for this reference data set.
+              <div className="text-center py-12 bg-gray-50 rounded-lg">
+                <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 font-medium">No instances available for this reference data set.</p>
+                <p className="text-sm text-gray-500 mt-1">Click the "Add New Instance" button to create one.</p>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* History Dialog */}
+        {/* History Dialog with improved styling */}
         <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
-              <DialogTitle>Edit History - Instance {selectedInstanceHistory?.id}</DialogTitle>
+              <DialogTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <History className="h-5 w-5 text-primary" />
+                Edit History - Instance {selectedInstanceHistory?.id}
+              </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
               {selectedInstanceHistory?.history.length === 0 ? (
-                <p className="text-center text-muted-foreground">No edit history available.</p>
+                <div className="text-center py-8 bg-gray-50 rounded-lg">
+                  <History className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No edit history available.</p>
+                </div>
               ) : (
                 selectedInstanceHistory?.history.map((entry, index) => (
-                  <div key={index} className="border rounded-lg p-4 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <h4 className="font-medium">Changes made on:</h4>
-                      <span className="text-sm text-muted-foreground">
+                  <div key={index} className="border rounded-lg p-4 space-y-3 hover:bg-gray-50 transition-colors">
+                    <div className="flex justify-between items-center border-b pb-2">
+                      <h4 className="font-medium text-gray-900">Changes made on:</h4>
+                      <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">
                         {format(new Date(entry.timestamp), 'PPpp')}
                       </span>
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       {entry.changes.map((change, changeIndex) => (
-                        <div key={changeIndex} className="text-sm">
-                          <span className="font-medium">{change.field}:</span>{' '}
-                          <span className="text-red-500 line-through">{change.oldValue}</span>{' '}
-                          <span className="text-green-500">{change.newValue}</span>
+                        <div key={changeIndex} className="text-sm bg-white p-2 rounded">
+                          <span className="font-medium text-gray-700">{change.field}:</span>{' '}
+                          <span className="text-red-500 line-through bg-red-50 px-1 rounded">
+                            {change.oldValue || '(empty)'}
+                          </span>{' '}
+                          <span className="text-green-600 bg-green-50 px-1 rounded">
+                            {change.newValue}
+                          </span>
                         </div>
                       ))}
                     </div>
