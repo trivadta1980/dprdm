@@ -27,6 +27,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useState } from "react";
 
 interface Params {
   id: string;
@@ -36,6 +37,8 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
   const dataSetId = Number(params.id);
+  const [editingDataSet, setEditingDataSet] = useState<ReferenceDataInstance | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Fetch the reference data set with the correct endpoint
   const { data: dataSet, isLoading, error } = useQuery<ReferenceDataSet>({
@@ -113,6 +116,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
         description: "Instance added successfully",
       });
       form.reset();
+      setIsDialogOpen(false);
     },
     onError: (error: Error) => {
       toast({
@@ -145,6 +149,8 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
         description: "Instance updated successfully",
       });
       form.reset();
+      setEditingDataSet(null);
+      setIsDialogOpen(false);
     },
     onError: (error: Error) => {
       toast({
@@ -184,24 +190,36 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   });
 
   function onSubmit(data: InstanceFormData) {
-    addMutation.mutate(data);
+    if (editingDataSet) {
+      editMutation.mutate({ id: editingDataSet.id, data });
+    } else {
+      addMutation.mutate(data);
+    }
   }
 
   function handleEdit(instance: { id: string } & ReferenceDataInstance) {
+    setEditingDataSet(instance);
     // Pre-fill form with instance data
     Object.entries(instance).forEach(([key, value]) => {
       if (key !== 'id') {
         form.setValue(key, value);
       }
     });
-    // Update submit handler to use edit mutation
-    form.handleSubmit((data) => editMutation.mutate({ id: instance.id, data }))();
+    setIsDialogOpen(true);
   }
 
   function handleDelete(instanceId: string) {
     if (window.confirm("Are you sure you want to delete this instance?")) {
       deleteMutation.mutate(instanceId);
     }
+  }
+
+  function handleDialogOpenChange(open: boolean) {
+    if (!open) {
+      form.reset();
+      setEditingDataSet(null);
+    }
+    setIsDialogOpen(open);
   }
 
   if (isLoading) {
@@ -247,7 +265,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
             Back to Reference Data
           </Button>
 
-          <Dialog>
+          <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
@@ -256,7 +274,9 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add New Instance</DialogTitle>
+                <DialogTitle>
+                  {editingDataSet ? "Edit Instance" : "Add New Instance"}
+                </DialogTitle>
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -284,7 +304,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
                     {(addMutation.isPending || editMutation.isPending) && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
-                    Save Instance
+                    {editingDataSet ? "Update Instance" : "Save Instance"}
                   </Button>
                 </form>
               </Form>
