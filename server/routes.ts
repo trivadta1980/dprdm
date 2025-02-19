@@ -159,9 +159,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dataSetId = Number(req.params.id);
       const file = req.file;
 
+      console.log('Received upload request for dataset:', dataSetId);
+      console.log('File received:', file ? 'yes' : 'no');
+
       if (!file) {
         return res.status(400).json({ error: "No file uploaded" });
       }
+
+      console.log('File details:', {
+        filename: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size
+      });
 
       const dataSet = await storage.getReferenceDataSet(dataSetId);
       if (!dataSet) {
@@ -170,6 +179,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const schemas = await storage.getReferenceDataTypeSchemas(dataSet.typeId);
       const schemaNames = schemas.map(s => s.name);
+
+      console.log('Schema names:', schemaNames);
 
       // Parse CSV
       const records: any[] = [];
@@ -194,11 +205,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       await new Promise((resolve, reject) => {
-        parser.on('error', reject);
-        parser.on('end', resolve);
+        parser.on('error', (error) => {
+          console.error('CSV parsing error:', error);
+          reject(error);
+        });
+        parser.on('end', () => {
+          console.log('CSV parsing complete. Records found:', records.length);
+          resolve(null);
+        });
         parser.write(file.buffer);
         parser.end();
       });
+
+      console.log('Updating dataset with records');
 
       // Update data set with new instances
       const updatedDataSet = await storage.updateReferenceDataSet(dataSetId, {
@@ -208,6 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }, {} as Record<string, any>)
       });
 
+      console.log('Upload complete. Dataset updated.');
       res.json(updatedDataSet);
     } catch (error) {
       console.error('Error processing bulk upload:', error);
@@ -246,7 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create CSV content
       const headers = schemas.map(s => s.name).join(",");
-      const rows = sampleData.map(country => 
+      const rows = sampleData.map(country =>
         schemas.map(schema => country[schema.name.toLowerCase()] || "").join(",")
       );
 

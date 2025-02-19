@@ -44,11 +44,16 @@ export default function ReferenceDataInstancesPage() {
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const res = await apiRequest(
-        "POST",
-        `/api/reference-data/${dataSetId}/bulk-upload`,
-        formData
-      );
+      console.log('Uploading file:', formData.get('file')); // Debug log
+      const res = await fetch(`/api/reference-data/${dataSetId}/bulk-upload`, {
+        method: 'POST',
+        body: formData,
+        // Don't set Content-Type, let the browser set it with the boundary
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Upload failed');
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -74,6 +79,7 @@ export default function ReferenceDataInstancesPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      console.log('Selected file:', file.name, file.type); // Debug log
       setSelectedFile(file);
     }
   };
@@ -83,6 +89,7 @@ export default function ReferenceDataInstancesPage() {
 
     const formData = new FormData();
     formData.append("file", selectedFile);
+    console.log('Uploading file:', selectedFile.name); // Debug log
     uploadMutation.mutate(formData);
   };
 
