@@ -15,9 +15,9 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   const [_, setLocation] = useLocation();
   const dataSetId = Number(params.id);
 
-  // Fetch the reference data set
+  // Fetch the reference data set with the correct endpoint
   const { data: dataSet, isLoading, error } = useQuery<ReferenceDataSet>({
-    queryKey: ["/api/reference-data", dataSetId],
+    queryKey: [`/api/reference-data/${dataSetId}`],
     enabled: !!dataSetId && !isNaN(dataSetId),
     refetchOnWindowFocus: false
   });
