@@ -46,6 +46,14 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     enabled: !!dataSetId && !isNaN(dataSetId),
   });
 
+  // Add immediate logging after query
+  console.log('Dataset Query Results:', {
+    dataSetId,
+    hasData: !!dataSet,
+    dataSetName: dataSet?.name,
+    instanceCount: dataSet?.data ? Object.keys(dataSet.data).length : 0
+  });
+
   console.log('2. Query State');
   console.log('- isLoading:', isLoading);
   console.log('- error:', error);
@@ -62,8 +70,8 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
 
     try {
       console.log('- Processing data type:', typeof dataSet.data);
-      const data = typeof dataSet.data === 'string' 
-        ? JSON.parse(dataSet.data) 
+      const data = typeof dataSet.data === 'string'
+        ? JSON.parse(dataSet.data)
         : dataSet.data;
 
       console.log('- Parsed data:', data);
