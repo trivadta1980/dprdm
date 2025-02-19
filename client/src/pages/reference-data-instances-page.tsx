@@ -49,17 +49,31 @@ export default function ReferenceDataInstancesPage() {
         id: dataSet.id,
         name: dataSet.name,
         typeId: dataSet.typeId,
-        instanceCount: dataSet.data ? Object.keys(dataSet.data).length : 0,
-        data: dataSet.data
+        data: JSON.stringify(dataSet.data, null, 2), // Pretty print the data
+        instanceCount: dataSet.data ? Object.keys(dataSet.data).length : 0
       });
     }
   }, [dataSet]);
 
   useEffect(() => {
     if (schemas.length > 0) {
-      console.log('Schemas loaded:', schemas.map(s => ({ name: s.name, dataType: s.dataType })));
+      console.log('Schemas loaded:', schemas.map(s => ({
+        id: s.id,
+        name: s.name,
+        dataType: s.dataType
+      })));
     }
   }, [schemas]);
+
+  useEffect(() => {
+    if (dataSet?.data) {
+      console.log('Data structure:', {
+        data: dataSet.data,
+        keys: Object.keys(dataSet.data),
+        sample: Object.entries(dataSet.data)[0]
+      });
+    }
+  }, [dataSet?.data]);
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -119,10 +133,11 @@ export default function ReferenceDataInstancesPage() {
   const instancesCount = dataSet?.data ? Object.keys(dataSet.data).length : 0;
   const instances = dataSet?.data ? Object.entries(dataSet.data) : [];
 
-  console.log('Rendering with:', {
+  console.log('Rendering instances:', {
     instancesCount,
     hasData: !!dataSet?.data,
-    schemaCount: schemas.length
+    schemaCount: schemas.length,
+    instances: instances.length > 0 ? instances : 'No instances'
   });
 
   if (isLoadingDataSet || isLoadingType || isLoadingSchemas) {
@@ -226,9 +241,9 @@ export default function ReferenceDataInstancesPage() {
 
               {/* Current Instances Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">
+                <h1 className="text-lg font-medium">
                   Current Instances ({instancesCount})
-                </h3>
+                </h1>
                 {instancesCount > 0 ? (
                   <Table>
                     <TableHeader>
@@ -239,15 +254,20 @@ export default function ReferenceDataInstancesPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {instances.map(([key, instance]) => (
-                        <TableRow key={key}>
-                          {schemas.map((schema) => (
-                            <TableCell key={schema.id}>
-                              {instance[schema.name]}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      ))}
+                      {instances.map(([key, instance]) => {
+                        console.log('Rendering instance:', { key, instance });
+                        return (
+                          <TableRow key={key}>
+                            {schemas.map((schema) => (
+                              <TableCell key={schema.id}>
+                                {instance && typeof instance === 'object'
+                                  ? String(instance[schema.name] || '')
+                                  : ''}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 ) : (

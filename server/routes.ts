@@ -246,6 +246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (record[schemaName] === undefined) {
               throw new Error(`Missing required field: ${schemaName}`);
             }
+            // Make sure to store data with exact schema names
             validRecord[schemaName] = record[schemaName];
           }
           records.push(validRecord);
