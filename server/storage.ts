@@ -6,6 +6,8 @@ import connectPg from "connect-pg-simple";
 import { pool } from "./db";
 import { type ReferenceDataType, type InsertReferenceDataType, type ReferenceDataTypeSchema } from "@shared/schema"; // Import necessary types
 import { referenceDataTypes, referenceDataTypeSchemas } from "@shared/schema"; //Import necessary tables
+import { type ReferenceDataSet, type InsertReferenceDataSet } from "@shared/schema"; //Import necessary types for ReferenceDataSet
+import { referenceDataSets } from "@shared/schema";
 
 
 const PostgresSessionStore = connectPg(session);
@@ -46,6 +48,14 @@ export interface IStorage {
   getReferenceDataTypeSchemas(typeId: number): Promise<ReferenceDataTypeSchema[]>;
   // Add new update method
   updateReferenceDataType(id: number, data: InsertReferenceDataType): Promise<ReferenceDataType>;
+
+  // Reference Data Set operations
+  createReferenceDataSet(data: InsertReferenceDataSet): Promise<ReferenceDataSet>;
+  getReferenceDataSet(id: number): Promise<ReferenceDataSet | undefined>;
+  getAllReferenceDataSets(): Promise<ReferenceDataSet[]>;
+  getReferenceDataSetsByType(typeId: number): Promise<ReferenceDataSet[]>;
+  updateReferenceDataSet(id: number, data: Partial<InsertReferenceDataSet>): Promise<ReferenceDataSet>;
+  deleteReferenceDataSet(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -294,6 +304,56 @@ export class DatabaseStorage implements IStorage {
 
       return referenceType;
     });
+  }
+
+  async createReferenceDataSet(data: InsertReferenceDataSet): Promise<ReferenceDataSet> {
+    const [referenceDataSet] = await db
+      .insert(referenceDataSets)
+      .values(data)
+      .returning();
+    return referenceDataSet;
+  }
+
+  async getReferenceDataSet(id: number): Promise<ReferenceDataSet | undefined> {
+    const [referenceDataSet] = await db
+      .select()
+      .from(referenceDataSets)
+      .where(eq(referenceDataSets.id, id));
+    return referenceDataSet;
+  }
+
+  async getAllReferenceDataSets(): Promise<ReferenceDataSet[]> {
+    return db.select().from(referenceDataSets);
+  }
+
+  async getReferenceDataSetsByType(typeId: number): Promise<ReferenceDataSet[]> {
+    return db
+      .select()
+      .from(referenceDataSets)
+      .where(eq(referenceDataSets.typeId, typeId));
+  }
+
+  async updateReferenceDataSet(
+    id: number,
+    data: Partial<InsertReferenceDataSet>
+  ): Promise<ReferenceDataSet> {
+    const [referenceDataSet] = await db
+      .update(referenceDataSets)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(referenceDataSets.id, id))
+      .returning();
+    return referenceDataSet;
+  }
+
+  async deleteReferenceDataSet(id: number): Promise<boolean> {
+    const [referenceDataSet] = await db
+      .delete(referenceDataSets)
+      .where(eq(referenceDataSets.id, id))
+      .returning();
+    return !!referenceDataSet;
   }
 }
 

@@ -11,6 +11,7 @@ import RolesPage from "@/pages/roles-page";
 import ReferenceTypesPage from "@/pages/reference-types-page";
 import PlaceholderPage from "@/pages/placeholder-page";
 import NotFound from "@/pages/not-found";
+import ReferenceDataPage from "@/pages/reference-data-page";
 
 function Router() {
   return (
@@ -19,17 +20,14 @@ function Router() {
       <ProtectedRoute path="/users" component={UsersPage} adminOnly />
       <ProtectedRoute path="/roles" component={RolesPage} adminOnly />
       <ProtectedRoute path="/reference-types" component={ReferenceTypesPage} />
-      <ProtectedRoute 
-        path="/reference-data" 
-        component={() => <PlaceholderPage title="Reference Data Management" />} 
+      <ProtectedRoute path="/reference-data" component={ReferenceDataPage} />
+      <ProtectedRoute
+        path="/relationships"
+        component={() => <PlaceholderPage title="Relationship Management" />}
       />
-      <ProtectedRoute 
-        path="/relationships" 
-        component={() => <PlaceholderPage title="Relationship Management" />} 
-      />
-      <ProtectedRoute 
-        path="/crosswalks" 
-        component={() => <PlaceholderPage title="Crosswalk Management" />} 
+      <ProtectedRoute
+        path="/crosswalks"
+        component={() => <PlaceholderPage title="Crosswalk Management" />}
       />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />

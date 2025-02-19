@@ -106,6 +106,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reference Data Sets routes
+  app.get("/api/reference-data", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const dataSets = await storage.getAllReferenceDataSets();
+      res.json(dataSets);
+    } catch (error) {
+      console.error('Error fetching reference data sets:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.get("/api/reference-data/type/:typeId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const dataSets = await storage.getReferenceDataSetsByType(Number(req.params.typeId));
+      res.json(dataSets);
+    } catch (error) {
+      console.error('Error fetching reference data sets by type:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.post("/api/reference-data", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const dataSet = await storage.createReferenceDataSet(req.body);
+      res.status(201).json(dataSet);
+    } catch (error) {
+      console.error('Error creating reference data set:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.patch("/api/reference-data/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const dataSet = await storage.updateReferenceDataSet(
+        Number(req.params.id),
+        req.body
+      );
+      res.json(dataSet);
+    } catch (error) {
+      console.error('Error updating reference data set:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.delete("/api/reference-data/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const success = await storage.deleteReferenceDataSet(Number(req.params.id));
+      if (success) {
+        res.sendStatus(200);
+      } else {
+        res.sendStatus(404);
+      }
+    } catch (error) {
+      console.error('Error deleting reference data set:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

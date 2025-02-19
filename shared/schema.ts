@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, boolean, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, integer, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations, type InferModel } from "drizzle-orm";
@@ -71,6 +71,7 @@ export const referenceDataTypeSchemas = pgTable("reference_data_type_schemas", {
 // Add relations
 export const referenceDataTypesRelations = relations(referenceDataTypes, ({ many }) => ({
   schemas: many(referenceDataTypeSchemas),
+  dataSets: many(referenceDataSets),
 }));
 
 export const referenceDataTypeSchemasRelations = relations(referenceDataTypeSchemas, ({ one }) => ({
@@ -79,6 +80,28 @@ export const referenceDataTypeSchemasRelations = relations(referenceDataTypeSche
     references: [referenceDataTypes.id],
   }),
 }));
+
+// Add Reference Data Sets table
+export const referenceDataSets = pgTable("reference_data_sets", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  typeId: integer("type_id")
+    .references(() => referenceDataTypes.id)
+    .notNull(),
+  data: jsonb("data").notNull(),  // Store the dynamic data according to schema
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Add relations
+export const referenceDataSetsRelations = relations(referenceDataSets, ({ one }) => ({
+  type: one(referenceDataTypes, {
+    fields: [referenceDataSets.typeId],
+    references: [referenceDataTypes.id],
+  }),
+}));
+
 
 // Base schema without password confirmation
 const baseUserSchema = createInsertSchema(users).pick({
@@ -164,6 +187,11 @@ export const insertReferenceDataTypeSchema = createInsertSchema(referenceDataTyp
   ),
 });
 
+// Add after the existing schemas
+export const insertReferenceDataSetSchema = createInsertSchema(referenceDataSets).extend({
+  data: z.record(z.string(), z.any()), // Dynamic schema based on reference type
+});
+
 // Types
 export type InsertRole = z.infer<typeof insertRoleSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -176,3 +204,5 @@ export type ChangePassword = z.infer<typeof changePasswordSchema>;
 export type InsertReferenceDataType = z.infer<typeof insertReferenceDataTypeSchema>;
 export type ReferenceDataType = typeof referenceDataTypes.$inferSelect;
 export type ReferenceDataTypeSchema = typeof referenceDataTypeSchemas.$inferSelect;
+export type InsertReferenceDataSet = z.infer<typeof insertReferenceDataSetSchema>;
+export type ReferenceDataSet = typeof referenceDataSets.$inferSelect;
