@@ -151,7 +151,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // New route for bulk uploading instances
+  // New route to get sample data template
+  app.get("/api/reference-data/:id/template", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const dataSetId = Number(req.params.id);
+      const dataSet = await storage.getReferenceDataSet(dataSetId);
+
+      if (!dataSet) {
+        return res.status(404).json({ error: "Reference Data Set not found" });
+      }
+
+      // Get schemas to know the structure
+      const schemas = await storage.getReferenceDataTypeSchemas(dataSet.typeId);
+
+      // Sample country data matching the exact schema field names
+      const sampleData = [
+        { Country: "United States", Country_Code: "US" },
+        { Country: "United Kingdom", Country_Code: "GB" },
+        { Country: "Canada", Country_Code: "CA" },
+        { Country: "Australia", Country_Code: "AU" },
+        { Country: "Germany", Country_Code: "DE" },
+        { Country: "France", Country_Code: "FR" },
+        { Country: "Japan", Country_Code: "JP" },
+        { Country: "Brazil", Country_Code: "BR" },
+        { Country: "India", Country_Code: "IN" },
+        { Country: "China", Country_Code: "CN" }
+      ];
+
+      // Create CSV content with exact schema field names
+      const headers = schemas.map(s => s.name).join(",");
+      const rows = sampleData.map(country =>
+        schemas.map(schema => country[schema.name] || "").join(",")
+      );
+
+      const csvContent = [headers, ...rows].join("\n");
+
+      // Send as CSV file
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename=${dataSet.name}_template.csv`);
+      res.send(csvContent);
+    } catch (error) {
+      console.error('Error generating template:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  // Update the bulk upload route to handle the data structure correctly
   app.post("/api/reference-data/:id/bulk-upload", upload.single("file"), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
@@ -186,7 +233,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const records: any[] = [];
       const parser = parse({
         columns: true,
-        skip_empty_lines: true
+        skip_empty_lines: true,
+        trim: true
       });
 
       parser.on('readable', function() {
@@ -217,7 +265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         parser.end();
       });
 
-      console.log('Updating dataset with records');
+      console.log('Updating dataset with records:', records);
 
       // Update data set with new instances
       const updatedDataSet = await storage.updateReferenceDataSet(dataSetId, {
@@ -227,57 +275,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }, {} as Record<string, any>)
       });
 
-      console.log('Upload complete. Dataset updated.');
+      console.log('Upload complete. Dataset updated with data:', updatedDataSet.data);
       res.json(updatedDataSet);
     } catch (error) {
       console.error('Error processing bulk upload:', error);
-      res.status(500).json({ error: String(error) });
-    }
-  });
-
-  // New route to get sample data template
-  app.get("/api/reference-data/:id/template", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const dataSetId = Number(req.params.id);
-      const dataSet = await storage.getReferenceDataSet(dataSetId);
-
-      if (!dataSet) {
-        return res.status(404).json({ error: "Reference Data Set not found" });
-      }
-
-      // Get schemas to know the structure
-      const schemas = await storage.getReferenceDataTypeSchemas(dataSet.typeId);
-
-      // Sample country data
-      const sampleData = [
-        { name: "United States", code: "US", phoneCode: "+1", region: "North America", currency: "USD" },
-        { name: "United Kingdom", code: "GB", phoneCode: "+44", region: "Europe", currency: "GBP" },
-        { name: "Canada", code: "CA", phoneCode: "+1", region: "North America", currency: "CAD" },
-        { name: "Australia", code: "AU", phoneCode: "+61", region: "Oceania", currency: "AUD" },
-        { name: "Germany", code: "DE", phoneCode: "+49", region: "Europe", currency: "EUR" },
-        { name: "France", code: "FR", phoneCode: "+33", region: "Europe", currency: "EUR" },
-        { name: "Japan", code: "JP", phoneCode: "+81", region: "Asia", currency: "JPY" },
-        { name: "Brazil", code: "BR", phoneCode: "+55", region: "South America", currency: "BRL" },
-        { name: "India", code: "IN", phoneCode: "+91", region: "Asia", currency: "INR" },
-        { name: "China", code: "CN", phoneCode: "+86", region: "Asia", currency: "CNY" }
-      ];
-
-      // Create CSV content
-      const headers = schemas.map(s => s.name).join(",");
-      const rows = sampleData.map(country =>
-        schemas.map(schema => country[schema.name.toLowerCase()] || "").join(",")
-      );
-
-      const csvContent = [headers, ...rows].join("\n");
-
-      // Send as CSV file
-      res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', `attachment; filename=${dataSet.name}_template.csv`);
-      res.send(csvContent);
-    } catch (error) {
-      console.error('Error generating template:', error);
       res.status(500).json({ error: String(error) });
     }
   });

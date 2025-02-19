@@ -76,6 +76,10 @@ export default function ReferenceDataInstancesPage() {
     },
   });
 
+  // Add debug logs for data
+  console.log('Current dataSet:', dataSet);
+  console.log('Current schemas:', schemas);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -97,6 +101,10 @@ export default function ReferenceDataInstancesPage() {
     // Download the pre-filled template with sample data
     window.location.href = `/api/reference-data/${dataSetId}/template`;
   };
+
+  // Safely get the instances count, handling null/undefined data
+  const instancesCount = dataSet?.data ? Object.keys(dataSet.data).length : 0;
+  console.log('Instances count:', instancesCount);
 
   if (isLoadingDataSet || isLoadingType || isLoadingSchemas) {
     return (
@@ -128,8 +136,6 @@ export default function ReferenceDataInstancesPage() {
     );
   }
 
-  // Safely get the instances count, handling null/undefined data
-  const instancesCount = dataSet.data ? Object.keys(dataSet.data).length : 0;
 
   return (
     <MainLayout>
