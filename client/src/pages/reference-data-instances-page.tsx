@@ -51,7 +51,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   console.log('- error:', error);
   console.log('- Raw dataset:', dataSet);
 
-  // Parse instances from the data
+  // Update the data parsing logic to handle the correct data structure
   const instances = (() => {
     console.log('3. Data Processing');
 
