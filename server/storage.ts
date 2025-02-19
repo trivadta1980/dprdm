@@ -315,10 +315,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getReferenceDataSet(id: number): Promise<ReferenceDataSet | undefined> {
+    console.log('Storage: Fetching reference data set with ID:', id);
     const [referenceDataSet] = await db
-      .select()
+      .select({
+        id: referenceDataSets.id,
+        name: referenceDataSets.name,
+        description: referenceDataSets.description,
+        typeId: referenceDataSets.typeId,
+        data: referenceDataSets.data,
+        createdAt: referenceDataSets.createdAt,
+        updatedAt: referenceDataSets.updatedAt,
+      })
       .from(referenceDataSets)
       .where(eq(referenceDataSets.id, id));
+
+    console.log('Storage: Retrieved data set:', referenceDataSet);
     return referenceDataSet;
   }
 

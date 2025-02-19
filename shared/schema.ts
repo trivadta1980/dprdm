@@ -200,9 +200,18 @@ export type Role = typeof roles.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type ChangePassword = z.infer<typeof changePasswordSchema>;
 
+// Add this type definition after the existing types
+export type ReferenceDataInstance = {
+  [key: string]: string;
+};
+
 // Add after the existing types
 export type InsertReferenceDataType = z.infer<typeof insertReferenceDataTypeSchema>;
 export type ReferenceDataType = typeof referenceDataTypes.$inferSelect;
 export type ReferenceDataTypeSchema = typeof referenceDataTypeSchemas.$inferSelect;
 export type InsertReferenceDataSet = z.infer<typeof insertReferenceDataSetSchema>;
-export type ReferenceDataSet = typeof referenceDataSets.$inferSelect;
+
+// Update the ReferenceDataSet type
+export type ReferenceDataSet = typeof referenceDataSets.$inferSelect & {
+  data: Record<string, ReferenceDataInstance>;
+};

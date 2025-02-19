@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft } from "lucide-react";
-import type { ReferenceDataSet } from "@shared/schema";
+import type { ReferenceDataSet, ReferenceDataInstance } from "@shared/schema";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
 
@@ -16,7 +16,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   const [_, setLocation] = useLocation();
   const dataSetId = Number(params.id);
 
-  // Add debug logging for params
+  // Add debug logging for initialization
   useEffect(() => {
     console.log('Component initialized with params:', {
       rawId: params.id,
@@ -25,12 +25,11 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     });
   }, [params.id, dataSetId]);
 
-  // Fetch the reference data set with explicit typing for JSONB data
-  const { data: dataSet, isLoading, error } = useQuery<
-    ReferenceDataSet & { data: Record<string, Record<string, string>> }
-  >({
+  // Fetch the reference data set with explicit JSONB data typing
+  const { data: dataSet, isLoading, error } = useQuery<ReferenceDataSet>({
     queryKey: ["/api/reference-data", dataSetId],
-    enabled: !!dataSetId && !isNaN(dataSetId)
+    enabled: !!dataSetId && !isNaN(dataSetId),
+    refetchOnWindowFocus: false,
   });
 
   // Process instances from the typed data
