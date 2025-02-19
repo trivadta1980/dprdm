@@ -16,20 +16,23 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   const [_, setLocation] = useLocation();
   const dataSetId = Number(params.id);
 
-  // Add debug logging for initialization
-  useEffect(() => {
-    console.log('Component initialized with params:', {
-      rawId: params.id,
-      parsedId: dataSetId,
-      isValidNumber: !isNaN(dataSetId)
-    });
-  }, [params.id, dataSetId]);
-
-  // Fetch the reference data set with explicit JSONB data typing
+  // Fetch the reference data set
   const { data: dataSet, isLoading, error } = useQuery<ReferenceDataSet>({
     queryKey: ["/api/reference-data", dataSetId],
     enabled: !!dataSetId && !isNaN(dataSetId),
     refetchOnWindowFocus: false,
+    onSuccess: (data) => {
+      console.log('Query success, received data:', {
+        id: data?.id,
+        name: data?.name,
+        dataType: typeof data?.data,
+        hasData: !!data?.data,
+        data: data?.data
+      });
+    },
+    onError: (err) => {
+      console.error('Query failed:', err);
+    }
   });
 
   // Process instances from the typed data
@@ -109,8 +112,8 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
                     succeeded: !!dataSet,
                   },
                   dataset: dataSet ? {
-                    id: dataSet.id,
-                    name: dataSet.name,
+                    id: String(dataSet.id),
+                    name: String(dataSet.name),
                     dataType: typeof dataSet.data,
                     hasData: !!dataSet.data,
                     instanceCount: instances.length,
@@ -137,7 +140,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
                       <TableCell className="font-medium">{instanceId}</TableCell>
                       <TableCell>
                         <div className="space-y-2">
-                          {Object.entries(instanceData).map(([field, value]) => (
+                          {Object.entries(instanceData as ReferenceDataInstance).map(([field, value]) => (
                             <div key={field} className="flex gap-2">
                               <span className="font-medium">{field}:</span>
                               <span>{value}</span>
