@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft } from "lucide-react";
 import type { ReferenceDataSet } from "@shared/schema";
 import { useLocation } from "wouter";
-import { useEffect } from "react";
 
 interface Params {
   id: string;
@@ -16,73 +15,29 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   const [_, setLocation] = useLocation();
   const dataSetId = Number(params.id);
 
-  // Log initial mount and params
-  useEffect(() => {
-    console.log('=== Component Mount ===');
-    console.log('Params:', params);
-    console.log('Parsed dataSetId:', dataSetId);
-  }, [params, dataSetId]);
-
   // Fetch the reference data set
   const { data: dataSet, isLoading, error } = useQuery<ReferenceDataSet>({
     queryKey: ["/api/reference-data", dataSetId],
     enabled: !!dataSetId && !isNaN(dataSetId),
   });
 
-  // Log raw data from API
-  useEffect(() => {
-    if (dataSet) {
-      console.log('=== Raw Data from API ===');
-      console.log('Full dataset:', dataSet);
-      console.log('Data column type:', typeof dataSet.data);
-      console.log('Raw data content:', dataSet.data);
-    }
-  }, [dataSet]);
-
-  // Process instances with detailed logging
+  // Process instances with proper typing for nested structure
   const instances = (() => {
-    console.log('=== Processing Data ===');
-
-    if (!dataSet?.data) {
-      console.log('No data available in dataset');
+    if (!dataSet?.data || typeof dataSet.data !== 'object') {
+      console.log('No valid data available:', dataSet?.data);
       return [];
     }
 
     try {
-      // Log the data type we're working with
-      console.log('Data type received:', typeof dataSet.data);
-
-      if (typeof dataSet.data === 'string') {
-        console.log('Parsing string data...');
-        const parsed = JSON.parse(dataSet.data);
-        console.log('Parsed result:', parsed);
-        const entries = Object.entries(parsed);
-        console.log('Entries from string:', entries);
-        return entries;
-      }
-
-      if (typeof dataSet.data === 'object' && dataSet.data !== null) {
-        console.log('Processing object data...');
-        const entries = Object.entries(dataSet.data);
-        console.log('Entries from object:', entries);
-        console.log('Number of instances:', entries.length);
-        return entries;
-      }
-
-      console.log('Unexpected data format:', typeof dataSet.data);
-      return [];
+      // Handle the nested structure where each instance has fields
+      const entries = Object.entries(dataSet.data);
+      console.log('Processed data entries:', entries);
+      return entries;
     } catch (error) {
-      console.error('Error processing data:', error);
+      console.error('Error processing instance data:', error);
       return [];
     }
   })();
-
-  // Log final processed data
-  useEffect(() => {
-    console.log('=== Final Data Structure ===');
-    console.log('Total instances:', instances.length);
-    console.log('Instances array:', instances);
-  }, [instances]);
 
   if (isLoading) {
     return (
@@ -133,23 +88,20 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
             <CardTitle>Reference Data Instances - {dataSet?.name}</CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Detailed debug information */}
+            {/* Debug information panel */}
             <div className="mb-4 p-4 bg-gray-100 rounded">
-              <p className="font-medium mb-2">Debug Information:</p>
+              <p className="font-medium mb-2">Data Structure:</p>
               <pre className="text-sm whitespace-pre-wrap">
                 {JSON.stringify({
-                  metadata: {
-                    dataSetId,
-                    dataSetName: dataSet?.name,
-                    hasData: !!dataSet?.data,
-                  },
-                  dataAnalysis: {
-                    dataType: typeof dataSet?.data,
-                    isString: typeof dataSet?.data === 'string',
-                    isObject: typeof dataSet?.data === 'object',
+                  dataset: {
+                    name: dataSet?.name,
                     instanceCount: instances.length,
                   },
-                  rawData: dataSet?.data
+                  firstInstance: instances[0] ? {
+                    key: instances[0][0],
+                    data: instances[0][1]
+                  } : null,
+                  allData: dataSet?.data
                 }, null, 2)}
               </pre>
             </div>
@@ -159,17 +111,22 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
                 <TableHeader>
                   <TableRow>
                     <TableHead>Instance ID</TableHead>
-                    <TableHead>Data</TableHead>
+                    <TableHead>Fields</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {instances.map(([key, data]) => (
-                    <TableRow key={key}>
-                      <TableCell>{key}</TableCell>
+                  {instances.map(([instanceId, instanceData]) => (
+                    <TableRow key={instanceId}>
+                      <TableCell className="font-medium">{instanceId}</TableCell>
                       <TableCell>
-                        <pre className="text-sm whitespace-pre-wrap">
-                          {JSON.stringify(data, null, 2)}
-                        </pre>
+                        <div className="space-y-2">
+                          {Object.entries(instanceData as Record<string, string>).map(([field, value]) => (
+                            <div key={field} className="flex gap-2">
+                              <span className="font-medium">{field}:</span>
+                              <span>{value}</span>
+                            </div>
+                          ))}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
