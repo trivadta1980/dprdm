@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/tabs";
 import { Loader2, Database, GitFork, History, GitCompare } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 type LoginData = Pick<InsertUser, "username" | "password">;
 
@@ -46,6 +47,7 @@ export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { user, loginMutation, registerMutation, requestResetMutation } = useAuth();
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
@@ -73,7 +75,26 @@ export default function AuthPage() {
   }
 
   function onRegister(data: InsertUser) {
-    registerMutation.mutate(data);
+    console.log('Registration data:', data); // Add logging
+    registerMutation.mutate(data, {
+      onError: (error) => {
+        console.error('Registration error:', error);
+        toast({
+          title: "Registration Failed",
+          description: error.message || "Failed to create user account",
+          variant: "destructive",
+        });
+      },
+      onSuccess: (response) => {
+        console.log('Registration successful:', response);
+        toast({
+          title: "Success",
+          description: "User account created successfully",
+        });
+        loginForm.reset();
+        registerForm.reset();
+      }
+    });
   }
 
   function onRequestReset(data: { email: string }) {
