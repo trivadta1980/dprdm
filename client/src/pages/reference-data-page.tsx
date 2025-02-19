@@ -68,6 +68,7 @@ export default function ReferenceDataPage() {
   }
 
   function handleManageInstances(dataSet: ReferenceDataSet) {
+    console.log('Navigating to instances page for dataset:', dataSet.id);
     setLocation(`/reference-data/instances?id=${dataSet.id}`);
   }
 
@@ -115,11 +116,12 @@ export default function ReferenceDataPage() {
                       <TableCell>{instanceCount} records</TableCell>
                       <TableCell className="text-right space-x-2">
                         <Button
-                          variant="ghost"
-                          size="icon"
+                          variant="outline"
+                          size="sm"
                           onClick={() => handleManageInstances(dataSet)}
                         >
-                          <Database className="h-4 w-4" />
+                          <Database className="h-4 w-4 mr-2" />
+                          Manage Instances
                         </Button>
                         <Button
                           variant="ghost"
