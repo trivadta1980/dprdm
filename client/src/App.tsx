@@ -14,7 +14,8 @@ import NotFound from "@/pages/not-found";
 import ReferenceDataPage from "@/pages/reference-data-page";
 import ReferenceDataCreatePage from "@/pages/reference-data-create-page";
 import ReferenceDataInstancesPage from "@/pages/reference-data-instances-page";
-import HelpPage from "@/pages/help-page"; // Added import
+import HelpPage from "@/pages/help-page";
+import RelationshipsPage from "@/pages/relationships-page";
 
 function Router() {
   console.log('Router: Initializing routes');
@@ -27,10 +28,7 @@ function Router() {
       <ProtectedRoute path="/reference-data" component={ReferenceDataPage} />
       <ProtectedRoute path="/reference-data/create" component={ReferenceDataCreatePage} />
       <ProtectedRoute path="/reference-data/:id/instances" component={ReferenceDataInstancesPage} />
-      <ProtectedRoute
-        path="/relationships"
-        component={() => <PlaceholderPage title="Relationship Management" />}
-      />
+      <ProtectedRoute path="/relationships" component={RelationshipsPage} />
       <ProtectedRoute
         path="/crosswalks"
         component={() => <PlaceholderPage title="Crosswalk Management" />}
