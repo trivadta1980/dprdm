@@ -19,39 +19,18 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   const { data: dataSet, isLoading, error } = useQuery<ReferenceDataSet>({
     queryKey: ["/api/reference-data", dataSetId],
     enabled: !!dataSetId && !isNaN(dataSetId),
-    refetchOnWindowFocus: false,
-    onSuccess: (data) => {
-      console.log('Query success, received data:', {
-        id: data?.id,
-        name: data?.name,
-        typeId: data?.typeId,
-        description: data?.description,
-        dataType: typeof data?.data,
-        hasData: !!data?.data,
-        data: data?.data
-      });
-    },
-    onError: (err) => {
-      console.error('Query failed:', err);
-    }
+    refetchOnWindowFocus: false
   });
 
   // Process instances from the typed data
   const instances = (() => {
     if (!dataSet?.data) {
-      console.log('No data available in dataset');
       return [];
     }
 
     try {
       // Convert the strongly typed data to entries
       const entries = Object.entries(dataSet.data);
-      console.log('Processing data entries:', {
-        count: entries.length,
-        sample: entries[0],
-        dataSetName: dataSet.name,
-        dataSetId: dataSet.id
-      });
       return entries;
     } catch (error) {
       console.error('Error processing instance data:', error);
@@ -90,29 +69,51 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     );
   }
 
-  if (!dataSet) {
-    return (
-      <MainLayout>
-        <div className="max-w-3xl mx-auto space-y-6">
-          <div className="text-center">
-            <h2 className="text-lg font-medium">Dataset Not Found</h2>
-            <Button
-              variant="ghost"
-              onClick={() => setLocation("/reference-data")}
-              className="mt-4"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Reference Data
-            </Button>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
-
   return (
     <MainLayout>
       <div className="max-w-6xl mx-auto space-y-6">
+        {/* Debug Information Card */}
+        <Card className="bg-slate-50">
+          <CardHeader>
+            <CardTitle>Query Debug Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-medium mb-2">Query Parameters:</h3>
+                <pre className="bg-white p-2 rounded">
+                  {JSON.stringify({ dataSetId, isValidId: !isNaN(dataSetId) }, null, 2)}
+                </pre>
+              </div>
+
+              <div>
+                <h3 className="font-medium mb-2">Raw Dataset:</h3>
+                <pre className="bg-white p-2 rounded">
+                  {JSON.stringify({
+                    id: dataSet?.id,
+                    name: dataSet?.name,
+                    typeId: dataSet?.typeId,
+                    description: dataSet?.description,
+                    dataType: typeof dataSet?.data,
+                    hasData: !!dataSet?.data,
+                    data: dataSet?.data
+                  }, null, 2)}
+                </pre>
+              </div>
+
+              <div>
+                <h3 className="font-medium mb-2">Processed Instances:</h3>
+                <pre className="bg-white p-2 rounded">
+                  {JSON.stringify({
+                    count: instances.length,
+                    sample: instances[0],
+                  }, null, 2)}
+                </pre>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -125,35 +126,9 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
 
         <Card>
           <CardHeader>
-            <CardTitle>Reference Data Instances - {dataSet.name}</CardTitle>
+            <CardTitle>Reference Data Instances - {dataSet?.name}</CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Debug information panel */}
-            <div className="mb-4 p-4 bg-gray-100 rounded">
-              <p className="font-medium mb-2">Data Structure:</p>
-              <pre className="text-sm whitespace-pre-wrap">
-                {JSON.stringify({
-                  query: {
-                    id: dataSetId,
-                    succeeded: !!dataSet,
-                  },
-                  dataset: {
-                    id: dataSet.id,
-                    name: dataSet.name,
-                    description: dataSet.description,
-                    typeId: dataSet.typeId,
-                    dataType: typeof dataSet.data,
-                    hasData: !!dataSet.data,
-                    instanceCount: instances.length,
-                  },
-                  firstInstance: instances[0] ? {
-                    key: instances[0][0],
-                    data: instances[0][1]
-                  } : null
-                }, null, 2)}
-              </pre>
-            </div>
-
             {instances.length > 0 ? (
               <Table>
                 <TableHeader>
