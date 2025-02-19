@@ -13,7 +13,7 @@ import type {
   ReferenceDataTypeSchema
 } from "@shared/schema";
 import { useLocation } from "wouter";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export default function ReferenceDataInstancesPage() {
   const { toast } = useToast();
@@ -42,13 +42,31 @@ export default function ReferenceDataInstancesPage() {
     enabled: !!dataSet?.typeId,
   });
 
+  // Debug logs for data loading
+  useEffect(() => {
+    if (dataSet) {
+      console.log('DataSet loaded:', {
+        id: dataSet.id,
+        name: dataSet.name,
+        typeId: dataSet.typeId,
+        instanceCount: dataSet.data ? Object.keys(dataSet.data).length : 0,
+        data: dataSet.data
+      });
+    }
+  }, [dataSet]);
+
+  useEffect(() => {
+    if (schemas.length > 0) {
+      console.log('Schemas loaded:', schemas.map(s => ({ name: s.name, dataType: s.dataType })));
+    }
+  }, [schemas]);
+
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      console.log('Uploading file:', formData.get('file')); // Debug log
+      console.log('Uploading file:', formData.get('file'));
       const res = await fetch(`/api/reference-data/${dataSetId}/bulk-upload`, {
         method: 'POST',
         body: formData,
-        // Don't set Content-Type, let the browser set it with the boundary
       });
       if (!res.ok) {
         const error = await res.json();
@@ -76,14 +94,10 @@ export default function ReferenceDataInstancesPage() {
     },
   });
 
-  // Add debug logs for data
-  console.log('Current dataSet:', dataSet);
-  console.log('Current schemas:', schemas);
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      console.log('Selected file:', file.name, file.type); // Debug log
+      console.log('Selected file:', file.name, file.type);
       setSelectedFile(file);
     }
   };
@@ -93,18 +107,23 @@ export default function ReferenceDataInstancesPage() {
 
     const formData = new FormData();
     formData.append("file", selectedFile);
-    console.log('Uploading file:', selectedFile.name); // Debug log
+    console.log('Uploading file:', selectedFile.name);
     uploadMutation.mutate(formData);
   };
 
   const downloadTemplate = () => {
-    // Download the pre-filled template with sample data
     window.location.href = `/api/reference-data/${dataSetId}/template`;
   };
 
-  // Safely get the instances count, handling null/undefined data
+  // Safely get the instances count and data
   const instancesCount = dataSet?.data ? Object.keys(dataSet.data).length : 0;
-  console.log('Instances count:', instancesCount);
+  const instances = dataSet?.data ? Object.entries(dataSet.data) : [];
+
+  console.log('Rendering with:', {
+    instancesCount,
+    hasData: !!dataSet?.data,
+    schemaCount: schemas.length
+  });
 
   if (isLoadingDataSet || isLoadingType || isLoadingSchemas) {
     return (
@@ -135,7 +154,6 @@ export default function ReferenceDataInstancesPage() {
       </MainLayout>
     );
   }
-
 
   return (
     <MainLayout>
@@ -221,11 +239,11 @@ export default function ReferenceDataInstancesPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {Object.entries(dataSet.data || {}).map(([key, values]: [string, any]) => (
+                      {instances.map(([key, instance]) => (
                         <TableRow key={key}>
                           {schemas.map((schema) => (
                             <TableCell key={schema.id}>
-                              {values[schema.name]}
+                              {instance[schema.name]}
                             </TableCell>
                           ))}
                         </TableRow>
