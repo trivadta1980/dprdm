@@ -3,6 +3,14 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations, type InferModel } from "drizzle-orm";
 
+// Add the session table definition if it doesn't exist
+export const sessions = pgTable("session", {
+  sid: text("sid").primaryKey(),
+  sess: jsonb("sess").notNull(),
+  expire: timestamp("expire", { mode: "date" }).notNull(),
+});
+
+// Keep all existing table definitions
 // Add routes type and array
 const availableRoutes = [
   "/reference-types",
@@ -253,3 +261,6 @@ export type InsertReferenceDataSet = z.infer<typeof insertReferenceDataSetSchema
 export type ReferenceDataSet = typeof referenceDataSets.$inferSelect & {
   data: Record<string, ReferenceDataInstance>;
 };
+
+// Export the session type
+export type Session = typeof sessions.$inferSelect;
