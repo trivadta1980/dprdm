@@ -13,11 +13,15 @@ import type {
   ReferenceDataTypeSchema
 } from "@shared/schema";
 import { useLocation } from "wouter";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 
-export default function ReferenceDataInstancesPage() {
+interface Params {
+  id: string;
+}
+
+export default function ReferenceDataInstancesPage({ params }: { params: Params }) {
   const { toast } = useToast();
-  const [_, params] = useLocation();
+  const [location, setLocation] = useLocation();
   const dataSetId = Number(params.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -38,20 +42,6 @@ export default function ReferenceDataInstancesPage() {
     queryKey: ["/api/reference-types", dataSet?.typeId, "schemas"],
     enabled: !!dataSet?.typeId,
   });
-
-  useEffect(() => {
-    if (dataSet) {
-      console.log('DataSet loaded:', {
-        id: dataSet.id,
-        name: dataSet.name,
-        typeId: dataSet.typeId,
-        rawData: dataSet.data,
-        dataType: typeof dataSet.data,
-        hasData: !!dataSet.data,
-        keys: dataSet.data ? Object.keys(dataSet.data) : [],
-      });
-    }
-  }, [dataSet]);
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -242,7 +232,7 @@ export default function ReferenceDataInstancesPage() {
                           {schemas.map((schema) => (
                             <TableCell key={schema.id}>
                               {instance && typeof instance === 'object'
-                                ? String(instance[schema.name] || '')
+                                ? String((instance as Record<string, unknown>)[schema.name] || '')
                                 : ''}
                             </TableCell>
                           ))}
