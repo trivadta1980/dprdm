@@ -2,7 +2,7 @@ import { ReactNode, useState } from "react";
 import { Sidebar } from "./sidebar";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Database } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -56,13 +56,20 @@ export function MainLayout({ children }: MainLayoutProps) {
         <Sidebar className="w-64 hidden md:block" />
 
         <div className="flex-1">
-          <header className="border-b p-4 flex justify-between items-center bg-background">
-            <h1 className="text-xl font-semibold">Welcome, {user?.username}</h1>
+          <header className="border-b p-4 flex justify-between items-center bg-white">
+            <div className="flex items-center gap-3">
+              <Database className="h-6 w-6 text-primary" />
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">Reference Data Management</h1>
+                <p className="text-sm text-gray-500">Welcome, {user?.username}</p>
+              </div>
+            </div>
             <Button 
               variant="ghost" 
               size="sm"
               onClick={() => logoutMutation.mutate()}
               disabled={logoutMutation.isPending}
+              className="hover:bg-red-50 hover:text-red-600 transition-colors"
             >
               <LogOut className="h-4 w-4 mr-2" />
               Logout

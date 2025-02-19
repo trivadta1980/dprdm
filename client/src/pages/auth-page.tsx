@@ -28,7 +28,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { Loader2 } from "lucide-react";
+import { Loader2, Database, GitFork, History, GitCompare } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 type LoginData = Pick<InsertUser, "username" | "password">;
@@ -88,9 +88,9 @@ export default function AuthPage() {
       <div className="flex items-center justify-center p-8">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
+            <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
             <CardDescription>
-              Choose your preferred authentication method
+              Sign in to Reference Data Management Console
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -266,14 +266,48 @@ export default function AuthPage() {
         </Card>
       </div>
 
-      <div className="hidden md:flex flex-col justify-center p-8 bg-muted">
-        <div className="max-w-md mx-auto space-y-4">
-          <h1 className="text-4xl font-bold">Secure Authentication</h1>
-          <p className="text-lg text-muted-foreground">
-            A complete authentication system with role-based access control.
-            Features include secure password storage, session management, and user
-            roles.
+      <div className="hidden md:flex flex-col justify-center p-8 bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div className="max-w-md mx-auto space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Database className="h-10 w-10 text-primary" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+              Reference Data Management
+            </h1>
+          </div>
+          <p className="text-lg text-gray-600">
+            A comprehensive platform for managing reference data, types, and relationships.
+            Features include data versioning, audit history, and cross-reference management.
           </p>
+          <div className="grid grid-cols-2 gap-4 pt-4">
+            <div className="flex items-start gap-2">
+              <Database className="h-5 w-5 text-primary mt-1" />
+              <div>
+                <h3 className="font-medium">Data Management</h3>
+                <p className="text-sm text-gray-500">Centralized reference data control</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <GitFork className="h-5 w-5 text-primary mt-1" />
+              <div>
+                <h3 className="font-medium">Relationships</h3>
+                <p className="text-sm text-gray-500">Define and track data relationships</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <History className="h-5 w-5 text-primary mt-1" />
+              <div>
+                <h3 className="font-medium">Audit History</h3>
+                <p className="text-sm text-gray-500">Track all data changes</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <GitCompare className="h-5 w-5 text-primary mt-1" />
+              <div>
+                <h3 className="font-medium">Crosswalks</h3>
+                <p className="text-sm text-gray-500">Map between different systems</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
