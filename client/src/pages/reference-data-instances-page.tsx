@@ -16,83 +16,26 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   const [_, setLocation] = useLocation();
   const dataSetId = Number(params.id);
 
-  // Add effect to log data loading
-  useEffect(() => {
-    console.log('=== REFERENCE DATA INSTANCE PAGE MOUNT ===');
-    console.log('URL Parameters:', params);
-    console.log('Parsed Dataset ID:', dataSetId);
-  }, [params, dataSetId]);
-
-  // Add effect to log auth status
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const response = await fetch('/api/user', { credentials: 'include' });
-        console.log('Auth check response status:', response.status);
-        if (response.ok) {
-          const userData = await response.json();
-          console.log('User data:', userData);
-        } else {
-          console.log('Not authenticated');
-        }
-      } catch (error) {
-        console.error('Auth check error:', error);
-      }
-    };
-    checkAuth();
-  }, []);
-
-  // Fetch the reference data set with logging
+  // Fetch the reference data set
   const { data: dataSet, isLoading, error } = useQuery<ReferenceDataSet>({
     queryKey: ["/api/reference-data", dataSetId],
     enabled: !!dataSetId && !isNaN(dataSetId),
   });
 
-  // Add immediate logging after query
+  // Add debug logging
   useEffect(() => {
-    console.log('=== REFERENCE DATA QUERY UPDATE ===');
-    console.log('Query State:', {
-      dataSetId,
-      hasData: !!dataSet,
-      dataSetName: dataSet?.name,
-      fullData: dataSet,
-      error: error ? String(error) : null
-    });
-  }, [dataSet, dataSetId, error]);
-
-  // Update the data parsing logic to handle the correct data structure
-  const instances = (() => {
-    if (!dataSet?.data) {
-      console.log('DEBUG: No data in dataset');
-      return [];
+    if (dataSet) {
+      console.log('Reference Data Set:', {
+        id: dataSet.id,
+        name: dataSet.name,
+        data: dataSet.data,
+        dataType: typeof dataSet.data
+      });
     }
+  }, [dataSet]);
 
-    try {
-      const data = dataSet.data;
-      console.log('DEBUG: Raw data content:', data);
-
-      // Check if it's already an object
-      if (typeof data === 'object' && data !== null) {
-        const entries = Object.entries(data);
-        console.log('DEBUG: Parsed entries:', entries);
-        return entries;
-      }
-
-      // Try parsing if it's a string
-      if (typeof data === 'string') {
-        const parsed = JSON.parse(data);
-        const entries = Object.entries(parsed);
-        console.log('DEBUG: Parsed from string:', entries);
-        return entries;
-      }
-
-      console.log('DEBUG: Unknown data format:', typeof data);
-      return [];
-    } catch (error) {
-      console.error('DEBUG: Error parsing data:', error);
-      return [];
-    }
-  })();
+  // Process instances from the JSONB data
+  const instances = dataSet?.data ? Object.entries(dataSet.data) : [];
 
   if (isLoading) {
     return (
@@ -140,18 +83,18 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
 
         <Card>
           <CardHeader>
-            <CardTitle>Reference Data Instances - {dataSet?.name || 'Loading...'}</CardTitle>
+            <CardTitle>Reference Data Instances - {dataSet?.name}</CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Debug information panel */}
+            {/* Debug information */}
             <div className="mb-4 p-4 bg-gray-100 rounded">
               <p className="font-medium mb-2">Debug Information:</p>
               <pre className="text-sm whitespace-pre-wrap">
                 {JSON.stringify({
-                  pageInfo: {
-                    dataSetId,
-                    dataSetName: dataSet?.name,
-                    hasData: !!dataSet,
+                  dataSet: {
+                    id: dataSet?.id,
+                    name: dataSet?.name,
+                    hasData: !!dataSet?.data,
                     instanceCount: instances.length,
                   },
                   rawData: dataSet?.data
@@ -172,7 +115,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
                     <TableRow key={key}>
                       <TableCell>{key}</TableCell>
                       <TableCell>
-                        <pre className="text-sm">
+                        <pre className="text-sm whitespace-pre-wrap">
                           {JSON.stringify(data, null, 2)}
                         </pre>
                       </TableCell>
