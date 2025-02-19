@@ -59,6 +59,9 @@ export default function AuthPage() {
 
   const registerForm = useForm<InsertUser>({
     resolver: zodResolver(insertUserSchema),
+    defaultValues: {
+      roleId: 2, // Default to regular user role
+    }
   });
 
   const resetForm = useForm<{ email: string }>({
@@ -70,12 +73,7 @@ export default function AuthPage() {
   }
 
   function onRegister(data: InsertUser) {
-    // Remove password confirmation before sending to API
-    const { confirmPassword, ...registrationData } = data;
-    registerMutation.mutate({
-      ...registrationData,
-      password: "password123" // Use default password
-    });
+    registerMutation.mutate(data);
   }
 
   function onRequestReset(data: { email: string }) {
