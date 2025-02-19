@@ -268,66 +268,76 @@ export default function ReferenceTypesPage() {
                           Add Field
                         </Button>
                       </div>
-                      <ScrollArea className="h-[300px] rounded-md border p-4">
-                        <div className="space-y-6">
-                          {form.watch("schemas")?.map((schema, index) => (
-                            <div key={index} className="space-y-4">
-                              <div className="flex items-center justify-between">
-                                <h4 className="text-sm font-medium">Field {index + 1}</h4>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => removeSchemaField(index)}
-                                  disabled={index === 0 && form.watch("schemas")?.length === 1}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                              <div className="grid gap-4">
-                                <FormField
-                                  control={form.control}
-                                  name={`schemas.${index}.name`}
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Field Name</FormLabel>
-                                      <FormControl>
-                                        <Input {...field} placeholder="e.g., Country_Name" />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <FormField
-                                  control={form.control}
-                                  name={`schemas.${index}.dataType`}
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Data Type</FormLabel>
-                                      <FormControl>
-                                        <Input {...field} placeholder="e.g., String" />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <FormField
-                                  control={form.control}
-                                  name={`schemas.${index}.description`}
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Description</FormLabel>
-                                      <FormControl>
-                                        <Input {...field} placeholder="e.g., Full name of the country" />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                      <ScrollArea className="h-[400px] rounded-md border">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Field Name</TableHead>
+                              <TableHead>Data Type</TableHead>
+                              <TableHead>Description</TableHead>
+                              <TableHead className="w-[50px]"></TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {form.watch("schemas")?.map((schema, index) => (
+                              <TableRow key={index}>
+                                <TableCell className="p-2">
+                                  <FormField
+                                    control={form.control}
+                                    name={`schemas.${index}.name`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormControl>
+                                          <Input {...field} placeholder="e.g., Country_Name" />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                </TableCell>
+                                <TableCell className="p-2">
+                                  <FormField
+                                    control={form.control}
+                                    name={`schemas.${index}.dataType`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormControl>
+                                          <Input {...field} placeholder="e.g., String" />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                </TableCell>
+                                <TableCell className="p-2">
+                                  <FormField
+                                    control={form.control}
+                                    name={`schemas.${index}.description`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormControl>
+                                          <Input {...field} placeholder="e.g., Full name of the country" />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                </TableCell>
+                                <TableCell className="p-2">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => removeSchemaField(index)}
+                                    disabled={index === 0 && form.watch("schemas")?.length === 1}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
                       </ScrollArea>
                     </div>
 
