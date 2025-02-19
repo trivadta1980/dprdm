@@ -24,7 +24,7 @@ function Router() {
       <ProtectedRoute path="/reference-types" component={ReferenceTypesPage} />
       <ProtectedRoute path="/reference-data" component={ReferenceDataPage} />
       <ProtectedRoute path="/reference-data/create" component={ReferenceDataCreatePage} />
-      <ProtectedRoute path="/reference-data/instances" component={ReferenceDataInstancesPage} />
+      <ProtectedRoute path="/reference-data/:id/instances" component={ReferenceDataInstancesPage} />
       <ProtectedRoute
         path="/relationships"
         component={() => <PlaceholderPage title="Relationship Management" />}

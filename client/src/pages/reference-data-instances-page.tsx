@@ -17,13 +17,10 @@ import { useState, useRef, useEffect } from "react";
 
 export default function ReferenceDataInstancesPage() {
   const { toast } = useToast();
-  const [_, setLocation] = useLocation();
+  const [_, params] = useLocation();
+  const dataSetId = Number(params.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  // Get the data set ID from the URL
-  const params = new URLSearchParams(window.location.search);
-  const dataSetId = Number(params.get("id"));
 
   // Fetch the reference data set
   const { data: dataSet, isLoading: isLoadingDataSet } = useQuery<ReferenceDataSet>({
@@ -112,8 +109,8 @@ export default function ReferenceDataInstancesPage() {
     if (!dataSet?.data) return [];
 
     try {
-      const data = typeof dataSet.data === 'string' 
-        ? JSON.parse(dataSet.data) 
+      const data = typeof dataSet.data === 'string'
+        ? JSON.parse(dataSet.data)
         : dataSet.data;
 
       return Object.entries(data);

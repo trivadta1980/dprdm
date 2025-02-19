@@ -69,7 +69,7 @@ export default function ReferenceDataPage() {
 
   function handleManageInstances(dataSet: ReferenceDataSet) {
     console.log('Navigating to instances page for dataset:', dataSet.id);
-    setLocation(`/reference-data/instances?id=${dataSet.id}`);
+    setLocation(`/reference-data/${dataSet.id}/instances`);
   }
 
   if (isLoading) {
