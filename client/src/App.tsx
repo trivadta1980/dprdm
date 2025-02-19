@@ -14,6 +14,7 @@ import NotFound from "@/pages/not-found";
 import ReferenceDataPage from "@/pages/reference-data-page";
 import ReferenceDataCreatePage from "@/pages/reference-data-create-page";
 import ReferenceDataInstancesPage from "@/pages/reference-data-instances-page";
+import HelpPage from "@/pages/help-page"; // Added import
 
 function Router() {
   console.log('Router: Initializing routes');
@@ -34,6 +35,7 @@ function Router() {
         path="/crosswalks"
         component={() => <PlaceholderPage title="Crosswalk Management" />}
       />
+      <ProtectedRoute path="/help" component={HelpPage} /> {/* Added route */}
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

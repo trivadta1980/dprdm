@@ -2,7 +2,7 @@ import { ReactNode, useState } from "react";
 import { Sidebar } from "./sidebar";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { LogOut, Database } from "lucide-react";
+import { LogOut, Database, HelpCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { type ChangePassword, changePasswordSchema } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -21,6 +22,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
   const [showPasswordDialog, setShowPasswordDialog] = useState(user?.requirePasswordChange ?? false);
+  const [_, setLocation] = useLocation();
 
   const form = useForm<ChangePassword>({
     resolver: zodResolver(changePasswordSchema),
@@ -64,16 +66,27 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <p className="text-sm text-gray-500">Welcome, {user?.username}</p>
               </div>
             </div>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => logoutMutation.mutate()}
-              disabled={logoutMutation.isPending}
-              className="hover:bg-red-50 hover:text-red-600 transition-colors"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setLocation('/help')}
+                className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
+              >
+                <HelpCircle className="h-4 w-4 mr-2" />
+                Help
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => logoutMutation.mutate()}
+                disabled={logoutMutation.isPending}
+                className="hover:bg-red-50 hover:text-red-600 transition-colors"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
           </header>
 
           <main className="p-6">
