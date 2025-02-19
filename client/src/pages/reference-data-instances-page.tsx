@@ -25,40 +25,25 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     });
   }, [params.id, dataSetId]);
 
-  // Fetch the reference data set with debug logging
-  const { data: dataSet, isLoading, error } = useQuery<ReferenceDataSet>({
+  // Fetch the reference data set with explicit typing for JSONB data
+  const { data: dataSet, isLoading, error } = useQuery<
+    ReferenceDataSet & { data: Record<string, Record<string, string>> }
+  >({
     queryKey: ["/api/reference-data", dataSetId],
-    enabled: !!dataSetId && !isNaN(dataSetId),
-    onSuccess: (data) => {
-      console.log('Query succeeded:', {
-        dataReceived: !!data,
-        dataContent: data,
-        dataType: typeof data?.data
-      });
-    },
-    onError: (err) => {
-      console.error('Query failed:', err);
-    }
+    enabled: !!dataSetId && !isNaN(dataSetId)
   });
 
-  // Process instances with proper typing for nested structure
+  // Process instances from the typed data
   const instances = (() => {
-    console.log('Processing dataset:', dataSet);
-
     if (!dataSet?.data) {
       console.log('No data available in dataset');
       return [];
     }
 
     try {
-      // Log the data structure we're working with
-      console.log('Raw data structure:', {
-        type: typeof dataSet.data,
-        content: dataSet.data
-      });
-
+      // Convert the strongly typed data to entries
       const entries = Object.entries(dataSet.data);
-      console.log('Processed entries:', entries);
+      console.log('Processing data entries:', entries);
       return entries;
     } catch (error) {
       console.error('Error processing instance data:', error);
@@ -153,7 +138,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
                       <TableCell className="font-medium">{instanceId}</TableCell>
                       <TableCell>
                         <div className="space-y-2">
-                          {Object.entries(instanceData as Record<string, string>).map(([field, value]) => (
+                          {Object.entries(instanceData).map(([field, value]) => (
                             <div key={field} className="flex gap-2">
                               <span className="font-medium">{field}:</span>
                               <span>{value}</span>
