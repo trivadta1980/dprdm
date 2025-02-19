@@ -47,8 +47,7 @@ export default function ReferenceDataInstancesPage() {
       const res = await apiRequest(
         "POST",
         `/api/reference-data/${dataSetId}/bulk-upload`,
-        formData,
-        { isFormData: true }
+        formData
       );
       return res.json();
     },
@@ -111,7 +110,7 @@ export default function ReferenceDataInstancesPage() {
     );
   }
 
-  if (!dataSet || !type) {
+  if (!dataSet) {
     return (
       <MainLayout>
         <div className="max-w-3xl mx-auto space-y-6">
@@ -130,6 +129,9 @@ export default function ReferenceDataInstancesPage() {
       </MainLayout>
     );
   }
+
+  // Safely get the instances count, handling null/undefined data
+  const instancesCount = dataSet.data ? Object.keys(dataSet.data).length : 0;
 
   return (
     <MainLayout>
@@ -150,6 +152,7 @@ export default function ReferenceDataInstancesPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
+              {/* Schema Definition Section */}
               <div className="flex flex-col gap-2">
                 <h3 className="text-lg font-medium">Schema Definition</h3>
                 <Table>
@@ -157,7 +160,6 @@ export default function ReferenceDataInstancesPage() {
                     <TableRow>
                       <TableHead>Field Name</TableHead>
                       <TableHead>Data Type</TableHead>
-                      
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -165,13 +167,13 @@ export default function ReferenceDataInstancesPage() {
                       <TableRow key={schema.id}>
                         <TableCell>{schema.name}</TableCell>
                         <TableCell>{schema.dataType}</TableCell>
-                        
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </div>
 
+              {/* Bulk Upload Section */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-medium">Bulk Upload</h3>
@@ -200,28 +202,37 @@ export default function ReferenceDataInstancesPage() {
                 </div>
               </div>
 
+              {/* Current Instances Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Current Instances</h3>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      {schemas.map((schema) => (
-                        <TableHead key={schema.id}>{schema.name}</TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Object.entries(dataSet.data || {}).map(([key, values]: [string, any]) => (
-                      <TableRow key={key}>
+                <h3 className="text-lg font-medium">
+                  Current Instances ({instancesCount})
+                </h3>
+                {instancesCount > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
                         {schemas.map((schema) => (
-                          <TableCell key={schema.id}>
-                            {values[schema.name]}
-                          </TableCell>
+                          <TableHead key={schema.id}>{schema.name}</TableHead>
                         ))}
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {Object.entries(dataSet.data || {}).map(([key, values]: [string, any]) => (
+                        <TableRow key={key}>
+                          {schemas.map((schema) => (
+                            <TableCell key={schema.id}>
+                              {values[schema.name]}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No instances available. Use the bulk upload feature above to add data.
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
