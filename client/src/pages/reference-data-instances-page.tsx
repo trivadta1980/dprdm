@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, ArrowLeft, Upload, Plus } from "lucide-react";
+import { Loader2, ArrowLeft, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type {
@@ -20,7 +20,7 @@ export default function ReferenceDataInstancesPage() {
   const [_, setLocation] = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  
+
   // Get the data set ID from the URL
   const params = new URLSearchParams(window.location.search);
   const dataSetId = Number(params.get("id"));
@@ -28,7 +28,7 @@ export default function ReferenceDataInstancesPage() {
   // Fetch the reference data set
   const { data: dataSet, isLoading: isLoadingDataSet } = useQuery<ReferenceDataSet>({
     queryKey: ["/api/reference-data", dataSetId],
-    enabled: !!dataSetId,
+    enabled: !!dataSetId && !isNaN(dataSetId),
   });
 
   // Fetch the reference type and its schemas
@@ -157,7 +157,7 @@ export default function ReferenceDataInstancesPage() {
                     <TableRow>
                       <TableHead>Field Name</TableHead>
                       <TableHead>Data Type</TableHead>
-                      <TableHead>Description</TableHead>
+                      
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -165,7 +165,7 @@ export default function ReferenceDataInstancesPage() {
                       <TableRow key={schema.id}>
                         <TableCell>{schema.name}</TableCell>
                         <TableCell>{schema.dataType}</TableCell>
-                        <TableCell>{schema.description}</TableCell>
+                        
                       </TableRow>
                     ))}
                   </TableBody>
