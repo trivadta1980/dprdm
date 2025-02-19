@@ -6,7 +6,7 @@ import connectPg from "connect-pg-simple";
 import { pool } from "./db";
 import { type ReferenceDataType, type InsertReferenceDataType, type ReferenceDataTypeSchema } from "@shared/schema"; // Import necessary types
 import { referenceDataTypes, referenceDataTypeSchemas } from "@shared/schema"; //Import necessary tables
-import { type ReferenceDataSet, type InsertReferenceDataSet } from "@shared/schema"; //Import necessary types for ReferenceDataSet
+import { type ReferenceDataSet, type InsertReferenceDataSet, type ReferenceDataInstance } from "@shared/schema"; //Import necessary types for ReferenceDataSet
 import { referenceDataSets } from "@shared/schema";
 
 
@@ -319,28 +319,32 @@ export class DatabaseStorage implements IStorage {
 
     try {
       const [referenceDataSet] = await db
-        .select({
-          id: referenceDataSets.id,
-          name: referenceDataSets.name,
-          description: referenceDataSets.description,
-          typeId: referenceDataSets.typeId,
-          data: referenceDataSets.data,
-          createdAt: referenceDataSets.createdAt,
-          updatedAt: referenceDataSets.updatedAt,
-        })
+        .select()
         .from(referenceDataSets)
         .where(eq(referenceDataSets.id, id));
 
+      if (!referenceDataSet) {
+        console.log('Storage: No data set found for ID:', id);
+        return undefined;
+      }
+
+      // Cast the data field to the correct type
+      const typedDataSet: ReferenceDataSet = {
+        ...referenceDataSet,
+        data: referenceDataSet.data as Record<string, ReferenceDataInstance>
+      };
+
       // Log the exact structure being returned
       console.log('Storage: Retrieved data set structure:', {
-        hasResult: !!referenceDataSet,
-        fields: referenceDataSet ? Object.keys(referenceDataSet) : [],
-        name: referenceDataSet?.name,
-        id: referenceDataSet?.id,
-        dataType: referenceDataSet ? typeof referenceDataSet.data : 'undefined'
+        hasResult: true,
+        fields: Object.keys(typedDataSet),
+        name: typedDataSet.name,
+        id: typedDataSet.id,
+        dataType: typeof typedDataSet.data,
+        dataContent: typedDataSet.data
       });
 
-      return referenceDataSet;
+      return typedDataSet;
     } catch (error) {
       console.error('Storage: Error fetching reference data set:', error);
       throw error;
@@ -348,14 +352,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllReferenceDataSets(): Promise<ReferenceDataSet[]> {
-    return db.select().from(referenceDataSets);
+    const dataSets = await db.select().from(referenceDataSets);
+    return dataSets.map(dataSet => ({
+      ...dataSet,
+      data: dataSet.data as Record<string, ReferenceDataInstance>
+    }));
   }
 
   async getReferenceDataSetsByType(typeId: number): Promise<ReferenceDataSet[]> {
-    return db
+    const dataSets = await db
       .select()
       .from(referenceDataSets)
       .where(eq(referenceDataSets.typeId, typeId));
+
+    return dataSets.map(dataSet => ({
+      ...dataSet,
+      data: dataSet.data as Record<string, ReferenceDataInstance>
+    }));
   }
 
   async updateReferenceDataSet(
@@ -370,7 +383,11 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(referenceDataSets.id, id))
       .returning();
-    return referenceDataSet;
+
+    return {
+      ...referenceDataSet,
+      data: referenceDataSet.data as Record<string, ReferenceDataInstance>
+    };
   }
 
   async deleteReferenceDataSet(id: number): Promise<boolean> {
