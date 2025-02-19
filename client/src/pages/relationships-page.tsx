@@ -32,7 +32,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { ReferenceDataSet } from "@shared/schema";
+import type { ReferenceDataSet, ReferenceDataTypeSchema } from "@shared/schema";
 import { useState } from "react";
 
 // Form schema for creating relationships
