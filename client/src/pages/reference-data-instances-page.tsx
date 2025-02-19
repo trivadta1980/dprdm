@@ -19,8 +19,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, ArrowLeft, Plus, Pencil, Trash2 } from "lucide-react";
-import type { ReferenceDataSet, ReferenceDataInstance } from "@shared/schema";
+import { Loader2, ArrowLeft, Plus, Pencil, Trash2, History } from "lucide-react";
+import type { ReferenceDataSet, ReferenceDataInstance, HistoryEntry } from "@shared/schema";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,6 +28,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState } from "react";
+import { format } from "date-fns";
 
 interface Params {
   id: string;
@@ -39,6 +40,8 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   const dataSetId = Number(params.id);
   const [editingDataSet, setEditingDataSet] = useState<ReferenceDataInstance | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
+  const [selectedInstanceHistory, setSelectedInstanceHistory] = useState<{ id: string; history: HistoryEntry[] } | null>(null);
 
   // Fetch the reference data set with the correct endpoint
   const { data: dataSet, isLoading, error } = useQuery<ReferenceDataSet>({
@@ -54,7 +57,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     }
     // Get the first instance
     const firstInstance = Object.values(dataSet.data)[0] as ReferenceDataInstance;
-    return Object.keys(firstInstance);
+    return Object.keys(firstInstance).filter(key => key !== '_history');
   })();
 
   // Create a dynamic schema based on the fields
@@ -99,7 +102,17 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
       const newInstanceId = `instance_${Object.keys(currentData).length + 1}`;
       const updatedData = {
         ...currentData,
-        [newInstanceId]: data
+        [newInstanceId]: {
+          ...data,
+          _history: [{
+            timestamp: new Date().toISOString(),
+            changes: Object.entries(data).map(([field, value]) => ({
+              field,
+              oldValue: '',
+              newValue: value
+            }))
+          }]
+        }
       };
 
       const res = await apiRequest(
@@ -130,17 +143,36 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   const editMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: InstanceFormData }) => {
       const currentData = { ...dataSet?.data };
-      const updatedData = {
-        ...currentData,
-        [id]: data
-      };
+      const currentInstance = currentData[id] as ReferenceDataInstance;
+      const changes = Object.entries(data).map(([field, newValue]) => ({
+        field,
+        oldValue: currentInstance[field] || '',
+        newValue
+      })).filter(change => change.oldValue !== change.newValue);
 
-      const res = await apiRequest(
-        "PATCH",
-        `/api/reference-data/${dataSetId}`,
-        { data: updatedData }
-      );
-      return res.json();
+      // Only update history if there are actual changes
+      if (changes.length > 0) {
+        const historyEntry: HistoryEntry = {
+          timestamp: new Date().toISOString(),
+          changes
+        };
+
+        const updatedData = {
+          ...currentData,
+          [id]: {
+            ...data,
+            _history: [...(currentInstance._history || []), historyEntry]
+          }
+        };
+
+        const res = await apiRequest(
+          "PATCH",
+          `/api/reference-data/${dataSetId}`,
+          { data: updatedData }
+        );
+        return res.json();
+      }
+      return null;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
@@ -201,7 +233,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     setEditingDataSet(instance);
     // Pre-fill form with instance data
     Object.entries(instance).forEach(([key, value]) => {
-      if (key !== 'id') {
+      if (key !== 'id' && key !== '_history') {
         form.setValue(key, value);
       }
     });
@@ -212,6 +244,14 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     if (window.confirm("Are you sure you want to delete this instance?")) {
       deleteMutation.mutate(instanceId);
     }
+  }
+
+  function handleShowHistory(instance: { id: string } & ReferenceDataInstance) {
+    setSelectedInstanceHistory({
+      id: instance.id,
+      history: instance._history || []
+    });
+    setIsHistoryDialogOpen(true);
   }
 
   function handleDialogOpenChange(open: boolean) {
@@ -339,6 +379,14 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
                         <Button
                           variant="ghost"
                           size="icon"
+                          onClick={() => handleShowHistory(instance)}
+                          title="View History"
+                        >
+                          <History className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleEdit(instance)}
                         >
                           <Pencil className="h-4 w-4" />
@@ -362,6 +410,40 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
             )}
           </CardContent>
         </Card>
+
+        {/* History Dialog */}
+        <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit History - Instance {selectedInstanceHistory?.id}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {selectedInstanceHistory?.history.length === 0 ? (
+                <p className="text-center text-muted-foreground">No edit history available.</p>
+              ) : (
+                selectedInstanceHistory?.history.map((entry, index) => (
+                  <div key={index} className="border rounded-lg p-4 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-medium">Changes made on:</h4>
+                      <span className="text-sm text-muted-foreground">
+                        {format(new Date(entry.timestamp), 'PPpp')}
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      {entry.changes.map((change, changeIndex) => (
+                        <div key={changeIndex} className="text-sm">
+                          <span className="font-medium">{change.field}:</span>{' '}
+                          <span className="text-red-500 line-through">{change.oldValue}</span>{' '}
+                          <span className="text-green-500">{change.newValue}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );

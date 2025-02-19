@@ -201,8 +201,18 @@ export type User = typeof users.$inferSelect;
 export type ChangePassword = z.infer<typeof changePasswordSchema>;
 
 // Add this type definition after the existing types
+export type HistoryEntry = {
+  timestamp: string;
+  changes: {
+    field: string;
+    oldValue: string;
+    newValue: string;
+  }[];
+};
+
 export type ReferenceDataInstance = {
   [key: string]: string;
+  _history?: HistoryEntry[];
 };
 
 // Add after the existing types
