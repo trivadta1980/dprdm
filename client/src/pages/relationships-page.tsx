@@ -60,6 +60,21 @@ export default function RelationshipsPage() {
     queryKey: ["/api/reference-data"],
   });
 
+  // Get the selected data sets
+  const sourceDataSet = dataSets.find(ds => ds.id.toString() === form.watch("sourceDataSetId"));
+  const targetDataSet = dataSets.find(ds => ds.id.toString() === form.watch("targetDataSetId"));
+
+  // Fetch schemas for selected data sets
+  const { data: sourceSchemas = [] } = useQuery<ReferenceDataTypeSchema[]>({
+    queryKey: [`/api/reference-types/${sourceDataSet?.typeId}/schemas`],
+    enabled: !!sourceDataSet?.typeId,
+  });
+
+  const { data: targetSchemas = [] } = useQuery<ReferenceDataTypeSchema[]>({
+    queryKey: [`/api/reference-types/${targetDataSet?.typeId}/schemas`],
+    enabled: !!targetDataSet?.typeId,
+  });
+
   // Create relationship mutation
   const createMutation = useMutation({
     mutationFn: async (data: CreateRelationshipForm) => {
@@ -226,9 +241,26 @@ export default function RelationshipsPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Source Field</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Enter source field" />
-                          </FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select source field" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {sourceSchemas.map((schema) => (
+                                <SelectItem
+                                  key={schema.id}
+                                  value={schema.name}
+                                >
+                                  {schema.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -239,9 +271,26 @@ export default function RelationshipsPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Target Field</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Enter target field" />
-                          </FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select target field" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {targetSchemas.map((schema) => (
+                                <SelectItem
+                                  key={schema.id}
+                                  value={schema.name}
+                                >
+                                  {schema.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
