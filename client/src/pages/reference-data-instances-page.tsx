@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft } from "lucide-react";
 import type { ReferenceDataSet, ReferenceDataInstance } from "@shared/schema";
 import { useLocation } from "wouter";
-import { useEffect } from "react";
 
 interface Params {
   id: string;
@@ -25,6 +24,8 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
       console.log('Query success, received data:', {
         id: data?.id,
         name: data?.name,
+        typeId: data?.typeId,
+        description: data?.description,
         dataType: typeof data?.data,
         hasData: !!data?.data,
         data: data?.data
@@ -45,7 +46,12 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     try {
       // Convert the strongly typed data to entries
       const entries = Object.entries(dataSet.data);
-      console.log('Processing data entries:', entries);
+      console.log('Processing data entries:', {
+        count: entries.length,
+        sample: entries[0],
+        dataSetName: dataSet.name,
+        dataSetId: dataSet.id
+      });
       return entries;
     } catch (error) {
       console.error('Error processing instance data:', error);
@@ -84,6 +90,26 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     );
   }
 
+  if (!dataSet) {
+    return (
+      <MainLayout>
+        <div className="max-w-3xl mx-auto space-y-6">
+          <div className="text-center">
+            <h2 className="text-lg font-medium">Dataset Not Found</h2>
+            <Button
+              variant="ghost"
+              onClick={() => setLocation("/reference-data")}
+              className="mt-4"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Reference Data
+            </Button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <div className="max-w-6xl mx-auto space-y-6">
@@ -99,7 +125,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
 
         <Card>
           <CardHeader>
-            <CardTitle>Reference Data Instances - {dataSet?.name}</CardTitle>
+            <CardTitle>Reference Data Instances - {dataSet.name}</CardTitle>
           </CardHeader>
           <CardContent>
             {/* Debug information panel */}
@@ -111,13 +137,15 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
                     id: dataSetId,
                     succeeded: !!dataSet,
                   },
-                  dataset: dataSet ? {
-                    id: String(dataSet.id),
-                    name: String(dataSet.name),
+                  dataset: {
+                    id: dataSet.id,
+                    name: dataSet.name,
+                    description: dataSet.description,
+                    typeId: dataSet.typeId,
                     dataType: typeof dataSet.data,
                     hasData: !!dataSet.data,
                     instanceCount: instances.length,
-                  } : null,
+                  },
                   firstInstance: instances[0] ? {
                     key: instances[0][0],
                     data: instances[0][1]

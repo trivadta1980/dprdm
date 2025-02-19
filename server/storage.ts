@@ -316,21 +316,35 @@ export class DatabaseStorage implements IStorage {
 
   async getReferenceDataSet(id: number): Promise<ReferenceDataSet | undefined> {
     console.log('Storage: Fetching reference data set with ID:', id);
-    const [referenceDataSet] = await db
-      .select({
-        id: referenceDataSets.id,
-        name: referenceDataSets.name,
-        description: referenceDataSets.description,
-        typeId: referenceDataSets.typeId,
-        data: referenceDataSets.data,
-        createdAt: referenceDataSets.createdAt,
-        updatedAt: referenceDataSets.updatedAt,
-      })
-      .from(referenceDataSets)
-      .where(eq(referenceDataSets.id, id));
 
-    console.log('Storage: Retrieved data set:', referenceDataSet);
-    return referenceDataSet;
+    try {
+      const [referenceDataSet] = await db
+        .select({
+          id: referenceDataSets.id,
+          name: referenceDataSets.name,
+          description: referenceDataSets.description,
+          typeId: referenceDataSets.typeId,
+          data: referenceDataSets.data,
+          createdAt: referenceDataSets.createdAt,
+          updatedAt: referenceDataSets.updatedAt,
+        })
+        .from(referenceDataSets)
+        .where(eq(referenceDataSets.id, id));
+
+      // Log the exact structure being returned
+      console.log('Storage: Retrieved data set structure:', {
+        hasResult: !!referenceDataSet,
+        fields: referenceDataSet ? Object.keys(referenceDataSet) : [],
+        name: referenceDataSet?.name,
+        id: referenceDataSet?.id,
+        dataType: referenceDataSet ? typeof referenceDataSet.data : 'undefined'
+      });
+
+      return referenceDataSet;
+    } catch (error) {
+      console.error('Storage: Error fetching reference data set:', error);
+      throw error;
+    }
   }
 
   async getAllReferenceDataSets(): Promise<ReferenceDataSet[]> {
