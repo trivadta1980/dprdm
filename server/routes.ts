@@ -152,17 +152,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      console.log('GET /api/reference-data/:id - Fetching dataset:', req.params.id);
-      const dataSet = await storage.getReferenceDataSet(Number(req.params.id));
+      console.log('GET /api/reference-data/:id - Request params:', req.params);
+      const dataSetId = Number(req.params.id);
+      console.log('GET /api/reference-data/:id - Fetching dataset:', dataSetId);
+
+      const dataSet = await storage.getReferenceDataSet(dataSetId);
+      console.log('GET /api/reference-data/:id - Raw dataset from storage:', dataSet);
+
       if (dataSet) {
-        console.log('GET /api/reference-data/:id - Dataset found:', dataSet);
+        // Log the structure of the data before sending
+        console.log('GET /api/reference-data/:id - Dataset structure:', {
+          id: dataSet.id,
+          name: dataSet.name,
+          dataType: typeof dataSet.data,
+          dataContent: dataSet.data
+        });
         res.json(dataSet);
       } else {
         console.log('GET /api/reference-data/:id - Dataset not found');
         res.sendStatus(404);
       }
     } catch (error) {
-      console.error('GET /api/reference-data/:id - Error fetching reference data set:', error); //Added logging
+      console.error('GET /api/reference-data/:id - Error:', error);
       res.status(500).json({ error: String(error) });
     }
   });

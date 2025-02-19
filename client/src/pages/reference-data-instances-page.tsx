@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft } from "lucide-react";
 import type { ReferenceDataSet } from "@shared/schema";
 import { useLocation } from "wouter";
+import { useEffect } from "react";
 
 interface Params {
   id: string;
@@ -15,23 +16,49 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   const [_, setLocation] = useLocation();
   const dataSetId = Number(params.id);
 
-  // Fetch the reference data set
+  // Add debug logging for params
+  useEffect(() => {
+    console.log('Component initialized with params:', {
+      rawId: params.id,
+      parsedId: dataSetId,
+      isValidNumber: !isNaN(dataSetId)
+    });
+  }, [params.id, dataSetId]);
+
+  // Fetch the reference data set with debug logging
   const { data: dataSet, isLoading, error } = useQuery<ReferenceDataSet>({
     queryKey: ["/api/reference-data", dataSetId],
     enabled: !!dataSetId && !isNaN(dataSetId),
+    onSuccess: (data) => {
+      console.log('Query succeeded:', {
+        dataReceived: !!data,
+        dataContent: data,
+        dataType: typeof data?.data
+      });
+    },
+    onError: (err) => {
+      console.error('Query failed:', err);
+    }
   });
 
   // Process instances with proper typing for nested structure
   const instances = (() => {
-    if (!dataSet?.data || typeof dataSet.data !== 'object') {
-      console.log('No valid data available:', dataSet?.data);
+    console.log('Processing dataset:', dataSet);
+
+    if (!dataSet?.data) {
+      console.log('No data available in dataset');
       return [];
     }
 
     try {
-      // Handle the nested structure where each instance has fields
+      // Log the data structure we're working with
+      console.log('Raw data structure:', {
+        type: typeof dataSet.data,
+        content: dataSet.data
+      });
+
       const entries = Object.entries(dataSet.data);
-      console.log('Processed data entries:', entries);
+      console.log('Processed entries:', entries);
       return entries;
     } catch (error) {
       console.error('Error processing instance data:', error);
@@ -93,15 +120,21 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
               <p className="font-medium mb-2">Data Structure:</p>
               <pre className="text-sm whitespace-pre-wrap">
                 {JSON.stringify({
-                  dataset: {
-                    name: dataSet?.name,
-                    instanceCount: instances.length,
+                  query: {
+                    id: dataSetId,
+                    succeeded: !!dataSet,
                   },
+                  dataset: dataSet ? {
+                    id: dataSet.id,
+                    name: dataSet.name,
+                    dataType: typeof dataSet.data,
+                    hasData: !!dataSet.data,
+                    instanceCount: instances.length,
+                  } : null,
                   firstInstance: instances[0] ? {
                     key: instances[0][0],
                     data: instances[0][1]
-                  } : null,
-                  allData: dataSet?.data
+                  } : null
                 }, null, 2)}
               </pre>
             </div>
