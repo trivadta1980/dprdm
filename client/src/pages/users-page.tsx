@@ -41,6 +41,7 @@ export default function UsersPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
 
   const form = useForm<InsertUser>({
     resolver: zodResolver(insertUserSchema),
@@ -132,12 +133,29 @@ export default function UsersPage() {
   });
 
   function onSubmit(data: InsertUser) {
+    const [debugInfo, setDebugInfo] = useState<string[]>([]);
+    
+    setDebugInfo(prev => [...prev, "Starting user creation..."]);
+    
     createMutation.mutate({
       email: data.email,
       username: data.username,
       password: "password123", // Use default password
       confirmPassword: "password123", // Add confirmPassword
       roleId: data.roleId ?? 3, // Default to user role (ID 3) if not selected
+    }, {
+      onMutate: () => {
+        setDebugInfo(prev => [...prev, `Sending request with data: ${JSON.stringify(data)}`]);
+      },
+      onError: (error) => {
+        setDebugInfo(prev => [...prev, `Error occurred: ${error.message}`]);
+      },
+      onSuccess: (response) => {
+        setDebugInfo(prev => [...prev, `User created successfully: ${JSON.stringify(response)}`]);
+      },
+      onSettled: () => {
+        setDebugInfo(prev => [...prev, "Request completed"]);
+      }
     });
   }
 
@@ -275,6 +293,18 @@ export default function UsersPage() {
                     </Button>
                   </form>
                 </Form>
+              {debugInfo.length > 0 && (
+                  <div className="mt-4 p-2 bg-gray-100 rounded-md">
+                    <h3 className="font-semibold mb-2">Debug Information:</h3>
+                    <ul className="text-sm space-y-1">
+                      {debugInfo.map((info, index) => (
+                        <li key={index} className="text-gray-600">
+                          {info}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </DialogContent>
             </Dialog>
           </CardHeader>
