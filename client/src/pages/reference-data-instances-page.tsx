@@ -15,14 +15,39 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   const [_, setLocation] = useLocation();
   const dataSetId = Number(params.id);
 
+  console.log('ReferenceDataInstancesPage: Loading data for ID:', dataSetId);
+
   // Fetch the reference data set
   const { data: dataSet, isLoading } = useQuery<ReferenceDataSet>({
     queryKey: ["/api/reference-data", dataSetId],
     enabled: !!dataSetId && !isNaN(dataSetId),
   });
 
+  console.log('Raw dataset from API:', dataSet);
+
   // Parse instances from the data
-  const instances = dataSet?.data ? Object.entries(dataSet.data) : [];
+  const instances = (() => {
+    if (!dataSet?.data) {
+      console.log('No data in dataset');
+      return [];
+    }
+
+    try {
+      const data = typeof dataSet.data === 'string' 
+        ? JSON.parse(dataSet.data) 
+        : dataSet.data;
+
+      console.log('Parsed data:', data);
+      const entries = Object.entries(data);
+      console.log('Parsed instances:', entries);
+      return entries;
+    } catch (error) {
+      console.error('Error parsing instance data:', error);
+      return [];
+    }
+  })();
+
+  console.log('Final instances to render:', instances);
 
   if (isLoading) {
     return (
