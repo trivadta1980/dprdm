@@ -12,12 +12,6 @@ import {
   Laptop2
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 interface SidebarProps {
   className?: string;
@@ -35,13 +29,11 @@ export function Sidebar({ className }: SidebarProps) {
             title: "User Management",
             href: "/users",
             icon: Users,
-            tooltip: "Manage user accounts, permissions and access control",
           },
           {
             title: "Role Management",
             href: "/roles",
             icon: UserCog,
-            tooltip: "Configure user roles and their associated permissions",
           },
         ]
       : []),
@@ -50,28 +42,24 @@ export function Sidebar({ className }: SidebarProps) {
       href: "/reference-types",
       icon: FileJson,
       requiresPermission: true,
-      tooltip: "Define and manage the structure of different reference data types",
     },
     {
       title: "Reference Data",
       href: "/reference-data",
       icon: Database,
       requiresPermission: true,
-      tooltip: "Create and manage reference data sets based on defined types",
     },
     {
       title: "Relationships",
       href: "/relationships",
       icon: GitFork,
       requiresPermission: true,
-      tooltip: "Define relationships between different reference data sets",
     },
     {
       title: "Crosswalks",
       href: "/crosswalks",
       icon: GitCompare,
       requiresPermission: true,
-      tooltip: "Map and transform data between different reference data sets",
     },
   ];
 
@@ -92,30 +80,22 @@ export function Sidebar({ className }: SidebarProps) {
           </div>
           <ScrollArea className="px-1">
             <div className="space-y-1">
-              <TooltipProvider>
-                {filteredMenuItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Tooltip key={item.href}>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant={location === item.href ? "secondary" : "ghost"}
-                          className="w-full justify-start"
-                          asChild
-                        >
-                          <Link href={item.href}>
-                            <Icon className="mr-2 h-4 w-4" />
-                            {item.title}
-                          </Link>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" className="max-w-[200px]">
-                        <p>{item.tooltip}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                })}
-              </TooltipProvider>
+              {filteredMenuItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Button
+                    key={item.href}
+                    variant={location === item.href ? "secondary" : "ghost"}
+                    className="w-full justify-start"
+                    asChild
+                  >
+                    <Link href={item.href}>
+                      <Icon className="mr-2 h-4 w-4" />
+                      {item.title}
+                    </Link>
+                  </Button>
+                );
+              })}
             </div>
           </ScrollArea>
         </div>

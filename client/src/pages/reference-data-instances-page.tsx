@@ -29,12 +29,6 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState } from "react";
 import { format } from "date-fns";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 interface Params {
   id: string;
@@ -280,81 +274,65 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     <MainLayout>
       <div className="max-w-7xl mx-auto space-y-8 px-4 py-6">
         <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow-sm">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  onClick={() => setLocation("/reference-data")}
-                  className="hover:bg-blue-50 transition-colors"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Reference Data
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Return to reference data sets list</p>
-              </TooltipContent>
-            </Tooltip>
+          <Button
+            variant="ghost"
+            onClick={() => setLocation("/reference-data")}
+            className="hover:bg-blue-50 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Reference Data
+          </Button>
 
-            <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
-              <DialogTrigger asChild>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button className="bg-primary hover:bg-primary/90 text-white shadow-sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add New Instance
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Create a new data instance in this reference data set</p>
-                  </TooltipContent>
-                </Tooltip>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle className="text-xl font-semibold text-gray-900">
-                    {editingDataSet ? "Edit Instance" : "Add New Instance"}
-                  </DialogTitle>
-                </DialogHeader>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    {schemaFields.map((field) => (
-                      <FormField
-                        key={field.name}
-                        control={form.control}
-                        name={field.name}
-                        render={({ field: { value, onChange } }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-medium text-gray-700">{field.name}</FormLabel>
-                            <FormControl>
-                              <Input
-                                value={value}
-                                onChange={onChange}
-                                placeholder={`Enter ${field.name}`}
-                                className="focus:ring-2 focus:ring-primary/20"
-                              />
-                            </FormControl>
-                            <FormMessage className="text-xs" />
-                          </FormItem>
-                        )}
-                      />
-                    ))}
-                    <Button
-                      type="submit"
-                      className="w-full bg-primary hover:bg-primary/90 text-white shadow-sm"
-                      disabled={addMutation.isPending || editMutation.isPending}
-                    >
-                      {(addMutation.isPending || editMutation.isPending) && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
+            <DialogTrigger asChild>
+              <Button className="bg-primary hover:bg-primary/90 text-white shadow-sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Add New Instance
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-semibold text-gray-900">
+                  {editingDataSet ? "Edit Instance" : "Add New Instance"}
+                </DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  {schemaFields.map((field) => (
+                    <FormField
+                      key={field.name}
+                      control={form.control}
+                      name={field.name}
+                      render={({ field: { value, onChange } }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">{field.name}</FormLabel>
+                          <FormControl>
+                            <Input
+                              value={value}
+                              onChange={onChange}
+                              placeholder={`Enter ${field.name}`}
+                              className="focus:ring-2 focus:ring-primary/20"
+                            />
+                          </FormControl>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
                       )}
-                      {editingDataSet ? "Update Instance" : "Save Instance"}
-                    </Button>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-          </TooltipProvider>
+                    />
+                  ))}
+                  <Button
+                    type="submit"
+                    className="w-full bg-primary hover:bg-primary/90 text-white shadow-sm"
+                    disabled={addMutation.isPending || editMutation.isPending}
+                  >
+                    {(addMutation.isPending || editMutation.isPending) && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    {editingDataSet ? "Update Instance" : "Save Instance"}
+                  </Button>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <Card className="shadow-lg border-0">
@@ -365,113 +343,70 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <TooltipProvider>
-              {instances.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50">
-                      <TableHead className="text-sm font-semibold text-gray-700">
-                        <Tooltip>
-                          <TooltipTrigger>Instance ID</TooltipTrigger>
-                          <TooltipContent>
-                            <p>Unique identifier for this data instance</p>
-                          </TooltipContent>
-                        </Tooltip>
+            {instances.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="text-sm font-semibold text-gray-700">Instance ID</TableHead>
+                    {schemaFields.map((field) => (
+                      <TableHead key={field.name} className="text-sm font-semibold text-gray-700">
+                        {field.name}
                       </TableHead>
-                      {schemaFields.map((field) => (
-                        <TableHead key={field.name} className="text-sm font-semibold text-gray-700">
-                          <Tooltip>
-                            <TooltipTrigger>{field.name}</TooltipTrigger>
-                            <TooltipContent>
-                              <p>Field type: {field.dataType}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TableHead>
-                      ))}
-                      <TableHead className="text-right text-sm font-semibold text-gray-700">
-                        <Tooltip>
-                          <TooltipTrigger>Actions</TooltipTrigger>
-                          <TooltipContent>
-                            <p>View history, edit, or delete this instance</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {instances.map((instance) => (
-                      <TableRow key={instance.id} className="hover:bg-gray-50 transition-colors">
-                        <TableCell className="font-medium text-gray-900">{instance.id}</TableCell>
-                        {schemaFields.map((field) => (
-                          <TableCell key={field.name} className="text-gray-700">
-                            {instance[field.name]}
-                          </TableCell>
-                        ))}
-                        <TableCell className="text-right space-x-1">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleShowHistory(instance)}
-                                className="hover:bg-blue-50"
-                              >
-                                <History className="h-4 w-4 text-blue-600" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>View edit history for this instance</p>
-                            </TooltipContent>
-                          </Tooltip>
-
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEdit(instance)}
-                                className="hover:bg-green-50"
-                              >
-                                <Pencil className="h-4 w-4 text-green-600" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Edit this instance</p>
-                            </TooltipContent>
-                          </Tooltip>
-
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDelete(instance.id)}
-                                className="hover:bg-red-50"
-                              >
-                                <Trash2 className="h-4 w-4 text-red-600" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Delete this instance</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TableCell>
-                      </TableRow>
                     ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="text-center py-12 bg-gray-50 rounded-lg">
-                  <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 font-medium">No instances available for this reference data set.</p>
-                  <p className="text-sm text-gray-500 mt-1">Click the "Add New Instance" button to create one.</p>
-                </div>
-              )}
-            </TooltipProvider>
+                    <TableHead className="text-right text-sm font-semibold text-gray-700">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {instances.map((instance) => (
+                    <TableRow key={instance.id} className="hover:bg-gray-50 transition-colors">
+                      <TableCell className="font-medium text-gray-900">{instance.id}</TableCell>
+                      {schemaFields.map((field) => (
+                        <TableCell key={field.name} className="text-gray-700">
+                          {instance[field.name]}
+                        </TableCell>
+                      ))}
+                      <TableCell className="text-right space-x-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleShowHistory(instance)}
+                          className="hover:bg-blue-50"
+                          title="View History"
+                        >
+                          <History className="h-4 w-4 text-blue-600" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(instance)}
+                          className="hover:bg-green-50"
+                        >
+                          <Pencil className="h-4 w-4 text-green-600" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(instance.id)}
+                          className="hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-12 bg-gray-50 rounded-lg">
+                <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 font-medium">No instances available for this reference data set.</p>
+                <p className="text-sm text-gray-500 mt-1">Click the "Add New Instance" button to create one.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* History Dialog remains the same */}
+        {/* History Dialog with improved styling */}
         <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
