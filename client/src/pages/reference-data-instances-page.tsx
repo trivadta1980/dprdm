@@ -16,11 +16,6 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   const [_, setLocation] = useLocation();
   const dataSetId = Number(params.id);
 
-  console.log('=== ReferenceDataInstancesPage Debug ===');
-  console.log('1. Component Initialization');
-  console.log('- Params received:', params);
-  console.log('- Parsed dataSetId:', dataSetId);
-
   // Add effect to log auth status
   useEffect(() => {
     const checkAuth = async () => {
@@ -46,52 +41,51 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     enabled: !!dataSetId && !isNaN(dataSetId),
   });
 
-  // Add immediate logging after query
-  console.log('Dataset Query Results:', {
+  // Add immediate logging after query with clear markers
+  console.log('=== REFERENCE DATA INSTANCE DEBUG ===');
+  console.log('Query Response:', {
     dataSetId,
     hasData: !!dataSet,
     dataSetName: dataSet?.name,
-    instanceCount: dataSet?.data ? Object.keys(dataSet.data).length : 0
+    fullData: dataSet,
+    dataContent: dataSet?.data
   });
-
-  console.log('2. Query State');
-  console.log('- isLoading:', isLoading);
-  console.log('- error:', error);
-  console.log('- Raw dataset:', dataSet);
 
   // Update the data parsing logic to handle the correct data structure
   const instances = (() => {
-    console.log('3. Data Processing');
-
     if (!dataSet?.data) {
-      console.log('- No data in dataset');
+      console.log('DEBUG: No data in dataset');
       return [];
     }
 
     try {
-      console.log('- Processing data type:', typeof dataSet.data);
-      const data = typeof dataSet.data === 'string'
-        ? JSON.parse(dataSet.data)
-        : dataSet.data;
+      const data = dataSet.data;
+      console.log('DEBUG: Raw data content:', data);
 
-      console.log('- Parsed data:', data);
-      const entries = Object.entries(data);
-      console.log('- Extracted entries:', entries);
-      return entries;
+      // Check if it's already an object
+      if (typeof data === 'object' && data !== null) {
+        const entries = Object.entries(data);
+        console.log('DEBUG: Parsed entries:', entries);
+        return entries;
+      }
+
+      // Try parsing if it's a string
+      if (typeof data === 'string') {
+        const parsed = JSON.parse(data);
+        const entries = Object.entries(parsed);
+        console.log('DEBUG: Parsed from string:', entries);
+        return entries;
+      }
+
+      console.log('DEBUG: Unknown data format:', typeof data);
+      return [];
     } catch (error) {
-      console.error('- Error parsing instance data:', error);
+      console.error('DEBUG: Error parsing data:', error);
       return [];
     }
   })();
 
-  console.log('4. Render Preparation');
-  console.log('- Final instances to render:', instances);
-  console.log('- Will show loading?', isLoading);
-  console.log('- Will show error?', !!error);
-  console.log('- Will show no data message?', instances.length === 0);
-
   if (isLoading) {
-    console.log('Rendering: Loading state');
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-[200px]">
@@ -102,7 +96,6 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   }
 
   if (error) {
-    console.log('Rendering: Error state');
     return (
       <MainLayout>
         <div className="max-w-3xl mx-auto space-y-6">
@@ -123,28 +116,6 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     );
   }
 
-  if (!dataSet) {
-    console.log('Rendering: No dataset state');
-    return (
-      <MainLayout>
-        <div className="max-w-3xl mx-auto space-y-6">
-          <div className="text-center">
-            <h2 className="text-lg font-medium">Reference Data Set not found</h2>
-            <Button
-              variant="ghost"
-              onClick={() => setLocation("/reference-data")}
-              className="mt-4"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Reference Data
-            </Button>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
-
-  console.log('Rendering: Main content');
   return (
     <MainLayout>
       <div className="max-w-6xl mx-auto space-y-6">
@@ -160,9 +131,21 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
 
         <Card>
           <CardHeader>
-            <CardTitle>Reference Data Instances - {dataSet.name}</CardTitle>
+            <CardTitle>Reference Data Instances - {dataSet?.name || 'Loading...'}</CardTitle>
           </CardHeader>
           <CardContent>
+            {/* Add debug info */}
+            <div className="mb-4 p-4 bg-gray-100 rounded">
+              <p>Debug Info:</p>
+              <pre className="text-sm">
+                {JSON.stringify({
+                  dataSetId,
+                  dataSetName: dataSet?.name,
+                  instanceCount: instances.length,
+                }, null, 2)}
+              </pre>
+            </div>
+
             {instances.length > 0 ? (
               <Table>
                 <TableHeader>
