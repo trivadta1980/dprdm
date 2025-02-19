@@ -13,6 +13,7 @@ import PlaceholderPage from "@/pages/placeholder-page";
 import NotFound from "@/pages/not-found";
 import ReferenceDataPage from "@/pages/reference-data-page";
 import ReferenceDataCreatePage from "@/pages/reference-data-create-page";
+import ReferenceDataInstancesPage from "@/pages/reference-data-instances-page";
 
 function Router() {
   return (
@@ -23,6 +24,7 @@ function Router() {
       <ProtectedRoute path="/reference-types" component={ReferenceTypesPage} />
       <ProtectedRoute path="/reference-data" component={ReferenceDataPage} />
       <ProtectedRoute path="/reference-data/create" component={ReferenceDataCreatePage} />
+      <ProtectedRoute path="/reference-data/instances" component={ReferenceDataInstancesPage} />
       <ProtectedRoute
         path="/relationships"
         component={() => <PlaceholderPage title="Relationship Management" />}

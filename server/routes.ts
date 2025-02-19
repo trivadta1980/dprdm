@@ -2,10 +2,14 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
+import multer from "multer";
+import { parse } from "csv-parse";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication and user management routes
   setupAuth(app);
+
+  const upload = multer({ storage: multer.memoryStorage() });
 
   // Admin-only routes for user management
   app.get("/api/users", async (req, res) => {
@@ -119,14 +123,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/reference-data/type/:typeId", async (req, res) => {
+  app.get("/api/reference-data/:id", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
-      const dataSets = await storage.getReferenceDataSetsByType(Number(req.params.typeId));
-      res.json(dataSets);
+      const dataSet = await storage.getReferenceDataSet(Number(req.params.id));
+      if (dataSet) {
+        res.json(dataSet);
+      } else {
+        res.sendStatus(404);
+      }
     } catch (error) {
-      console.error('Error fetching reference data sets by type:', error);
+      console.error('Error fetching reference data set:', error);
       res.status(500).json({ error: String(error) });
     }
   });
@@ -139,6 +147,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(dataSet);
     } catch (error) {
       console.error('Error creating reference data set:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  // New route for bulk uploading instances
+  app.post("/api/reference-data/:id/bulk-upload", upload.single("file"), async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const dataSetId = Number(req.params.id);
+      const file = req.file;
+
+      if (!file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const dataSet = await storage.getReferenceDataSet(dataSetId);
+      if (!dataSet) {
+        return res.status(404).json({ error: "Reference Data Set not found" });
+      }
+
+      const schemas = await storage.getReferenceDataTypeSchemas(dataSet.typeId);
+      const schemaNames = schemas.map(s => s.name);
+
+      // Parse CSV
+      const records: any[] = [];
+      const parser = parse({
+        columns: true,
+        skip_empty_lines: true
+      });
+
+      parser.on('readable', function() {
+        let record;
+        while ((record = parser.read()) !== null) {
+          // Validate record against schema
+          const validRecord: Record<string, any> = {};
+          for (const schemaName of schemaNames) {
+            if (record[schemaName] === undefined) {
+              throw new Error(`Missing required field: ${schemaName}`);
+            }
+            validRecord[schemaName] = record[schemaName];
+          }
+          records.push(validRecord);
+        }
+      });
+
+      await new Promise((resolve, reject) => {
+        parser.on('error', reject);
+        parser.on('end', resolve);
+        parser.write(file.buffer);
+        parser.end();
+      });
+
+      // Update data set with new instances
+      const updatedDataSet = await storage.updateReferenceDataSet(dataSetId, {
+        data: records.reduce((acc, record, index) => {
+          acc[`instance_${index + 1}`] = record;
+          return acc;
+        }, {} as Record<string, any>)
+      });
+
+      res.json(updatedDataSet);
+    } catch (error) {
+      console.error('Error processing bulk upload:', error);
       res.status(500).json({ error: String(error) });
     }
   });

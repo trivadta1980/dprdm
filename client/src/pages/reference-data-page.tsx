@@ -3,7 +3,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type {
@@ -67,6 +67,10 @@ export default function ReferenceDataPage() {
     setLocation("/reference-data/create");
   }
 
+  function handleManageInstances(dataSet: ReferenceDataSet) {
+    setLocation(`/reference-data/instances?id=${dataSet.id}`);
+  }
+
   if (isLoading) {
     return (
       <MainLayout>
@@ -95,24 +99,28 @@ export default function ReferenceDataPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Description</TableHead>
-                  <TableHead>Data</TableHead>
+                  <TableHead>Instances</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {dataSets.map((dataSet) => {
                   const type = types.find((t) => t.id === dataSet.typeId);
+                  const instanceCount = Object.keys(dataSet.data || {}).length;
                   return (
                     <TableRow key={dataSet.id}>
                       <TableCell>{dataSet.name}</TableCell>
                       <TableCell>{type?.name}</TableCell>
                       <TableCell>{dataSet.description}</TableCell>
-                      <TableCell>
-                        <pre className="text-xs whitespace-pre-wrap">
-                          {JSON.stringify(dataSet.data, null, 2)}
-                        </pre>
-                      </TableCell>
+                      <TableCell>{instanceCount} records</TableCell>
                       <TableCell className="text-right space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleManageInstances(dataSet)}
+                        >
+                          <Database className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
