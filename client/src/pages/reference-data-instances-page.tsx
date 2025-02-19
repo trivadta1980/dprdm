@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Loader2, ArrowLeft, Plus, Pencil, Trash2, History } from "lucide-react";
-import type { ReferenceDataSet, ReferenceDataInstance, HistoryEntry } from "@shared/schema";
+import type { ReferenceDataSet, ReferenceDataInstance, HistoryEntry, ReferenceDataTypeSchema } from "@shared/schema";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,34 +43,26 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
   const [selectedInstanceHistory, setSelectedInstanceHistory] = useState<{ id: string; history: HistoryEntry[] } | null>(null);
 
-  // Fetch the reference data set with the correct endpoint
-  const { data: dataSet, isLoading, error } = useQuery<ReferenceDataSet>({
+  // Fetch the reference data set
+  const { data: dataSet, isLoading: isLoadingDataSet } = useQuery<ReferenceDataSet>({
     queryKey: [`/api/reference-data/${dataSetId}`],
     enabled: !!dataSetId && !isNaN(dataSetId),
     refetchOnWindowFocus: false
   });
 
-  console.log('Debug: Raw dataset:', dataSet);
-
-  // Get schema fields from the first instance
-  const schemaFields = (() => {
-    if (!dataSet?.data || Object.keys(dataSet.data).length === 0) {
-      console.log('Debug: No data found in dataset');
-      return [];
-    }
-    // Get the first instance
-    const firstInstance = Object.values(dataSet.data)[0] as ReferenceDataInstance;
-    console.log('Debug: First instance:', firstInstance);
-    return Object.keys(firstInstance).filter(key => key !== '_history');
-  })();
+  // Fetch schema fields for the reference type
+  const { data: schemaFields = [], isLoading: isLoadingSchema } = useQuery<ReferenceDataTypeSchema[]>({
+    queryKey: [`/api/reference-types/${dataSet?.typeId}/schemas`],
+    enabled: !!dataSet?.typeId,
+  });
 
   console.log('Debug: Schema fields:', schemaFields);
 
-  // Create a dynamic schema based on the fields
+  // Create a dynamic schema based on the schema fields
   const instanceSchema = z.object(
     schemaFields.reduce((acc, field) => ({
       ...acc,
-      [field]: z.string().min(1, `${field} is required`)
+      [field.name]: z.string().min(1, `${field.name} is required`)
     }), {})
   );
 
@@ -80,7 +72,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     resolver: zodResolver(instanceSchema),
     defaultValues: schemaFields.reduce((acc, field) => ({
       ...acc,
-      [field]: ""
+      [field.name]: ""
     }), {})
   });
 
@@ -271,32 +263,11 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     setIsDialogOpen(open);
   }
 
-  if (isLoading) {
+  if (isLoadingDataSet || isLoadingSchema) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-[200px]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </MainLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <MainLayout>
-        <div className="max-w-3xl mx-auto space-y-6">
-          <div className="text-center">
-            <h2 className="text-lg font-medium text-red-600">Error loading data</h2>
-            <p className="text-sm text-muted-foreground">{String(error)}</p>
-            <Button
-              variant="ghost"
-              onClick={() => setLocation("/reference-data")}
-              className="mt-4"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Reference Data
-            </Button>
-          </div>
         </div>
       </MainLayout>
     );
@@ -331,14 +302,14 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   {schemaFields.map((field) => (
                     <FormField
-                      key={field}
+                      key={field.name}
                       control={form.control}
-                      name={field}
+                      name={field.name}
                       render={({ field: { value, onChange } }) => (
                         <FormItem>
-                          <FormLabel>{field}</FormLabel>
+                          <FormLabel>{field.name}</FormLabel>
                           <FormControl>
-                            <Input value={value} onChange={onChange} placeholder={`Enter ${field}`} />
+                            <Input value={value} onChange={onChange} placeholder={`Enter ${field.name}`} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -372,7 +343,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
                   <TableRow>
                     <TableHead>Instance ID</TableHead>
                     {schemaFields.map((field) => (
-                      <TableHead key={field}>{field}</TableHead>
+                      <TableHead key={field.name}>{field.name}</TableHead>
                     ))}
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -382,7 +353,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
                     <TableRow key={instance.id}>
                       <TableCell className="font-medium">{instance.id}</TableCell>
                       {schemaFields.map((field) => (
-                        <TableCell key={field}>{instance[field]}</TableCell>
+                        <TableCell key={field.name}>{instance[field.name]}</TableCell>
                       ))}
                       <TableCell className="text-right space-x-2">
                         <Button
