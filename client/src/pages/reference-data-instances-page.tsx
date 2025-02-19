@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -307,9 +307,9 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
                         <FormItem>
                           <FormLabel className="text-sm font-medium text-gray-700">{field.name}</FormLabel>
                           <FormControl>
-                            <Input 
-                              value={value} 
-                              onChange={onChange} 
+                            <Input
+                              value={value}
+                              onChange={onChange}
                               placeholder={`Enter ${field.name}`}
                               className="focus:ring-2 focus:ring-primary/20"
                             />
