@@ -1,4 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -24,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Plus, GitFork, Trash2 } from "lucide-react";
 import { useParams } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -66,7 +66,7 @@ export default function RelationshipValuesPage() {
   });
 
   // Fetch available targets for selected source
-  const { data: availableTargets = [] } = useQuery({
+  const { data: availableTargets = [] } = useQuery<Array<{ id: string; [key: string]: any }>>({
     queryKey: [`/api/relationships/${id}/values/available-targets`, selectedSource],
     enabled: !!selectedSource,
   });
@@ -75,7 +75,7 @@ export default function RelationshipValuesPage() {
   const createMutation = useMutation({
     mutationFn: async () => {
       if (!selectedSource || !selectedTarget) return;
-      
+
       const res = await apiRequest("POST", `/api/relationships/${id}/values`, {
         relationshipId: Number(id),
         sourceInstanceId: selectedSource,
@@ -133,9 +133,10 @@ export default function RelationshipValuesPage() {
     instanceId: string,
     dataSet?: ReferenceDataSet,
     field?: string
-  ) {
+  ): string {
     if (!dataSet || !field) return instanceId;
-    return dataSet.data[instanceId]?.[field] || instanceId;
+    const instance = dataSet.data[instanceId];
+    return instance && field in instance ? String(instance[field]) : instanceId;
   }
 
   return (
