@@ -458,6 +458,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add after the existing relationship routes
+  app.get("/api/relationships/:id/values", async (req, res) => {
+    console.log('GET /api/relationships/:id/values - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/relationships/:id/values - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const values = await storage.getRelationshipValues(Number(req.params.id));
+      console.log('GET /api/relationships/:id/values - Values fetched successfully');
+      res.json(values);
+    } catch (error) {
+      console.error('GET /api/relationships/:id/values - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.post("/api/relationships/:id/values", async (req, res) => {
+    console.log('POST /api/relationships/:id/values - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/relationships/:id/values - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const value = await storage.createRelationshipValue(req.body);
+      console.log('POST /api/relationships/:id/values - Value created successfully');
+      res.status(201).json(value);
+    } catch (error) {
+      console.error('POST /api/relationships/:id/values - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.delete("/api/relationships/:id/values/:valueId", async (req, res) => {
+    console.log('DELETE /api/relationships/:id/values/:valueId - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('DELETE /api/relationships/:id/values/:valueId - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const success = await storage.deleteRelationshipValue(Number(req.params.valueId));
+      if (success) {
+        console.log('DELETE /api/relationships/:id/values/:valueId - Value deleted successfully');
+        res.sendStatus(200);
+      } else {
+        console.log('DELETE /api/relationships/:id/values/:valueId - Value not found');
+        res.sendStatus(404);
+      }
+    } catch (error) {
+      console.error('DELETE /api/relationships/:id/values/:valueId - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.get("/api/relationships/:id/values/available-targets", async (req, res) => {
+    console.log('GET /api/relationships/:id/values/available-targets - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/relationships/:id/values/available-targets - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const sourceId = req.query.sourceId as string;
+      if (!sourceId) {
+        return res.status(400).json({ error: "Source ID is required" });
+      }
+      const targets = await storage.getAvailableTargets(Number(req.params.id), sourceId);
+      console.log('GET /api/relationships/:id/values/available-targets - Targets fetched successfully');
+      res.json(targets);
+    } catch (error) {
+      console.error('GET /api/relationships/:id/values/available-targets - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

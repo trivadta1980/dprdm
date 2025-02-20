@@ -68,6 +68,14 @@ export default function RelationshipValuesPage() {
   // Fetch available targets for selected source
   const { data: availableTargets = [] } = useQuery<Array<{ id: string; [key: string]: any }>>({
     queryKey: [`/api/relationships/${id}/values/available-targets`, selectedSource],
+    queryFn: async () => {
+      if (!selectedSource) return [];
+      const res = await apiRequest(
+        "GET",
+        `/api/relationships/${id}/values/available-targets?sourceId=${selectedSource}`
+      );
+      return res.json();
+    },
     enabled: !!selectedSource,
   });
 
