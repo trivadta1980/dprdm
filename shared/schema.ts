@@ -228,6 +228,9 @@ export const insertReferenceDataSetSchema = createInsertSchema(referenceDataSets
   data: z.record(z.string(), z.any()), // Dynamic schema based on reference type
 });
 
+// Add after the existing schemas
+export const insertRelationshipSchema = createInsertSchema(relationships);
+
 // Types
 export type InsertRole = z.infer<typeof insertRoleSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -247,7 +250,7 @@ export type HistoryEntry = {
 };
 
 export type ReferenceDataInstance = {
-  [key: string]: string;
+  [key: string]: string | HistoryEntry[] | undefined;
   _history?: HistoryEntry[];
 };
 
@@ -256,6 +259,10 @@ export type InsertReferenceDataType = z.infer<typeof insertReferenceDataTypeSche
 export type ReferenceDataType = typeof referenceDataTypes.$inferSelect;
 export type ReferenceDataTypeSchema = typeof referenceDataTypeSchemas.$inferSelect;
 export type InsertReferenceDataSet = z.infer<typeof insertReferenceDataSetSchema>;
+
+// Add after the existing types
+export type InsertRelationship = z.infer<typeof insertRelationshipSchema>;
+export type Relationship = typeof relationships.$inferSelect;
 
 // Update the ReferenceDataSet type
 export type ReferenceDataSet = typeof referenceDataSets.$inferSelect & {

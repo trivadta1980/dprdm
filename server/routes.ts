@@ -4,6 +4,7 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import multer from "multer";
 import { parse } from "csv-parse";
+import { insertRelationshipSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication and user management routes
@@ -353,6 +354,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error('DELETE /api/reference-data/:id - Error deleting reference data set:', error); //Added logging
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  // Add relationship routes
+  app.get("/api/relationships", async (req, res) => {
+    console.log('GET /api/relationships - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/relationships - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const relationships = await storage.getAllRelationships();
+      console.log('GET /api/relationships - Relationships fetched successfully');
+      res.json(relationships);
+    } catch (error) {
+      console.error('GET /api/relationships - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.get("/api/relationships/:id", async (req, res) => {
+    console.log('GET /api/relationships/:id - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/relationships/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const relationship = await storage.getRelationship(Number(req.params.id));
+      if (relationship) {
+        console.log('GET /api/relationships/:id - Relationship found');
+        res.json(relationship);
+      } else {
+        console.log('GET /api/relationships/:id - Relationship not found');
+        res.sendStatus(404);
+      }
+    } catch (error) {
+      console.error('GET /api/relationships/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.post("/api/relationships", async (req, res) => {
+    console.log('POST /api/relationships - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/relationships - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const result = insertRelationshipSchema.safeParse(req.body);
+      if (!result.success) {
+        console.log('POST /api/relationships - Invalid data:', result.error);
+        return res.status(400).json(result.error);
+      }
+
+      const relationship = await storage.createRelationship(result.data);
+      console.log('POST /api/relationships - Relationship created successfully');
+      res.status(201).json(relationship);
+    } catch (error) {
+      console.error('POST /api/relationships - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.patch("/api/relationships/:id", async (req, res) => {
+    console.log('PATCH /api/relationships/:id - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('PATCH /api/relationships/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const relationship = await storage.updateRelationship(
+        Number(req.params.id),
+        req.body
+      );
+      console.log('PATCH /api/relationships/:id - Relationship updated successfully');
+      res.json(relationship);
+    } catch (error) {
+      console.error('PATCH /api/relationships/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.delete("/api/relationships/:id", async (req, res) => {
+    console.log('DELETE /api/relationships/:id - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('DELETE /api/relationships/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const success = await storage.deleteRelationship(Number(req.params.id));
+      if (success) {
+        console.log('DELETE /api/relationships/:id - Relationship deleted successfully');
+        res.sendStatus(200);
+      } else {
+        console.log('DELETE /api/relationships/:id - Relationship not found');
+        res.sendStatus(404);
+      }
+    } catch (error) {
+      console.error('DELETE /api/relationships/:id - Error:', error);
       res.status(500).json({ error: String(error) });
     }
   });

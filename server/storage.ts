@@ -1,6 +1,6 @@
 import { users, roles, type User, type InsertUser, type Role, type InsertRole, type UpdateUser } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -8,7 +8,7 @@ import { type ReferenceDataType, type InsertReferenceDataType, type ReferenceDat
 import { referenceDataTypes, referenceDataTypeSchemas } from "@shared/schema"; //Import necessary tables
 import { type ReferenceDataSet, type InsertReferenceDataSet, type ReferenceDataInstance } from "@shared/schema"; //Import necessary types for ReferenceDataSet
 import { referenceDataSets } from "@shared/schema";
-
+import { relationships, type Relationship, type InsertRelationship } from "@shared/schema";
 
 const PostgresSessionStore = connectPg(session);
 
@@ -56,6 +56,14 @@ export interface IStorage {
   getReferenceDataSetsByType(typeId: number): Promise<ReferenceDataSet[]>;
   updateReferenceDataSet(id: number, data: Partial<InsertReferenceDataSet>): Promise<ReferenceDataSet>;
   deleteReferenceDataSet(id: number): Promise<boolean>;
+
+  // Add relationship management methods
+  createRelationship(relationship: InsertRelationship): Promise<Relationship>;
+  getRelationship(id: number): Promise<Relationship | undefined>;
+  getAllRelationships(): Promise<Relationship[]>;
+  getRelationshipsByDataSet(dataSetId: number): Promise<Relationship[]>;
+  updateRelationship(id: number, relationship: Partial<InsertRelationship>): Promise<Relationship>;
+  deleteRelationship(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -396,6 +404,62 @@ export class DatabaseStorage implements IStorage {
       .where(eq(referenceDataSets.id, id))
       .returning();
     return !!referenceDataSet;
+  }
+
+  // Implement relationship management methods
+  async createRelationship(relationship: InsertRelationship): Promise<Relationship> {
+    const [newRelationship] = await db
+      .insert(relationships)
+      .values(relationship)
+      .returning();
+    return newRelationship;
+  }
+
+  async getRelationship(id: number): Promise<Relationship | undefined> {
+    const [relationship] = await db
+      .select()
+      .from(relationships)
+      .where(eq(relationships.id, id));
+    return relationship;
+  }
+
+  async getAllRelationships(): Promise<Relationship[]> {
+    return db.select().from(relationships);
+  }
+
+  async getRelationshipsByDataSet(dataSetId: number): Promise<Relationship[]> {
+    return db
+      .select()
+      .from(relationships)
+      .where(
+        or(
+          eq(relationships.sourceDataSetId, dataSetId),
+          eq(relationships.targetDataSetId, dataSetId)
+        )
+      );
+  }
+
+  async updateRelationship(
+    id: number,
+    updates: Partial<InsertRelationship>
+  ): Promise<Relationship> {
+    const [relationship] = await db
+      .update(relationships)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(relationships.id, id))
+      .returning();
+    return relationship;
+  }
+
+  async deleteRelationship(id: number): Promise<boolean> {
+    const [relationship] = await db
+      .delete(relationships)
+      .where(eq(relationships.id, id))
+      .returning();
+    return !!relationship;
   }
 }
 
