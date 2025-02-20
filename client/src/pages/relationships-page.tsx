@@ -42,8 +42,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { ReferenceDataSet, ReferenceDataTypeSchema, Relationship } from "@shared/schema";
 import { useState } from "react";
 
-// Form schema for creating relationships
-const createRelationshipSchema = z.object({
+// Form schema for relationships
+const relationshipSchema = z.object({
   name: z.string().min(1, "Relationship name is required"),
   sourceDataSetId: z.string(),
   targetDataSetId: z.string(),
@@ -53,14 +53,15 @@ const createRelationshipSchema = z.object({
   targetField: z.string(),
 });
 
-type CreateRelationshipForm = z.infer<typeof createRelationshipSchema>;
+type RelationshipForm = z.infer<typeof relationshipSchema>;
 
 export default function RelationshipsPage() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingRelationship, setEditingRelationship] = useState<Relationship | null>(null);
 
-  const form = useForm<CreateRelationshipForm>({
-    resolver: zodResolver(createRelationshipSchema),
+  const form = useForm<RelationshipForm>({
+    resolver: zodResolver(relationshipSchema),
   });
 
   // Fetch relationships
@@ -88,25 +89,30 @@ export default function RelationshipsPage() {
     enabled: !!targetDataSet?.typeId,
   });
 
-  // Create relationship mutation
-  const createMutation = useMutation({
-    mutationFn: async (data: CreateRelationshipForm) => {
-      const res = await apiRequest("POST", "/api/relationships", data);
+  // Create/Update relationship mutation
+  const mutateRelationship = useMutation({
+    mutationFn: async (data: RelationshipForm) => {
+      const method = editingRelationship ? "PATCH" : "POST";
+      const endpoint = editingRelationship 
+        ? `/api/relationships/${editingRelationship.id}`
+        : "/api/relationships";
+      const res = await apiRequest(method, endpoint, data);
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
       setIsDialogOpen(false);
+      setEditingRelationship(null);
       form.reset();
       toast({
         title: "Success",
-        description: "Relationship created successfully",
+        description: `Relationship ${editingRelationship ? 'updated' : 'created'} successfully`,
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to create relationship",
+        description: error.message || `Failed to ${editingRelationship ? 'update' : 'create'} relationship`,
         variant: "destructive",
       });
     },
@@ -133,8 +139,22 @@ export default function RelationshipsPage() {
     },
   });
 
-  function onSubmit(data: CreateRelationshipForm) {
-    createMutation.mutate(data);
+  function onSubmit(data: RelationshipForm) {
+    mutateRelationship.mutate(data);
+  }
+
+  function handleEdit(relationship: Relationship) {
+    setEditingRelationship(relationship);
+    form.reset({
+      name: relationship.name,
+      sourceDataSetId: relationship.sourceDataSetId.toString(),
+      targetDataSetId: relationship.targetDataSetId.toString(),
+      relationshipType: relationship.relationshipType,
+      cardinality: relationship.cardinality,
+      sourceField: relationship.sourceField,
+      targetField: relationship.targetField,
+    });
+    setIsDialogOpen(true);
   }
 
   function handleDelete(id: number) {
@@ -157,7 +177,13 @@ export default function RelationshipsPage() {
               <GitFork className="h-5 w-5" />
               Relationship Management
             </CardTitle>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog open={isDialogOpen} onOpenChange={(open) => {
+              if (!open) {
+                setEditingRelationship(null);
+                form.reset();
+              }
+              setIsDialogOpen(open);
+            }}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
@@ -166,7 +192,9 @@ export default function RelationshipsPage() {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Create New Relationship</DialogTitle>
+                  <DialogTitle>
+                    {editingRelationship ? 'Edit Relationship' : 'Create New Relationship'}
+                  </DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -354,7 +382,7 @@ export default function RelationshipsPage() {
                       )}
                     />
                     <Button type="submit" className="w-full">
-                      Create Relationship
+                      {editingRelationship ? 'Update' : 'Create'} Relationship
                     </Button>
                   </form>
                 </Form>
@@ -395,7 +423,15 @@ export default function RelationshipsPage() {
                       <TableCell>{getDataSetName(relationship.targetDataSetId)}</TableCell>
                       <TableCell>{relationship.targetField}</TableCell>
                       <TableCell>{relationship.cardinality}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(relationship)}
+                          className="hover:bg-blue-50"
+                        >
+                          <Pencil className="h-4 w-4 text-blue-600" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
