@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,14 +24,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Plus, GitFork } from "lucide-react";
+import { Plus, GitFork, Pencil, Trash2, ArrowRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { ReferenceDataSet, ReferenceDataTypeSchema } from "@shared/schema";
+import type { ReferenceDataSet, ReferenceDataTypeSchema, Relationship } from "@shared/schema";
 import { useState } from "react";
 
 // Form schema for creating relationships
@@ -55,7 +62,12 @@ export default function RelationshipsPage() {
     resolver: zodResolver(createRelationshipSchema),
   });
 
-  // Fetch reference data sets for dropdowns
+  // Fetch relationships
+  const { data: relationships = [], isLoading: isLoadingRelationships } = useQuery<Relationship[]>({
+    queryKey: ["/api/relationships"],
+  });
+
+  // Fetch reference data sets for dropdowns and relationship display
   const { data: dataSets = [] } = useQuery<ReferenceDataSet[]>({
     queryKey: ["/api/reference-data"],
   });
@@ -99,9 +111,41 @@ export default function RelationshipsPage() {
     },
   });
 
+  // Delete relationship mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/relationships/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
+      toast({
+        title: "Success",
+        description: "Relationship deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete relationship",
+        variant: "destructive",
+      });
+    },
+  });
+
   function onSubmit(data: CreateRelationshipForm) {
     createMutation.mutate(data);
   }
+
+  function handleDelete(id: number) {
+    if (window.confirm("Are you sure you want to delete this relationship?")) {
+      deleteMutation.mutate(id);
+    }
+  }
+
+  // Helper function to get dataset name by ID
+  const getDataSetName = (id: number) => {
+    return dataSets.find(ds => ds.id === id)?.name || "Unknown Dataset";
+  };
 
   return (
     <MainLayout>
@@ -304,11 +348,58 @@ export default function RelationshipsPage() {
             </Dialog>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8 text-gray-500">
-              <GitFork className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-              <p>No relationships defined yet.</p>
-              <p className="text-sm">Click the "New Relationship" button to create one.</p>
-            </div>
+            {isLoadingRelationships ? (
+              <div className="flex justify-center items-center h-32">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : relationships.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Source Dataset</TableHead>
+                    <TableHead>Source Field</TableHead>
+                    <TableHead className="w-[100px]">Relationship</TableHead>
+                    <TableHead>Target Dataset</TableHead>
+                    <TableHead>Target Field</TableHead>
+                    <TableHead>Cardinality</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {relationships.map((relationship) => (
+                    <TableRow key={relationship.id}>
+                      <TableCell>{getDataSetName(relationship.sourceDataSetId)}</TableCell>
+                      <TableCell>{relationship.sourceField}</TableCell>
+                      <TableCell>
+                        <span className="inline-flex items-center gap-1 text-sm">
+                          <ArrowRight className="h-4 w-4" />
+                          {relationship.relationshipType}
+                        </span>
+                      </TableCell>
+                      <TableCell>{getDataSetName(relationship.targetDataSetId)}</TableCell>
+                      <TableCell>{relationship.targetField}</TableCell>
+                      <TableCell>{relationship.cardinality}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(relationship.id)}
+                          className="hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <GitFork className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                <p>No relationships defined yet.</p>
+                <p className="text-sm">Click the "New Relationship" button to create one.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
