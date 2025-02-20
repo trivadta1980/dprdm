@@ -128,8 +128,21 @@ export const relationships = pgTable("relationships", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Add after the existing relationships table definition
+export const relationshipValues = pgTable("relationship_values", {
+  id: serial("id").primaryKey(),
+  relationshipId: integer("relationship_id")
+    .references(() => relationships.id)
+    .notNull(),
+  sourceInstanceId: text("source_instance_id").notNull(),
+  targetInstanceId: text("target_instance_id").notNull(),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Add relationships relations
-export const relationshipsRelations = relations(relationships, ({ one }) => ({
+export const relationshipsRelations = relations(relationships, ({ one, many }) => ({
   sourceDataSet: one(referenceDataSets, {
     fields: [relationships.sourceDataSetId],
     references: [referenceDataSets.id],
@@ -138,7 +151,36 @@ export const relationshipsRelations = relations(relationships, ({ one }) => ({
     fields: [relationships.targetDataSetId],
     references: [referenceDataSets.id],
   }),
+  values: many(relationshipValues),
 }));
+
+// Add relationship values relations
+export const relationshipValuesRelations = relations(relationshipValues, ({ one }) => ({
+  relationship: one(relationships, {
+    fields: [relationshipValues.relationshipId],
+    references: [relationships.id],
+  }),
+}));
+
+// Add after existing schemas
+export const insertRelationshipValueSchema = createInsertSchema(relationshipValues).extend({
+  relationshipId: z.number(),
+  sourceInstanceId: z.string(),
+  targetInstanceId: z.string(),
+  metadata: z.record(z.string(), z.any()).optional(),
+});
+
+// Add after existing schemas
+export const insertRelationshipSchema = createInsertSchema(relationships).extend({
+  sourceDataSetId: z.coerce.number(),
+  targetDataSetId: z.coerce.number(),
+  name: z.string().min(1, "Relationship name is required"),
+  relationshipType: z.string(),
+  cardinality: z.string(),
+  sourceField: z.string(),
+  targetField: z.string(),
+});
+
 
 // Base schema without password confirmation
 const baseUserSchema = createInsertSchema(users).pick({
@@ -229,16 +271,10 @@ export const insertReferenceDataSetSchema = createInsertSchema(referenceDataSets
   data: z.record(z.string(), z.any()), // Dynamic schema based on reference type
 });
 
-// Update the insert schema
-export const insertRelationshipSchema = createInsertSchema(relationships).extend({
-  sourceDataSetId: z.coerce.number(),
-  targetDataSetId: z.coerce.number(),
-  name: z.string().min(1, "Relationship name is required"),
-  relationshipType: z.string(),
-  cardinality: z.string(),
-  sourceField: z.string(),
-  targetField: z.string(),
-});
+
+// Add after existing types
+export type RelationshipValue = typeof relationshipValues.$inferSelect;
+export type InsertRelationshipValue = z.infer<typeof insertRelationshipValueSchema>;
 
 // Types
 export type InsertRole = z.infer<typeof insertRoleSchema>;

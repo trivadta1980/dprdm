@@ -1,6 +1,6 @@
 import { users, roles, type User, type InsertUser, type Role, type InsertRole, type UpdateUser } from "@shared/schema";
 import { db } from "./db";
-import { eq, or } from "drizzle-orm";
+import { eq, or, and } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -9,6 +9,9 @@ import { referenceDataTypes, referenceDataTypeSchemas } from "@shared/schema"; /
 import { type ReferenceDataSet, type InsertReferenceDataSet, type ReferenceDataInstance } from "@shared/schema"; //Import necessary types for ReferenceDataSet
 import { referenceDataSets } from "@shared/schema";
 import { relationships, type Relationship, type InsertRelationship } from "@shared/schema";
+import { type RelationshipValue, type InsertRelationshipValue } from "@shared/schema"; //Import necessary types for RelationshipValue
+import { relationshipValues } from "@shared/schema"; //Import necessary table for RelationshipValue
+
 
 const PostgresSessionStore = connectPg(session);
 
@@ -64,6 +67,14 @@ export interface IStorage {
   getRelationshipsByDataSet(dataSetId: number): Promise<Relationship[]>;
   updateRelationship(id: number, relationship: Partial<InsertRelationship>): Promise<Relationship>;
   deleteRelationship(id: number): Promise<boolean>;
+
+  // Add relationship value methods
+  createRelationshipValue(value: InsertRelationshipValue): Promise<RelationshipValue>;
+  getRelationshipValue(id: number): Promise<RelationshipValue | undefined>;
+  getRelationshipValues(relationshipId: number): Promise<RelationshipValue[]>;
+  deleteRelationshipValue(id: number): Promise<boolean>;
+  getAvailableTargets(relationshipId: number, sourceId: string): Promise<Record<string, any>[]>;
+  getAvailableSources(relationshipId: number, targetId: string): Promise<Record<string, any>[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -460,6 +471,112 @@ export class DatabaseStorage implements IStorage {
       .where(eq(relationships.id, id))
       .returning();
     return !!relationship;
+  }
+
+  // Implement relationship value methods
+  async createRelationshipValue(value: InsertRelationshipValue): Promise<RelationshipValue> {
+    const [relationshipValue] = await db
+      .insert(relationshipValues)
+      .values(value)
+      .returning();
+    return relationshipValue;
+  }
+
+  async getRelationshipValue(id: number): Promise<RelationshipValue | undefined> {
+    const [value] = await db
+      .select()
+      .from(relationshipValues)
+      .where(eq(relationshipValues.id, id));
+    return value;
+  }
+
+  async getRelationshipValues(relationshipId: number): Promise<RelationshipValue[]> {
+    return db
+      .select()
+      .from(relationshipValues)
+      .where(eq(relationshipValues.relationshipId, relationshipId));
+  }
+
+  async deleteRelationshipValue(id: number): Promise<boolean> {
+    const [value] = await db
+      .delete(relationshipValues)
+      .where(eq(relationshipValues.id, id))
+      .returning();
+    return !!value;
+  }
+
+  async getAvailableTargets(
+    relationshipId: number,
+    sourceId: string
+  ): Promise<Record<string, any>[]> {
+    // First get the relationship to know the target dataset
+    const relationship = await this.getRelationship(relationshipId);
+    if (!relationship) return [];
+
+    // Get the target dataset
+    const targetDataSet = await this.getReferenceDataSet(relationship.targetDataSetId);
+    if (!targetDataSet) return [];
+
+    // Get existing relationship values for this source
+    const existingValues = await db
+      .select()
+      .from(relationshipValues)
+      .where(
+        and(
+          eq(relationshipValues.relationshipId, relationshipId),
+          eq(relationshipValues.sourceInstanceId, sourceId)
+        )
+      );
+
+    // Filter out already connected targets based on cardinality
+    const existingTargetIds = existingValues.map(v => v.targetInstanceId);
+    const allTargets = Object.entries(targetDataSet.data).map(([id, data]) => ({
+      id,
+      ...data,
+    }));
+
+    if (relationship.cardinality === 'one-to-one') {
+      return allTargets.filter(target => !existingTargetIds.includes(target.id));
+    }
+
+    return allTargets;
+  }
+
+  async getAvailableSources(
+    relationshipId: number,
+    targetId: string
+  ): Promise<Record<string, any>[]> {
+    // First get the relationship to know the source dataset
+    const relationship = await this.getRelationship(relationshipId);
+    if (!relationship) return [];
+
+    // Get the source dataset
+    const sourceDataSet = await this.getReferenceDataSet(relationship.sourceDataSetId);
+    if (!sourceDataSet) return [];
+
+    // Get existing relationship values for this target
+    const existingValues = await db
+      .select()
+      .from(relationshipValues)
+      .where(
+        and(
+          eq(relationshipValues.relationshipId, relationshipId),
+          eq(relationshipValues.targetInstanceId, targetId)
+        )
+      );
+
+    // Filter out already connected sources based on cardinality
+    const existingSourceIds = existingValues.map(v => v.sourceInstanceId);
+    const allSources = Object.entries(sourceDataSet.data).map(([id, data]) => ({
+      id,
+      ...data,
+    }));
+
+    if (relationship.cardinality === 'one-to-one' || relationship.cardinality === 'one-to-many') {
+      return allSources.filter(source => !existingSourceIds.includes(source.id));
+    }
+
+    return allSources;
   }
 }
 

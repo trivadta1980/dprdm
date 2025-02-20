@@ -41,6 +41,9 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { ReferenceDataSet, ReferenceDataTypeSchema, Relationship } from "@shared/schema";
 import { useState } from "react";
+import { Link } from "wouter";
+import { Link as LinkIcon } from "lucide-react";
+
 
 // Form schema for relationships
 const relationshipSchema = z.object({
@@ -93,7 +96,7 @@ export default function RelationshipsPage() {
   const mutateRelationship = useMutation({
     mutationFn: async (data: RelationshipForm) => {
       const method = editingRelationship ? "PATCH" : "POST";
-      const endpoint = editingRelationship 
+      const endpoint = editingRelationship
         ? `/api/relationships/${editingRelationship.id}`
         : "/api/relationships";
       const res = await apiRequest(method, endpoint, data);
@@ -424,6 +427,16 @@ export default function RelationshipsPage() {
                       <TableCell>{relationship.targetField}</TableCell>
                       <TableCell>{relationship.cardinality}</TableCell>
                       <TableCell className="text-right space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          asChild
+                          className="hover:bg-green-50"
+                        >
+                          <Link to={`/relationships/${relationship.id}/values`}>
+                            <LinkIcon className="h-4 w-4 text-green-600" />
+                          </Link>
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
