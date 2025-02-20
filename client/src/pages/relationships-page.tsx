@@ -44,6 +44,7 @@ import { useState } from "react";
 
 // Form schema for creating relationships
 const createRelationshipSchema = z.object({
+  name: z.string().min(1, "Relationship name is required"),
   sourceDataSetId: z.string(),
   targetDataSetId: z.string(),
   relationshipType: z.string(),
@@ -169,6 +170,19 @@ export default function RelationshipsPage() {
                 </DialogHeader>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Relationship Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter relationship name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField
                       control={form.control}
                       name="sourceDataSetId"
@@ -356,6 +370,7 @@ export default function RelationshipsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Name</TableHead>
                     <TableHead>Source Dataset</TableHead>
                     <TableHead>Source Field</TableHead>
                     <TableHead className="w-[100px]">Relationship</TableHead>
@@ -368,6 +383,7 @@ export default function RelationshipsPage() {
                 <TableBody>
                   {relationships.map((relationship) => (
                     <TableRow key={relationship.id}>
+                      <TableCell>{relationship.name}</TableCell>
                       <TableCell>{getDataSetName(relationship.sourceDataSetId)}</TableCell>
                       <TableCell>{relationship.sourceField}</TableCell>
                       <TableCell>

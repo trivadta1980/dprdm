@@ -113,6 +113,7 @@ export const referenceDataSetsRelations = relations(referenceDataSets, ({ one })
 // Add Relationships table
 export const relationships = pgTable("relationships", {
   id: serial("id").primaryKey(),
+  name: text("relationship_name").notNull(),
   sourceDataSetId: integer("source_dataset_id")
     .references(() => referenceDataSets.id)
     .notNull(),
@@ -228,10 +229,11 @@ export const insertReferenceDataSetSchema = createInsertSchema(referenceDataSets
   data: z.record(z.string(), z.any()), // Dynamic schema based on reference type
 });
 
-// Add after the existing schemas
+// Update the insert schema
 export const insertRelationshipSchema = createInsertSchema(relationships).extend({
   sourceDataSetId: z.coerce.number(),
   targetDataSetId: z.coerce.number(),
+  name: z.string().min(1, "Relationship name is required"),
   relationshipType: z.string(),
   cardinality: z.string(),
   sourceField: z.string(),
