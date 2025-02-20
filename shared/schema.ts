@@ -229,7 +229,14 @@ export const insertReferenceDataSetSchema = createInsertSchema(referenceDataSets
 });
 
 // Add after the existing schemas
-export const insertRelationshipSchema = createInsertSchema(relationships);
+export const insertRelationshipSchema = createInsertSchema(relationships).extend({
+  sourceDataSetId: z.coerce.number(),
+  targetDataSetId: z.coerce.number(),
+  relationshipType: z.string(),
+  cardinality: z.string(),
+  sourceField: z.string(),
+  targetField: z.string(),
+});
 
 // Types
 export type InsertRole = z.infer<typeof insertRoleSchema>;
