@@ -9,7 +9,8 @@ import {
   GitCompare,
   GitFork,
   FileJson,
-  Laptop2
+  Laptop2,
+  TestTube2
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -59,6 +60,12 @@ export function Sidebar({ className }: SidebarProps) {
       title: "Crosswalks",
       href: "/crosswalks",
       icon: GitCompare,
+      requiresPermission: true,
+    },
+    {
+      title: "API Testing",
+      href: "/api-test",
+      icon: TestTube2,
       requiresPermission: true,
     },
   ];
