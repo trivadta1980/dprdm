@@ -363,10 +363,13 @@ export default function ApiTestPage() {
                           <Label>Source System Schema</Label>
                           <ScrollArea className="h-32 rounded-md border">
                             <div className="p-4">
-                              {Object.entries(sourceSchema).map(([field, type]) => (
-                                <div key={field} className="flex items-center gap-2 text-sm">
-                                  <span className="font-medium">{field}:</span>
-                                  <span className="text-muted-foreground">{String(type)}</span>
+                              {sourceSchema.columns?.map((column: any) => (
+                                <div key={column.name} className="flex items-center gap-2 text-sm">
+                                  <span className="font-medium">{column.name}:</span>
+                                  <span className="text-muted-foreground">{column.type}</span>
+                                  {column.description && (
+                                    <span className="text-xs text-muted-foreground">({column.description})</span>
+                                  )}
                                 </div>
                               ))}
                             </div>
@@ -397,10 +400,13 @@ export default function ApiTestPage() {
                           <Label>Target System Schema</Label>
                           <ScrollArea className="h-32 rounded-md border">
                             <div className="p-4">
-                              {Object.entries(targetSchema).map(([field, type]) => (
-                                <div key={field} className="flex items-center gap-2 text-sm">
-                                  <span className="font-medium">{field}:</span>
-                                  <span className="text-muted-foreground">{String(type)}</span>
+                              {targetSchema.columns?.map((column: any) => (
+                                <div key={column.name} className="flex items-center gap-2 text-sm">
+                                  <span className="font-medium">{column.name}:</span>
+                                  <span className="text-muted-foreground">{column.type}</span>
+                                  {column.description && (
+                                    <span className="text-xs text-muted-foreground">({column.description})</span>
+                                  )}
                                 </div>
                               ))}
                             </div>
@@ -423,9 +429,9 @@ export default function ApiTestPage() {
                                   <SelectValue placeholder="Select source element" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {sourceSchema && Object.keys(sourceSchema).map((field) => (
-                                    <SelectItem key={field} value={field}>
-                                      {field}
+                                  {sourceSchema?.columns?.map((column: any) => (
+                                    <SelectItem key={column.name} value={column.name}>
+                                      {column.name}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
@@ -441,9 +447,9 @@ export default function ApiTestPage() {
                                   <SelectValue placeholder="Select target element" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {targetSchema && Object.keys(targetSchema).map((field) => (
-                                    <SelectItem key={field} value={field}>
-                                      {field}
+                                  {targetSchema?.columns?.map((column: any) => (
+                                    <SelectItem key={column.name} value={column.name}>
+                                      {column.name}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
