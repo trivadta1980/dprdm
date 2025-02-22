@@ -11,6 +11,8 @@ import { referenceDataSets } from "@shared/schema";
 import { relationships, type Relationship, type InsertRelationship } from "@shared/schema";
 import { type RelationshipValue, type InsertRelationshipValue } from "@shared/schema"; //Import necessary types for RelationshipValue
 import { relationshipValues } from "@shared/schema"; //Import necessary table for RelationshipValue
+import { type CrosswalkMapping, type InsertCrosswalkMapping } from "@shared/schema"; //Import necessary types and table for crosswalk mappings
+import { crosswalkMappings } from "@shared/schema"; //Import necessary table for crosswalk mappings
 
 
 const PostgresSessionStore = connectPg(session);
@@ -75,6 +77,14 @@ export interface IStorage {
   deleteRelationshipValue(id: number): Promise<boolean>;
   getAvailableTargets(relationshipId: number, sourceId: string): Promise<Record<string, any>[]>;
   getAvailableSources(relationshipId: number, targetId: string): Promise<Record<string, any>[]>;
+
+  // Crosswalk mapping methods
+  createCrosswalkMapping(mapping: InsertCrosswalkMapping): Promise<CrosswalkMapping>;
+  getCrosswalkMapping(id: number): Promise<CrosswalkMapping | undefined>;
+  getAllCrosswalkMappings(): Promise<CrosswalkMapping[]>;
+  getCrosswalkMappingsBySystem(systemId: number): Promise<CrosswalkMapping[]>;
+  updateCrosswalkMapping(id: number, mapping: Partial<InsertCrosswalkMapping>): Promise<CrosswalkMapping>;
+  deleteCrosswalkMapping(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -577,6 +587,62 @@ export class DatabaseStorage implements IStorage {
     }
 
     return allSources;
+  }
+
+  // Implement crosswalk mapping methods
+  async createCrosswalkMapping(mapping: InsertCrosswalkMapping): Promise<CrosswalkMapping> {
+    const [crosswalkMapping] = await db
+      .insert(crosswalkMappings)
+      .values(mapping)
+      .returning();
+    return crosswalkMapping;
+  }
+
+  async getCrosswalkMapping(id: number): Promise<CrosswalkMapping | undefined> {
+    const [mapping] = await db
+      .select()
+      .from(crosswalkMappings)
+      .where(eq(crosswalkMappings.id, id));
+    return mapping;
+  }
+
+  async getAllCrosswalkMappings(): Promise<CrosswalkMapping[]> {
+    return db.select().from(crosswalkMappings);
+  }
+
+  async getCrosswalkMappingsBySystem(systemId: number): Promise<CrosswalkMapping[]> {
+    return db
+      .select()
+      .from(crosswalkMappings)
+      .where(
+        or(
+          eq(crosswalkMappings.sourceSystemId, systemId),
+          eq(crosswalkMappings.targetSystemId, systemId)
+        )
+      );
+  }
+
+  async updateCrosswalkMapping(
+    id: number,
+    updates: Partial<InsertCrosswalkMapping>
+  ): Promise<CrosswalkMapping> {
+    const [mapping] = await db
+      .update(crosswalkMappings)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(crosswalkMappings.id, id))
+      .returning();
+    return mapping;
+  }
+
+  async deleteCrosswalkMapping(id: number): Promise<boolean> {
+    const [mapping] = await db
+      .delete(crosswalkMappings)
+      .where(eq(crosswalkMappings.id, id))
+      .returning();
+    return !!mapping;
   }
 }
 

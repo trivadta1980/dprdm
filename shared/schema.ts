@@ -272,6 +272,42 @@ export const insertReferenceDataSetSchema = createInsertSchema(referenceDataSets
 });
 
 
+// Add after the existing relationships table definition
+export const crosswalkMappings = pgTable("crosswalk_mappings", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  sourceSystemId: integer("source_system_id")
+    .references(() => referenceDataSets.id)
+    .notNull(),
+  targetSystemId: integer("target_system_id")
+    .references(() => referenceDataSets.id)
+    .notNull(),
+  mappingData: jsonb("mapping_data").notNull(), // Stores key-value pairs for the mapping
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Add crosswalk mapping relations
+export const crosswalkMappingsRelations = relations(crosswalkMappings, ({ one }) => ({
+  sourceSystem: one(referenceDataSets, {
+    fields: [crosswalkMappings.sourceSystemId],
+    references: [referenceDataSets.id],
+  }),
+  targetSystem: one(referenceDataSets, {
+    fields: [crosswalkMappings.targetSystemId],
+    references: [referenceDataSets.id],
+  }),
+}));
+
+// Add after existing schemas
+export const insertCrosswalkMappingSchema = createInsertSchema(crosswalkMappings).extend({
+  sourceSystemId: z.coerce.number(),
+  targetSystemId: z.coerce.number(),
+  name: z.string().min(1, "Mapping name is required"),
+  mappingData: z.record(z.string(), z.any()),
+});
+
 // Add after existing types
 export type RelationshipValue = typeof relationshipValues.$inferSelect;
 export type InsertRelationshipValue = z.infer<typeof insertRelationshipValueSchema>;
@@ -316,3 +352,7 @@ export type ReferenceDataSet = typeof referenceDataSets.$inferSelect & {
 
 // Export the session type
 export type Session = typeof sessions.$inferSelect;
+
+// Add after existing types
+export type InsertCrosswalkMapping = z.infer<typeof insertCrosswalkMappingSchema>;
+export type CrosswalkMapping = typeof crosswalkMappings.$inferSelect;

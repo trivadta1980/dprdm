@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import multer from "multer";
 import { parse } from "csv-parse";
 import { insertRelationshipSchema } from "@shared/schema";
+import { insertCrosswalkMappingSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication and user management routes
@@ -528,6 +529,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(targets);
     } catch (error) {
       console.error('GET /api/relationships/:id/values/available-targets - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  // Crosswalk Mapping routes
+  app.get("/api/crosswalks", async (req, res) => {
+    console.log('GET /api/crosswalks - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/crosswalks - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const mappings = await storage.getAllCrosswalkMappings();
+      console.log('GET /api/crosswalks - Mappings fetched successfully');
+      res.json(mappings);
+    } catch (error) {
+      console.error('GET /api/crosswalks - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.get("/api/crosswalks/:id", async (req, res) => {
+    console.log('GET /api/crosswalks/:id - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/crosswalks/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const mapping = await storage.getCrosswalkMapping(Number(req.params.id));
+      if (mapping) {
+        console.log('GET /api/crosswalks/:id - Mapping found');
+        res.json(mapping);
+      } else {
+        console.log('GET /api/crosswalks/:id - Mapping not found');
+        res.sendStatus(404);
+      }
+    } catch (error) {
+      console.error('GET /api/crosswalks/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.post("/api/crosswalks", async (req, res) => {
+    console.log('POST /api/crosswalks - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/crosswalks - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const result = insertCrosswalkMappingSchema.safeParse(req.body);
+      if (!result.success) {
+        console.log('POST /api/crosswalks - Invalid data:', result.error);
+        return res.status(400).json(result.error);
+      }
+
+      const mapping = await storage.createCrosswalkMapping(result.data);
+      console.log('POST /api/crosswalks - Mapping created successfully');
+      res.status(201).json(mapping);
+    } catch (error) {
+      console.error('POST /api/crosswalks - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.patch("/api/crosswalks/:id", async (req, res) => {
+    console.log('PATCH /api/crosswalks/:id - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('PATCH /api/crosswalks/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const mapping = await storage.updateCrosswalkMapping(
+        Number(req.params.id),
+        req.body
+      );
+      console.log('PATCH /api/crosswalks/:id - Mapping updated successfully');
+      res.json(mapping);
+    } catch (error) {
+      console.error('PATCH /api/crosswalks/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.delete("/api/crosswalks/:id", async (req, res) => {
+    console.log('DELETE /api/crosswalks/:id - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('DELETE /api/crosswalks/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const success = await storage.deleteCrosswalkMapping(Number(req.params.id));
+      if (success) {
+        console.log('DELETE /api/crosswalks/:id - Mapping deleted successfully');
+        res.sendStatus(200);
+      } else {
+        console.log('DELETE /api/crosswalks/:id - Mapping not found');
+        res.sendStatus(404);
+      }
+    } catch (error) {
+      console.error('DELETE /api/crosswalks/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.get("/api/crosswalks/system/:systemId", async (req, res) => {
+    console.log('GET /api/crosswalks/system/:systemId - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/crosswalks/system/:systemId - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const mappings = await storage.getCrosswalkMappingsBySystem(Number(req.params.systemId));
+      console.log('GET /api/crosswalks/system/:systemId - Mappings fetched successfully');
+      res.json(mappings);
+    } catch (error) {
+      console.error('GET /api/crosswalks/system/:systemId - Error:', error);
       res.status(500).json({ error: String(error) });
     }
   });
