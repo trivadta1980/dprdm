@@ -28,6 +28,8 @@ export default function ApiTestPage() {
   const [testParams, setTestParams] = useState<Record<string, string>>({});
   const [response, setResponse] = useState<any>(null);
   const [mappingElements, setMappingElements] = useState<MappingElement[]>([{ source: '', target: '' }]);
+  const [selectedSourceSystem, setSelectedSourceSystem] = useState<string | null>(null);
+  const [selectedTargetSystem, setSelectedTargetSystem] = useState<string | null>(null);
 
   // Authentication endpoints test
   const { data: userData, isLoading: userLoading } = useQuery({
@@ -43,6 +45,18 @@ export default function ApiTestPage() {
   // Reference Data endpoints test
   const { data: referenceData, isLoading: dataLoading } = useQuery({
     queryKey: ['/api/reference-data']
+  });
+
+  // Source system instances
+  const { data: sourceInstances } = useQuery({
+    queryKey: ['/api/reference-data', selectedSourceSystem, 'instances'],
+    enabled: !!selectedSourceSystem
+  });
+
+  // Target system instances
+  const { data: targetInstances } = useQuery({
+    queryKey: ['/api/reference-data', selectedTargetSystem, 'instances'],
+    enabled: !!selectedTargetSystem
   });
 
   // Relationships endpoints test
@@ -309,7 +323,12 @@ export default function ApiTestPage() {
                         placeholder="Mapping Name"
                         onChange={(e) => handleParamChange('name', e.target.value)}
                       />
-                      <Select onValueChange={(value) => handleParamChange('sourceSystemId', value)}>
+                      <Select 
+                        onValueChange={(value) => {
+                          handleParamChange('sourceSystemId', value);
+                          setSelectedSourceSystem(value);
+                        }}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select Source System" />
                         </SelectTrigger>
@@ -321,7 +340,12 @@ export default function ApiTestPage() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <Select onValueChange={(value) => handleParamChange('targetSystemId', value)}>
+                      <Select 
+                        onValueChange={(value) => {
+                          handleParamChange('targetSystemId', value);
+                          setSelectedTargetSystem(value);
+                        }}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select Target System" />
                         </SelectTrigger>
@@ -341,19 +365,39 @@ export default function ApiTestPage() {
                           <div key={index} className="grid grid-cols-[1fr,1fr,auto] gap-2 items-start">
                             <div className="space-y-2">
                               <Label>Source Element</Label>
-                              <Input
-                                placeholder="Source element identifier"
+                              <Select
                                 value={element.source}
-                                onChange={(e) => handleMappingElementChange(index, 'source', e.target.value)}
-                              />
+                                onValueChange={(value) => handleMappingElementChange(index, 'source', value)}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select source element" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {sourceInstances?.map((instance: any) => (
+                                    <SelectItem key={instance.id} value={instance.code}>
+                                      {instance.name} ({instance.code})
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             </div>
                             <div className="space-y-2">
                               <Label>Target Element</Label>
-                              <Input
-                                placeholder="Target element identifier"
+                              <Select
                                 value={element.target}
-                                onChange={(e) => handleMappingElementChange(index, 'target', e.target.value)}
-                              />
+                                onValueChange={(value) => handleMappingElementChange(index, 'target', value)}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select target element" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {targetInstances?.map((instance: any) => (
+                                    <SelectItem key={instance.id} value={instance.code}>
+                                      {instance.name} ({instance.code})
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             </div>
                             <Button
                               variant="ghost"
