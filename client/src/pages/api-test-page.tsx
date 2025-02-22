@@ -47,6 +47,18 @@ export default function ApiTestPage() {
     queryKey: ['/api/reference-data']
   });
 
+  // Source system schema and instances
+  const { data: sourceSchema } = useQuery({
+    queryKey: ['/api/reference-data', selectedSourceSystem, 'schema'],
+    enabled: !!selectedSourceSystem
+  });
+
+  // Target system schema and instances
+  const { data: targetSchema } = useQuery({
+    queryKey: ['/api/reference-data', selectedTargetSystem, 'schema'],
+    enabled: !!selectedTargetSystem
+  });
+
   // Source system instances
   const { data: sourceInstances } = useQuery({
     queryKey: ['/api/reference-data', selectedSourceSystem, 'instances'],
@@ -144,6 +156,7 @@ export default function ApiTestPage() {
             <TabsTrigger value="crosswalks">Crosswalks</TabsTrigger>
           </TabsList>
 
+          {/* Auth Tab Content */}
           <TabsContent value="auth" className="space-y-4">
             <Card>
               <CardHeader>
@@ -197,6 +210,7 @@ export default function ApiTestPage() {
             </Card>
           </TabsContent>
 
+          {/* Types Tab Content */}
           <TabsContent value="types" className="space-y-4">
             <Card>
               <CardHeader>
@@ -245,6 +259,7 @@ export default function ApiTestPage() {
             </Card>
           </TabsContent>
 
+          {/* Data Tab Content */}
           <TabsContent value="data" className="space-y-4">
             <Card>
               <CardHeader>
@@ -269,6 +284,7 @@ export default function ApiTestPage() {
             </Card>
           </TabsContent>
 
+          {/* Relationships Tab Content */}
           <TabsContent value="relationships" className="space-y-4">
             <Card>
               <CardHeader>
@@ -295,6 +311,7 @@ export default function ApiTestPage() {
             </Card>
           </TabsContent>
 
+          {/* Crosswalks Tab Content */}
           <TabsContent value="crosswalks" className="space-y-4">
             <Card>
               <CardHeader>
@@ -340,6 +357,23 @@ export default function ApiTestPage() {
                           ))}
                         </SelectContent>
                       </Select>
+
+                      {sourceSchema && (
+                        <div className="space-y-2">
+                          <Label>Source System Schema</Label>
+                          <ScrollArea className="h-32 rounded-md border">
+                            <div className="p-4">
+                              {Object.entries(sourceSchema).map(([field, type]) => (
+                                <div key={field} className="flex items-center gap-2 text-sm">
+                                  <span className="font-medium">{field}:</span>
+                                  <span className="text-muted-foreground">{String(type)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </ScrollArea>
+                        </div>
+                      )}
+
                       <Select 
                         onValueChange={(value) => {
                           handleParamChange('targetSystemId', value);
@@ -358,6 +392,22 @@ export default function ApiTestPage() {
                         </SelectContent>
                       </Select>
 
+                      {targetSchema && (
+                        <div className="space-y-2">
+                          <Label>Target System Schema</Label>
+                          <ScrollArea className="h-32 rounded-md border">
+                            <div className="p-4">
+                              {Object.entries(targetSchema).map(([field, type]) => (
+                                <div key={field} className="flex items-center gap-2 text-sm">
+                                  <span className="font-medium">{field}:</span>
+                                  <span className="text-muted-foreground">{String(type)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </ScrollArea>
+                        </div>
+                      )}
+
                       {/* Element Mappings */}
                       <div className="space-y-4">
                         <Label>Element Mappings</Label>
@@ -373,9 +423,9 @@ export default function ApiTestPage() {
                                   <SelectValue placeholder="Select source element" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {sourceInstances?.map((instance: any) => (
-                                    <SelectItem key={instance.id} value={instance.code}>
-                                      {instance.name} ({instance.code})
+                                  {sourceSchema && Object.keys(sourceSchema).map((field) => (
+                                    <SelectItem key={field} value={field}>
+                                      {field}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
@@ -391,9 +441,9 @@ export default function ApiTestPage() {
                                   <SelectValue placeholder="Select target element" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {targetInstances?.map((instance: any) => (
-                                    <SelectItem key={instance.id} value={instance.code}>
-                                      {instance.name} ({instance.code})
+                                  {targetSchema && Object.keys(targetSchema).map((field) => (
+                                    <SelectItem key={field} value={field}>
+                                      {field}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
