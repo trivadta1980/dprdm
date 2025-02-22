@@ -22,6 +22,16 @@ type MappingElement = {
   target: string;
 };
 
+interface SchemaColumn {
+  name: string;
+  type: string;
+  description?: string;
+}
+
+interface SchemaResponse {
+  columns: SchemaColumn[];
+}
+
 export default function ApiTestPage() {
   const { toast } = useToast();
   const [selectedEndpoint, setSelectedEndpoint] = useState<string | null>(null);
@@ -47,14 +57,14 @@ export default function ApiTestPage() {
     queryKey: ['/api/reference-data']
   });
 
-  // Source system schema and instances
-  const { data: sourceSchema } = useQuery({
+  // Source system schema
+  const { data: sourceSchema, isLoading: sourceSchemaLoading } = useQuery<SchemaResponse>({
     queryKey: ['/api/reference-data', selectedSourceSystem, 'schema'],
     enabled: !!selectedSourceSystem
   });
 
-  // Target system schema and instances
-  const { data: targetSchema } = useQuery({
+  // Target system schema
+  const { data: targetSchema, isLoading: targetSchemaLoading } = useQuery<SchemaResponse>({
     queryKey: ['/api/reference-data', selectedTargetSystem, 'schema'],
     enabled: !!selectedTargetSystem
   });
@@ -358,20 +368,28 @@ export default function ApiTestPage() {
                         </SelectContent>
                       </Select>
 
-                      {sourceSchema && (
+                      {selectedSourceSystem && (
                         <div className="space-y-2">
                           <Label>Source System Schema</Label>
                           <ScrollArea className="h-32 rounded-md border">
                             <div className="p-4">
-                              {sourceSchema.columns?.map((column: any) => (
-                                <div key={column.name} className="flex items-center gap-2 text-sm">
-                                  <span className="font-medium">{column.name}:</span>
-                                  <span className="text-muted-foreground">{column.type}</span>
-                                  {column.description && (
-                                    <span className="text-xs text-muted-foreground">({column.description})</span>
-                                  )}
+                              {sourceSchemaLoading ? (
+                                <div className="flex items-center justify-center h-24">
+                                  <Loader2 className="h-6 w-6 animate-spin" />
                                 </div>
-                              ))}
+                              ) : sourceSchema?.columns ? (
+                                sourceSchema.columns.map((column) => (
+                                  <div key={column.name} className="flex items-center gap-2 text-sm">
+                                    <span className="font-medium">{column.name}:</span>
+                                    <span className="text-muted-foreground">{column.type}</span>
+                                    {column.description && (
+                                      <span className="text-xs text-muted-foreground">({column.description})</span>
+                                    )}
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="text-sm text-muted-foreground">No schema information available</div>
+                              )}
                             </div>
                           </ScrollArea>
                         </div>
@@ -395,20 +413,28 @@ export default function ApiTestPage() {
                         </SelectContent>
                       </Select>
 
-                      {targetSchema && (
+                      {selectedTargetSystem && (
                         <div className="space-y-2">
                           <Label>Target System Schema</Label>
                           <ScrollArea className="h-32 rounded-md border">
                             <div className="p-4">
-                              {targetSchema.columns?.map((column: any) => (
-                                <div key={column.name} className="flex items-center gap-2 text-sm">
-                                  <span className="font-medium">{column.name}:</span>
-                                  <span className="text-muted-foreground">{column.type}</span>
-                                  {column.description && (
-                                    <span className="text-xs text-muted-foreground">({column.description})</span>
-                                  )}
+                              {targetSchemaLoading ? (
+                                <div className="flex items-center justify-center h-24">
+                                  <Loader2 className="h-6 w-6 animate-spin" />
                                 </div>
-                              ))}
+                              ) : targetSchema?.columns ? (
+                                targetSchema.columns.map((column) => (
+                                  <div key={column.name} className="flex items-center gap-2 text-sm">
+                                    <span className="font-medium">{column.name}:</span>
+                                    <span className="text-muted-foreground">{column.type}</span>
+                                    {column.description && (
+                                      <span className="text-xs text-muted-foreground">({column.description})</span>
+                                    )}
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="text-sm text-muted-foreground">No schema information available</div>
+                              )}
                             </div>
                           </ScrollArea>
                         </div>
@@ -429,7 +455,7 @@ export default function ApiTestPage() {
                                   <SelectValue placeholder="Select source element" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {sourceSchema?.columns?.map((column: any) => (
+                                  {sourceSchema?.columns?.map((column) => (
                                     <SelectItem key={column.name} value={column.name}>
                                       {column.name}
                                     </SelectItem>
@@ -447,7 +473,7 @@ export default function ApiTestPage() {
                                   <SelectValue placeholder="Select target element" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {targetSchema?.columns?.map((column: any) => (
+                                  {targetSchema?.columns?.map((column) => (
                                     <SelectItem key={column.name} value={column.name}>
                                       {column.name}
                                     </SelectItem>
