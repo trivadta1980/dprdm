@@ -19,15 +19,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, ArrowLeft, Plus, Pencil, Trash2, History, Database } from "lucide-react";
-import type { ReferenceDataSet, ReferenceDataInstance, HistoryEntry, ReferenceDataTypeSchema } from "@shared/schema";
+import { Loader2, ArrowLeft, Plus, Pencil, Trash2, History, Database, Upload, Download } from "lucide-react";
+import type { ReferenceDataSet, ReferenceDataInstance, HistoryEntry } from "@shared/schema";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { format } from "date-fns";
 
 interface Params {
@@ -42,6 +42,8 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
   const [selectedInstanceHistory, setSelectedInstanceHistory] = useState<{ id: string; history: HistoryEntry[] } | null>(null);
+  const [isBulkUploadDialogOpen, setIsBulkUploadDialogOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch the reference data set
   const { data: dataSet, isLoading: isLoadingDataSet } = useQuery<ReferenceDataSet>({
@@ -219,6 +221,76 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     },
   });
 
+  // Add bulk upload mutation
+  const bulkUploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`/api/reference-data/${dataSetId}/bulk-upload`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        throw new Error("Failed to upload file");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
+      toast({
+        title: "Success",
+        description: "Bulk upload completed successfully",
+      });
+      setIsBulkUploadDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to upload file",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.type !== "text/csv") {
+        toast({
+          title: "Error",
+          description: "Please upload a CSV file",
+          variant: "destructive",
+        });
+        return;
+      }
+      bulkUploadMutation.mutate(file);
+    }
+  };
+
+  const handleDownloadTemplate = async () => {
+    try {
+      const response = await fetch(`/api/reference-data/${dataSetId}/template`);
+      if (!response.ok) {
+        throw new Error("Failed to download template");
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `template_${dataSet?.name || "reference_data"}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download template",
+        variant: "destructive",
+      });
+    }
+  };
+
   function onSubmit(data: InstanceFormData) {
     if (editingDataSet) {
       editMutation.mutate({ id: editingDataSet.id, data });
@@ -283,57 +355,112 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
             Back to Reference Data
           </Button>
 
-          <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 text-white shadow-sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add New Instance
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle className="text-xl font-semibold text-gray-900">
-                  {editingDataSet ? "Edit Instance" : "Add New Instance"}
-                </DialogTitle>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  {schemaFields.map((field) => (
-                    <FormField
-                      key={field.name}
-                      control={form.control}
-                      name={field.name}
-                      render={({ field: { value, onChange } }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium text-gray-700">{field.name}</FormLabel>
-                          <FormControl>
-                            <Input
-                              value={value}
-                              onChange={onChange}
-                              placeholder={`Enter ${field.name}`}
-                              className="focus:ring-2 focus:ring-primary/20"
-                            />
-                          </FormControl>
-                          <FormMessage className="text-xs" />
-                        </FormItem>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleDownloadTemplate}
+              className="bg-white hover:bg-blue-50"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download Template
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => setIsBulkUploadDialogOpen(true)}
+              className="bg-white hover:bg-blue-50"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Bulk Upload
+            </Button>
+
+            <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
+              <DialogTrigger asChild>
+                <Button className="bg-primary hover:bg-primary/90 text-white shadow-sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add New Instance
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-semibold text-gray-900">
+                    {editingDataSet ? "Edit Instance" : "Add New Instance"}
+                  </DialogTitle>
+                </DialogHeader>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    {schemaFields.map((field) => (
+                      <FormField
+                        key={field.name}
+                        control={form.control}
+                        name={field.name}
+                        render={({ field: { value, onChange } }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium text-gray-700">{field.name}</FormLabel>
+                            <FormControl>
+                              <Input
+                                value={value}
+                                onChange={onChange}
+                                placeholder={`Enter ${field.name}`}
+                                className="focus:ring-2 focus:ring-primary/20"
+                              />
+                            </FormControl>
+                            <FormMessage className="text-xs" />
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                    <Button
+                      type="submit"
+                      className="w-full bg-primary hover:bg-primary/90 text-white shadow-sm"
+                      disabled={addMutation.isPending || editMutation.isPending}
+                    >
+                      {(addMutation.isPending || editMutation.isPending) && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       )}
-                    />
-                  ))}
-                  <Button
-                    type="submit"
-                    className="w-full bg-primary hover:bg-primary/90 text-white shadow-sm"
-                    disabled={addMutation.isPending || editMutation.isPending}
-                  >
-                    {(addMutation.isPending || editMutation.isPending) && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    {editingDataSet ? "Update Instance" : "Save Instance"}
-                  </Button>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+                      {editingDataSet ? "Update Instance" : "Save Instance"}
+                    </Button>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
+
+        {/* Add Bulk Upload Dialog */}
+        <Dialog open={isBulkUploadDialogOpen} onOpenChange={setIsBulkUploadDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <Upload className="h-5 w-5 text-primary" />
+                Bulk Upload Reference Data
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-500">
+                Upload a CSV file containing multiple instances. Make sure to follow the template format.
+              </p>
+              <div className="space-y-2">
+                <Input
+                  type="file"
+                  accept=".csv"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  className="focus:ring-2 focus:ring-primary/20"
+                />
+                <p className="text-xs text-gray-400">
+                  Only CSV files are supported. Download the template first to ensure correct format.
+                </p>
+              </div>
+              {bulkUploadMutation.isPending && (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <span className="ml-2 text-sm text-gray-600">Uploading...</span>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <Card className="shadow-lg border-0">
           <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
