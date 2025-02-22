@@ -19,7 +19,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, ArrowLeft, Plus, Pencil, Trash2, History, Database } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Pencil, Trash2, History, Database, Upload, Download } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import type { ReferenceDataSet, ReferenceDataInstance, HistoryEntry, ReferenceDataTypeSchema } from "@shared/schema";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
@@ -283,13 +284,93 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
             Back to Reference Data
           </Button>
 
-          <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 text-white shadow-sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add New Instance
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <a 
+              href={`/api/reference-data/${dataSetId}/template`}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center"
+              download
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download Template
+            </a>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="border-primary text-primary hover:bg-primary/10">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Bulk Upload
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Bulk Upload Instances</DialogTitle>
+                </DialogHeader>
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    const file = formData.get('file') as File;
+                    
+                    if (!file) {
+                      toast({
+                        title: "Error",
+                        description: "Please select a CSV file",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+
+                    fetch(`/api/reference-data/${dataSetId}/bulk-upload`, {
+                      method: 'POST',
+                      body: formData,
+                    })
+                    .then(async (response) => {
+                      if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Failed to upload');
+                      }
+                      return response.json();
+                    })
+                    .then(() => {
+                      toast({
+                        title: "Success",
+                        description: "Instances uploaded successfully",
+                      });
+                      queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
+                      (e.target as HTMLFormElement).reset();
+                    })
+                    .catch((error) => {
+                      toast({
+                        title: "Error",
+                        description: error.message,
+                        variant: "destructive",
+                      });
+                    });
+                  }}
+                  className="space-y-4"
+                >
+                  <div className="grid w-full max-w-sm items-center gap-1.5">
+                    <Label htmlFor="file">CSV File</Label>
+                    <Input 
+                      id="file" 
+                      name="file" 
+                      type="file" 
+                      accept=".csv"
+                      className="cursor-pointer"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full">
+                    Upload
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+            <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
+              <DialogTrigger asChild>
+                <Button className="bg-primary hover:bg-primary/90 text-white shadow-sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add New Instance
+                </Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle className="text-xl font-semibold text-gray-900">
