@@ -5,11 +5,29 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+type MappingElement = {
+  source: string;
+  target: string;
+};
 
 export default function ApiTestPage() {
   const { toast } = useToast();
   const [selectedEndpoint, setSelectedEndpoint] = useState<string | null>(null);
+  const [testParams, setTestParams] = useState<Record<string, string>>({});
+  const [response, setResponse] = useState<any>(null);
+  const [mappingElements, setMappingElements] = useState<MappingElement[]>([{ source: '', target: '' }]);
 
   // Authentication endpoints test
   const { data: userData, isLoading: userLoading } = useQuery({
@@ -37,14 +55,45 @@ export default function ApiTestPage() {
     queryKey: ['/api/crosswalks']
   });
 
-  const testEndpoint = async (endpoint: string) => {
+  const handleParamChange = (key: string, value: string) => {
+    setTestParams(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleMappingElementChange = (index: number, field: 'source' | 'target', value: string) => {
+    const newElements = [...mappingElements];
+    newElements[index][field] = value;
+    setMappingElements(newElements);
+  };
+
+  const addMappingElement = () => {
+    setMappingElements([...mappingElements, { source: '', target: '' }]);
+  };
+
+  const removeMappingElement = (index: number) => {
+    const newElements = mappingElements.filter((_, i) => i !== index);
+    setMappingElements(newElements);
+  };
+
+  const testEndpoint = async (endpoint: string, method: string = 'GET', body?: any) => {
     setSelectedEndpoint(endpoint);
     try {
-      const response = await fetch(endpoint);
+      const options: RequestInit = {
+        method,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      };
+
+      if (body) {
+        options.body = JSON.stringify(body);
+      }
+
+      const response = await fetch(endpoint, options);
       const data = await response.json();
+      setResponse(data);
       toast({
         title: "Endpoint Test Result",
-        description: `Status: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`,
+        description: `Status: ${response.status}`,
       });
     } catch (error) {
       toast({
@@ -57,11 +106,21 @@ export default function ApiTestPage() {
     }
   };
 
+  const renderResponse = (data: any) => {
+    return (
+      <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+        <pre className="text-sm">
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      </ScrollArea>
+    );
+  };
+
   return (
     <MainLayout>
       <div className="container mx-auto p-6 space-y-8">
         <h1 className="text-3xl font-bold">API Endpoint Testing</h1>
-        
+
         <Tabs defaultValue="auth" className="w-full">
           <TabsList>
             <TabsTrigger value="auth">Authentication</TabsTrigger>
@@ -78,17 +137,46 @@ export default function ApiTestPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4">
-                  <div className="flex items-center gap-4">
-                    <Button 
-                      disabled={selectedEndpoint === '/api/user'}
-                      onClick={() => testEndpoint('/api/user')}
-                    >
-                      {selectedEndpoint === '/api/user' && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      Test /api/user
-                    </Button>
-                    <span>{userLoading ? 'Loading...' : userData ? 'Authenticated' : 'Not authenticated'}</span>
+                  {/* Test GET /api/user */}
+                  <div className="space-y-2">
+                    <Label>GET /api/user</Label>
+                    <div className="flex items-center gap-4">
+                      <Button 
+                        disabled={selectedEndpoint === '/api/user'}
+                        onClick={() => testEndpoint('/api/user')}
+                      >
+                        {selectedEndpoint === '/api/user' && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Test Endpoint
+                      </Button>
+                      <span>{userLoading ? 'Loading...' : userData ? 'Authenticated' : 'Not authenticated'}</span>
+                    </div>
+                  </div>
+
+                  {/* Test POST /api/login */}
+                  <div className="space-y-2">
+                    <Label>POST /api/login</Label>
+                    <div className="grid gap-2">
+                      <Input 
+                        placeholder="Username"
+                        onChange={(e) => handleParamChange('username', e.target.value)}
+                      />
+                      <Input 
+                        type="password"
+                        placeholder="Password"
+                        onChange={(e) => handleParamChange('password', e.target.value)}
+                      />
+                      <Button
+                        disabled={selectedEndpoint === '/api/login'}
+                        onClick={() => testEndpoint('/api/login', 'POST', {
+                          username: testParams.username,
+                          password: testParams.password
+                        })}
+                      >
+                        Test Login
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -102,17 +190,41 @@ export default function ApiTestPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4">
-                  <div className="flex items-center gap-4">
-                    <Button 
-                      disabled={selectedEndpoint === '/api/reference-types'}
-                      onClick={() => testEndpoint('/api/reference-types')}
-                    >
-                      {selectedEndpoint === '/api/reference-types' && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      Test /api/reference-types
-                    </Button>
-                    <span>{typesLoading ? 'Loading...' : `${referenceTypes?.length || 0} types found`}</span>
+                  {/* Test GET /api/reference-types */}
+                  <div className="space-y-2">
+                    <Label>GET /api/reference-types</Label>
+                    <div className="flex items-center gap-4">
+                      <Button 
+                        disabled={selectedEndpoint === '/api/reference-types'}
+                        onClick={() => testEndpoint('/api/reference-types')}
+                      >
+                        Test Endpoint
+                      </Button>
+                      <span>{typesLoading ? 'Loading...' : `${referenceTypes?.length || 0} types found`}</span>
+                    </div>
+                  </div>
+
+                  {/* Test POST /api/reference-types */}
+                  <div className="space-y-2">
+                    <Label>POST /api/reference-types</Label>
+                    <div className="grid gap-2">
+                      <Input 
+                        placeholder="Type Name"
+                        onChange={(e) => handleParamChange('name', e.target.value)}
+                      />
+                      <Input 
+                        placeholder="Description"
+                        onChange={(e) => handleParamChange('description', e.target.value)}
+                      />
+                      <Button
+                        onClick={() => testEndpoint('/api/reference-types', 'POST', {
+                          name: testParams.name,
+                          description: testParams.description
+                        })}
+                      >
+                        Create Type
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -176,21 +288,118 @@ export default function ApiTestPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4">
-                  <div className="flex items-center gap-4">
-                    <Button 
-                      disabled={selectedEndpoint === '/api/crosswalks'}
-                      onClick={() => testEndpoint('/api/crosswalks')}
-                    >
-                      {selectedEndpoint === '/api/crosswalks' && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      Test /api/crosswalks
-                    </Button>
-                    <span>
-                      {crosswalksLoading ? 'Loading...' : `${crosswalks?.length || 0} crosswalks found`}
-                    </span>
+                  {/* Test GET /api/crosswalks */}
+                  <div className="space-y-2">
+                    <Label>GET /api/crosswalks</Label>
+                    <div className="flex items-center gap-4">
+                      <Button 
+                        disabled={selectedEndpoint === '/api/crosswalks'}
+                        onClick={() => testEndpoint('/api/crosswalks')}
+                      >
+                        Test Endpoint
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Test POST /api/crosswalks */}
+                  <div className="space-y-2">
+                    <Label>POST /api/crosswalks</Label>
+                    <div className="grid gap-4">
+                      <Input 
+                        placeholder="Mapping Name"
+                        onChange={(e) => handleParamChange('name', e.target.value)}
+                      />
+                      <Select onValueChange={(value) => handleParamChange('sourceSystemId', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Source System" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {referenceData?.map((data: any) => (
+                            <SelectItem key={data.id} value={String(data.id)}>
+                              {data.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select onValueChange={(value) => handleParamChange('targetSystemId', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Target System" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {referenceData?.map((data: any) => (
+                            <SelectItem key={data.id} value={String(data.id)}>
+                              {data.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      {/* Element Mappings */}
+                      <div className="space-y-4">
+                        <Label>Element Mappings</Label>
+                        {mappingElements.map((element, index) => (
+                          <div key={index} className="grid grid-cols-[1fr,1fr,auto] gap-2 items-start">
+                            <div className="space-y-2">
+                              <Label>Source Element</Label>
+                              <Input
+                                placeholder="Source element identifier"
+                                value={element.source}
+                                onChange={(e) => handleMappingElementChange(index, 'source', e.target.value)}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Target Element</Label>
+                              <Input
+                                placeholder="Target element identifier"
+                                value={element.target}
+                                onChange={(e) => handleMappingElementChange(index, 'target', e.target.value)}
+                              />
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="mt-8"
+                              onClick={() => removeMappingElement(index)}
+                              disabled={mappingElements.length === 1}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={addMappingElement}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Mapping
+                        </Button>
+                      </div>
+
+                      <Button
+                        onClick={() => testEndpoint('/api/crosswalks', 'POST', {
+                          name: testParams.name,
+                          sourceSystemId: Number(testParams.sourceSystemId),
+                          targetSystemId: Number(testParams.targetSystemId),
+                          mappingData: mappingElements.reduce((acc, curr) => {
+                            acc[curr.source] = curr.target;
+                            return acc;
+                          }, {} as Record<string, string>)
+                        })}
+                      >
+                        Create Mapping
+                      </Button>
+                    </div>
                   </div>
                 </div>
+
+                {response && (
+                  <div className="mt-4">
+                    <Label>Response:</Label>
+                    {renderResponse(response)}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
