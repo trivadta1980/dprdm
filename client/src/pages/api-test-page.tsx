@@ -22,6 +22,11 @@ interface ReferenceData {
   name: string;
 }
 
+interface Instance {
+  id: number;
+  name: string;
+}
+
 export default function ApiTestPage() {
   const { toast } = useToast();
   const [selectedEndpoint, setSelectedEndpoint] = useState<string | null>(null);
@@ -29,6 +34,8 @@ export default function ApiTestPage() {
   const [response, setResponse] = useState<any>(null);
   const [selectedSourceSystem, setSelectedSourceSystem] = useState<string | null>(null);
   const [selectedTargetSystem, setSelectedTargetSystem] = useState<string | null>(null);
+  const [selectedSourceInstance, setSelectedSourceInstance] = useState<string | null>(null);
+  const [selectedTargetInstance, setSelectedTargetInstance] = useState<string | null>(null);
 
   // Authentication endpoints test
   const { data: userData, isLoading: userLoading } = useQuery({
@@ -44,6 +51,18 @@ export default function ApiTestPage() {
   // Reference Data endpoints test
   const { data: referenceData = [], isLoading: dataLoading } = useQuery<ReferenceData[]>({
     queryKey: ['/api/reference-data']
+  });
+
+  // Source system instances
+  const { data: sourceInstances = [], isLoading: sourceInstancesLoading } = useQuery<Instance[]>({
+    queryKey: [`/api/reference-data/${selectedSourceSystem}/instances`],
+    enabled: !!selectedSourceSystem
+  });
+
+  // Target system instances
+  const { data: targetInstances = [], isLoading: targetInstancesLoading } = useQuery<Instance[]>({
+    queryKey: [`/api/reference-data/${selectedTargetSystem}/instances`],
+    enabled: !!selectedTargetSystem
   });
 
   // Relationships endpoints test
@@ -158,6 +177,7 @@ export default function ApiTestPage() {
                           onValueChange={(value) => {
                             handleParamChange('sourceSystemId', value);
                             setSelectedSourceSystem(value);
+                            setSelectedSourceInstance(null);
                           }}
                         >
                           <SelectTrigger>
@@ -173,12 +193,39 @@ export default function ApiTestPage() {
                         </Select>
                       </div>
 
+                      {selectedSourceSystem && (
+                        <div className="space-y-2">
+                          <Label>Source Instance</Label>
+                          <Select
+                            value={selectedSourceInstance || undefined}
+                            onValueChange={(value) => {
+                              handleParamChange('sourceInstanceId', value);
+                              setSelectedSourceInstance(value);
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Source Instance" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {sourceInstancesLoading ? (
+                                <SelectItem value="loading">Loading instances...</SelectItem>
+                              ) : sourceInstances.map((instance) => (
+                                <SelectItem key={instance.id} value={String(instance.id)}>
+                                  {instance.name || `Instance ${instance.id}`}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
                       <div className="space-y-2">
                         <Label>Target Dataset</Label>
                         <Select
                           onValueChange={(value) => {
                             handleParamChange('targetSystemId', value);
                             setSelectedTargetSystem(value);
+                            setSelectedTargetInstance(null);
                           }}
                         >
                           <SelectTrigger>
@@ -194,11 +241,39 @@ export default function ApiTestPage() {
                         </Select>
                       </div>
 
+                      {selectedTargetSystem && (
+                        <div className="space-y-2">
+                          <Label>Target Instance</Label>
+                          <Select
+                            value={selectedTargetInstance || undefined}
+                            onValueChange={(value) => {
+                              handleParamChange('targetInstanceId', value);
+                              setSelectedTargetInstance(value);
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Target Instance" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {targetInstancesLoading ? (
+                                <SelectItem value="loading">Loading instances...</SelectItem>
+                              ) : targetInstances.map((instance) => (
+                                <SelectItem key={instance.id} value={String(instance.id)}>
+                                  {instance.name || `Instance ${instance.id}`}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
                       <Button
                         onClick={() => testEndpoint('/api/crosswalks', 'POST', {
                           name: testParams.name,
                           sourceSystemId: Number(testParams.sourceSystemId),
-                          targetSystemId: Number(testParams.targetSystemId)
+                          targetSystemId: Number(testParams.targetSystemId),
+                          sourceInstanceId: Number(testParams.sourceInstanceId),
+                          targetInstanceId: Number(testParams.targetInstanceId)
                         })}
                       >
                         Create Mapping
@@ -331,7 +406,7 @@ export default function ApiTestPage() {
                       )}
                       Test /api/reference-data
                     </Button>
-                    <span>{dataLoading ? 'Loading...' : `${referenceData.length} datasets found`}</span>
+                    <span>{dataLoading ? 'Loading...' : `${referenceData?.length || 0} datasets found`}</span>
                   </div>
                 </div>
               </CardContent>
