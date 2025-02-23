@@ -14,14 +14,11 @@ import { Label } from "@/components/ui/label";
 interface DataSet {
   id: number;
   name: string;
+  typeId: number;
 }
 
 interface SchemaField {
-  id: number;
   name: string;
-  dataType: string;
-  isRequired: boolean;
-  description?: string;
 }
 
 export default function AttributeMappingPage() {
@@ -32,17 +29,20 @@ export default function AttributeMappingPage() {
     queryKey: ['/api/reference-data']
   });
 
-  // Fetch schemas for selected dataset
+  // Find the selected dataset to get its typeId
+  const selectedDatasetObj = datasets.find(d => d.id === Number(selectedDataset));
+
+  // Fetch schemas for selected dataset's type
   const { data: schemas = [], isLoading: schemasLoading } = useQuery<SchemaField[]>({
-    queryKey: [`/api/reference-types/${selectedDataset}/schemas`],
-    enabled: !!selectedDataset
+    queryKey: [`/api/reference-types/${selectedDatasetObj?.typeId}/schemas`],
+    enabled: !!selectedDatasetObj?.typeId
   });
 
   return (
     <MainLayout>
       <div className="container mx-auto p-6 space-y-8">
         <h1 className="text-3xl font-bold">Attribute Mapping</h1>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Select Dataset and Schema</CardTitle>
@@ -80,10 +80,9 @@ export default function AttributeMappingPage() {
                 <SelectContent>
                   {schemasLoading ? (
                     <SelectItem value="loading">Loading schemas...</SelectItem>
-                  ) : schemas.map((schema) => (
-                    <SelectItem key={schema.id} value={String(schema.id)}>
-                      {schema.name} ({schema.dataType})
-                      {schema.isRequired && " *"}
+                  ) : schemas.map((schema, index) => (
+                    <SelectItem key={index} value={schema.name}>
+                      {schema.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
