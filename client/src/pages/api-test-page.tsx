@@ -17,6 +17,16 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+interface ReferenceData {
+  id: number;
+  name: string;
+}
+
+interface Instance {
+  id: number;
+  name: string;
+}
+
 export default function ApiTestPage() {
   const { toast } = useToast();
   const [selectedEndpoint, setSelectedEndpoint] = useState<string | null>(null);
@@ -39,18 +49,18 @@ export default function ApiTestPage() {
   });
 
   // Reference Data endpoints test
-  const { data: referenceData, isLoading: dataLoading } = useQuery({
+  const { data: referenceData, isLoading: dataLoading } = useQuery<ReferenceData[]>({
     queryKey: ['/api/reference-data']
   });
 
   // Source system instances
-  const { data: sourceInstances, isLoading: sourceInstancesLoading } = useQuery({
+  const { data: sourceInstances, isLoading: sourceInstancesLoading } = useQuery<Instance[]>({
     queryKey: [`/api/reference-data/${selectedSourceSystem}/instances`],
     enabled: !!selectedSourceSystem
   });
 
   // Target system instances
-  const { data: targetInstances, isLoading: targetInstancesLoading } = useQuery({
+  const { data: targetInstances, isLoading: targetInstancesLoading } = useQuery<Instance[]>({
     queryKey: [`/api/reference-data/${selectedTargetSystem}/instances`],
     enabled: !!selectedTargetSystem
   });
@@ -322,14 +332,14 @@ export default function ApiTestPage() {
                           onValueChange={(value) => {
                             handleParamChange('sourceSystemId', value);
                             setSelectedSourceSystem(value);
-                            setSelectedSourceInstance(null); // Reset instance selection
+                            setSelectedSourceInstance(null);
                           }}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select Source Dataset" />
                           </SelectTrigger>
                           <SelectContent>
-                            {referenceData?.map((data: any) => (
+                            {referenceData?.map((data) => (
                               <SelectItem key={data.id} value={String(data.id)}>
                                 {data.name}
                               </SelectItem>
@@ -342,7 +352,7 @@ export default function ApiTestPage() {
                         <div className="space-y-2">
                           <Label>Source Instance</Label>
                           <Select
-                            value={selectedSourceInstance || ''}
+                            value={selectedSourceInstance || undefined}
                             onValueChange={(value) => {
                               handleParamChange('sourceInstanceId', value);
                               setSelectedSourceInstance(value);
@@ -353,8 +363,8 @@ export default function ApiTestPage() {
                             </SelectTrigger>
                             <SelectContent>
                               {sourceInstancesLoading ? (
-                                <SelectItem value="">Loading...</SelectItem>
-                              ) : sourceInstances?.map((instance: any) => (
+                                <SelectItem value="loading">Loading instances...</SelectItem>
+                              ) : sourceInstances?.map((instance) => (
                                 <SelectItem key={instance.id} value={String(instance.id)}>
                                   {instance.name || `Instance ${instance.id}`}
                                 </SelectItem>
@@ -370,14 +380,14 @@ export default function ApiTestPage() {
                           onValueChange={(value) => {
                             handleParamChange('targetSystemId', value);
                             setSelectedTargetSystem(value);
-                            setSelectedTargetInstance(null); // Reset instance selection
+                            setSelectedTargetInstance(null);
                           }}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select Target Dataset" />
                           </SelectTrigger>
                           <SelectContent>
-                            {referenceData?.map((data: any) => (
+                            {referenceData?.map((data) => (
                               <SelectItem key={data.id} value={String(data.id)}>
                                 {data.name}
                               </SelectItem>
@@ -390,7 +400,7 @@ export default function ApiTestPage() {
                         <div className="space-y-2">
                           <Label>Target Instance</Label>
                           <Select
-                            value={selectedTargetInstance || ''}
+                            value={selectedTargetInstance || undefined}
                             onValueChange={(value) => {
                               handleParamChange('targetInstanceId', value);
                               setSelectedTargetInstance(value);
@@ -401,8 +411,8 @@ export default function ApiTestPage() {
                             </SelectTrigger>
                             <SelectContent>
                               {targetInstancesLoading ? (
-                                <SelectItem value="">Loading...</SelectItem>
-                              ) : targetInstances?.map((instance: any) => (
+                                <SelectItem value="loading">Loading instances...</SelectItem>
+                              ) : targetInstances?.map((instance) => (
                                 <SelectItem key={instance.id} value={String(instance.id)}>
                                   {instance.name || `Instance ${instance.id}`}
                                 </SelectItem>
