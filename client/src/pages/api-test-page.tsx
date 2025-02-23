@@ -27,11 +27,6 @@ interface Instance {
   name: string;
 }
 
-interface Attribute {
-  name: string;
-  type: string;
-}
-
 export default function ApiTestPage() {
   const { toast } = useToast();
   const [selectedEndpoint, setSelectedEndpoint] = useState<string | null>(null);
@@ -79,18 +74,6 @@ export default function ApiTestPage() {
   const { data: crosswalks = [], isLoading: crosswalksLoading } = useQuery({
     queryKey: ['/api/crosswalks']
   });
-
-  // Add attributes queries
-  const { data: sourceAttributes = [], isLoading: sourceAttributesLoading } = useQuery<Attribute[]>({
-    queryKey: [`/api/reference-data/${selectedSourceSystem}/attributes`],
-    enabled: !!selectedSourceSystem
-  });
-
-  const { data: targetAttributes = [], isLoading: targetAttributesLoading } = useQuery<Attribute[]>({
-    queryKey: [`/api/reference-data/${selectedTargetSystem}/attributes`],
-    enabled: !!selectedTargetSystem
-  });
-
 
   const handleParamChange = (key: string, value: string) => {
     setTestParams(prev => ({ ...prev, [key]: value }));
@@ -143,7 +126,7 @@ export default function ApiTestPage() {
       <div className="container mx-auto p-6 space-y-8">
         <h1 className="text-3xl font-bold">API Endpoint Testing</h1>
 
-        <Tabs defaultValue="data" className="w-full">
+        <Tabs defaultValue="crosswalks" className="w-full">
           <TabsList>
             <TabsTrigger value="auth">Authentication</TabsTrigger>
             <TabsTrigger value="types">Reference Types</TabsTrigger>
@@ -413,62 +396,17 @@ export default function ApiTestPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4">
-                  {/* Test GET /api/reference-data */}
                   <div className="flex items-center gap-4">
                     <Button
                       disabled={selectedEndpoint === '/api/reference-data'}
                       onClick={() => testEndpoint('/api/reference-data')}
                     >
+                      {selectedEndpoint === '/api/reference-data' && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
                       Test /api/reference-data
                     </Button>
                     <span>{dataLoading ? 'Loading...' : `${referenceData?.length || 0} datasets found`}</span>
-                  </div>
-
-                  {/* Test GET /api/reference-data/:id/attributes */}
-                  <div className="space-y-4">
-                    <Label>Test GET /api/reference-data/:id/attributes</Label>
-                    <div className="space-y-2">
-                      <Select
-                        value={selectedSourceSystem || undefined}
-                        onValueChange={setSelectedSourceSystem}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a dataset" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {referenceData.map((data) => (
-                            <SelectItem key={data.id} value={String(data.id)}>
-                              {data.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-                      <Button
-                        disabled={!selectedSourceSystem || selectedEndpoint === `/api/reference-data/${selectedSourceSystem}/attributes`}
-                        onClick={() => testEndpoint(`/api/reference-data/${selectedSourceSystem}/attributes`)}
-                      >
-                        Test Attributes Endpoint
-                      </Button>
-                      <div>
-                        {sourceAttributesLoading ? (
-                          'Loading attributes...'
-                        ) : sourceAttributes.length > 0 ? (
-                          <div className="mt-2">
-                            <Label>Attributes found:</Label>
-                            <ScrollArea className="h-[100px] w-full rounded-md border p-4 mt-2">
-                              <pre className="text-sm">
-                                {JSON.stringify(sourceAttributes, null, 2)}
-                              </pre>
-                            </ScrollArea>
-                          </div>
-                        ) : selectedSourceSystem ? (
-                          'No attributes found'
-                        ) : (
-                          'Select a dataset to test attributes'
-                        )}
-                      </div>
-                    </div>
                   </div>
                 </div>
               </CardContent>

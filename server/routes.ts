@@ -180,43 +180,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/reference-data/:id/attributes", async (req, res) => {
-    console.log('GET /api/reference-data/:id/attributes - Request received');
-    if (!req.isAuthenticated()) {
-      console.log('GET /api/reference-data/:id/attributes - Unauthorized access');
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    try {
-      const dataSetId = Number(req.params.id);
-      console.log('GET /api/reference-data/:id/attributes - Fetching dataset:', dataSetId);
-
-      // Get the reference data set to find its type
-      const dataSet = await storage.getReferenceDataSet(dataSetId);
-      if (!dataSet) {
-        console.log('GET /api/reference-data/:id/attributes - Dataset not found');
-        return res.status(404).json({ error: "Reference Data Set not found" });
-      }
-
-      // Get the schemas for this type
-      const schemas = await storage.getReferenceDataTypeSchemas(dataSet.typeId);
-      console.log('GET /api/reference-data/:id/attributes - Found schemas:', schemas);
-
-      // Convert schemas to attributes format
-      const attributes = schemas.map(schema => ({
-        name: schema.name,
-        dataType: schema.dataType
-      }));
-
-      console.log('GET /api/reference-data/:id/attributes - Returning attributes:', attributes);
-      res.setHeader('Content-Type', 'application/json');
-      return res.json(attributes);
-    } catch (error) {
-      console.error('GET /api/reference-data/:id/attributes - Error:', error);
-      return res.status(500).json({ error: String(error) });
-    }
-  });
-
   app.post("/api/reference-data", async (req, res) => {
     console.log('POST /api/reference-data - Request received'); //Added logging
     if (!req.isAuthenticated()) {
@@ -233,6 +196,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New route to get sample data template
   app.get("/api/reference-data/:id/template", async (req, res) => {
     console.log('GET /api/reference-data/:id/template - Request received'); //Added logging
     if (!req.isAuthenticated()) {
