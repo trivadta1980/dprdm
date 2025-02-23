@@ -19,11 +19,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit2, Check, X, Save } from "lucide-react";
+import { Edit2, Check, X, Save, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useParams, Link } from "wouter";
 
 interface DataSet {
   id: number;
@@ -42,13 +43,12 @@ interface Mapping {
 }
 
 export default function CrosswalkPage() {
+  const { id } = useParams();
   const { toast } = useToast();
+  const isEditMode = !!id;
 
-  // Add new state variables for name and description
   const [mappingName, setMappingName] = useState("");
   const [mappingDescription, setMappingDescription] = useState("");
-
-  // Previous state variables remain the same
   const [selectedSourceDataset, setSelectedSourceDataset] = useState<string | null>(null);
   const [selectedSourceAttribute, setSelectedSourceAttribute] = useState<string | null>(null);
   const [selectedTargetDataset, setSelectedTargetDataset] = useState<string | null>(null);
@@ -60,36 +60,28 @@ export default function CrosswalkPage() {
   const [confidenceOperator, setConfidenceOperator] = useState<"gt" | "lt" | "eq">("gt");
   const [confidenceValue, setConfidenceValue] = useState<string>("");
 
-  // Fetch all datasets
   const { data: datasets = [], isLoading: datasetsLoading } = useQuery<DataSet[]>({
     queryKey: ['/api/reference-data']
   });
 
-  // Source dataset type
   const selectedSourceDatasetObj = datasets.find(d => d.id === Number(selectedSourceDataset));
-
-  // Target dataset type
   const selectedTargetDatasetObj = datasets.find(d => d.id === Number(selectedTargetDataset));
 
-  // Fetch schemas for source dataset's type
   const { data: sourceSchemas = [], isLoading: sourceSchemaLoading } = useQuery<SchemaField[]>({
     queryKey: [`/api/reference-types/${selectedSourceDatasetObj?.typeId}/schemas`],
     enabled: !!selectedSourceDatasetObj?.typeId
   });
 
-  // Get the source dataset's raw data
   const { data: sourceDatasetData, isLoading: sourceDatasetLoading } = useQuery({
     queryKey: [`/api/reference-data/${selectedSourceDataset}`],
     enabled: !!selectedSourceDataset
   });
 
-  // Get the target dataset's raw data
   const { data: targetDatasetData, isLoading: targetDatasetLoading } = useQuery({
     queryKey: [`/api/reference-data/${selectedTargetDataset}`],
     enabled: !!selectedTargetDataset
   });
 
-  // Extract unique values for the selected source attribute
   const getSourceAttributeValues = () => {
     if (!selectedSourceAttribute || !sourceDatasetData?.data) return [];
 
@@ -103,7 +95,6 @@ export default function CrosswalkPage() {
     return Array.from(values);
   };
 
-  // Extract unique values for the selected target attribute
   const getTargetAttributeValues = () => {
     if (!selectedSourceAttribute || !targetDatasetData?.data) return [];
 
@@ -120,7 +111,6 @@ export default function CrosswalkPage() {
   const sourceAttributeValues = getSourceAttributeValues();
   const targetAttributeValues = getTargetAttributeValues();
 
-  // Function to calculate string similarity (simple for now, can be enhanced)
   const calculateSimilarity = (str1: string, str2: string): number => {
     const s1 = str1.toLowerCase();
     const s2 = str2.toLowerCase();
@@ -129,7 +119,6 @@ export default function CrosswalkPage() {
     return 0;
   };
 
-  // Function to automatically generate mappings
   const generateMappings = () => {
     const newMappings: Mapping[] = [];
 
@@ -161,14 +150,12 @@ export default function CrosswalkPage() {
     setMappings(newMappings);
   };
 
-  // Effect to generate mappings when both attributes are selected
   useEffect(() => {
     if (selectedSourceAttribute && selectedTargetDataset) {
       generateMappings();
     }
   }, [selectedSourceAttribute, selectedTargetDataset, sourceAttributeValues, targetAttributeValues]);
 
-  // Function to update a mapping
   const updateMapping = (index: number, newTargetValue: string) => {
     const newMappings = [...mappings];
     newMappings[index] = {
@@ -180,24 +167,21 @@ export default function CrosswalkPage() {
     setEditingIndex(null);
   };
 
-  // Filter target datasets to match source type and exclude source dataset
   const availableTargetDatasets = datasets.filter(dataset => {
-    if (!selectedSourceDatasetObj) return true; // Show all if no source selected
+    if (!selectedSourceDatasetObj) return true; 
     return dataset.typeId === selectedSourceDatasetObj.typeId &&
-           dataset.id !== Number(selectedSourceDataset); // Exclude source dataset
+           dataset.id !== Number(selectedSourceDataset); 
   });
 
-  // Effect to reset target selection if source type changes
   useEffect(() => {
     if (selectedSourceDatasetObj && selectedTargetDatasetObj) {
       if (selectedSourceDatasetObj.typeId !== selectedTargetDatasetObj.typeId ||
-          selectedSourceDataset === selectedTargetDataset) { // Reset if same dataset selected
+          selectedSourceDataset === selectedTargetDataset) { 
         setSelectedTargetDataset(null);
       }
     }
   }, [selectedSourceDatasetObj?.typeId, selectedSourceDataset]);
 
-  // Apply filters to mappings
   const filteredMappings = mappings.filter(mapping => {
     const sourceMatch = mapping.sourceValue.toLowerCase().includes(sourceFilter.toLowerCase());
     const targetMatch = mapping.targetValue.toLowerCase().includes(targetFilter.toLowerCase());
@@ -214,7 +198,6 @@ export default function CrosswalkPage() {
     return sourceMatch && targetMatch && confidenceMatch;
   });
 
-  // Update generatePayload to match the schema
   const generatePayload = () => {
     if (!selectedSourceDataset || !selectedTargetDataset || !selectedSourceAttribute || !mappingName) {
       return null;
@@ -237,6 +220,23 @@ export default function CrosswalkPage() {
     };
   };
 
+  const { data: existingCrosswalk, isLoading: crosswalkLoading } = useQuery({
+    queryKey: [`/api/crosswalks/${id}`],
+    enabled: isEditMode,
+  });
+
+  useEffect(() => {
+    if (existingCrosswalk && isEditMode) {
+      setMappingName(existingCrosswalk.name);
+      setMappingDescription(existingCrosswalk.description);
+      setSelectedSourceDataset(String(existingCrosswalk.sourceSystemId));
+      setSelectedTargetDataset(String(existingCrosswalk.targetSystemId));
+      setSelectedSourceAttribute(existingCrosswalk.mappingData.sourceAttribute);
+      setMappings(existingCrosswalk.mappingData.mappings);
+    }
+  }, [existingCrosswalk, isEditMode]);
+
+
   const saveMappingsMutation = useMutation({
     mutationFn: async () => {
       const payload = generatePayload();
@@ -244,13 +244,12 @@ export default function CrosswalkPage() {
         throw new Error("Please select source and target datasets and attributes and provide a name");
       }
 
-      // Use the correct endpoint and include credentials
       const response = await fetch('/api/crosswalks', {
-        method: 'POST',
+        method: isEditMode ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        credentials: 'include', // Important for session cookies
+        credentials: 'include', 
         body: JSON.stringify(payload)
       });
 
@@ -281,7 +280,16 @@ export default function CrosswalkPage() {
     <MainLayout>
       <div className="container mx-auto p-6 space-y-8">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Crosswalk</h1>
+          <div className="flex items-center gap-4">
+            <Link href="/crosswalks">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
+            <h1 className="text-3xl font-bold">
+              {isEditMode ? "Edit Crosswalk" : "Create Crosswalk"}
+            </h1>
+          </div>
         </div>
 
         <Card>
@@ -289,7 +297,6 @@ export default function CrosswalkPage() {
             <CardTitle>Map Source to Target Attributes</CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Add Name and Description fields */}
             <div className="space-y-6 mb-8">
               <div className="space-y-2">
                 <Label htmlFor="mapping-name">Mapping Name</Label>
@@ -314,10 +321,8 @@ export default function CrosswalkPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-8">
-              {/* Source Section */}
               <div className="space-y-6">
                 <h2 className="text-xl font-semibold">Source</h2>
-                {/* Source Dataset Selection */}
                 <div className="space-y-2">
                   <Label>Source Dataset</Label>
                   <Select
@@ -325,7 +330,6 @@ export default function CrosswalkPage() {
                     onValueChange={(value) => {
                       setSelectedSourceDataset(value);
                       setSelectedSourceAttribute(null);
-                      // Reset target if types don't match
                       const newSourceType = datasets.find(d => d.id === Number(value))?.typeId;
                       if (selectedTargetDatasetObj && newSourceType !== selectedTargetDatasetObj.typeId) {
                         setSelectedTargetDataset(null);
@@ -347,7 +351,6 @@ export default function CrosswalkPage() {
                   </Select>
                 </div>
 
-                {/* Source Attribute Selection */}
                 <div className="space-y-2">
                   <Label>Source Attribute</Label>
                   <Select
@@ -371,10 +374,8 @@ export default function CrosswalkPage() {
                 </div>
               </div>
 
-              {/* Target Section */}
               <div className="space-y-6">
                 <h2 className="text-xl font-semibold">Target</h2>
-                {/* Target Dataset Selection */}
                 <div className="space-y-2">
                   <Label>Target Dataset</Label>
                   <Select
@@ -407,7 +408,6 @@ export default function CrosswalkPage() {
                     )}
                 </div>
 
-                {/* Target Attribute Display */}
                 <div className="space-y-2">
                   <Label>Target Attribute</Label>
                   <div className="p-2 border rounded-md bg-muted">
@@ -417,7 +417,6 @@ export default function CrosswalkPage() {
               </div>
             </div>
 
-            {/* Mapping Table */}
             {mappings.length > 0 && (
               <div className="mt-8">
                 <div className="flex justify-between items-center mb-4">
@@ -573,7 +572,6 @@ export default function CrosswalkPage() {
           </CardContent>
         </Card>
 
-        {/* Debug Panel */}
         {mappings.length > 0 && (
           <Card>
             <CardHeader>
