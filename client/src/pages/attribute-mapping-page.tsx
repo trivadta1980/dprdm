@@ -83,6 +83,7 @@ export default function AttributeMappingPage() {
     selectedAttribute,
     sourceInstances: sourceInstances?.map(instance => ({
       id: instance.id,
+      name: instance.name,
       data: instance.data
     })),
     extractedValues: attributeValues
