@@ -19,6 +19,7 @@ import RelationshipsPage from "@/pages/relationships-page";
 import RelationshipValuesPage from "@/pages/relationship-values-page";
 import ApiTestPage from "@/pages/api-test-page";
 import CrosswalkPage from "@/pages/crosswalk-page";
+import CrosswalksListPage from "@/pages/crosswalks-list-page";
 
 function Router() {
   console.log('Router: Initializing routes');
@@ -33,7 +34,10 @@ function Router() {
       <ProtectedRoute path="/reference-data/:id/instances" component={ReferenceDataInstancesPage} />
       <ProtectedRoute path="/relationships" component={RelationshipsPage} />
       <ProtectedRoute path="/relationships/:id/values" component={RelationshipValuesPage} />
-      <ProtectedRoute path="/crosswalk" component={CrosswalkPage} />
+      <ProtectedRoute path="/crosswalks" component={CrosswalksListPage} />
+      <ProtectedRoute path="/crosswalks/create" component={CrosswalkPage} />
+      <ProtectedRoute path="/crosswalks/:id/edit" component={CrosswalkPage} />
+      <ProtectedRoute path="/crosswalks/:id" component={CrosswalkPage} />
       <ProtectedRoute path="/help" component={HelpPage} />
       <ProtectedRoute path="/api-test" component={ApiTestPage} />
       <Route path="/auth" component={AuthPage} />
