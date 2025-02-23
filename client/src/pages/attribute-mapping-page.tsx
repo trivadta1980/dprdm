@@ -14,7 +14,14 @@ import { useState } from "react";
 interface DataSet {
   id: number;
   name: string;
-  attributes?: string[];
+}
+
+interface SchemaField {
+  id: number;
+  name: string;
+  dataType: string;
+  isRequired: boolean;
+  description?: string;
 }
 
 export default function AttributeMappingPage() {
@@ -28,15 +35,15 @@ export default function AttributeMappingPage() {
     queryKey: ['/api/reference-data']
   });
 
-  // Fetch source dataset attributes
-  const { data: sourceAttributes = [], isLoading: sourceAttributesLoading } = useQuery<string[]>({
-    queryKey: [`/api/reference-data/${selectedSourceDataset}/attributes`],
+  // Fetch source dataset schemas
+  const { data: sourceSchemas = [], isLoading: sourceSchemaLoading } = useQuery<SchemaField[]>({
+    queryKey: [`/api/reference-types/${selectedSourceDataset}/schemas`],
     enabled: !!selectedSourceDataset
   });
 
-  // Fetch target dataset attributes
-  const { data: targetAttributes = [], isLoading: targetAttributesLoading } = useQuery<string[]>({
-    queryKey: [`/api/reference-data/${selectedTargetDataset}/attributes`],
+  // Fetch target dataset schemas
+  const { data: targetSchemas = [], isLoading: targetSchemaLoading } = useQuery<SchemaField[]>({
+    queryKey: [`/api/reference-types/${selectedTargetDataset}/schemas`],
     enabled: !!selectedTargetDataset
   });
 
@@ -44,7 +51,7 @@ export default function AttributeMappingPage() {
     <MainLayout>
       <div className="container mx-auto p-6 space-y-8">
         <h1 className="text-3xl font-bold">Attribute Mapping</h1>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Map Attributes Between Datasets</CardTitle>
@@ -87,11 +94,12 @@ export default function AttributeMappingPage() {
                     <SelectValue placeholder="Select source attribute" />
                   </SelectTrigger>
                   <SelectContent>
-                    {sourceAttributesLoading ? (
+                    {sourceSchemaLoading ? (
                       <SelectItem value="loading">Loading attributes...</SelectItem>
-                    ) : sourceAttributes.map((attribute) => (
-                      <SelectItem key={attribute} value={attribute}>
-                        {attribute}
+                    ) : sourceSchemas.map((schema) => (
+                      <SelectItem key={schema.id} value={schema.name}>
+                        {schema.name} ({schema.dataType})
+                        {schema.isRequired && " *"}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -136,11 +144,12 @@ export default function AttributeMappingPage() {
                     <SelectValue placeholder="Select target attribute" />
                   </SelectTrigger>
                   <SelectContent>
-                    {targetAttributesLoading ? (
+                    {targetSchemaLoading ? (
                       <SelectItem value="loading">Loading attributes...</SelectItem>
-                    ) : targetAttributes.map((attribute) => (
-                      <SelectItem key={attribute} value={attribute}>
-                        {attribute}
+                    ) : targetSchemas.map((schema) => (
+                      <SelectItem key={schema.id} value={schema.name}>
+                        {schema.name} ({schema.dataType})
+                        {schema.isRequired && " *"}
                       </SelectItem>
                     ))}
                   </SelectContent>
