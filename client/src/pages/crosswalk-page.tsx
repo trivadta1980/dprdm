@@ -49,6 +49,22 @@ interface CSVMapping {
   targetValue: string;
 }
 
+export const calculateSimilarity = (str1: string, str2: string): number => {
+  const s1 = str1.toLowerCase().trim();
+  const s2 = str2.toLowerCase().trim();
+  if (s1 === s2) return 1;
+  if (s1.includes(s2) || s2.includes(s1)) return 0.8;
+  // Check if strings are similar enough (e.g., Brasil vs Brazil)
+  const minLength = Math.min(s1.length, s2.length);
+  const maxLength = Math.max(s1.length, s2.length);
+  let commonChars = 0;
+  for (let i = 0; i < minLength; i++) {
+    if (s1[i] === s2[i]) commonChars++;
+  }
+  const similarity = commonChars / maxLength;
+  return similarity >= 0.7 ? 0.8 : 0;
+};
+
 export default function CrosswalkPage() {
   const { id } = useParams();
   const { toast } = useToast();
@@ -119,13 +135,6 @@ export default function CrosswalkPage() {
   const sourceAttributeValues = getSourceAttributeValues();
   const targetAttributeValues = getTargetAttributeValues();
 
-  const calculateSimilarity = (str1: string, str2: string): number => {
-    const s1 = str1.toLowerCase();
-    const s2 = str2.toLowerCase();
-    if (s1 === s2) return 1;
-    if (s1.includes(s2) || s2.includes(s1)) return 0.8;
-    return 0;
-  };
 
   const generateMappings = () => {
     const newMappings: Mapping[] = [];
