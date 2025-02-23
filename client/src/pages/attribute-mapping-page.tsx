@@ -23,55 +23,98 @@ interface SchemaField {
 }
 
 export default function AttributeMappingPage() {
-  const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
-  const [selectedAttribute, setSelectedAttribute] = useState<string | null>(null);
-  const [selectedValue, setSelectedValue] = useState<string | null>(null);
+  // Source states
+  const [selectedSourceDataset, setSelectedSourceDataset] = useState<string | null>(null);
+  const [selectedSourceAttribute, setSelectedSourceAttribute] = useState<string | null>(null);
+  const [selectedSourceValue, setSelectedSourceValue] = useState<string | null>(null);
+
+  // Target states
+  const [selectedTargetDataset, setSelectedTargetDataset] = useState<string | null>(null);
+  const [selectedTargetAttribute, setSelectedTargetAttribute] = useState<string | null>(null);
+  const [selectedTargetValue, setSelectedTargetValue] = useState<string | null>(null);
 
   // Fetch all datasets
   const { data: datasets = [], isLoading: datasetsLoading } = useQuery<DataSet[]>({
     queryKey: ['/api/reference-data']
   });
 
-  // Find the selected dataset to get its typeId
-  const selectedDatasetObj = datasets.find(d => d.id === Number(selectedDataset));
+  // Source dataset type
+  const selectedSourceDatasetObj = datasets.find(d => d.id === Number(selectedSourceDataset));
 
-  // Fetch schemas for selected dataset's type
-  const { data: schemas = [], isLoading: schemasLoading } = useQuery<SchemaField[]>({
-    queryKey: [`/api/reference-types/${selectedDatasetObj?.typeId}/schemas`],
-    enabled: !!selectedDatasetObj?.typeId
+  // Target dataset type
+  const selectedTargetDatasetObj = datasets.find(d => d.id === Number(selectedTargetDataset));
+
+  // Fetch schemas for source dataset's type
+  const { data: sourceSchemas = [], isLoading: sourceSchemaLoading } = useQuery<SchemaField[]>({
+    queryKey: [`/api/reference-types/${selectedSourceDatasetObj?.typeId}/schemas`],
+    enabled: !!selectedSourceDatasetObj?.typeId
   });
 
-  // Get the specific dataset's raw data
-  const { data: selectedDatasetData, isLoading: selectedDatasetLoading } = useQuery({
-    queryKey: [`/api/reference-data/${selectedDataset}`],
-    enabled: !!selectedDataset
+  // Fetch schemas for target dataset's type
+  const { data: targetSchemas = [], isLoading: targetSchemaLoading } = useQuery<SchemaField[]>({
+    queryKey: [`/api/reference-types/${selectedTargetDatasetObj?.typeId}/schemas`],
+    enabled: !!selectedTargetDatasetObj?.typeId
   });
 
-  // Extract unique values for the selected attribute from the data
-  const getAttributeValues = () => {
-    if (!selectedAttribute || !selectedDatasetData?.data) return [];
+  // Get the source dataset's raw data
+  const { data: sourceDatasetData, isLoading: sourceDatasetLoading } = useQuery({
+    queryKey: [`/api/reference-data/${selectedSourceDataset}`],
+    enabled: !!selectedSourceDataset
+  });
+
+  // Get the target dataset's raw data
+  const { data: targetDatasetData, isLoading: targetDatasetLoading } = useQuery({
+    queryKey: [`/api/reference-data/${selectedTargetDataset}`],
+    enabled: !!selectedTargetDataset
+  });
+
+  // Extract unique values for the selected source attribute
+  const getSourceAttributeValues = () => {
+    if (!selectedSourceAttribute || !sourceDatasetData?.data) return [];
 
     const values = new Set<string>();
-
-    // Iterate through all instances in the data
-    Object.values(selectedDatasetData.data).forEach(instance => {
-      if (instance[selectedAttribute]) {
-        values.add(instance[selectedAttribute]);
+    Object.values(sourceDatasetData.data).forEach(instance => {
+      if (instance[selectedSourceAttribute]) {
+        values.add(instance[selectedSourceAttribute]);
       }
     });
 
     return Array.from(values);
   };
 
-  const attributeValues = getAttributeValues();
+  // Extract unique values for the selected target attribute
+  const getTargetAttributeValues = () => {
+    if (!selectedTargetAttribute || !targetDatasetData?.data) return [];
+
+    const values = new Set<string>();
+    Object.values(targetDatasetData.data).forEach(instance => {
+      if (instance[selectedTargetAttribute]) {
+        values.add(instance[selectedTargetAttribute]);
+      }
+    });
+
+    return Array.from(values);
+  };
+
+  const sourceAttributeValues = getSourceAttributeValues();
+  const targetAttributeValues = getTargetAttributeValues();
 
   // Debug information
   const debugInfo = {
-    selectedDataset,
-    selectedAttribute,
-    selectedValue,
-    rawDatasetData: selectedDatasetData,
-    extractedValues: attributeValues
+    source: {
+      dataset: selectedSourceDataset,
+      attribute: selectedSourceAttribute,
+      value: selectedSourceValue,
+      rawData: sourceDatasetData,
+      extractedValues: sourceAttributeValues
+    },
+    target: {
+      dataset: selectedTargetDataset,
+      attribute: selectedTargetAttribute,
+      value: selectedTargetValue,
+      rawData: targetDatasetData,
+      extractedValues: targetAttributeValues
+    }
   };
 
   return (
@@ -81,82 +124,167 @@ export default function AttributeMappingPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Select Dataset and Schema</CardTitle>
+            <CardTitle>Map Source to Target Attributes</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Dataset Selection */}
-            <div className="space-y-2">
-              <Label>Source Dataset</Label>
-              <Select
-                value={selectedDataset || undefined}
-                onValueChange={(value) => {
-                  setSelectedDataset(value);
-                  setSelectedAttribute(null); // Reset attribute when dataset changes
-                  setSelectedValue(null); // Reset value when dataset changes
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choose a dataset" />
-                </SelectTrigger>
-                <SelectContent>
-                  {datasetsLoading ? (
-                    <SelectItem value="loading">Loading datasets...</SelectItem>
-                  ) : datasets.map((dataset) => (
-                    <SelectItem key={dataset.id} value={String(dataset.id)}>
-                      {dataset.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-8">
+              {/* Source Section */}
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold">Source</h2>
+                {/* Source Dataset Selection */}
+                <div className="space-y-2">
+                  <Label>Source Dataset</Label>
+                  <Select
+                    value={selectedSourceDataset || undefined}
+                    onValueChange={(value) => {
+                      setSelectedSourceDataset(value);
+                      setSelectedSourceAttribute(null);
+                      setSelectedSourceValue(null);
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Choose a dataset" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {datasetsLoading ? (
+                        <SelectItem value="loading">Loading datasets...</SelectItem>
+                      ) : datasets.map((dataset) => (
+                        <SelectItem key={dataset.id} value={String(dataset.id)}>
+                          {dataset.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Schema Selection */}
-            <div className="space-y-2">
-              <Label>Source Attribute</Label>
-              <Select 
-                disabled={!selectedDataset}
-                value={selectedAttribute || undefined}
-                onValueChange={(value) => {
-                  setSelectedAttribute(value);
-                  setSelectedValue(null); // Reset value when attribute changes
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={selectedDataset ? "Choose an attribute" : "Select a dataset first"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {schemasLoading ? (
-                    <SelectItem value="loading">Loading attributes...</SelectItem>
-                  ) : schemas.map((schema) => (
-                    <SelectItem key={schema.name} value={schema.name}>
-                      {schema.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                {/* Source Attribute Selection */}
+                <div className="space-y-2">
+                  <Label>Source Attribute</Label>
+                  <Select 
+                    disabled={!selectedSourceDataset}
+                    value={selectedSourceAttribute || undefined}
+                    onValueChange={(value) => {
+                      setSelectedSourceAttribute(value);
+                      setSelectedSourceValue(null);
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={selectedSourceDataset ? "Choose an attribute" : "Select a dataset first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sourceSchemaLoading ? (
+                        <SelectItem value="loading">Loading attributes...</SelectItem>
+                      ) : sourceSchemas.map((schema) => (
+                        <SelectItem key={schema.name} value={schema.name}>
+                          {schema.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Source Values Selection */}
-            <div className="space-y-2">
-              <Label>Source Values</Label>
-              <Select
-                disabled={!selectedAttribute}
-                value={selectedValue || undefined}
-                onValueChange={setSelectedValue}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={selectedAttribute ? "Choose a value" : "Select an attribute first"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {selectedDatasetLoading ? (
-                    <SelectItem value="loading">Loading values...</SelectItem>
-                  ) : attributeValues.map((value) => (
-                    <SelectItem key={value} value={value}>
-                      {value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                {/* Source Values Selection */}
+                <div className="space-y-2">
+                  <Label>Source Values</Label>
+                  <Select
+                    disabled={!selectedSourceAttribute}
+                    value={selectedSourceValue || undefined}
+                    onValueChange={setSelectedSourceValue}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={selectedSourceAttribute ? "Choose a value" : "Select an attribute first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sourceDatasetLoading ? (
+                        <SelectItem value="loading">Loading values...</SelectItem>
+                      ) : sourceAttributeValues.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Target Section */}
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold">Target</h2>
+                {/* Target Dataset Selection */}
+                <div className="space-y-2">
+                  <Label>Target Dataset</Label>
+                  <Select
+                    value={selectedTargetDataset || undefined}
+                    onValueChange={(value) => {
+                      setSelectedTargetDataset(value);
+                      setSelectedTargetAttribute(null);
+                      setSelectedTargetValue(null);
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Choose a dataset" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {datasetsLoading ? (
+                        <SelectItem value="loading">Loading datasets...</SelectItem>
+                      ) : datasets.map((dataset) => (
+                        <SelectItem key={dataset.id} value={String(dataset.id)}>
+                          {dataset.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Target Attribute Selection */}
+                <div className="space-y-2">
+                  <Label>Target Attribute</Label>
+                  <Select 
+                    disabled={!selectedTargetDataset}
+                    value={selectedTargetAttribute || undefined}
+                    onValueChange={(value) => {
+                      setSelectedTargetAttribute(value);
+                      setSelectedTargetValue(null);
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={selectedTargetDataset ? "Choose an attribute" : "Select a dataset first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {targetSchemaLoading ? (
+                        <SelectItem value="loading">Loading attributes...</SelectItem>
+                      ) : targetSchemas.map((schema) => (
+                        <SelectItem key={schema.name} value={schema.name}>
+                          {schema.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Target Values Selection */}
+                <div className="space-y-2">
+                  <Label>Target Values</Label>
+                  <Select
+                    disabled={!selectedTargetAttribute}
+                    value={selectedTargetValue || undefined}
+                    onValueChange={setSelectedTargetValue}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={selectedTargetAttribute ? "Choose a value" : "Select an attribute first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {targetDatasetLoading ? (
+                        <SelectItem value="loading">Loading values...</SelectItem>
+                      ) : targetAttributeValues.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
 
             {/* Debug Panel */}
