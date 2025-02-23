@@ -59,14 +59,26 @@ export default function ApiTestPage() {
 
   // Source system schema
   const { data: sourceSchema, isLoading: sourceSchemaLoading } = useQuery<SchemaResponse>({
-    queryKey: ['/api/reference-data', selectedSourceSystem, 'schema'],
-    enabled: !!selectedSourceSystem
+    queryKey: [`/api/reference-data/${selectedSourceSystem}/schema`],
+    enabled: !!selectedSourceSystem,
+    onSuccess: (data) => {
+      console.log('Source schema loaded:', data);
+    },
+    onError: (error) => {
+      console.error('Error loading source schema:', error);
+    }
   });
 
   // Target system schema
   const { data: targetSchema, isLoading: targetSchemaLoading } = useQuery<SchemaResponse>({
-    queryKey: ['/api/reference-data', selectedTargetSystem, 'schema'],
-    enabled: !!selectedTargetSystem
+    queryKey: [`/api/reference-data/${selectedTargetSystem}/schema`],
+    enabled: !!selectedTargetSystem,
+    onSuccess: (data) => {
+      console.log('Target schema loaded:', data);
+    },
+    onError: (error) => {
+      console.error('Error loading target schema:', error);
+    }
   });
 
   // Source system instances
@@ -178,7 +190,7 @@ export default function ApiTestPage() {
                   <div className="space-y-2">
                     <Label>GET /api/user</Label>
                     <div className="flex items-center gap-4">
-                      <Button 
+                      <Button
                         disabled={selectedEndpoint === '/api/user'}
                         onClick={() => testEndpoint('/api/user')}
                       >
@@ -195,11 +207,11 @@ export default function ApiTestPage() {
                   <div className="space-y-2">
                     <Label>POST /api/login</Label>
                     <div className="grid gap-2">
-                      <Input 
+                      <Input
                         placeholder="Username"
                         onChange={(e) => handleParamChange('username', e.target.value)}
                       />
-                      <Input 
+                      <Input
                         type="password"
                         placeholder="Password"
                         onChange={(e) => handleParamChange('password', e.target.value)}
@@ -232,7 +244,7 @@ export default function ApiTestPage() {
                   <div className="space-y-2">
                     <Label>GET /api/reference-types</Label>
                     <div className="flex items-center gap-4">
-                      <Button 
+                      <Button
                         disabled={selectedEndpoint === '/api/reference-types'}
                         onClick={() => testEndpoint('/api/reference-types')}
                       >
@@ -246,11 +258,11 @@ export default function ApiTestPage() {
                   <div className="space-y-2">
                     <Label>POST /api/reference-types</Label>
                     <div className="grid gap-2">
-                      <Input 
+                      <Input
                         placeholder="Type Name"
                         onChange={(e) => handleParamChange('name', e.target.value)}
                       />
-                      <Input 
+                      <Input
                         placeholder="Description"
                         onChange={(e) => handleParamChange('description', e.target.value)}
                       />
@@ -278,7 +290,7 @@ export default function ApiTestPage() {
               <CardContent className="space-y-4">
                 <div className="grid gap-4">
                   <div className="flex items-center gap-4">
-                    <Button 
+                    <Button
                       disabled={selectedEndpoint === '/api/reference-data'}
                       onClick={() => testEndpoint('/api/reference-data')}
                     >
@@ -303,7 +315,7 @@ export default function ApiTestPage() {
               <CardContent className="space-y-4">
                 <div className="grid gap-4">
                   <div className="flex items-center gap-4">
-                    <Button 
+                    <Button
                       disabled={selectedEndpoint === '/api/relationships'}
                       onClick={() => testEndpoint('/api/relationships')}
                     >
@@ -333,7 +345,7 @@ export default function ApiTestPage() {
                   <div className="space-y-2">
                     <Label>GET /api/crosswalks</Label>
                     <div className="flex items-center gap-4">
-                      <Button 
+                      <Button
                         disabled={selectedEndpoint === '/api/crosswalks'}
                         onClick={() => testEndpoint('/api/crosswalks')}
                       >
@@ -346,11 +358,11 @@ export default function ApiTestPage() {
                   <div className="space-y-2">
                     <Label>POST /api/crosswalks</Label>
                     <div className="grid gap-4">
-                      <Input 
+                      <Input
                         placeholder="Mapping Name"
                         onChange={(e) => handleParamChange('name', e.target.value)}
                       />
-                      <Select 
+                      <Select
                         onValueChange={(value) => {
                           handleParamChange('sourceSystemId', value);
                           setSelectedSourceSystem(value);
@@ -395,7 +407,7 @@ export default function ApiTestPage() {
                         </div>
                       )}
 
-                      <Select 
+                      <Select
                         onValueChange={(value) => {
                           handleParamChange('targetSystemId', value);
                           setSelectedTargetSystem(value);
