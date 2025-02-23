@@ -10,8 +10,7 @@ import {
   GitFork,
   FileJson,
   Laptop2,
-  TestTube2,
-  ArrowRightLeft
+  TestTube2
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -61,12 +60,6 @@ export function Sidebar({ className }: SidebarProps) {
       title: "Crosswalks",
       href: "/crosswalks",
       icon: GitCompare,
-      requiresPermission: true,
-    },
-    {
-      title: "Attribute Mapping",
-      href: "/attribute-mapping",
-      icon: ArrowRightLeft,
       requiresPermission: true,
     },
     {
