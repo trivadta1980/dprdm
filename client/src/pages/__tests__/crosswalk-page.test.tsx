@@ -1,7 +1,7 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '../../test/test-utils';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import CrosswalkPage from '../crosswalk-page';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
 
 // Mock the routing
 vi.mock('wouter', () => ({
@@ -37,8 +37,8 @@ describe('CrosswalkPage', () => {
   ];
 
   beforeEach(() => {
-    // Reset mocks
     vi.clearAllMocks();
+    queryClient.clear();
 
     // Mock API responses
     global.fetch = vi.fn()
@@ -53,11 +53,7 @@ describe('CrosswalkPage', () => {
   });
 
   const renderComponent = () => {
-    return render(
-      <QueryClientProvider client={queryClient}>
-        <CrosswalkPage />
-      </QueryClientProvider>
-    );
+    return render(<CrosswalkPage />);
   };
 
   describe('Form Validation', () => {
