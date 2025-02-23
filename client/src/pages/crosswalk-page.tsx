@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit2, Check, X, Save, ArrowLeft, Upload } from "lucide-react";
+import { Edit2, Check, X, Save, ArrowLeft, Upload, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
@@ -335,6 +335,27 @@ export default function CrosswalkPage() {
     event.target.value = '';
   };
 
+  const handleExportCSV = () => {
+    const csvContent = [
+      ['sourceValue', 'targetValue'].join(','),
+      ...mappings.map(mapping =>
+        [
+          `"${mapping.sourceValue.replace(/"/g, '""')}"`,
+          `"${mapping.targetValue.replace(/"/g, '""')}"`
+        ].join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${mappingName || 'crosswalk'}_mappings.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <MainLayout>
       <div className="container mx-auto p-6 space-y-8">
@@ -497,6 +518,14 @@ export default function CrosswalkPage() {
                           </span>
                         </Button>
                       </label>
+                      <Button
+                        variant="outline"
+                        onClick={handleExportCSV}
+                        disabled={mappings.length === 0}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Export to CSV
+                      </Button>
                     </div>
                   </div>
                   <Button
