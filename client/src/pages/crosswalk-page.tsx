@@ -44,19 +44,17 @@ interface Mapping {
 export default function CrosswalkPage() {
   const { toast } = useToast();
 
-  // Source states
+  // Add new state variables for name and description
+  const [mappingName, setMappingName] = useState("");
+  const [mappingDescription, setMappingDescription] = useState("");
+
+  // Previous state variables remain the same
   const [selectedSourceDataset, setSelectedSourceDataset] = useState<string | null>(null);
   const [selectedSourceAttribute, setSelectedSourceAttribute] = useState<string | null>(null);
-
-  // Target states
   const [selectedTargetDataset, setSelectedTargetDataset] = useState<string | null>(null);
-
-  // Mapping states
   const [mappings, setMappings] = useState<Mapping[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState<string>("");
-
-  // Filter states
   const [sourceFilter, setSourceFilter] = useState("");
   const [targetFilter, setTargetFilter] = useState("");
   const [confidenceOperator, setConfidenceOperator] = useState<"gt" | "lt" | "eq">("gt");
@@ -216,22 +214,26 @@ export default function CrosswalkPage() {
     return sourceMatch && targetMatch && confidenceMatch;
   });
 
-  // Generate the payload that would be sent
+  // Update generatePayload to include name and description
   const generatePayload = () => {
-    if (!selectedSourceDataset || !selectedTargetDataset || !selectedSourceAttribute) {
+    if (!selectedSourceDataset || !selectedTargetDataset || !selectedSourceAttribute || !mappingName) {
       return null;
     }
 
     return {
-      sourceDatasetId: Number(selectedSourceDataset),
-      targetDatasetId: Number(selectedTargetDataset),
-      sourceAttribute: selectedSourceAttribute,
-      targetAttribute: selectedSourceAttribute, // Same as source since we're using the same attribute
-      mappings: mappings.map(m => ({
-        sourceValue: m.sourceValue,
-        targetValue: m.targetValue,
-        confidence: m.confidence
-      }))
+      name: mappingName,
+      description: mappingDescription,
+      sourceSystemId: Number(selectedSourceDataset),
+      targetSystemId: Number(selectedTargetDataset),
+      mapping_data: {
+        sourceAttribute: selectedSourceAttribute,
+        targetAttribute: selectedSourceAttribute, // Same as source since we're using the same attribute
+        mappings: mappings.map(m => ({
+          sourceValue: m.sourceValue,
+          targetValue: m.targetValue,
+          confidence: m.confidence
+        }))
+      }
     };
   };
 
@@ -239,7 +241,7 @@ export default function CrosswalkPage() {
     mutationFn: async () => {
       const payload = generatePayload();
       if (!payload) {
-        throw new Error("Please select source and target datasets and attributes");
+        throw new Error("Please select source and target datasets and attributes and provide a name");
       }
 
       const response = await fetch('/api/crosswalk-mappings', {
@@ -281,6 +283,7 @@ export default function CrosswalkPage() {
             onClick={() => saveMappingsMutation.mutate()}
             disabled={
               saveMappingsMutation.isPending ||
+              !mappingName ||
               !selectedSourceDataset ||
               !selectedTargetDataset ||
               !selectedSourceAttribute ||
@@ -305,6 +308,30 @@ export default function CrosswalkPage() {
             <CardTitle>Map Source to Target Attributes</CardTitle>
           </CardHeader>
           <CardContent>
+            {/* Add Name and Description fields */}
+            <div className="space-y-6 mb-8">
+              <div className="space-y-2">
+                <Label htmlFor="mapping-name">Mapping Name</Label>
+                <Input
+                  id="mapping-name"
+                  value={mappingName}
+                  onChange={(e) => setMappingName(e.target.value)}
+                  placeholder="Enter a name for this mapping"
+                  className="w-full"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="mapping-description">Description</Label>
+                <Input
+                  id="mapping-description"
+                  value={mappingDescription}
+                  onChange={(e) => setMappingDescription(e.target.value)}
+                  placeholder="Describe the purpose of this mapping"
+                  className="w-full"
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-8">
               {/* Source Section */}
               <div className="space-y-6">
@@ -563,6 +590,7 @@ export default function CrosswalkPage() {
             onClick={() => saveMappingsMutation.mutate()}
             disabled={
               saveMappingsMutation.isPending ||
+              !mappingName ||
               !selectedSourceDataset ||
               !selectedTargetDataset ||
               !selectedSourceAttribute ||
