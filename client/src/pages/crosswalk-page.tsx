@@ -214,7 +214,7 @@ export default function CrosswalkPage() {
     return sourceMatch && targetMatch && confidenceMatch;
   });
 
-  // Update generatePayload to include name and description
+  // Update generatePayload to match the schema
   const generatePayload = () => {
     if (!selectedSourceDataset || !selectedTargetDataset || !selectedSourceAttribute || !mappingName) {
       return null;
@@ -225,9 +225,9 @@ export default function CrosswalkPage() {
       description: mappingDescription,
       sourceSystemId: Number(selectedSourceDataset),
       targetSystemId: Number(selectedTargetDataset),
-      mapping_data: {
+      mappingData: {
         sourceAttribute: selectedSourceAttribute,
-        targetAttribute: selectedSourceAttribute, // Same as source since we're using the same attribute
+        targetAttribute: selectedSourceAttribute,
         mappings: mappings.map(m => ({
           sourceValue: m.sourceValue,
           targetValue: m.targetValue,
@@ -244,16 +244,19 @@ export default function CrosswalkPage() {
         throw new Error("Please select source and target datasets and attributes and provide a name");
       }
 
-      const response = await fetch('/api/crosswalk-mappings', {
+      // Use the correct endpoint and include credentials
+      const response = await fetch('/api/crosswalks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
+        credentials: 'include', // Important for session cookies
         body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save mappings');
+        const error = await response.text();
+        throw new Error(error || 'Failed to save mapping');
       }
 
       return response.json();
@@ -261,9 +264,9 @@ export default function CrosswalkPage() {
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Mappings saved successfully",
+        description: "Mapping saved successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/crosswalk-mappings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/crosswalks'] });
     },
     onError: (error: Error) => {
       toast({
