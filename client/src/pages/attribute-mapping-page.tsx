@@ -180,22 +180,24 @@ export default function AttributeMappingPage() {
     setEditingIndex(null);
   };
 
-  // Filter target datasets to match source type
+  // Filter target datasets to match source type and exclude source dataset
   const availableTargetDatasets = datasets.filter(dataset => {
     if (!selectedSourceDatasetObj) return true; // Show all if no source selected
-    return dataset.typeId === selectedSourceDatasetObj.typeId;
+    return dataset.typeId === selectedSourceDatasetObj.typeId && 
+           dataset.id !== Number(selectedSourceDataset); // Exclude source dataset
   });
 
   // Effect to reset target selection if source type changes
   useEffect(() => {
     if (selectedSourceDatasetObj && selectedTargetDatasetObj) {
-      if (selectedSourceDatasetObj.typeId !== selectedTargetDatasetObj.typeId) {
+      if (selectedSourceDatasetObj.typeId !== selectedTargetDatasetObj.typeId ||
+          selectedSourceDataset === selectedTargetDataset) { // Reset if same dataset selected
         setSelectedTargetDataset(null);
         setSelectedTargetAttribute(null);
         setSelectedTargetValue(null);
       }
     }
-  }, [selectedSourceDatasetObj?.typeId]);
+  }, [selectedSourceDatasetObj?.typeId, selectedSourceDataset]);
 
 
   // Debug information
