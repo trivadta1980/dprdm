@@ -50,7 +50,7 @@ export default function AttributeMappingPage() {
           <CardContent className="space-y-6">
             {/* Dataset Selection */}
             <div className="space-y-2">
-              <Label>Select Dataset</Label>
+              <Label>Source Dataset</Label>
               <Select
                 value={selectedDataset || undefined}
                 onValueChange={setSelectedDataset}
@@ -72,14 +72,14 @@ export default function AttributeMappingPage() {
 
             {/* Schema Selection */}
             <div className="space-y-2">
-              <Label>Select Schema</Label>
+              <Label>Source Attribute</Label>
               <Select disabled={!selectedDataset}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={selectedDataset ? "Choose a schema" : "Select a dataset first"} />
+                  <SelectValue placeholder={selectedDataset ? "Choose an attribute" : "Select a dataset first"} />
                 </SelectTrigger>
                 <SelectContent>
                   {schemasLoading ? (
-                    <SelectItem value="loading">Loading schemas...</SelectItem>
+                    <SelectItem value="loading">Loading attributes...</SelectItem>
                   ) : schemas.map((schema, index) => (
                     <SelectItem key={index} value={schema.name}>
                       {schema.name}
