@@ -54,7 +54,8 @@ export default function AttributeMappingPage() {
   // Filter states
   const [sourceFilter, setSourceFilter] = useState("");
   const [targetFilter, setTargetFilter] = useState("");
-  const [confidenceFilter, setConfidenceFilter] = useState("");
+  const [confidenceOperator, setConfidenceOperator] = useState<"gt" | "lt" | "eq">("gt");
+  const [confidenceValue, setConfidenceValue] = useState<string>("");
 
   // Fetch all datasets
   const { data: datasets = [], isLoading: datasetsLoading } = useQuery<DataSet[]>({
@@ -197,8 +198,15 @@ export default function AttributeMappingPage() {
   const filteredMappings = mappings.filter(mapping => {
     const sourceMatch = mapping.sourceValue.toLowerCase().includes(sourceFilter.toLowerCase());
     const targetMatch = mapping.targetValue.toLowerCase().includes(targetFilter.toLowerCase());
-    const confidenceMatch = confidenceFilter === "" ||
-      (mapping.confidence * 100).toFixed(0).includes(confidenceFilter);
+
+    const confidencePercent = Number((mapping.confidence * 100).toFixed(0));
+    const confidenceNumValue = Number(confidenceValue);
+
+    const confidenceMatch = confidenceValue === "" || (
+      confidenceOperator === "gt" ? confidencePercent > confidenceNumValue :
+      confidenceOperator === "lt" ? confidencePercent < confidenceNumValue :
+      confidencePercent === confidenceNumValue
+    );
 
     return sourceMatch && targetMatch && confidenceMatch;
   });
@@ -351,12 +359,33 @@ export default function AttributeMappingPage() {
                         <TableHead>
                           <div className="space-y-2">
                             <span>Confidence</span>
-                            <Input
-                              placeholder="Filter confidence..."
-                              value={confidenceFilter}
-                              onChange={(e) => setConfidenceFilter(e.target.value)}
-                              className="w-full"
-                            />
+                            <div className="flex gap-2">
+                              <Select
+                                value={confidenceOperator}
+                                onValueChange={(value: "gt" | "lt" | "eq") => setConfidenceOperator(value)}
+                              >
+                                <SelectTrigger className="w-[100px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="gt">&gt;</SelectItem>
+                                  <SelectItem value="lt">&lt;</SelectItem>
+                                  <SelectItem value="eq">=</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Input
+                                type="number"
+                                min="0"
+                                max="100"
+                                placeholder="Value %"
+                                value={confidenceValue}
+                                onChange={(e) => {
+                                  const value = Math.max(0, Math.min(100, Number(e.target.value)));
+                                  setConfidenceValue(value.toString());
+                                }}
+                                className="w-[100px]"
+                              />
+                            </div>
                           </div>
                         </TableHead>
                         <TableHead className="w-[100px]">Actions</TableHead>
