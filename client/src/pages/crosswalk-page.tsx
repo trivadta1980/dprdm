@@ -49,22 +49,6 @@ interface CSVMapping {
   targetValue: string;
 }
 
-export const calculateSimilarity = (str1: string, str2: string): number => {
-  const s1 = str1.toLowerCase().trim();
-  const s2 = str2.toLowerCase().trim();
-  if (s1 === s2) return 1;
-  if (s1.includes(s2) || s2.includes(s1)) return 0.8;
-  // Check if strings are similar enough (e.g., Brasil vs Brazil)
-  const minLength = Math.min(s1.length, s2.length);
-  const maxLength = Math.max(s1.length, s2.length);
-  let commonChars = 0;
-  for (let i = 0; i < minLength; i++) {
-    if (s1[i] === s2[i]) commonChars++;
-  }
-  const similarity = commonChars / maxLength;
-  return similarity >= 0.7 ? 0.8 : 0;
-};
-
 export default function CrosswalkPage() {
   const { id } = useParams();
   const { toast } = useToast();
@@ -135,6 +119,13 @@ export default function CrosswalkPage() {
   const sourceAttributeValues = getSourceAttributeValues();
   const targetAttributeValues = getTargetAttributeValues();
 
+  const calculateSimilarity = (str1: string, str2: string): number => {
+    const s1 = str1.toLowerCase();
+    const s2 = str2.toLowerCase();
+    if (s1 === s2) return 1;
+    if (s1.includes(s2) || s2.includes(s1)) return 0.8;
+    return 0;
+  };
 
   const generateMappings = () => {
     const newMappings: Mapping[] = [];
@@ -394,7 +385,6 @@ export default function CrosswalkPage() {
                 <Label htmlFor="mapping-name">Mapping Name</Label>
                 <Input
                   id="mapping-name"
-                  data-testid="mapping-name-input"
                   value={mappingName}
                   onChange={(e) => setMappingName(e.target.value)}
                   placeholder="Enter a name for this mapping"
@@ -429,7 +419,7 @@ export default function CrosswalkPage() {
                       }
                     }}
                   >
-                    <SelectTrigger className="w-full" data-testid="source-dataset-select">
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Choose a dataset" />
                     </SelectTrigger>
                     <SelectContent>
@@ -451,7 +441,7 @@ export default function CrosswalkPage() {
                     value={selectedSourceAttribute || undefined}
                     onValueChange={setSelectedSourceAttribute}
                   >
-                    <SelectTrigger className="w-full" data-testid="source-attribute-select">
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder={selectedSourceDataset ? "Choose an attribute" : "Select a dataset first"} />
                     </SelectTrigger>
                     <SelectContent>
@@ -476,7 +466,7 @@ export default function CrosswalkPage() {
                     value={selectedTargetDataset || undefined}
                     onValueChange={setSelectedTargetDataset}
                   >
-                    <SelectTrigger className="w-full" data-testid="target-dataset-select">
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder={
                         !selectedSourceDataset
                           ? "Select a source dataset first"
@@ -542,7 +532,6 @@ export default function CrosswalkPage() {
                     </div>
                   </div>
                   <Button
-                    data-testid="save-mappings-button"
                     onClick={() => saveMappingsMutation.mutate()}
                     disabled={
                       saveMappingsMutation.isPending ||
