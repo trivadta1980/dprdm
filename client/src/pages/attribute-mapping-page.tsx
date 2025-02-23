@@ -25,6 +25,7 @@ interface SchemaField {
 export default function AttributeMappingPage() {
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [selectedAttribute, setSelectedAttribute] = useState<string | null>(null);
+  const [selectedValue, setSelectedValue] = useState<string | null>(null);
 
   // Fetch all datasets
   const { data: datasets = [], isLoading: datasetsLoading } = useQuery<DataSet[]>({
@@ -40,18 +41,37 @@ export default function AttributeMappingPage() {
     enabled: !!selectedDatasetObj?.typeId
   });
 
-
   // Get the specific dataset's raw data
   const { data: selectedDatasetData, isLoading: selectedDatasetLoading } = useQuery({
     queryKey: [`/api/reference-data/${selectedDataset}`],
     enabled: !!selectedDataset
   });
 
+  // Extract unique values for the selected attribute from the data
+  const getAttributeValues = () => {
+    if (!selectedAttribute || !selectedDatasetData?.data) return [];
+
+    const values = new Set<string>();
+
+    // Iterate through all instances in the data
+    Object.values(selectedDatasetData.data).forEach(instance => {
+      if (instance[selectedAttribute]) {
+        values.add(instance[selectedAttribute]);
+      }
+    });
+
+    return Array.from(values);
+  };
+
+  const attributeValues = getAttributeValues();
+
   // Debug information
   const debugInfo = {
     selectedDataset,
     selectedAttribute,
-    rawDatasetData: selectedDatasetData
+    selectedValue,
+    rawDatasetData: selectedDatasetData,
+    extractedValues: attributeValues
   };
 
   return (
@@ -72,6 +92,7 @@ export default function AttributeMappingPage() {
                 onValueChange={(value) => {
                   setSelectedDataset(value);
                   setSelectedAttribute(null); // Reset attribute when dataset changes
+                  setSelectedValue(null); // Reset value when dataset changes
                 }}
               >
                 <SelectTrigger className="w-full">
@@ -95,7 +116,10 @@ export default function AttributeMappingPage() {
               <Select 
                 disabled={!selectedDataset}
                 value={selectedAttribute || undefined}
-                onValueChange={setSelectedAttribute}
+                onValueChange={(value) => {
+                  setSelectedAttribute(value);
+                  setSelectedValue(null); // Reset value when attribute changes
+                }}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={selectedDataset ? "Choose an attribute" : "Select a dataset first"} />
@@ -103,8 +127,8 @@ export default function AttributeMappingPage() {
                 <SelectContent>
                   {schemasLoading ? (
                     <SelectItem value="loading">Loading attributes...</SelectItem>
-                  ) : schemas.map((schema, index) => (
-                    <SelectItem key={index} value={schema.name}>
+                  ) : schemas.map((schema) => (
+                    <SelectItem key={schema.name} value={schema.name}>
                       {schema.name}
                     </SelectItem>
                   ))}
@@ -112,6 +136,28 @@ export default function AttributeMappingPage() {
               </Select>
             </div>
 
+            {/* Source Values Selection */}
+            <div className="space-y-2">
+              <Label>Source Values</Label>
+              <Select
+                disabled={!selectedAttribute}
+                value={selectedValue || undefined}
+                onValueChange={setSelectedValue}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={selectedAttribute ? "Choose a value" : "Select an attribute first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectedDatasetLoading ? (
+                    <SelectItem value="loading">Loading values...</SelectItem>
+                  ) : attributeValues.map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* Debug Panel */}
             <Card className="mt-8">
