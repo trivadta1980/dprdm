@@ -37,6 +37,11 @@ export default function ApiTestPage() {
     queryKey: ['/api/relationships']
   });
 
+  // Crosswalks endpoints test
+  const { data: crosswalks, isLoading: crosswalksLoading } = useQuery({
+    queryKey: ['/api/crosswalks']
+  });
+
   const handleParamChange = (key: string, value: string) => {
     setTestParams(prev => ({ ...prev, [key]: value }));
   };
@@ -94,6 +99,7 @@ export default function ApiTestPage() {
             <TabsTrigger value="types">Reference Types</TabsTrigger>
             <TabsTrigger value="data">Reference Data</TabsTrigger>
             <TabsTrigger value="relationships">Relationships</TabsTrigger>
+            <TabsTrigger value="crosswalks">Crosswalks</TabsTrigger>
           </TabsList>
 
           {/* Auth Tab Content */}
@@ -245,6 +251,55 @@ export default function ApiTestPage() {
                     <span>
                       {relationshipsLoading ? 'Loading...' : `${relationships?.length || 0} relationships found`}
                     </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Crosswalks Tab Content */}
+          <TabsContent value="crosswalks" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Crosswalks Endpoints</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4">
+                  {/* Test GET /api/crosswalks */}
+                  <div className="space-y-2">
+                    <Label>GET /api/crosswalks</Label>
+                    <div className="flex items-center gap-4">
+                      <Button
+                        disabled={selectedEndpoint === '/api/crosswalks'}
+                        onClick={() => testEndpoint('/api/crosswalks')}
+                      >
+                        {selectedEndpoint === '/api/crosswalks' && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Test Endpoint
+                      </Button>
+                      <span>
+                        {crosswalksLoading ? 'Loading...' : `${crosswalks?.length || 0} crosswalks found`}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Test POST /api/crosswalks */}
+                  <div className="space-y-2">
+                    <Label>POST /api/crosswalks</Label>
+                    <div className="grid gap-4">
+                      <Input
+                        placeholder="Mapping Name"
+                        onChange={(e) => handleParamChange('name', e.target.value)}
+                      />
+                      <Button
+                        onClick={() => testEndpoint('/api/crosswalks', 'POST', {
+                          name: testParams.name
+                        })}
+                      >
+                        Create Mapping
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
