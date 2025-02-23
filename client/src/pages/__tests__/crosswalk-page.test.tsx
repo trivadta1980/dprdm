@@ -60,51 +60,48 @@ describe('CrosswalkPage', () => {
   describe('Form Validation', () => {
     it('should disable save button when required fields are empty', async () => {
       renderComponent();
-      // Wait for initial render
-      await waitFor(() => {
-        const saveButton = screen.getByText(/save mappings/i, { exact: false });
-        expect(saveButton).toBeDisabled();
-      });
+      const saveButton = await screen.findByTestId('save-mappings-button');
+      expect(saveButton).toBeDisabled();
     });
 
     it('should enable save button when all required fields are filled', async () => {
       renderComponent();
 
       // Fill in required fields
-      const nameInput = screen.getByLabelText(/mapping name/i);
+      const nameInput = screen.getByTestId('mapping-name-input');
       fireEvent.change(nameInput, {
         target: { value: 'Test Mapping' }
       });
 
-      // Select source dataset using placeholder text
-      const sourceSelect = screen.getByPlaceholderText(/choose a dataset/i);
+      // Select source dataset
+      const sourceSelect = screen.getByTestId('source-dataset-select');
       fireEvent.click(sourceSelect);
-      await waitFor(() => {
-        const sourceOption = screen.getByText('Dataset 1');
+
+      // Wait for options to be available and select one
+      await waitFor(async () => {
+        const sourceOption = await screen.findByText('Dataset 1');
         fireEvent.click(sourceOption);
       });
 
       // Wait for schemas to load and select attribute
-      await waitFor(() => {
-        const attributeSelect = screen.getByPlaceholderText(/choose an attribute/i);
+      await waitFor(async () => {
+        const attributeSelect = await screen.findByTestId('source-attribute-select');
         fireEvent.click(attributeSelect);
-        const attributeOption = screen.getByText('attribute1');
+        const attributeOption = await screen.findByText('attribute1');
         fireEvent.click(attributeOption);
       });
 
       // Select target dataset
-      const targetSelect = screen.getByPlaceholderText(/choose a target dataset/i);
-      fireEvent.click(targetSelect);
-      await waitFor(() => {
-        const targetOption = screen.getByText('Dataset 2');
+      await waitFor(async () => {
+        const targetSelect = await screen.findByTestId('target-dataset-select');
+        fireEvent.click(targetSelect);
+        const targetOption = await screen.findByText('Dataset 2');
         fireEvent.click(targetOption);
       });
 
       // Verify save button is enabled
-      await waitFor(() => {
-        const saveButton = screen.getByText(/save mappings/i, { exact: false });
-        expect(saveButton).not.toBeDisabled();
-      });
+      const saveButton = await screen.findByTestId('save-mappings-button');
+      expect(saveButton).not.toBeDisabled();
     });
   });
 
@@ -143,7 +140,7 @@ describe('CrosswalkPage', () => {
       fireEvent.change(input);
 
       await waitFor(() => {
-        expect(screen.getByText(/csv must have 'sourcevalue' and 'targetvalue' columns/i)).toBeInTheDocument();
+        expect(screen.getByText(/CSV must have 'sourceValue' and 'targetValue' columns/i)).toBeInTheDocument();
       });
     });
   });
@@ -153,15 +150,16 @@ describe('CrosswalkPage', () => {
       renderComponent();
 
       // Select source dataset
-      const sourceSelect = screen.getByPlaceholderText(/choose a dataset/i);
+      const sourceSelect = screen.getByTestId('source-dataset-select');
       fireEvent.click(sourceSelect);
-      await waitFor(() => {
-        const sourceOption = screen.getByText('Dataset 1');
+
+      await waitFor(async () => {
+        const sourceOption = await screen.findByText('Dataset 1');
         fireEvent.click(sourceOption);
       });
 
       // Check target dataset options
-      const targetSelect = screen.getByPlaceholderText(/choose a target dataset/i);
+      const targetSelect = screen.getByTestId('target-dataset-select');
       fireEvent.click(targetSelect);
 
       // Should show Dataset 2 (same type) but not Dataset 3 (different type)

@@ -394,6 +394,7 @@ export default function CrosswalkPage() {
                 <Label htmlFor="mapping-name">Mapping Name</Label>
                 <Input
                   id="mapping-name"
+                  data-testid="mapping-name-input"
                   value={mappingName}
                   onChange={(e) => setMappingName(e.target.value)}
                   placeholder="Enter a name for this mapping"
@@ -428,7 +429,7 @@ export default function CrosswalkPage() {
                       }
                     }}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full" data-testid="source-dataset-select">
                       <SelectValue placeholder="Choose a dataset" />
                     </SelectTrigger>
                     <SelectContent>
@@ -450,7 +451,7 @@ export default function CrosswalkPage() {
                     value={selectedSourceAttribute || undefined}
                     onValueChange={setSelectedSourceAttribute}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full" data-testid="source-attribute-select">
                       <SelectValue placeholder={selectedSourceDataset ? "Choose an attribute" : "Select a dataset first"} />
                     </SelectTrigger>
                     <SelectContent>
@@ -475,7 +476,7 @@ export default function CrosswalkPage() {
                     value={selectedTargetDataset || undefined}
                     onValueChange={setSelectedTargetDataset}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full" data-testid="target-dataset-select">
                       <SelectValue placeholder={
                         !selectedSourceDataset
                           ? "Select a source dataset first"
@@ -541,6 +542,7 @@ export default function CrosswalkPage() {
                     </div>
                   </div>
                   <Button
+                    data-testid="save-mappings-button"
                     onClick={() => saveMappingsMutation.mutate()}
                     disabled={
                       saveMappingsMutation.isPending ||

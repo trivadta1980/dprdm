@@ -18,11 +18,6 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-// Mock CSV parse function
-vi.mock('csv-parse/browser/esm/sync', () => ({
-  parse: vi.fn()
-}));
-
 // Mock fetch
 global.fetch = vi.fn();
 
@@ -43,6 +38,23 @@ document.createElement = vi.fn((tagName: string) => {
   }
   return element;
 });
+
+// Mock scrollIntoView
+Element.prototype.scrollIntoView = vi.fn();
+
+// Mock ResizeObserver
+global.ResizeObserver = class ResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+};
+
+// Mock IntersectionObserver
+global.IntersectionObserver = class IntersectionObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+};
 
 // Create a test QueryClient instance
 export const testQueryClient = new QueryClient({
