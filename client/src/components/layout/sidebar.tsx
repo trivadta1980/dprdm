@@ -6,7 +6,6 @@ import {
   Users, 
   UserCog,
   Database,
-  GitCompare,
   GitFork,
   FileJson,
   Laptop2,
@@ -55,12 +54,6 @@ export function Sidebar({ className }: SidebarProps) {
       title: "Relationships",
       href: "/relationships",
       icon: GitFork,
-      requiresPermission: true,
-    },
-    {
-      title: "Crosswalks",
-      href: "/crosswalks",
-      icon: GitCompare,
       requiresPermission: true,
     },
     {

@@ -33,7 +33,6 @@ function Router() {
       <ProtectedRoute path="/reference-data/:id/instances" component={ReferenceDataInstancesPage} />
       <ProtectedRoute path="/relationships" component={RelationshipsPage} />
       <ProtectedRoute path="/relationships/:id/values" component={RelationshipValuesPage} />
-      <ProtectedRoute path="/crosswalks" component={PlaceholderPage} />
       <ProtectedRoute path="/attribute-mapping" component={AttributeMappingPage} />
       <ProtectedRoute path="/help" component={HelpPage} />
       <ProtectedRoute path="/api-test" component={ApiTestPage} />

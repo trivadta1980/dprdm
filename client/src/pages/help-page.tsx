@@ -1,6 +1,6 @@
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Database, GitFork, History, GitCompare, FileJson, Users, UserCog, ListTree, Library, Plus, Edit, Table2 } from "lucide-react";
+import { Database, GitFork, History, FileJson, Users, UserCog, ListTree, Library, Plus, Edit, Table2 } from "lucide-react";
 
 export default function HelpPage() {
   const sections = [
@@ -95,34 +95,6 @@ export default function HelpPage() {
             "Filter by data set or type",
             "Export relationship mappings",
             "Track relationship changes"
-          ]
-        }
-      ]
-    },
-    {
-      title: "Crosswalks",
-      icon: GitCompare,
-      description: "Map and transform data between different reference systems.",
-      features: [
-        {
-          title: "Creating Mappings",
-          icon: Edit,
-          steps: [
-            "Access Crosswalks page",
-            "Select source and target systems",
-            "Define field mappings",
-            "Set transformation rules",
-            "Validate mappings"
-          ]
-        },
-        {
-          title: "Using Crosswalks",
-          icon: GitFork,
-          steps: [
-            "Import data using defined mappings",
-            "Transform data between systems",
-            "Validate transformed data",
-            "Track transformation history"
           ]
         }
       ]
