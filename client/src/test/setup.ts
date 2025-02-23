@@ -27,8 +27,22 @@ vi.mock('csv-parse/browser/esm/sync', () => ({
 global.fetch = vi.fn();
 
 // Mock URL.createObjectURL
-global.URL.createObjectURL = vi.fn();
+global.URL.createObjectURL = vi.fn(() => 'mock-url');
 global.URL.revokeObjectURL = vi.fn();
+
+// Mock document.createElement for CSV export
+const originalCreateElement = document.createElement.bind(document);
+document.createElement = vi.fn((tagName: string) => {
+  const element = originalCreateElement(tagName);
+  if (tagName === 'a') {
+    // Add missing properties that jsdom doesn't implement
+    Object.defineProperty(element, 'click', {
+      value: vi.fn(),
+      writable: true
+    });
+  }
+  return element;
+});
 
 // Create a test QueryClient instance
 export const testQueryClient = new QueryClient({

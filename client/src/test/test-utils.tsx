@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactElement } from 'react';
 import { testQueryClient } from './setup';
 import { AuthProvider } from '@/hooks/use-auth';
+import { vi } from 'vitest';
 
 const mockAuthValue = {
   user: { id: 1, email: 'test@example.com', username: 'testuser' },
@@ -13,11 +14,11 @@ const mockAuthValue = {
 
 const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
   return (
-    <AuthProvider initialState={mockAuthValue}>
-      <QueryClientProvider client={testQueryClient}>
+    <QueryClientProvider client={testQueryClient}>
+      <AuthProvider value={mockAuthValue}>
         {children}
-      </QueryClientProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 };
 

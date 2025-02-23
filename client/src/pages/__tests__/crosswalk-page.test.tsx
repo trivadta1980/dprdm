@@ -6,7 +6,8 @@ import { QueryClient } from '@tanstack/react-query';
 // Mock the routing
 vi.mock('wouter', () => ({
   useParams: () => ({ id: undefined }),
-  Link: ({ children, ...props }: any) => <a {...props}>{children}</a>
+  Link: ({ children, ...props }: any) => <a {...props}>{children}</a>,
+  useLocation: () => ['/', () => {}]
 }));
 
 // Mock the toast hook
@@ -57,43 +58,51 @@ describe('CrosswalkPage', () => {
   };
 
   describe('Form Validation', () => {
-    it('should disable save button when required fields are empty', () => {
+    it('should disable save button when required fields are empty', async () => {
       renderComponent();
-      const saveButton = screen.getByText(/save mapping/i);
-      expect(saveButton).toBeDisabled();
+      // Wait for initial render
+      await waitFor(() => {
+        const saveButton = screen.getByText(/save mappings/i, { exact: false });
+        expect(saveButton).toBeDisabled();
+      });
     });
 
     it('should enable save button when all required fields are filled', async () => {
       renderComponent();
 
       // Fill in required fields
-      fireEvent.change(screen.getByLabelText(/mapping name/i), {
+      const nameInput = screen.getByLabelText(/mapping name/i);
+      fireEvent.change(nameInput, {
         target: { value: 'Test Mapping' }
       });
 
-      // Select source dataset
-      const sourceSelect = screen.getByRole('combobox', { name: /source dataset/i });
+      // Select source dataset using placeholder text
+      const sourceSelect = screen.getByPlaceholderText(/choose a dataset/i);
       fireEvent.click(sourceSelect);
-      const sourceOption = await screen.findByText('Dataset 1');
-      fireEvent.click(sourceOption);
+      await waitFor(() => {
+        const sourceOption = screen.getByText('Dataset 1');
+        fireEvent.click(sourceOption);
+      });
 
       // Wait for schemas to load and select attribute
       await waitFor(() => {
-        const attributeSelect = screen.getByRole('combobox', { name: /source attribute/i });
+        const attributeSelect = screen.getByPlaceholderText(/choose an attribute/i);
         fireEvent.click(attributeSelect);
         const attributeOption = screen.getByText('attribute1');
         fireEvent.click(attributeOption);
       });
 
       // Select target dataset
-      const targetSelect = screen.getByRole('combobox', { name: /target dataset/i });
+      const targetSelect = screen.getByPlaceholderText(/choose a target dataset/i);
       fireEvent.click(targetSelect);
-      const targetOption = await screen.findByText('Dataset 2');
-      fireEvent.click(targetOption);
+      await waitFor(() => {
+        const targetOption = screen.getByText('Dataset 2');
+        fireEvent.click(targetOption);
+      });
 
       // Verify save button is enabled
       await waitFor(() => {
-        const saveButton = screen.getByText(/save mapping/i);
+        const saveButton = screen.getByText(/save mappings/i, { exact: false });
         expect(saveButton).not.toBeDisabled();
       });
     });
@@ -144,13 +153,15 @@ describe('CrosswalkPage', () => {
       renderComponent();
 
       // Select source dataset
-      const sourceSelect = screen.getByRole('combobox', { name: /source dataset/i });
+      const sourceSelect = screen.getByPlaceholderText(/choose a dataset/i);
       fireEvent.click(sourceSelect);
-      const sourceOption = await screen.findByText('Dataset 1');
-      fireEvent.click(sourceOption);
+      await waitFor(() => {
+        const sourceOption = screen.getByText('Dataset 1');
+        fireEvent.click(sourceOption);
+      });
 
       // Check target dataset options
-      const targetSelect = screen.getByRole('combobox', { name: /target dataset/i });
+      const targetSelect = screen.getByPlaceholderText(/choose a target dataset/i);
       fireEvent.click(targetSelect);
 
       // Should show Dataset 2 (same type) but not Dataset 3 (different type)
