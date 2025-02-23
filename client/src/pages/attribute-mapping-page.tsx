@@ -1,6 +1,6 @@
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import {
   Select,
@@ -19,8 +19,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit2, Check, X } from "lucide-react";
+import { Edit2, Check, X, Save } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 
 interface DataSet {
   id: number;
@@ -39,6 +41,8 @@ interface Mapping {
 }
 
 export default function AttributeMappingPage() {
+  const { toast } = useToast();
+
   // Source states
   const [selectedSourceDataset, setSelectedSourceDataset] = useState<string | null>(null);
   const [selectedSourceAttribute, setSelectedSourceAttribute] = useState<string | null>(null);
@@ -211,11 +215,84 @@ export default function AttributeMappingPage() {
     return sourceMatch && targetMatch && confidenceMatch;
   });
 
+  // Add mutation for saving mappings
+  const saveMappingsMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedSourceDataset || !selectedTargetDataset || !selectedSourceAttribute) {
+        throw new Error("Please select source and target datasets and attributes");
+      }
+
+      const payload = {
+        sourceDatasetId: Number(selectedSourceDataset),
+        targetDatasetId: Number(selectedTargetDataset),
+        sourceAttribute: selectedSourceAttribute,
+        targetAttribute: selectedSourceAttribute, // Same as source since we're using the same attribute
+        mappings: mappings.map(m => ({
+          sourceValue: m.sourceValue,
+          targetValue: m.targetValue,
+          confidence: m.confidence
+        }))
+      };
+
+      const response = await fetch('/api/crosswalk-mappings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save mappings');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Mappings saved successfully",
+      });
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['/api/crosswalk-mappings'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
 
   return (
     <MainLayout>
       <div className="container mx-auto p-6 space-y-8">
-        <h1 className="text-3xl font-bold">Attribute Mapping</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Attribute Mapping</h1>
+          <Button
+            onClick={() => saveMappingsMutation.mutate()}
+            disabled={
+              saveMappingsMutation.isPending ||
+              !selectedSourceDataset ||
+              !selectedTargetDataset ||
+              !selectedSourceAttribute ||
+              mappings.length === 0
+            }
+          >
+            {saveMappingsMutation.isPending ? (
+              <span className="flex items-center gap-2">
+                Saving...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <Save className="h-4 w-4" />
+                Save Mappings
+              </span>
+            )}
+          </Button>
+        </div>
 
         <Card>
           <CardHeader>
