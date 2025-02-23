@@ -1,7 +1,7 @@
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -11,6 +11,16 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Edit2, Check, X } from "lucide-react";
 
 interface DataSet {
   id: number;
@@ -20,6 +30,12 @@ interface DataSet {
 
 interface SchemaField {
   name: string;
+}
+
+interface Mapping {
+  sourceValue: string;
+  targetValue: string;
+  confidence: number;
 }
 
 export default function AttributeMappingPage() {
@@ -32,6 +48,11 @@ export default function AttributeMappingPage() {
   const [selectedTargetDataset, setSelectedTargetDataset] = useState<string | null>(null);
   const [selectedTargetAttribute, setSelectedTargetAttribute] = useState<string | null>(null);
   const [selectedTargetValue, setSelectedTargetValue] = useState<string | null>(null);
+
+  // Mapping states
+  const [mappings, setMappings] = useState<Mapping[]>([]);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState<string>("");
 
   // Fetch all datasets
   const { data: datasets = [], isLoading: datasetsLoading } = useQuery<DataSet[]>({
@@ -99,6 +120,66 @@ export default function AttributeMappingPage() {
   const sourceAttributeValues = getSourceAttributeValues();
   const targetAttributeValues = getTargetAttributeValues();
 
+  // Function to calculate string similarity (simple for now, can be enhanced)
+  const calculateSimilarity = (str1: string, str2: string): number => {
+    const s1 = str1.toLowerCase();
+    const s2 = str2.toLowerCase();
+    if (s1 === s2) return 1;
+    if (s1.includes(s2) || s2.includes(s1)) return 0.8;
+    return 0;
+  };
+
+  // Function to automatically generate mappings
+  const generateMappings = () => {
+    const newMappings: Mapping[] = [];
+
+    sourceAttributeValues.forEach(sourceValue => {
+      let bestMatch = {
+        targetValue: '',
+        confidence: 0
+      };
+
+      targetAttributeValues.forEach(targetValue => {
+        const similarity = calculateSimilarity(sourceValue, targetValue);
+        if (similarity > bestMatch.confidence) {
+          bestMatch = {
+            targetValue,
+            confidence: similarity
+          };
+        }
+      });
+
+      if (bestMatch.confidence > 0) {
+        newMappings.push({
+          sourceValue,
+          targetValue: bestMatch.targetValue,
+          confidence: bestMatch.confidence
+        });
+      }
+    });
+
+    setMappings(newMappings);
+  };
+
+  // Effect to generate mappings when both attributes are selected
+  useEffect(() => {
+    if (selectedSourceAttribute && selectedTargetAttribute) {
+      generateMappings();
+    }
+  }, [selectedSourceAttribute, selectedTargetAttribute, sourceAttributeValues, targetAttributeValues]);
+
+  // Function to update a mapping
+  const updateMapping = (index: number, newTargetValue: string) => {
+    const newMappings = [...mappings];
+    newMappings[index] = {
+      ...newMappings[index],
+      targetValue: newTargetValue,
+      confidence: calculateSimilarity(newMappings[index].sourceValue, newTargetValue)
+    };
+    setMappings(newMappings);
+    setEditingIndex(null);
+  };
+
   // Debug information
   const debugInfo = {
     source: {
@@ -114,7 +195,8 @@ export default function AttributeMappingPage() {
       value: selectedTargetValue,
       rawData: targetDatasetData,
       extractedValues: targetAttributeValues
-    }
+    },
+    mappings
   };
 
   return (
@@ -182,7 +264,6 @@ export default function AttributeMappingPage() {
                     </SelectContent>
                   </Select>
                 </div>
-
                 {/* Source Values Selection */}
                 <div className="space-y-2">
                   <Label>Source Values</Label>
@@ -261,7 +342,6 @@ export default function AttributeMappingPage() {
                     </SelectContent>
                   </Select>
                 </div>
-
                 {/* Target Values Selection */}
                 <div className="space-y-2">
                   <Label>Target Values</Label>
@@ -286,6 +366,85 @@ export default function AttributeMappingPage() {
                 </div>
               </div>
             </div>
+
+            {/* Mapping Table */}
+            {mappings.length > 0 && (
+              <div className="mt-8">
+                <h2 className="text-xl font-semibold mb-4">Value Mappings</h2>
+                <div className="border rounded-lg">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Source Value</TableHead>
+                        <TableHead>Target Value</TableHead>
+                        <TableHead>Confidence</TableHead>
+                        <TableHead className="w-[100px]">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {mappings.map((mapping, index) => (
+                        <TableRow key={mapping.sourceValue}>
+                          <TableCell>{mapping.sourceValue}</TableCell>
+                          <TableCell>
+                            {editingIndex === index ? (
+                              <Select
+                                value={editValue || mapping.targetValue}
+                                onValueChange={setEditValue}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Choose target value" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {targetAttributeValues.map((value) => (
+                                    <SelectItem key={value} value={value}>
+                                      {value}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              mapping.targetValue
+                            )}
+                          </TableCell>
+                          <TableCell>{(mapping.confidence * 100).toFixed(0)}%</TableCell>
+                          <TableCell>
+                            {editingIndex === index ? (
+                              <div className="flex space-x-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => updateMapping(index, editValue)}
+                                >
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setEditingIndex(null)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setEditingIndex(index);
+                                  setEditValue(mapping.targetValue);
+                                }}
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
 
             {/* Debug Panel */}
             <Card className="mt-8">
