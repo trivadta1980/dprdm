@@ -2,44 +2,19 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-type MappingElement = {
-  source: string;
-  target: string;
-};
-
-interface SchemaColumn {
-  name: string;
-  type: string;
-  description?: string;
-}
-
-interface SchemaResponse {
-  columns: SchemaColumn[];
-}
 
 export default function ApiTestPage() {
   const { toast } = useToast();
   const [selectedEndpoint, setSelectedEndpoint] = useState<string | null>(null);
   const [testParams, setTestParams] = useState<Record<string, string>>({});
   const [response, setResponse] = useState<any>(null);
-  const [mappingElements, setMappingElements] = useState<MappingElement[]>([{ source: '', target: '' }]);
-  const [selectedSourceSystem, setSelectedSourceSystem] = useState<string | null>(null);
-  const [selectedTargetSystem, setSelectedTargetSystem] = useState<string | null>(null);
 
   // Authentication endpoints test
   const { data: userData, isLoading: userLoading } = useQuery({
@@ -57,69 +32,13 @@ export default function ApiTestPage() {
     queryKey: ['/api/reference-data']
   });
 
-  // Source system schema
-  const { data: sourceSchema, isLoading: sourceSchemaLoading } = useQuery<SchemaResponse>({
-    queryKey: [`/api/reference-data/${selectedSourceSystem}/schema`],
-    enabled: !!selectedSourceSystem,
-    onSuccess: (data) => {
-      console.log('Source schema loaded:', data);
-    },
-    onError: (error) => {
-      console.error('Error loading source schema:', error);
-    }
-  });
-
-  // Target system schema
-  const { data: targetSchema, isLoading: targetSchemaLoading } = useQuery<SchemaResponse>({
-    queryKey: [`/api/reference-data/${selectedTargetSystem}/schema`],
-    enabled: !!selectedTargetSystem,
-    onSuccess: (data) => {
-      console.log('Target schema loaded:', data);
-    },
-    onError: (error) => {
-      console.error('Error loading target schema:', error);
-    }
-  });
-
-  // Source system instances
-  const { data: sourceInstances } = useQuery({
-    queryKey: ['/api/reference-data', selectedSourceSystem, 'instances'],
-    enabled: !!selectedSourceSystem
-  });
-
-  // Target system instances
-  const { data: targetInstances } = useQuery({
-    queryKey: ['/api/reference-data', selectedTargetSystem, 'instances'],
-    enabled: !!selectedTargetSystem
-  });
-
   // Relationships endpoints test
   const { data: relationships, isLoading: relationshipsLoading } = useQuery({
     queryKey: ['/api/relationships']
   });
 
-  // Crosswalks endpoints test
-  const { data: crosswalks, isLoading: crosswalksLoading } = useQuery({
-    queryKey: ['/api/crosswalks']
-  });
-
   const handleParamChange = (key: string, value: string) => {
     setTestParams(prev => ({ ...prev, [key]: value }));
-  };
-
-  const handleMappingElementChange = (index: number, field: 'source' | 'target', value: string) => {
-    const newElements = [...mappingElements];
-    newElements[index][field] = value;
-    setMappingElements(newElements);
-  };
-
-  const addMappingElement = () => {
-    setMappingElements([...mappingElements, { source: '', target: '' }]);
-  };
-
-  const removeMappingElement = (index: number) => {
-    const newElements = mappingElements.filter((_, i) => i !== index);
-    setMappingElements(newElements);
   };
 
   const testEndpoint = async (endpoint: string, method: string = 'GET', body?: any) => {
@@ -175,7 +94,6 @@ export default function ApiTestPage() {
             <TabsTrigger value="types">Reference Types</TabsTrigger>
             <TabsTrigger value="data">Reference Data</TabsTrigger>
             <TabsTrigger value="relationships">Relationships</TabsTrigger>
-            <TabsTrigger value="crosswalks">Crosswalks</TabsTrigger>
           </TabsList>
 
           {/* Auth Tab Content */}
@@ -333,214 +251,12 @@ export default function ApiTestPage() {
             </Card>
           </TabsContent>
 
-          {/* Crosswalks Tab Content */}
-          <TabsContent value="crosswalks" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Crosswalks Endpoints</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4">
-                  {/* Test GET /api/crosswalks */}
-                  <div className="space-y-2">
-                    <Label>GET /api/crosswalks</Label>
-                    <div className="flex items-center gap-4">
-                      <Button
-                        disabled={selectedEndpoint === '/api/crosswalks'}
-                        onClick={() => testEndpoint('/api/crosswalks')}
-                      >
-                        Test Endpoint
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Test POST /api/crosswalks */}
-                  <div className="space-y-2">
-                    <Label>POST /api/crosswalks</Label>
-                    <div className="grid gap-4">
-                      <Input
-                        placeholder="Mapping Name"
-                        onChange={(e) => handleParamChange('name', e.target.value)}
-                      />
-                      <Select
-                        onValueChange={(value) => {
-                          handleParamChange('sourceSystemId', value);
-                          setSelectedSourceSystem(value);
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Source System" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {referenceData?.map((data: any) => (
-                            <SelectItem key={data.id} value={String(data.id)}>
-                              {data.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-                      {selectedSourceSystem && (
-                        <div className="space-y-2">
-                          <Label>Source System Schema</Label>
-                          <ScrollArea className="h-32 rounded-md border">
-                            <div className="p-4">
-                              {sourceSchemaLoading ? (
-                                <div className="flex items-center justify-center h-24">
-                                  <Loader2 className="h-6 w-6 animate-spin" />
-                                </div>
-                              ) : sourceSchema?.columns ? (
-                                sourceSchema.columns.map((column) => (
-                                  <div key={column.name} className="flex items-center gap-2 text-sm">
-                                    <span className="font-medium">{column.name}:</span>
-                                    <span className="text-muted-foreground">{column.type}</span>
-                                    {column.description && (
-                                      <span className="text-xs text-muted-foreground">({column.description})</span>
-                                    )}
-                                  </div>
-                                ))
-                              ) : (
-                                <div className="text-sm text-muted-foreground">No schema information available</div>
-                              )}
-                            </div>
-                          </ScrollArea>
-                        </div>
-                      )}
-
-                      <Select
-                        onValueChange={(value) => {
-                          handleParamChange('targetSystemId', value);
-                          setSelectedTargetSystem(value);
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Target System" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {referenceData?.map((data: any) => (
-                            <SelectItem key={data.id} value={String(data.id)}>
-                              {data.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-                      {selectedTargetSystem && (
-                        <div className="space-y-2">
-                          <Label>Target System Schema</Label>
-                          <ScrollArea className="h-32 rounded-md border">
-                            <div className="p-4">
-                              {targetSchemaLoading ? (
-                                <div className="flex items-center justify-center h-24">
-                                  <Loader2 className="h-6 w-6 animate-spin" />
-                                </div>
-                              ) : targetSchema?.columns ? (
-                                targetSchema.columns.map((column) => (
-                                  <div key={column.name} className="flex items-center gap-2 text-sm">
-                                    <span className="font-medium">{column.name}:</span>
-                                    <span className="text-muted-foreground">{column.type}</span>
-                                    {column.description && (
-                                      <span className="text-xs text-muted-foreground">({column.description})</span>
-                                    )}
-                                  </div>
-                                ))
-                              ) : (
-                                <div className="text-sm text-muted-foreground">No schema information available</div>
-                              )}
-                            </div>
-                          </ScrollArea>
-                        </div>
-                      )}
-
-                      {/* Element Mappings */}
-                      <div className="space-y-4">
-                        <Label>Element Mappings</Label>
-                        {mappingElements.map((element, index) => (
-                          <div key={index} className="grid grid-cols-[1fr,1fr,auto] gap-2 items-start">
-                            <div className="space-y-2">
-                              <Label>Source Element</Label>
-                              <Select
-                                value={element.source}
-                                onValueChange={(value) => handleMappingElementChange(index, 'source', value)}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select source element" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {sourceSchema?.columns?.map((column) => (
-                                    <SelectItem key={column.name} value={column.name}>
-                                      {column.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Target Element</Label>
-                              <Select
-                                value={element.target}
-                                onValueChange={(value) => handleMappingElementChange(index, 'target', value)}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select target element" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {targetSchema?.columns?.map((column) => (
-                                    <SelectItem key={column.name} value={column.name}>
-                                      {column.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="mt-8"
-                              onClick={() => removeMappingElement(index)}
-                              disabled={mappingElements.length === 1}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                          onClick={addMappingElement}
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Mapping
-                        </Button>
-                      </div>
-
-                      <Button
-                        onClick={() => testEndpoint('/api/crosswalks', 'POST', {
-                          name: testParams.name,
-                          sourceSystemId: Number(testParams.sourceSystemId),
-                          targetSystemId: Number(testParams.targetSystemId),
-                          mappingData: mappingElements.reduce((acc, curr) => {
-                            acc[curr.source] = curr.target;
-                            return acc;
-                          }, {} as Record<string, string>)
-                        })}
-                      >
-                        Create Mapping
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                {response && (
-                  <div className="mt-4">
-                    <Label>Response:</Label>
-                    {renderResponse(response)}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+          {response && (
+            <div className="mt-4">
+              <Label>Response:</Label>
+              {renderResponse(response)}
+            </div>
+          )}
         </Tabs>
       </div>
     </MainLayout>
