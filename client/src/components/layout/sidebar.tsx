@@ -57,8 +57,8 @@ export function Sidebar({ className }: SidebarProps) {
       requiresPermission: true,
     },
     {
-      title: "Crosswalk",
-      href: "/crosswalk",
+      title: "Crosswalks",
+      href: "/crosswalks",
       icon: ArrowRightLeft,
       requiresPermission: true,
     },
