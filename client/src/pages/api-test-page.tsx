@@ -49,29 +49,29 @@ export default function ApiTestPage() {
   });
 
   // Reference Data endpoints test
-  const { data: referenceData, isLoading: dataLoading } = useQuery<ReferenceData[]>({
+  const { data: referenceData = [], isLoading: dataLoading } = useQuery<ReferenceData[]>({
     queryKey: ['/api/reference-data']
   });
 
   // Source system instances
-  const { data: sourceInstances, isLoading: sourceInstancesLoading } = useQuery<Instance[]>({
+  const { data: sourceInstances = [], isLoading: sourceInstancesLoading } = useQuery<Instance[]>({
     queryKey: [`/api/reference-data/${selectedSourceSystem}/instances`],
     enabled: !!selectedSourceSystem
   });
 
   // Target system instances
-  const { data: targetInstances, isLoading: targetInstancesLoading } = useQuery<Instance[]>({
+  const { data: targetInstances = [], isLoading: targetInstancesLoading } = useQuery<Instance[]>({
     queryKey: [`/api/reference-data/${selectedTargetSystem}/instances`],
     enabled: !!selectedTargetSystem
   });
 
   // Relationships endpoints test
-  const { data: relationships, isLoading: relationshipsLoading } = useQuery({
+  const { data: relationships = [], isLoading: relationshipsLoading } = useQuery({
     queryKey: ['/api/relationships']
   });
 
   // Crosswalks endpoints test
-  const { data: crosswalks, isLoading: crosswalksLoading } = useQuery({
+  const { data: crosswalks = [], isLoading: crosswalksLoading } = useQuery({
     queryKey: ['/api/crosswalks']
   });
 
@@ -126,7 +126,7 @@ export default function ApiTestPage() {
       <div className="container mx-auto p-6 space-y-8">
         <h1 className="text-3xl font-bold">API Endpoint Testing</h1>
 
-        <Tabs defaultValue="auth" className="w-full">
+        <Tabs defaultValue="crosswalks" className="w-full">
           <TabsList>
             <TabsTrigger value="auth">Authentication</TabsTrigger>
             <TabsTrigger value="types">Reference Types</TabsTrigger>
@@ -134,6 +134,156 @@ export default function ApiTestPage() {
             <TabsTrigger value="relationships">Relationships</TabsTrigger>
             <TabsTrigger value="crosswalks">Crosswalks</TabsTrigger>
           </TabsList>
+
+          {/* Crosswalks Tab Content */}
+          <TabsContent value="crosswalks" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Crosswalks Endpoints</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4">
+                  {/* Test GET /api/crosswalks */}
+                  <div className="space-y-2">
+                    <Label>GET /api/crosswalks</Label>
+                    <div className="flex items-center gap-4">
+                      <Button
+                        disabled={selectedEndpoint === '/api/crosswalks'}
+                        onClick={() => testEndpoint('/api/crosswalks')}
+                      >
+                        {selectedEndpoint === '/api/crosswalks' && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Test Endpoint
+                      </Button>
+                      <span>
+                        {crosswalksLoading ? 'Loading...' : `${crosswalks.length} crosswalks found`}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Test POST /api/crosswalks */}
+                  <div className="space-y-2">
+                    <Label>POST /api/crosswalks</Label>
+                    <div className="grid gap-4">
+                      <Input
+                        placeholder="Mapping Name"
+                        onChange={(e) => handleParamChange('name', e.target.value)}
+                      />
+
+                      <div className="space-y-2">
+                        <Label>Source Dataset</Label>
+                        <Select
+                          onValueChange={(value) => {
+                            handleParamChange('sourceSystemId', value);
+                            setSelectedSourceSystem(value);
+                            setSelectedSourceInstance(null);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Source Dataset" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {referenceData.map((data) => (
+                              <SelectItem key={data.id} value={String(data.id)}>
+                                {data.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {selectedSourceSystem && (
+                        <div className="space-y-2">
+                          <Label>Source Instance</Label>
+                          <Select
+                            value={selectedSourceInstance || undefined}
+                            onValueChange={(value) => {
+                              handleParamChange('sourceInstanceId', value);
+                              setSelectedSourceInstance(value);
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Source Instance" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {sourceInstancesLoading ? (
+                                <SelectItem value="loading">Loading instances...</SelectItem>
+                              ) : sourceInstances.map((instance) => (
+                                <SelectItem key={instance.id} value={String(instance.id)}>
+                                  {instance.name || `Instance ${instance.id}`}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        <Label>Target Dataset</Label>
+                        <Select
+                          onValueChange={(value) => {
+                            handleParamChange('targetSystemId', value);
+                            setSelectedTargetSystem(value);
+                            setSelectedTargetInstance(null);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Target Dataset" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {referenceData.map((data) => (
+                              <SelectItem key={data.id} value={String(data.id)}>
+                                {data.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {selectedTargetSystem && (
+                        <div className="space-y-2">
+                          <Label>Target Instance</Label>
+                          <Select
+                            value={selectedTargetInstance || undefined}
+                            onValueChange={(value) => {
+                              handleParamChange('targetInstanceId', value);
+                              setSelectedTargetInstance(value);
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Target Instance" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {targetInstancesLoading ? (
+                                <SelectItem value="loading">Loading instances...</SelectItem>
+                              ) : targetInstances.map((instance) => (
+                                <SelectItem key={instance.id} value={String(instance.id)}>
+                                  {instance.name || `Instance ${instance.id}`}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
+                      <Button
+                        onClick={() => testEndpoint('/api/crosswalks', 'POST', {
+                          name: testParams.name,
+                          sourceSystemId: Number(testParams.sourceSystemId),
+                          targetSystemId: Number(testParams.targetSystemId),
+                          sourceInstanceId: Number(testParams.sourceInstanceId),
+                          targetInstanceId: Number(testParams.targetInstanceId)
+                        })}
+                      >
+                        Create Mapping
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Auth Tab Content */}
           <TabsContent value="auth" className="space-y-4">
@@ -282,158 +432,8 @@ export default function ApiTestPage() {
                       Test /api/relationships
                     </Button>
                     <span>
-                      {relationshipsLoading ? 'Loading...' : `${relationships?.length || 0} relationships found`}
+                      {relationshipsLoading ? 'Loading...' : `${relationships.length} relationships found`}
                     </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Crosswalks Tab Content */}
-          <TabsContent value="crosswalks" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Crosswalks Endpoints</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4">
-                  {/* Test GET /api/crosswalks */}
-                  <div className="space-y-2">
-                    <Label>GET /api/crosswalks</Label>
-                    <div className="flex items-center gap-4">
-                      <Button
-                        disabled={selectedEndpoint === '/api/crosswalks'}
-                        onClick={() => testEndpoint('/api/crosswalks')}
-                      >
-                        {selectedEndpoint === '/api/crosswalks' && (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        )}
-                        Test Endpoint
-                      </Button>
-                      <span>
-                        {crosswalksLoading ? 'Loading...' : `${crosswalks?.length || 0} crosswalks found`}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Test POST /api/crosswalks */}
-                  <div className="space-y-2">
-                    <Label>POST /api/crosswalks</Label>
-                    <div className="grid gap-4">
-                      <Input
-                        placeholder="Mapping Name"
-                        onChange={(e) => handleParamChange('name', e.target.value)}
-                      />
-
-                      <div className="space-y-2">
-                        <Label>Source Dataset</Label>
-                        <Select
-                          onValueChange={(value) => {
-                            handleParamChange('sourceSystemId', value);
-                            setSelectedSourceSystem(value);
-                            setSelectedSourceInstance(null);
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Source Dataset" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {referenceData?.map((data) => (
-                              <SelectItem key={data.id} value={String(data.id)}>
-                                {data.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {selectedSourceSystem && (
-                        <div className="space-y-2">
-                          <Label>Source Instance</Label>
-                          <Select
-                            value={selectedSourceInstance || undefined}
-                            onValueChange={(value) => {
-                              handleParamChange('sourceInstanceId', value);
-                              setSelectedSourceInstance(value);
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select Source Instance" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {sourceInstancesLoading ? (
-                                <SelectItem value="loading">Loading instances...</SelectItem>
-                              ) : sourceInstances?.map((instance) => (
-                                <SelectItem key={instance.id} value={String(instance.id)}>
-                                  {instance.name || `Instance ${instance.id}`}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-
-                      <div className="space-y-2">
-                        <Label>Target Dataset</Label>
-                        <Select
-                          onValueChange={(value) => {
-                            handleParamChange('targetSystemId', value);
-                            setSelectedTargetSystem(value);
-                            setSelectedTargetInstance(null);
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Target Dataset" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {referenceData?.map((data) => (
-                              <SelectItem key={data.id} value={String(data.id)}>
-                                {data.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {selectedTargetSystem && (
-                        <div className="space-y-2">
-                          <Label>Target Instance</Label>
-                          <Select
-                            value={selectedTargetInstance || undefined}
-                            onValueChange={(value) => {
-                              handleParamChange('targetInstanceId', value);
-                              setSelectedTargetInstance(value);
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select Target Instance" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {targetInstancesLoading ? (
-                                <SelectItem value="loading">Loading instances...</SelectItem>
-                              ) : targetInstances?.map((instance) => (
-                                <SelectItem key={instance.id} value={String(instance.id)}>
-                                  {instance.name || `Instance ${instance.id}`}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-
-                      <Button
-                        onClick={() => testEndpoint('/api/crosswalks', 'POST', {
-                          name: testParams.name,
-                          sourceSystemId: Number(testParams.sourceSystemId),
-                          targetSystemId: Number(testParams.targetSystemId),
-                          sourceInstanceId: Number(testParams.sourceInstanceId),
-                          targetInstanceId: Number(testParams.targetInstanceId)
-                        })}
-                      >
-                        Create Mapping
-                      </Button>
-                    </div>
                   </div>
                 </div>
               </CardContent>
