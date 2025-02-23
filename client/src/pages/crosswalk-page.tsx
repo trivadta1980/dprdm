@@ -19,12 +19,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit2, Check, X, Save, ArrowLeft } from "lucide-react";
+import { Edit2, Check, X, Save, ArrowLeft, Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useParams, Link } from "wouter";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { parse } from 'csv-parse/browser/esm/sync';
 
 interface DataSet {
   id: number;
@@ -40,6 +42,11 @@ interface Mapping {
   sourceValue: string;
   targetValue: string;
   confidence: number;
+}
+
+interface CSVMapping {
+  sourceValue: string;
+  targetValue: string;
 }
 
 export default function CrosswalkPage() {
@@ -59,6 +66,7 @@ export default function CrosswalkPage() {
   const [targetFilter, setTargetFilter] = useState("");
   const [confidenceOperator, setConfidenceOperator] = useState<"gt" | "lt" | "eq">("gt");
   const [confidenceValue, setConfidenceValue] = useState<string>("");
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const { data: datasets = [], isLoading: datasetsLoading } = useQuery<DataSet[]>({
     queryKey: ['/api/reference-data']
@@ -168,15 +176,15 @@ export default function CrosswalkPage() {
   };
 
   const availableTargetDatasets = datasets.filter(dataset => {
-    if (!selectedSourceDatasetObj) return true; 
+    if (!selectedSourceDatasetObj) return true;
     return dataset.typeId === selectedSourceDatasetObj.typeId &&
-           dataset.id !== Number(selectedSourceDataset); 
+           dataset.id !== Number(selectedSourceDataset);
   });
 
   useEffect(() => {
     if (selectedSourceDatasetObj && selectedTargetDatasetObj) {
       if (selectedSourceDatasetObj.typeId !== selectedTargetDatasetObj.typeId ||
-          selectedSourceDataset === selectedTargetDataset) { 
+          selectedSourceDataset === selectedTargetDataset) {
         setSelectedTargetDataset(null);
       }
     }
@@ -249,7 +257,7 @@ export default function CrosswalkPage() {
         headers: {
           'Content-Type': 'application/json'
         },
-        credentials: 'include', 
+        credentials: 'include',
         body: JSON.stringify(payload)
       });
 
@@ -275,6 +283,57 @@ export default function CrosswalkPage() {
       });
     }
   });
+
+  const handleCSVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    setUploadError(null);
+
+    if (!file) return;
+
+    if (file.type !== "text/csv") {
+      setUploadError("Please upload a CSV file");
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const records = parse(text, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true
+      });
+
+      if (!Array.isArray(records) || records.length === 0) {
+        setUploadError("The CSV file is empty or invalid");
+        return;
+      }
+
+      // Validate CSV structure
+      const firstRecord = records[0];
+      if (!('sourceValue' in firstRecord && 'targetValue' in firstRecord)) {
+        setUploadError("CSV must have 'sourceValue' and 'targetValue' columns");
+        return;
+      }
+
+      // Convert CSV records to mappings
+      const newMappings: Mapping[] = records.map((record: CSVMapping) => ({
+        sourceValue: record.sourceValue,
+        targetValue: record.targetValue,
+        confidence: calculateSimilarity(record.sourceValue, record.targetValue)
+      }));
+
+      setMappings(newMappings);
+      toast({
+        title: "Success",
+        description: `Imported ${newMappings.length} mappings from CSV`,
+      });
+    } catch (error) {
+      setUploadError("Failed to parse CSV file: " + (error as Error).message);
+    }
+
+    // Reset the file input
+    event.target.value = '';
+  };
 
   return (
     <MainLayout>
@@ -420,7 +479,26 @@ export default function CrosswalkPage() {
             {mappings.length > 0 && (
               <div className="mt-8">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Value Mappings</h2>
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-xl font-semibold">Value Mappings</h2>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="file"
+                        accept=".csv"
+                        onChange={handleCSVUpload}
+                        className="hidden"
+                        id="csv-upload"
+                      />
+                      <label htmlFor="csv-upload">
+                        <Button variant="outline" asChild>
+                          <span>
+                            <Upload className="h-4 w-4 mr-2" />
+                            Import from CSV
+                          </span>
+                        </Button>
+                      </label>
+                    </div>
+                  </div>
                   <Button
                     onClick={() => saveMappingsMutation.mutate()}
                     disabled={
@@ -444,6 +522,12 @@ export default function CrosswalkPage() {
                     )}
                   </Button>
                 </div>
+                {uploadError && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>{uploadError}</AlertDescription>
+                  </Alert>
+                )}
                 <div className="border rounded-lg">
                   <Table>
                     <TableHeader>
