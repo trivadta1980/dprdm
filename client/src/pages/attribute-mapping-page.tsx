@@ -24,6 +24,7 @@ interface SchemaField {
 interface Instance {
   id: number;
   name: string;
+  data: Record<string, Record<string, string>>;
 }
 
 export default function AttributeMappingPage() {
@@ -50,6 +51,29 @@ export default function AttributeMappingPage() {
     queryKey: [`/api/reference-data/${selectedDataset}/instances`],
     enabled: !!selectedDataset
   });
+
+  // Get the values for the selected attribute from all instances
+  const getAttributeValues = () => {
+    if (!selectedAttribute || !sourceInstances) return [];
+
+    const values = sourceInstances.map(instance => {
+      // Extract value for selected attribute from each instance's data
+      for (const instanceKey in instance.data) {
+        const instanceData = instance.data[instanceKey];
+        if (instanceData[selectedAttribute]) {
+          return {
+            id: instance.id,
+            value: instanceData[selectedAttribute]
+          };
+        }
+      }
+      return null;
+    }).filter(Boolean);
+
+    return values;
+  };
+
+  const attributeValues = getAttributeValues();
 
   return (
     <MainLayout>
@@ -127,9 +151,9 @@ export default function AttributeMappingPage() {
                 <SelectContent>
                   {sourceInstancesLoading ? (
                     <SelectItem value="loading">Loading values...</SelectItem>
-                  ) : sourceInstances.map((instance) => (
-                    <SelectItem key={instance.id} value={String(instance.id)}>
-                      {instance.name || `Instance ${instance.id}`}
+                  ) : attributeValues.map((item) => (
+                    <SelectItem key={item.id} value={String(item.id)}>
+                      {item.value}
                     </SelectItem>
                   ))}
                 </SelectContent>
