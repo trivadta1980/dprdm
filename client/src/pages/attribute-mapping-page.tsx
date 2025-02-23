@@ -21,8 +21,13 @@ interface SchemaField {
   name: string;
 }
 
+interface DataValue {
+  value: string;
+}
+
 export default function AttributeMappingPage() {
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
+  const [selectedAttribute, setSelectedAttribute] = useState<string | null>(null);
 
   // Fetch all datasets
   const { data: datasets = [], isLoading: datasetsLoading } = useQuery<DataSet[]>({
@@ -36,6 +41,12 @@ export default function AttributeMappingPage() {
   const { data: schemas = [], isLoading: schemasLoading } = useQuery<SchemaField[]>({
     queryKey: [`/api/reference-types/${selectedDatasetObj?.typeId}/schemas`],
     enabled: !!selectedDatasetObj?.typeId
+  });
+
+  // Fetch data values for selected attribute
+  const { data: dataValues = [], isLoading: valuesLoading } = useQuery<DataValue[]>({
+    queryKey: [`/api/reference-data/${selectedDataset}/values/${selectedAttribute}`],
+    enabled: !!selectedDataset && !!selectedAttribute
   });
 
   return (
@@ -53,7 +64,10 @@ export default function AttributeMappingPage() {
               <Label>Source Dataset</Label>
               <Select
                 value={selectedDataset || undefined}
-                onValueChange={setSelectedDataset}
+                onValueChange={(value) => {
+                  setSelectedDataset(value);
+                  setSelectedAttribute(null); // Reset attribute when dataset changes
+                }}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Choose a dataset" />
@@ -73,7 +87,11 @@ export default function AttributeMappingPage() {
             {/* Schema Selection */}
             <div className="space-y-2">
               <Label>Source Attribute</Label>
-              <Select disabled={!selectedDataset}>
+              <Select 
+                disabled={!selectedDataset}
+                value={selectedAttribute || undefined}
+                onValueChange={setSelectedAttribute}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={selectedDataset ? "Choose an attribute" : "Select a dataset first"} />
                 </SelectTrigger>
@@ -83,6 +101,25 @@ export default function AttributeMappingPage() {
                   ) : schemas.map((schema, index) => (
                     <SelectItem key={index} value={schema.name}>
                       {schema.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Data Values Selection */}
+            <div className="space-y-2">
+              <Label>Source Value</Label>
+              <Select disabled={!selectedAttribute}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={selectedAttribute ? "Choose a value" : "Select an attribute first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {valuesLoading ? (
+                    <SelectItem value="loading">Loading values...</SelectItem>
+                  ) : dataValues.map((dataValue, index) => (
+                    <SelectItem key={index} value={dataValue.value}>
+                      {dataValue.value}
                     </SelectItem>
                   ))}
                 </SelectContent>
