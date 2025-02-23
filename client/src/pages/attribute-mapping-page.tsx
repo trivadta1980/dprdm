@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface DataSet {
   id: number;
@@ -60,7 +61,7 @@ export default function AttributeMappingPage() {
       // Extract value for selected attribute from each instance's data
       for (const instanceKey in instance.data) {
         const instanceData = instance.data[instanceKey];
-        if (instanceData[selectedAttribute]) {
+        if (instanceData && instanceData[selectedAttribute]) {
           return {
             id: instance.id,
             value: instanceData[selectedAttribute]
@@ -70,10 +71,22 @@ export default function AttributeMappingPage() {
       return null;
     }).filter(Boolean);
 
+    console.log('Extracted values:', values);
     return values;
   };
 
   const attributeValues = getAttributeValues();
+
+  // Debug information
+  const debugInfo = {
+    selectedDataset,
+    selectedAttribute,
+    sourceInstances: sourceInstances?.map(instance => ({
+      id: instance.id,
+      data: instance.data
+    })),
+    extractedValues: attributeValues
+  };
 
   return (
     <MainLayout>
@@ -152,13 +165,27 @@ export default function AttributeMappingPage() {
                   {sourceInstancesLoading ? (
                     <SelectItem value="loading">Loading values...</SelectItem>
                   ) : attributeValues.map((item) => (
-                    <SelectItem key={item.id} value={String(item.id)}>
-                      {item.value}
+                    <SelectItem key={item?.id} value={String(item?.id)}>
+                      {item?.value}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Debug Panel */}
+            <Card className="mt-8">
+              <CardHeader>
+                <CardTitle>Debug Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                  <pre className="text-sm whitespace-pre-wrap">
+                    {JSON.stringify(debugInfo, null, 2)}
+                  </pre>
+                </ScrollArea>
+              </CardContent>
+            </Card>
           </CardContent>
         </Card>
       </div>
