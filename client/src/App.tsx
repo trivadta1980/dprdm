@@ -25,6 +25,7 @@ function Router() {
   console.log('Router: Initializing routes');
   return (
     <Switch>
+      <Route path="/auth" component={AuthPage} />
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/users" component={UsersPage} adminOnly />
       <ProtectedRoute path="/roles" component={RolesPage} adminOnly />
@@ -34,13 +35,12 @@ function Router() {
       <ProtectedRoute path="/reference-data/:id/instances" component={ReferenceDataInstancesPage} />
       <ProtectedRoute path="/relationships" component={RelationshipsPage} />
       <ProtectedRoute path="/relationships/:id/values" component={RelationshipValuesPage} />
-      <ProtectedRoute path="/crosswalks" component={CrosswalksListPage} />
       <ProtectedRoute path="/crosswalks/create" component={CrosswalkPage} />
       <ProtectedRoute path="/crosswalks/:id/edit" component={CrosswalkPage} />
       <ProtectedRoute path="/crosswalks/:id" component={CrosswalkPage} />
+      <ProtectedRoute path="/crosswalks" component={CrosswalksListPage} />
       <ProtectedRoute path="/help" component={HelpPage} />
       <ProtectedRoute path="/api-test" component={ApiTestPage} />
-      <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
   );
