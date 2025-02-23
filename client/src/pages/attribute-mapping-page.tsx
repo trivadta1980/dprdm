@@ -53,6 +53,12 @@ export default function AttributeMappingPage() {
     enabled: !!selectedDataset
   });
 
+  // Get the specific dataset's raw data
+  const { data: selectedDatasetData, isLoading: selectedDatasetLoading } = useQuery({
+    queryKey: [`/api/reference-data/${selectedDataset}`],
+    enabled: !!selectedDataset
+  });
+
   // Get the values for the selected attribute from all instances
   const getAttributeValues = () => {
     if (!selectedAttribute || !sourceInstances) return [];
@@ -81,6 +87,7 @@ export default function AttributeMappingPage() {
   const debugInfo = {
     selectedDataset,
     selectedAttribute,
+    rawDatasetData: selectedDatasetData,
     sourceInstances: sourceInstances?.map(instance => ({
       id: instance.id,
       name: instance.name,
