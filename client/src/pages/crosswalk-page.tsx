@@ -279,28 +279,6 @@ export default function CrosswalkPage() {
       <div className="container mx-auto p-6 space-y-8">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Crosswalk</h1>
-          <Button
-            onClick={() => saveMappingsMutation.mutate()}
-            disabled={
-              saveMappingsMutation.isPending ||
-              !mappingName ||
-              !selectedSourceDataset ||
-              !selectedTargetDataset ||
-              !selectedSourceAttribute ||
-              mappings.length === 0
-            }
-          >
-            {saveMappingsMutation.isPending ? (
-              <span className="flex items-center gap-2">
-                Saving...
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                <Save className="h-4 w-4" />
-                Save Mappings
-              </span>
-            )}
-          </Button>
         </div>
 
         <Card>
@@ -439,7 +417,31 @@ export default function CrosswalkPage() {
             {/* Mapping Table */}
             {mappings.length > 0 && (
               <div className="mt-8">
-                <h2 className="text-xl font-semibold mb-4">Value Mappings</h2>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Value Mappings</h2>
+                  <Button
+                    onClick={() => saveMappingsMutation.mutate()}
+                    disabled={
+                      saveMappingsMutation.isPending ||
+                      !mappingName ||
+                      !selectedSourceDataset ||
+                      !selectedTargetDataset ||
+                      !selectedSourceAttribute ||
+                      mappings.length === 0
+                    }
+                  >
+                    {saveMappingsMutation.isPending ? (
+                      <span className="flex items-center gap-2">
+                        Saving...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Save className="h-4 w-4" />
+                        Save Mappings
+                      </span>
+                    )}
+                  </Button>
+                </div>
                 <div className="border rounded-lg">
                   <Table>
                     <TableHeader>
@@ -583,32 +585,6 @@ export default function CrosswalkPage() {
             </CardContent>
           </Card>
         )}
-
-        {/* Save Button */}
-        <div className="flex justify-end">
-          <Button
-            onClick={() => saveMappingsMutation.mutate()}
-            disabled={
-              saveMappingsMutation.isPending ||
-              !mappingName ||
-              !selectedSourceDataset ||
-              !selectedTargetDataset ||
-              !selectedSourceAttribute ||
-              mappings.length === 0
-            }
-          >
-            {saveMappingsMutation.isPending ? (
-              <span className="flex items-center gap-2">
-                Saving...
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                <Save className="h-4 w-4" />
-                Save Mappings
-              </span>
-            )}
-          </Button>
-        </div>
       </div>
     </MainLayout>
   );
