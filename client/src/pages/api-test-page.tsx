@@ -8,6 +8,13 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function ApiTestPage() {
@@ -15,6 +22,8 @@ export default function ApiTestPage() {
   const [selectedEndpoint, setSelectedEndpoint] = useState<string | null>(null);
   const [testParams, setTestParams] = useState<Record<string, string>>({});
   const [response, setResponse] = useState<any>(null);
+  const [selectedSourceSystem, setSelectedSourceSystem] = useState<string | null>(null);
+  const [selectedTargetSystem, setSelectedTargetSystem] = useState<string | null>(null);
 
   // Authentication endpoints test
   const { data: userData, isLoading: userLoading } = useQuery({
@@ -292,9 +301,54 @@ export default function ApiTestPage() {
                         placeholder="Mapping Name"
                         onChange={(e) => handleParamChange('name', e.target.value)}
                       />
+
+                      <div className="space-y-2">
+                        <Label>Source Dataset</Label>
+                        <Select
+                          onValueChange={(value) => {
+                            handleParamChange('sourceSystemId', value);
+                            setSelectedSourceSystem(value);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Source Dataset" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {referenceData?.map((data: any) => (
+                              <SelectItem key={data.id} value={String(data.id)}>
+                                {data.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Target Dataset</Label>
+                        <Select
+                          onValueChange={(value) => {
+                            handleParamChange('targetSystemId', value);
+                            setSelectedTargetSystem(value);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Target Dataset" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {referenceData?.map((data: any) => (
+                              <SelectItem key={data.id} value={String(data.id)}>
+                                {data.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
                       <Button
                         onClick={() => testEndpoint('/api/crosswalks', 'POST', {
-                          name: testParams.name
+                          name: testParams.name,
+                          sourceSystemId: Number(testParams.sourceSystemId),
+                          targetSystemId: Number(testParams.targetSystemId)
                         })}
                       >
                         Create Mapping
