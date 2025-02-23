@@ -2,8 +2,8 @@ import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  Users, 
+import {
+  Users,
   UserCog,
   Database,
   GitFork,
@@ -57,8 +57,8 @@ export function Sidebar({ className }: SidebarProps) {
       requiresPermission: true,
     },
     {
-      title: "Attribute Mapping",
-      href: "/attribute-mapping",
+      title: "Crosswalk",
+      href: "/crosswalk",
       icon: ArrowRightLeft,
       requiresPermission: true,
     },
