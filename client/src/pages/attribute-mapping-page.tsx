@@ -23,6 +23,7 @@ import { Edit2, Check, X, Save } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface DataSet {
   id: number;
@@ -215,24 +216,31 @@ export default function AttributeMappingPage() {
     return sourceMatch && targetMatch && confidenceMatch;
   });
 
-  // Add mutation for saving mappings
+  // Generate the payload that would be sent
+  const generatePayload = () => {
+    if (!selectedSourceDataset || !selectedTargetDataset || !selectedSourceAttribute) {
+      return null;
+    }
+
+    return {
+      sourceDatasetId: Number(selectedSourceDataset),
+      targetDatasetId: Number(selectedTargetDataset),
+      sourceAttribute: selectedSourceAttribute,
+      targetAttribute: selectedSourceAttribute, // Same as source since we're using the same attribute
+      mappings: mappings.map(m => ({
+        sourceValue: m.sourceValue,
+        targetValue: m.targetValue,
+        confidence: m.confidence
+      }))
+    };
+  };
+
   const saveMappingsMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedSourceDataset || !selectedTargetDataset || !selectedSourceAttribute) {
+      const payload = generatePayload();
+      if (!payload) {
         throw new Error("Please select source and target datasets and attributes");
       }
-
-      const payload = {
-        sourceDatasetId: Number(selectedSourceDataset),
-        targetDatasetId: Number(selectedTargetDataset),
-        sourceAttribute: selectedSourceAttribute,
-        targetAttribute: selectedSourceAttribute, // Same as source since we're using the same attribute
-        mappings: mappings.map(m => ({
-          sourceValue: m.sourceValue,
-          targetValue: m.targetValue,
-          confidence: m.confidence
-        }))
-      };
 
       const response = await fetch('/api/crosswalk-mappings', {
         method: 'POST',
@@ -253,7 +261,6 @@ export default function AttributeMappingPage() {
         title: "Success",
         description: "Mappings saved successfully",
       });
-      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['/api/crosswalk-mappings'] });
     },
     onError: (error: Error) => {
@@ -534,6 +541,47 @@ export default function AttributeMappingPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Debug Panel */}
+        {mappings.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Debug Information - Save Mappings Payload</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                <pre className="text-sm">
+                  {JSON.stringify(generatePayload(), null, 2)}
+                </pre>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Save Button */}
+        <div className="flex justify-end">
+          <Button
+            onClick={() => saveMappingsMutation.mutate()}
+            disabled={
+              saveMappingsMutation.isPending ||
+              !selectedSourceDataset ||
+              !selectedTargetDataset ||
+              !selectedSourceAttribute ||
+              mappings.length === 0
+            }
+          >
+            {saveMappingsMutation.isPending ? (
+              <span className="flex items-center gap-2">
+                Saving...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <Save className="h-4 w-4" />
+                Save Mappings
+              </span>
+            )}
+          </Button>
+        </div>
       </div>
     </MainLayout>
   );
