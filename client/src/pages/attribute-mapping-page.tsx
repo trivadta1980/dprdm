@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Edit2, Check, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 interface DataSet {
   id: number;
@@ -49,6 +50,11 @@ export default function AttributeMappingPage() {
   const [mappings, setMappings] = useState<Mapping[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState<string>("");
+
+  // Filter states
+  const [sourceFilter, setSourceFilter] = useState("");
+  const [targetFilter, setTargetFilter] = useState("");
+  const [confidenceFilter, setConfidenceFilter] = useState("");
 
   // Fetch all datasets
   const { data: datasets = [], isLoading: datasetsLoading } = useQuery<DataSet[]>({
@@ -173,7 +179,7 @@ export default function AttributeMappingPage() {
   // Filter target datasets to match source type and exclude source dataset
   const availableTargetDatasets = datasets.filter(dataset => {
     if (!selectedSourceDatasetObj) return true; // Show all if no source selected
-    return dataset.typeId === selectedSourceDatasetObj.typeId && 
+    return dataset.typeId === selectedSourceDatasetObj.typeId &&
            dataset.id !== Number(selectedSourceDataset); // Exclude source dataset
   });
 
@@ -186,6 +192,17 @@ export default function AttributeMappingPage() {
       }
     }
   }, [selectedSourceDatasetObj?.typeId, selectedSourceDataset]);
+
+  // Apply filters to mappings
+  const filteredMappings = mappings.filter(mapping => {
+    const sourceMatch = mapping.sourceValue.toLowerCase().includes(sourceFilter.toLowerCase());
+    const targetMatch = mapping.targetValue.toLowerCase().includes(targetFilter.toLowerCase());
+    const confidenceMatch = confidenceFilter === "" ||
+      (mapping.confidence * 100).toFixed(0).includes(confidenceFilter);
+
+    return sourceMatch && targetMatch && confidenceMatch;
+  });
+
 
   return (
     <MainLayout>
@@ -309,14 +326,44 @@ export default function AttributeMappingPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Source Value</TableHead>
-                        <TableHead>Target Value</TableHead>
-                        <TableHead>Confidence</TableHead>
+                        <TableHead>
+                          <div className="space-y-2">
+                            <span>Source Value</span>
+                            <Input
+                              placeholder="Filter source..."
+                              value={sourceFilter}
+                              onChange={(e) => setSourceFilter(e.target.value)}
+                              className="w-full"
+                            />
+                          </div>
+                        </TableHead>
+                        <TableHead>
+                          <div className="space-y-2">
+                            <span>Target Value</span>
+                            <Input
+                              placeholder="Filter target..."
+                              value={targetFilter}
+                              onChange={(e) => setTargetFilter(e.target.value)}
+                              className="w-full"
+                            />
+                          </div>
+                        </TableHead>
+                        <TableHead>
+                          <div className="space-y-2">
+                            <span>Confidence</span>
+                            <Input
+                              placeholder="Filter confidence..."
+                              value={confidenceFilter}
+                              onChange={(e) => setConfidenceFilter(e.target.value)}
+                              className="w-full"
+                            />
+                          </div>
+                        </TableHead>
                         <TableHead className="w-[100px]">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {mappings.map((mapping, index) => (
+                      {filteredMappings.map((mapping, index) => (
                         <TableRow key={mapping.sourceValue}>
                           <TableCell>{mapping.sourceValue}</TableCell>
                           <TableCell>
