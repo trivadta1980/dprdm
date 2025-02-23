@@ -252,8 +252,11 @@ export default function CrosswalkPage() {
         throw new Error("Please select source and target datasets and attributes and provide a name");
       }
 
-      const response = await fetch('/api/crosswalks', {
-        method: isEditMode ? 'PUT' : 'POST',
+      const url = isEditMode ? `/api/crosswalks/${id}` : '/api/crosswalks';
+      const method = isEditMode ? 'PATCH' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json'
         },
@@ -271,7 +274,7 @@ export default function CrosswalkPage() {
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Mapping saved successfully",
+        description: isEditMode ? "Mapping updated successfully" : "Mapping created successfully",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/crosswalks'] });
     },
