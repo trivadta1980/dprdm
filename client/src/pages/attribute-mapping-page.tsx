@@ -180,6 +180,24 @@ export default function AttributeMappingPage() {
     setEditingIndex(null);
   };
 
+  // Filter target datasets to match source type
+  const availableTargetDatasets = datasets.filter(dataset => {
+    if (!selectedSourceDatasetObj) return true; // Show all if no source selected
+    return dataset.typeId === selectedSourceDatasetObj.typeId;
+  });
+
+  // Effect to reset target selection if source type changes
+  useEffect(() => {
+    if (selectedSourceDatasetObj && selectedTargetDatasetObj) {
+      if (selectedSourceDatasetObj.typeId !== selectedTargetDatasetObj.typeId) {
+        setSelectedTargetDataset(null);
+        setSelectedTargetAttribute(null);
+        setSelectedTargetValue(null);
+      }
+    }
+  }, [selectedSourceDatasetObj?.typeId]);
+
+
   // Debug information
   const debugInfo = {
     source: {
@@ -222,6 +240,13 @@ export default function AttributeMappingPage() {
                       setSelectedSourceDataset(value);
                       setSelectedSourceAttribute(null);
                       setSelectedSourceValue(null);
+                      // Reset target if types don't match
+                      const newSourceType = datasets.find(d => d.id === Number(value))?.typeId;
+                      if (selectedTargetDatasetObj && newSourceType !== selectedTargetDatasetObj.typeId) {
+                        setSelectedTargetDataset(null);
+                        setSelectedTargetAttribute(null);
+                        setSelectedTargetValue(null);
+                      }
                     }}
                   >
                     <SelectTrigger className="w-full">
@@ -242,7 +267,7 @@ export default function AttributeMappingPage() {
                 {/* Source Attribute Selection */}
                 <div className="space-y-2">
                   <Label>Source Attribute</Label>
-                  <Select 
+                  <Select
                     disabled={!selectedSourceDataset}
                     value={selectedSourceAttribute || undefined}
                     onValueChange={(value) => {
@@ -295,6 +320,7 @@ export default function AttributeMappingPage() {
                 <div className="space-y-2">
                   <Label>Target Dataset</Label>
                   <Select
+                    disabled={!selectedSourceDataset}
                     value={selectedTargetDataset || undefined}
                     onValueChange={(value) => {
                       setSelectedTargetDataset(value);
@@ -303,24 +329,34 @@ export default function AttributeMappingPage() {
                     }}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Choose a dataset" />
+                      <SelectValue placeholder={
+                        !selectedSourceDataset
+                          ? "Select a source dataset first"
+                          : "Choose a target dataset"
+                      } />
                     </SelectTrigger>
                     <SelectContent>
                       {datasetsLoading ? (
                         <SelectItem value="loading">Loading datasets...</SelectItem>
-                      ) : datasets.map((dataset) => (
+                      ) : availableTargetDatasets.map((dataset) => (
                         <SelectItem key={dataset.id} value={String(dataset.id)}>
                           {dataset.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  {selectedSourceDataset && selectedTargetDataset &&
+                    selectedSourceDatasetObj?.typeId !== selectedTargetDatasetObj?.typeId && (
+                      <p className="text-sm text-destructive">
+                        Target dataset type must match source dataset type
+                      </p>
+                    )}
                 </div>
 
                 {/* Target Attribute Selection */}
                 <div className="space-y-2">
                   <Label>Target Attribute</Label>
-                  <Select 
+                  <Select
                     disabled={!selectedTargetDataset}
                     value={selectedTargetAttribute || undefined}
                     onValueChange={(value) => {
