@@ -10,7 +10,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -42,12 +41,9 @@ export default function AttributeMappingPage() {
   // Source states
   const [selectedSourceDataset, setSelectedSourceDataset] = useState<string | null>(null);
   const [selectedSourceAttribute, setSelectedSourceAttribute] = useState<string | null>(null);
-  const [selectedSourceValue, setSelectedSourceValue] = useState<string | null>(null);
 
   // Target states
   const [selectedTargetDataset, setSelectedTargetDataset] = useState<string | null>(null);
-  const [selectedTargetAttribute, setSelectedTargetAttribute] = useState<string | null>(null);
-  const [selectedTargetValue, setSelectedTargetValue] = useState<string | null>(null);
 
   // Mapping states
   const [mappings, setMappings] = useState<Mapping[]>([]);
@@ -69,12 +65,6 @@ export default function AttributeMappingPage() {
   const { data: sourceSchemas = [], isLoading: sourceSchemaLoading } = useQuery<SchemaField[]>({
     queryKey: [`/api/reference-types/${selectedSourceDatasetObj?.typeId}/schemas`],
     enabled: !!selectedSourceDatasetObj?.typeId
-  });
-
-  // Fetch schemas for target dataset's type
-  const { data: targetSchemas = [], isLoading: targetSchemaLoading } = useQuery<SchemaField[]>({
-    queryKey: [`/api/reference-types/${selectedTargetDatasetObj?.typeId}/schemas`],
-    enabled: !!selectedTargetDatasetObj?.typeId
   });
 
   // Get the source dataset's raw data
@@ -105,12 +95,12 @@ export default function AttributeMappingPage() {
 
   // Extract unique values for the selected target attribute
   const getTargetAttributeValues = () => {
-    if (!selectedTargetAttribute || !targetDatasetData?.data) return [];
+    if (!selectedSourceAttribute || !targetDatasetData?.data) return [];
 
     const values = new Set<string>();
     Object.values(targetDatasetData.data).forEach(instance => {
-      if (instance[selectedTargetAttribute]) {
-        values.add(instance[selectedTargetAttribute]);
+      if (instance[selectedSourceAttribute]) {
+        values.add(instance[selectedSourceAttribute]);
       }
     });
 
@@ -163,10 +153,10 @@ export default function AttributeMappingPage() {
 
   // Effect to generate mappings when both attributes are selected
   useEffect(() => {
-    if (selectedSourceAttribute && selectedTargetAttribute) {
+    if (selectedSourceAttribute && selectedTargetDataset) {
       generateMappings();
     }
-  }, [selectedSourceAttribute, selectedTargetAttribute, sourceAttributeValues, targetAttributeValues]);
+  }, [selectedSourceAttribute, selectedTargetDataset, sourceAttributeValues, targetAttributeValues]);
 
   // Function to update a mapping
   const updateMapping = (index: number, newTargetValue: string) => {
@@ -193,31 +183,9 @@ export default function AttributeMappingPage() {
       if (selectedSourceDatasetObj.typeId !== selectedTargetDatasetObj.typeId ||
           selectedSourceDataset === selectedTargetDataset) { // Reset if same dataset selected
         setSelectedTargetDataset(null);
-        setSelectedTargetAttribute(null);
-        setSelectedTargetValue(null);
       }
     }
   }, [selectedSourceDatasetObj?.typeId, selectedSourceDataset]);
-
-
-  // Debug information
-  const debugInfo = {
-    source: {
-      dataset: selectedSourceDataset,
-      attribute: selectedSourceAttribute,
-      value: selectedSourceValue,
-      rawData: sourceDatasetData,
-      extractedValues: sourceAttributeValues
-    },
-    target: {
-      dataset: selectedTargetDataset,
-      attribute: selectedTargetAttribute,
-      value: selectedTargetValue,
-      rawData: targetDatasetData,
-      extractedValues: targetAttributeValues
-    },
-    mappings
-  };
 
   return (
     <MainLayout>
@@ -241,13 +209,10 @@ export default function AttributeMappingPage() {
                     onValueChange={(value) => {
                       setSelectedSourceDataset(value);
                       setSelectedSourceAttribute(null);
-                      setSelectedSourceValue(null);
                       // Reset target if types don't match
                       const newSourceType = datasets.find(d => d.id === Number(value))?.typeId;
                       if (selectedTargetDatasetObj && newSourceType !== selectedTargetDatasetObj.typeId) {
                         setSelectedTargetDataset(null);
-                        setSelectedTargetAttribute(null);
-                        setSelectedTargetValue(null);
                       }
                     }}
                   >
@@ -272,10 +237,7 @@ export default function AttributeMappingPage() {
                   <Select
                     disabled={!selectedSourceDataset}
                     value={selectedSourceAttribute || undefined}
-                    onValueChange={(value) => {
-                      setSelectedSourceAttribute(value);
-                      setSelectedSourceValue(null);
-                    }}
+                    onValueChange={setSelectedSourceAttribute}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder={selectedSourceDataset ? "Choose an attribute" : "Select a dataset first"} />
@@ -286,28 +248,6 @@ export default function AttributeMappingPage() {
                       ) : sourceSchemas.map((schema) => (
                         <SelectItem key={schema.name} value={schema.name}>
                           {schema.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {/* Source Values Selection */}
-                <div className="space-y-2">
-                  <Label>Source Values</Label>
-                  <Select
-                    disabled={!selectedSourceAttribute}
-                    value={selectedSourceValue || undefined}
-                    onValueChange={setSelectedSourceValue}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={selectedSourceAttribute ? "Choose a value" : "Select an attribute first"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sourceDatasetLoading ? (
-                        <SelectItem value="loading">Loading values...</SelectItem>
-                      ) : sourceAttributeValues.map((value) => (
-                        <SelectItem key={value} value={value}>
-                          {value}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -324,11 +264,7 @@ export default function AttributeMappingPage() {
                   <Select
                     disabled={!selectedSourceDataset}
                     value={selectedTargetDataset || undefined}
-                    onValueChange={(value) => {
-                      setSelectedTargetDataset(value);
-                      setSelectedTargetAttribute(null);
-                      setSelectedTargetValue(null);
-                    }}
+                    onValueChange={setSelectedTargetDataset}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder={
@@ -355,52 +291,12 @@ export default function AttributeMappingPage() {
                     )}
                 </div>
 
-                {/* Target Attribute Selection */}
+                {/* Target Attribute Display */}
                 <div className="space-y-2">
                   <Label>Target Attribute</Label>
-                  <Select
-                    disabled={!selectedTargetDataset}
-                    value={selectedTargetAttribute || undefined}
-                    onValueChange={(value) => {
-                      setSelectedTargetAttribute(value);
-                      setSelectedTargetValue(null);
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={selectedTargetDataset ? "Choose an attribute" : "Select a dataset first"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {targetSchemaLoading ? (
-                        <SelectItem value="loading">Loading attributes...</SelectItem>
-                      ) : targetSchemas.map((schema) => (
-                        <SelectItem key={schema.name} value={schema.name}>
-                          {schema.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {/* Target Values Selection */}
-                <div className="space-y-2">
-                  <Label>Target Values</Label>
-                  <Select
-                    disabled={!selectedTargetAttribute}
-                    value={selectedTargetValue || undefined}
-                    onValueChange={setSelectedTargetValue}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={selectedTargetAttribute ? "Choose a value" : "Select an attribute first"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {targetDatasetLoading ? (
-                        <SelectItem value="loading">Loading values...</SelectItem>
-                      ) : targetAttributeValues.map((value) => (
-                        <SelectItem key={value} value={value}>
-                          {value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="p-2 border rounded-md bg-muted">
+                    {selectedSourceAttribute || "Select a source attribute first"}
+                  </div>
                 </div>
               </div>
             </div>
@@ -483,20 +379,6 @@ export default function AttributeMappingPage() {
                 </div>
               </div>
             )}
-
-            {/* Debug Panel */}
-            <Card className="mt-8">
-              <CardHeader>
-                <CardTitle>Debug Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                  <pre className="text-sm whitespace-pre-wrap">
-                    {JSON.stringify(debugInfo, null, 2)}
-                  </pre>
-                </ScrollArea>
-              </CardContent>
-            </Card>
           </CardContent>
         </Card>
       </div>
