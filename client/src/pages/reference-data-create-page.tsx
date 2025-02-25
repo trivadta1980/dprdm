@@ -97,7 +97,7 @@ export default function ReferenceDataCreatePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Create New Reference Data Set 1</CardTitle>
+            <CardTitle>Create New Reference Data Set</CardTitle>
           </CardHeader>
           <CardContent>
             <Form {...form}>
