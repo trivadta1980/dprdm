@@ -59,7 +59,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         <div className="flex flex-1">
           <Sidebar className="w-64 hidden md:block" />
 
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col h-screen">
             <header className="border-b p-4 flex justify-between items-center bg-white">
               <div className="flex items-center gap-3">
                 <Database className="h-6 w-6 text-primary" />
@@ -94,7 +94,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               </div>
             </header>
 
-            <main className="flex-1 p-6">
+            <main className="flex-1 overflow-auto p-6">
               {children}
             </main>
 
