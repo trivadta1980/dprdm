@@ -3,13 +3,14 @@ import Image from "@/components/ui/image";
 
 interface LogoProps {
   className?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "footer";
 }
 
 const sizeClasses = {
-  sm: "h-5",  // Reduced from h-8
-  md: "h-8",  // Reduced from h-12
-  lg: "h-12", // Reduced from h-16
+  sm: "h-8",    // Original size
+  md: "h-12",   // Original size
+  lg: "h-16",   // Original size
+  footer: "h-5", // Small size for footer
 };
 
 export function Logo({ className, size = "md" }: LogoProps) {

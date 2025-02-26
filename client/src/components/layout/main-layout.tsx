@@ -103,7 +103,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <span className="text-xs text-gray-600">Powered by</span>
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-gray-600">Blumetra Solutions</span>
-                  <Logo size="sm" />
+                  <Logo size="footer" />
                 </div>
               </div>
             </footer>
