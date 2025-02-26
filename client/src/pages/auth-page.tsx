@@ -108,8 +108,9 @@ export default function AuthPage() {
       <div className="flex items-center justify-center p-8">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
-            <div className="flex justify-center mb-4">
+            <div className="flex items-center gap-3 mb-4">
               <Logo size="md" />
+              <h1 className="text-2xl font-semibold text-primary">Blumetra</h1>
             </div>
             <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
             <CardDescription>
