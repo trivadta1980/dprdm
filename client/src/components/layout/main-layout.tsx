@@ -55,45 +55,54 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <>
-      <div className="flex min-h-screen">
-        <Sidebar className="w-64 hidden md:block" />
+      <div className="flex min-h-screen flex-col">
+        <div className="flex flex-1">
+          <Sidebar className="w-64 hidden md:block" />
 
-        <div className="flex-1">
-          <header className="border-b p-4 flex justify-between items-center bg-white">
-            <div className="flex items-center gap-3">
-              <Logo size="sm" className="hidden md:block" />
-              <Database className="h-6 w-6 text-primary" />
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">Reference Data Management</h1>
-                <p className="text-sm text-gray-500">Welcome, {user?.username}</p>
+          <div className="flex-1 flex flex-col">
+            <header className="border-b p-4 flex justify-between items-center bg-white">
+              <div className="flex items-center gap-3">
+                <Logo size="sm" className="hidden md:block" />
+                <Database className="h-6 w-6 text-primary" />
+                <div>
+                  <h1 className="text-xl font-semibold text-gray-900">Reference Data Management</h1>
+                  <p className="text-sm text-gray-500">Welcome, {user?.username}</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => setLocation('/help')}
-                className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-              >
-                <HelpCircle className="h-4 w-4 mr-2" />
-                Help
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => logoutMutation.mutate()}
-                disabled={logoutMutation.isPending}
-                className="hover:bg-red-50 hover:text-red-600 transition-colors"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </header>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setLocation('/help')}
+                  className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                >
+                  <HelpCircle className="h-4 w-4 mr-2" />
+                  Help
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => logoutMutation.mutate()}
+                  disabled={logoutMutation.isPending}
+                  className="hover:bg-red-50 hover:text-red-600 transition-colors"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </div>
+            </header>
 
-          <main className="p-6">
-            {children}
-          </main>
+            <main className="flex-1 p-6">
+              {children}
+            </main>
+
+            <footer className="border-t py-4 px-6 bg-white">
+              <div className="flex items-center justify-center gap-2">
+                <Logo size="sm" />
+                <span className="text-sm text-gray-600">Powered by Blumetra Solutions</span>
+              </div>
+            </footer>
+          </div>
         </div>
       </div>
 
