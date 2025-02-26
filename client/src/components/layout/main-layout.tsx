@@ -98,11 +98,11 @@ export function MainLayout({ children }: MainLayoutProps) {
               {children}
             </main>
 
-            <footer className="border-t py-4 px-6 bg-white">
+            <footer className="border-t py-2 px-4 bg-white">
               <div className="flex items-center justify-end gap-2">
-                <span className="text-sm text-gray-600">Powered by</span>
+                <span className="text-xs text-gray-600">Powered by</span>
                 <div className="flex items-center gap-1">
-                  <span className="text-sm text-gray-600">Blumetra Solutions</span>
+                  <span className="text-xs text-gray-600">Blumetra Solutions</span>
                   <Logo size="sm" />
                 </div>
               </div>
