@@ -13,6 +13,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { Logo } from "@/components/ui/logo";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -60,6 +61,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         <div className="flex-1">
           <header className="border-b p-4 flex justify-between items-center bg-white">
             <div className="flex items-center gap-3">
+              <Logo size="sm" className="hidden md:block" />
               <Database className="h-6 w-6 text-primary" />
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">Reference Data Management</h1>

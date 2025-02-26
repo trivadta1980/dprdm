@@ -31,6 +31,7 @@ import {
 import { Loader2, Database, GitFork, History, GitCompare } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { Logo } from "@/components/ui/logo";
 
 type LoginData = Pick<InsertUser, "username" | "password">;
 
@@ -107,6 +108,9 @@ export default function AuthPage() {
       <div className="flex items-center justify-center p-8">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
+            <div className="flex justify-center mb-4">
+              <Logo size="md" />
+            </div>
             <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
             <CardDescription>
               Sign in to Reference Data Management Console
