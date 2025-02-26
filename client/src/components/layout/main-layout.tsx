@@ -69,7 +69,6 @@ export function MainLayout({ children }: MainLayoutProps) {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <Logo size="sm" className="hidden md:block" />
                 <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
@@ -91,6 +90,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                     Logout
                   </Button>
                 </div>
+                <Logo size="sm" className="hidden md:block" />
               </div>
             </header>
 
