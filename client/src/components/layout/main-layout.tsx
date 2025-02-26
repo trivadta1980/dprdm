@@ -62,33 +62,35 @@ export function MainLayout({ children }: MainLayoutProps) {
           <div className="flex-1 flex flex-col">
             <header className="border-b p-4 flex justify-between items-center bg-white">
               <div className="flex items-center gap-3">
-                <Logo size="sm" className="hidden md:block" />
                 <Database className="h-6 w-6 text-primary" />
                 <div>
                   <h1 className="text-xl font-semibold text-gray-900">Reference Data Management</h1>
                   <p className="text-sm text-gray-500">Welcome, {user?.username}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => setLocation('/help')}
-                  className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                >
-                  <HelpCircle className="h-4 w-4 mr-2" />
-                  Help
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => logoutMutation.mutate()}
-                  disabled={logoutMutation.isPending}
-                  className="hover:bg-red-50 hover:text-red-600 transition-colors"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Logout
-                </Button>
+              <div className="flex items-center gap-4">
+                <Logo size="sm" className="hidden md:block" />
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setLocation('/help')}
+                    className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                  >
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    Help
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => logoutMutation.mutate()}
+                    disabled={logoutMutation.isPending}
+                    className="hover:bg-red-50 hover:text-red-600 transition-colors"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </Button>
+                </div>
               </div>
             </header>
 
@@ -97,9 +99,12 @@ export function MainLayout({ children }: MainLayoutProps) {
             </main>
 
             <footer className="border-t py-4 px-6 bg-white">
-              <div className="flex items-center justify-center gap-2">
-                <Logo size="sm" />
-                <span className="text-sm text-gray-600">Powered by Blumetra Solutions</span>
+              <div className="flex items-center justify-end gap-2">
+                <span className="text-sm text-gray-600">Powered by</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm text-gray-600">Blumetra Solutions</span>
+                  <Logo size="sm" />
+                </div>
               </div>
             </footer>
           </div>
