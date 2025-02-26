@@ -16,7 +16,7 @@ export function Logo({ className, size = "md" }: LogoProps) {
   return (
     <div className={cn("relative flex items-center", className)}>
       <Image
-        src="/assets/blumetra-logo.jpeg"
+        src="assets/blumetra-logo.jpeg"
         alt="Blumetra Logo"
         className={cn("object-contain", sizeClasses[size])}
         priority
