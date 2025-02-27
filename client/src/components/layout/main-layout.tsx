@@ -91,7 +91,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             </main>
 
             <footer className="border-t py-2 px-4 bg-white">
-              <div className="flex flex-col items-end gap-1">
+              <div className="flex flex-col items-start gap-1">
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-600">Powered by</span>
                   <div className="flex items-center gap-1">
