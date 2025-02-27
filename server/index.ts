@@ -1,40 +1,10 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import helmet from "helmet";
-import rateLimit from "express-rate-limit";
 
 const app = express();
-
-// Basic security headers with CSP disabled for development
-app.use(helmet({
-  contentSecurityPolicy: false
-}));
-
-// Basic rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-});
-
-app.use(limiter);
-
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-
-// Request sanitization middleware
-app.use((req, res, next) => {
-  if (req.body) {
-    Object.keys(req.body).forEach(key => {
-      if (typeof req.body[key] === 'string') {
-        req.body[key] = req.body[key].trim().replace(/[<>]/g, '');
-      }
-    });
-  }
-  next();
-});
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -69,26 +39,25 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  // Error handling middleware
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    // Don't expose internal error details in production
-    const error = app.get("env") === "production" 
-      ? { message: "Internal Server Error" }
-      : { message, stack: err.stack };
-
-    res.status(status).json(error);
-    console.error('Server error:', err);
+    res.status(status).json({ message });
+    throw err;
   });
 
+  // importantly only setup vite in development and after
+  // setting up all the other routes so the catch-all route
+  // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
+  // ALWAYS serve the app on port 5000
+  // this serves both the API and the client
   const PORT = 5000;
   server.listen(PORT, "0.0.0.0", () => {
     log(`serving on port ${PORT}`);
