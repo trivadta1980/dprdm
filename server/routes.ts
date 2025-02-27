@@ -6,6 +6,7 @@ import multer from "multer";
 import { parse } from "csv-parse";
 import { insertRelationshipSchema } from "@shared/schema";
 import { insertCrosswalkMappingSchema } from "@shared/schema";
+import { sql } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication and user management routes
@@ -648,6 +649,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: String(error) });
     }
   });
+
+  app.get("/api/metrics", async (req, res) => {
+    console.log('GET /api/metrics - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/metrics - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const metrics = await storage.getDashboardMetrics();
+      console.log('GET /api/metrics - Metrics fetched successfully');
+      res.json(metrics);
+    } catch (error) {
+      console.error('GET /api/metrics - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.get("/api/recent-activity", async (req, res) => {
+    console.log('GET /api/recent-activity - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/recent-activity - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const activity = await storage.getRecentActivity();
+      console.log('GET /api/recent-activity - Activity fetched successfully');
+      res.json(activity);
+    } catch (error) {
+      console.error('GET /api/recent-activity - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
 
   const httpServer = createServer(app);
   return httpServer;

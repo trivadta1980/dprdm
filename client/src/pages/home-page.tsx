@@ -19,15 +19,14 @@ export default function HomePage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
 
-  // Fetch metrics
+  // Fetch metrics from real API endpoint
   const { data: metrics } = useQuery({
     queryKey: ['/api/metrics'],
-    queryFn: async () => ({
-      totalDatasets: 12,
-      activeMappings: 5,
-      recentChanges: 8,
-      activeUsers: 3
-    })
+  });
+
+  // Fetch recent activity
+  const { data: recentActivity } = useQuery({
+    queryKey: ['/api/recent-activity'],
   });
 
   const quickActions = [
@@ -81,7 +80,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-2">
                     <Database className="h-5 w-5 text-blue-600" />
                     <div>
-                      <p className="text-2xl font-bold">{metrics?.totalDatasets}</p>
+                      <p className="text-2xl font-bold">{metrics?.totalDatasets ?? '—'}</p>
                       <p className="text-sm text-gray-500">Total Datasets</p>
                     </div>
                   </div>
@@ -92,7 +91,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-2">
                     <ArrowRightLeft className="h-5 w-5 text-purple-600" />
                     <div>
-                      <p className="text-2xl font-bold">{metrics?.activeMappings}</p>
+                      <p className="text-2xl font-bold">{metrics?.activeMappings ?? '—'}</p>
                       <p className="text-sm text-gray-500">Active Mappings</p>
                     </div>
                   </div>
@@ -103,7 +102,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-2">
                     <Clock className="h-5 w-5 text-green-600" />
                     <div>
-                      <p className="text-2xl font-bold">{metrics?.recentChanges}</p>
+                      <p className="text-2xl font-bold">{metrics?.recentChanges ?? '—'}</p>
                       <p className="text-sm text-gray-500">Recent Changes</p>
                     </div>
                   </div>
@@ -114,7 +113,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5 text-orange-600" />
                     <div>
-                      <p className="text-2xl font-bold">{metrics?.activeUsers}</p>
+                      <p className="text-2xl font-bold">{metrics?.activeUsers ?? '—'}</p>
                       <p className="text-sm text-gray-500">Active Users</p>
                     </div>
                   </div>
@@ -212,37 +211,25 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {/* This would be populated with real data from the API */}
-                <div className="flex items-center justify-between py-2 border-b">
-                  <div className="flex items-center gap-3">
-                    <Database className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <p className="font-medium">Updated Customer Codes</p>
-                      <p className="text-sm text-gray-500">Modified by {user?.username}</p>
+                {recentActivity?.map((activity, index) => (
+                  <div key={index} className="flex items-center justify-between py-2 border-b last:border-0">
+                    <div className="flex items-center gap-3">
+                      {activity.type === 'dataset' && <Database className="h-4 w-4 text-gray-500" />}
+                      {activity.type === 'relationship' && <GitFork className="h-4 w-4 text-gray-500" />}
+                      {activity.type === 'mapping' && <ArrowRightLeft className="h-4 w-4 text-gray-500" />}
+                      <div>
+                        <p className="font-medium">{activity.description}</p>
+                        <p className="text-sm text-gray-500">Modified by {activity.user}</p>
+                      </div>
                     </div>
+                    <span className="text-sm text-gray-500">
+                      {new Date(activity.timestamp).toLocaleString()}
+                    </span>
                   </div>
-                  <span className="text-sm text-gray-500">2 hours ago</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b">
-                  <div className="flex items-center gap-3">
-                    <GitFork className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <p className="font-medium">New Relationship Created</p>
-                      <p className="text-sm text-gray-500">Products to Categories mapping</p>
-                    </div>
-                  </div>
-                  <span className="text-sm text-gray-500">5 hours ago</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-3">
-                    <ArrowRightLeft className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <p className="font-medium">Crosswalk Updated</p>
-                      <p className="text-sm text-gray-500">SAP to Oracle transformation</p>
-                    </div>
-                  </div>
-                  <span className="text-sm text-gray-500">1 day ago</span>
-                </div>
+                ))}
+                {(!recentActivity || recentActivity.length === 0) && (
+                  <p className="text-sm text-gray-500 text-center py-4">No recent activity</p>
+                )}
               </div>
             </CardContent>
           </Card>

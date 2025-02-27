@@ -1,6 +1,6 @@
 import { users, roles, type User, type InsertUser, type Role, type InsertRole, type UpdateUser } from "@shared/schema";
 import { db } from "./db";
-import { eq, or, and } from "drizzle-orm";
+import { eq, or, and, sql, desc } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -85,6 +85,20 @@ export interface IStorage {
   getCrosswalkMappingsBySystem(systemId: number): Promise<CrosswalkMapping[]>;
   updateCrosswalkMapping(id: number, mapping: Partial<InsertCrosswalkMapping>): Promise<CrosswalkMapping>;
   deleteCrosswalkMapping(id: number): Promise<boolean>;
+
+  // Dashboard metrics and activity
+  getDashboardMetrics(): Promise<{
+    totalDatasets: number;
+    activeMappings: number;
+    recentChanges: number;
+    activeUsers: number;
+  }>;
+  getRecentActivity(): Promise<Array<{
+    type: string;
+    description: string;
+    user: string;
+    timestamp: Date;
+  }>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -643,6 +657,91 @@ export class DatabaseStorage implements IStorage {
       .where(eq(crosswalkMappings.id, id))
       .returning();
     return !!mapping;
+  }
+
+  async getDashboardMetrics(): Promise<{
+    totalDatasets: number;
+    activeMappings: number;
+    recentChanges: number;
+    activeUsers: number;
+  }> {
+    const [datasets] = await db
+      .select({ count: sql`count(*)` })
+      .from(referenceDataSets);
+
+    const [mappings] = await db
+      .select({ count: sql`count(*)` })
+      .from(crosswalkMappings);
+
+    const [changes] = await db
+      .select({ count: sql`count(*)` })
+      .from(referenceDataSets)
+      .where(
+        sql`created_at > NOW() - INTERVAL '24 hours'`
+      );
+
+    const [users] = await db
+      .select({ count: sql`count(*)` })
+      .from(users)
+      .where(eq(users.isActive, true));
+
+    return {
+      totalDatasets: Number(datasets?.count || 0),
+      activeMappings: Number(mappings?.count || 0),
+      recentChanges: Number(changes?.count || 0),
+      activeUsers: Number(users?.count || 0)
+    };
+  }
+
+  async getRecentActivity(): Promise<Array<{
+    type: string;
+    description: string;
+    user: string;
+    timestamp: Date;
+  }>> {
+    // Get recent datasets
+    const recentDatasets = await db
+      .select({
+        type: sql`'dataset'`.as('type'),
+        description: referenceDataSets.name,
+        timestamp: referenceDataSets.createdAt,
+      })
+      .from(referenceDataSets)
+      .orderBy(desc(referenceDataSets.createdAt))
+      .limit(3);
+
+    // Get recent mappings
+    const recentMappings = await db
+      .select({
+        type: sql`'mapping'`.as('type'),
+        description: crosswalkMappings.name,
+        timestamp: crosswalkMappings.createdAt,
+      })
+      .from(crosswalkMappings)
+      .orderBy(desc(crosswalkMappings.createdAt))
+      .limit(3);
+
+    // Get recent relationships
+    const recentRelationships = await db
+      .select({
+        type: sql`'relationship'`.as('type'),
+        description: relationships.name,
+        timestamp: relationships.createdAt,
+      })
+      .from(relationships)
+      .orderBy(desc(relationships.createdAt))
+      .limit(3);
+
+    // Combine and sort all activities
+    const allActivities = [...recentDatasets, ...recentMappings, ...recentRelationships]
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, 5)
+      .map(activity => ({
+        ...activity,
+        user: 'System', // Since we don't track user for these actions yet
+      }));
+
+    return allActivities;
   }
 }
 
