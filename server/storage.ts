@@ -679,7 +679,7 @@ export class DatabaseStorage implements IStorage {
       .select({ count: sql`count(*)` })
       .from(referenceDataTypes);
 
-    const [relationships] = await db
+    const [relationshipCount] = await db
       .select({ count: sql`count(*)` })
       .from(relationships);
 
@@ -706,7 +706,7 @@ export class DatabaseStorage implements IStorage {
     return {
       totalDatasets: Number(datasets?.count || 0),
       totalDataTypes: Number(dataTypes?.count || 0),
-      totalRelationships: Number(relationships?.count || 0),
+      totalRelationships: Number(relationshipCount?.count || 0),
       totalCrosswalks: Number(crosswalks?.count || 0),
       activeMappings: Number(mappings?.count || 0),
       recentChanges: Number(changes?.count || 0),
