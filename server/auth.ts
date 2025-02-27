@@ -7,6 +7,8 @@ import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 import { resetPasswordRequestSchema, resetPasswordSchema } from "@shared/schema";
+import { z } from "zod";
+import rateLimit from "express-rate-limit";
 
 declare global {
   namespace Express {
@@ -15,6 +17,19 @@ declare global {
 }
 
 const scryptAsync = promisify(scrypt);
+
+// Password validation schema
+const passwordSchema = z.string()
+  .min(8, "Password must be at least 8 characters")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character");
+
+// Login attempt tracking
+const loginAttempts = new Map<string, { count: number, lastAttempt: number }>();
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOGIN_TIMEOUT = 15 * 60 * 1000; // 15 minutes
 
 async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
@@ -33,6 +48,25 @@ async function generateResetToken() {
   return randomBytes(32).toString("hex");
 }
 
+function checkLoginAttempts(username: string): boolean {
+  const attempt = loginAttempts.get(username);
+  if (!attempt) return true;
+
+  if (Date.now() - attempt.lastAttempt >= LOGIN_TIMEOUT) {
+    loginAttempts.delete(username);
+    return true;
+  }
+
+  return attempt.count < MAX_LOGIN_ATTEMPTS;
+}
+
+function recordLoginAttempt(username: string) {
+  const attempt = loginAttempts.get(username) || { count: 0, lastAttempt: Date.now() };
+  attempt.count += 1;
+  attempt.lastAttempt = Date.now();
+  loginAttempts.set(username, attempt);
+}
+
 const DEFAULT_PASSWORD = "password123";
 
 export function setupAuth(app: Express) {
@@ -41,6 +75,11 @@ export function setupAuth(app: Express) {
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
+    cookie: {
+      secure: app.get("env") === "production",
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
   };
 
   app.set("trust proxy", 1);
@@ -48,14 +87,28 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Rate limit for login attempts
+  const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // limit each IP to 5 requests per windowMs
+    message: { error: "Too many login attempts, please try again later" }
+  });
+
   passport.use(
     new LocalStrategy(async (username, password, done) => {
+      if (!checkLoginAttempts(username)) {
+        return done(null, false, { message: "Account temporarily locked due to too many failed attempts" });
+      }
+
       const user = await storage.getUserByUsername(username);
       if (!user || !user.isActive || !(await comparePasswords(password, user.password))) {
+        recordLoginAttempt(username);
         return done(null, false);
-      } else {
-        return done(null, user);
       }
+
+      // Reset login attempts on successful login
+      loginAttempts.delete(username);
+      return done(null, user);
     }),
   );
 
@@ -64,6 +117,11 @@ export function setupAuth(app: Express) {
     const user = await storage.getUser(id);
     done(null, user);
   });
+
+  // Apply rate limiting to authentication routes
+  app.use("/api/login", loginLimiter);
+  app.use("/api/register", loginLimiter);
+  app.use("/api/reset-password", loginLimiter);
 
   app.post("/api/register", async (req, res, next) => {
     const existingUser = await storage.getUserByUsername(req.body.username);
@@ -76,7 +134,12 @@ export function setupAuth(app: Express) {
       return res.status(400).send("Email already exists");
     }
 
-    const hashedPassword = await hashPassword(DEFAULT_PASSWORD);
+    const passwordResult = passwordSchema.safeParse(req.body.password);
+    if (!passwordResult.success) {
+        return res.status(400).json({ error: passwordResult.error.errors });
+    }
+
+    const hashedPassword = await hashPassword(req.body.password);
     const user = await storage.createUser({
       ...req.body,
       password: hashedPassword,
@@ -222,6 +285,10 @@ export function setupAuth(app: Express) {
 
     if (!(await comparePasswords(currentPassword, user.password))) {
       return res.status(400).send("Current password is incorrect");
+    }
+    const passwordResult = passwordSchema.safeParse(newPassword);
+    if (!passwordResult.success) {
+        return res.status(400).json({ error: passwordResult.error.errors });
     }
 
     const hashedNewPassword = await hashPassword(newPassword);
