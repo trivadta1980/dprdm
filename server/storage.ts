@@ -680,7 +680,7 @@ export class DatabaseStorage implements IStorage {
         sql`created_at > NOW() - INTERVAL '24 hours'`
       );
 
-    const [users] = await db
+    const [activeUsers] = await db
       .select({ count: sql`count(*)` })
       .from(users)
       .where(eq(users.isActive, true));
@@ -689,7 +689,7 @@ export class DatabaseStorage implements IStorage {
       totalDatasets: Number(datasets?.count || 0),
       activeMappings: Number(mappings?.count || 0),
       recentChanges: Number(changes?.count || 0),
-      activeUsers: Number(users?.count || 0)
+      activeUsers: Number(activeUsers?.count || 0)
     };
   }
 
