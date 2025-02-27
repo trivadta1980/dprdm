@@ -6,11 +6,14 @@ import rateLimit from "express-rate-limit";
 import { randomBytes } from "crypto";
 import csrf from "csurf";
 import cookieParser from "cookie-parser";
+import session from "express-session";
 
 const app = express();
 
 // Security headers
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP for development
+}));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -24,12 +27,29 @@ app.use(limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false }));
 
-// Cookie parsing must come before CSRF
+// Cookie parsing must come before session and CSRF
 app.use(cookieParser());
 
-// CSRF protection
-const csrfProtection = csrf({ cookie: true });
-app.use(csrfProtection);
+// Configure session before CSRF
+app.use(session({
+  secret: process.env.SESSION_SECRET || randomBytes(32).toString("hex"),
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: app.get("env") === "production",
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// CSRF protection with better error handling
+app.use(csrf({ cookie: true }));
+
+// Add CSRF token to all responses
+app.use((req, res, next) => {
+  res.cookie("XSRF-TOKEN", req.csrfToken());
+  next();
+});
 
 // Request sanitization middleware
 app.use((req, res, next) => {
@@ -78,6 +98,13 @@ app.use((req, res, next) => {
 
   // Error handling middleware
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    if (err.code === 'EBADCSRFTOKEN') {
+      return res.status(403).json({
+        error: 'Invalid CSRF token',
+        message: 'Form submission failed. Please refresh the page and try again.'
+      });
+    }
+
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
@@ -87,7 +114,7 @@ app.use((req, res, next) => {
       : { message, stack: err.stack };
 
     res.status(status).json(error);
-    throw err;
+    console.error('Server error:', err);
   });
 
   if (app.get("env") === "development") {
