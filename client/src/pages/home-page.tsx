@@ -75,13 +75,16 @@ export default function HomePage() {
 
             {/* Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
+              <Card 
+                className="cursor-pointer hover:shadow-md transition-all group"
+                onClick={() => setLocation('/reference-data')}
+              >
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-2">
-                    <Database className="h-5 w-5 text-blue-600" />
+                    <Database className="h-5 w-5 text-blue-600 group-hover:scale-110 transition-transform" />
                     <div>
-                      <p className="text-2xl font-bold">{metrics?.totalDatasets ?? '—'}</p>
-                      <p className="text-sm text-gray-500">Total Datasets</p>
+                      <p className="text-2xl font-bold group-hover:text-blue-600 transition-colors">{metrics?.totalDatasets ?? '—'}</p>
+                      <p className="text-sm text-gray-500 group-hover:text-blue-500 transition-colors">Total Datasets</p>
                     </div>
                   </div>
                 </CardContent>
