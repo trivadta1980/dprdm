@@ -2,7 +2,7 @@ import { ReactNode, useState } from "react";
 import { Sidebar } from "./sidebar";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { LogOut, Database, HelpCircle } from "lucide-react";
+import { Database, HelpCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const { user, logoutMutation } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [showPasswordDialog, setShowPasswordDialog] = useState(user?.requirePasswordChange ?? false);
   const [_, setLocation] = useLocation();
@@ -78,16 +78,6 @@ export function MainLayout({ children }: MainLayoutProps) {
                   >
                     <HelpCircle className="h-4 w-4 mr-2" />
                     Help
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => logoutMutation.mutate()}
-                    disabled={logoutMutation.isPending}
-                    className="hover:bg-red-50 hover:text-red-600 transition-colors"
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Logout
                   </Button>
                 </div>
                 <Logo size="sm" className="hidden md:block" />

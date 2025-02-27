@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import {
   Users,
   UserCog,
@@ -10,7 +11,8 @@ import {
   FileJson,
   Laptop2,
   TestTube2,
-  ArrowRightLeft
+  ArrowRightLeft,
+  LogOut
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -20,7 +22,7 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const [location] = useLocation();
-  const { user } = useAuth();
+  const { user, logoutMutation } = useAuth();
   const isAdmin = user?.roleId === 1;
 
   const menuItems = [
@@ -78,8 +80,8 @@ export function Sidebar({ className }: SidebarProps) {
   });
 
   return (
-    <div className={cn("pb-12 border-r bg-sidebar", className)}>
-      <div className="space-y-4 py-4">
+    <div className={cn("pb-12 border-r bg-sidebar h-screen flex flex-col", className)}>
+      <div className="space-y-4 py-4 flex-1">
         <div className="px-3 py-2">
           <div className="mb-4 px-4 flex items-center gap-2">
             <Laptop2 className="h-6 w-6 text-primary" />
@@ -106,6 +108,20 @@ export function Sidebar({ className }: SidebarProps) {
             </div>
           </ScrollArea>
         </div>
+      </div>
+
+      {/* Logout section at bottom */}
+      <div className="px-3 py-2">
+        <Separator className="my-2" />
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+          onClick={() => logoutMutation.mutate()}
+          disabled={logoutMutation.isPending}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Logout
+        </Button>
       </div>
     </div>
   );
