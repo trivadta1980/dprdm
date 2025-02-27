@@ -61,10 +61,12 @@ export function MainLayout({ children }: MainLayoutProps) {
 
           <div className="flex-1 flex flex-col h-screen">
             <header className="border-b p-4 flex justify-between items-center bg-white">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 cursor-pointer" onClick={() => setLocation('/')}>
                 <Database className="h-6 w-6 text-primary" />
                 <div>
-                  <h1 className="text-xl font-semibold text-gray-900">Reference Data Management</h1>
+                  <h1 className="text-xl font-semibold text-gray-900 hover:text-primary transition-colors">
+                    Reference Data Management
+                  </h1>
                   <p className="text-sm text-gray-500">Welcome, {user?.username}</p>
                 </div>
               </div>
