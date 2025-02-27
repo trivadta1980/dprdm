@@ -89,6 +89,9 @@ export interface IStorage {
   // Dashboard metrics and activity
   getDashboardMetrics(): Promise<{
     totalDatasets: number;
+    totalDataTypes: number;
+    totalRelationships: number;
+    totalCrosswalks: number;
     activeMappings: number;
     recentChanges: number;
     activeUsers: number;
@@ -661,6 +664,9 @@ export class DatabaseStorage implements IStorage {
 
   async getDashboardMetrics(): Promise<{
     totalDatasets: number;
+    totalDataTypes: number;
+    totalRelationships: number;
+    totalCrosswalks: number;
     activeMappings: number;
     recentChanges: number;
     activeUsers: number;
@@ -668,6 +674,18 @@ export class DatabaseStorage implements IStorage {
     const [datasets] = await db
       .select({ count: sql`count(*)` })
       .from(referenceDataSets);
+
+    const [dataTypes] = await db
+      .select({ count: sql`count(*)` })
+      .from(referenceDataTypes);
+
+    const [relationships] = await db
+      .select({ count: sql`count(*)` })
+      .from(relationships);
+
+    const [crosswalks] = await db
+      .select({ count: sql`count(*)` })
+      .from(crosswalkMappings);
 
     const [mappings] = await db
       .select({ count: sql`count(*)` })
@@ -687,6 +705,9 @@ export class DatabaseStorage implements IStorage {
 
     return {
       totalDatasets: Number(datasets?.count || 0),
+      totalDataTypes: Number(dataTypes?.count || 0),
+      totalRelationships: Number(relationships?.count || 0),
+      totalCrosswalks: Number(crosswalks?.count || 0),
       activeMappings: Number(mappings?.count || 0),
       recentChanges: Number(changes?.count || 0),
       activeUsers: Number(activeUsers?.count || 0)

@@ -89,35 +89,44 @@ export default function HomePage() {
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card 
+                className="cursor-pointer hover:shadow-md transition-all group"
+                onClick={() => setLocation('/reference-types')}
+              >
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-2">
-                    <ArrowRightLeft className="h-5 w-5 text-purple-600" />
+                    <FileJson className="h-5 w-5 text-purple-600 group-hover:scale-110 transition-transform" />
                     <div>
-                      <p className="text-2xl font-bold">{metrics?.activeMappings ?? '—'}</p>
-                      <p className="text-sm text-gray-500">Active Mappings</p>
+                      <p className="text-2xl font-bold group-hover:text-purple-600 transition-colors">{metrics?.totalDataTypes ?? '—'}</p>
+                      <p className="text-sm text-gray-500 group-hover:text-purple-500 transition-colors">Data Types</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card 
+                className="cursor-pointer hover:shadow-md transition-all group"
+                onClick={() => setLocation('/relationships')}
+              >
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-green-600" />
+                    <GitFork className="h-5 w-5 text-green-600 group-hover:scale-110 transition-transform" />
                     <div>
-                      <p className="text-2xl font-bold">{metrics?.recentChanges ?? '—'}</p>
-                      <p className="text-sm text-gray-500">Recent Changes</p>
+                      <p className="text-2xl font-bold group-hover:text-green-600 transition-colors">{metrics?.totalRelationships ?? '—'}</p>
+                      <p className="text-sm text-gray-500 group-hover:text-green-500 transition-colors">Relationships</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card 
+                className="cursor-pointer hover:shadow-md transition-all group"
+                onClick={() => setLocation('/crosswalks')}
+              >
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-orange-600" />
+                    <ArrowRightLeft className="h-5 w-5 text-orange-600 group-hover:scale-110 transition-transform" />
                     <div>
-                      <p className="text-2xl font-bold">{metrics?.activeUsers ?? '—'}</p>
-                      <p className="text-sm text-gray-500">Active Users</p>
+                      <p className="text-2xl font-bold group-hover:text-orange-600 transition-colors">{metrics?.totalCrosswalks ?? '—'}</p>
+                      <p className="text-sm text-gray-500 group-hover:text-orange-500 transition-colors">Crosswalks</p>
                     </div>
                   </div>
                 </CardContent>
