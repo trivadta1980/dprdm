@@ -91,16 +91,16 @@ export function MainLayout({ children }: MainLayoutProps) {
             </main>
 
             <footer className="border-t py-2 px-4 bg-white">
-              <div className="flex flex-col items-start gap-1">
+              <div className="flex justify-between items-center">
+                <div className="text-[10px] text-gray-500">
+                  © {new Date().getFullYear()} Blumetra Solutions. All rights reserved.
+                </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-600">Powered by</span>
                   <div className="flex items-center gap-1">
                     <span className="text-xs text-gray-600">Blumetra Solutions</span>
                     <Logo size="footer" />
                   </div>
-                </div>
-                <div className="text-[10px] text-gray-500">
-                  © {new Date().getFullYear()} Blumetra Solutions. All rights reserved.
                 </div>
               </div>
             </footer>
