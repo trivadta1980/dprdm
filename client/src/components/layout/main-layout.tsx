@@ -25,6 +25,10 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [showPasswordDialog, setShowPasswordDialog] = useState(user?.requirePasswordChange ?? false);
   const [_, setLocation] = useLocation();
 
+  const navigateToBlumetra = () => {
+    window.open('https://www.blumetra.com', '_blank');
+  };
+
   const form = useForm<ChangePassword>({
     resolver: zodResolver(changePasswordSchema),
   });
@@ -82,7 +86,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                     Help
                   </Button>
                 </div>
-                <Logo size="sm" className="hidden md:block" />
+                <Logo size="sm" className="hidden md:block" onClick={navigateToBlumetra} />
               </div>
             </header>
 
@@ -99,7 +103,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                   <span className="text-xs text-gray-600">Powered by</span>
                   <div className="flex items-center gap-1">
                     <span className="text-xs text-gray-600">Blumetra Solutions</span>
-                    <Logo size="footer" />
+                    <Logo size="footer" onClick={navigateToBlumetra} />
                   </div>
                 </div>
               </div>
