@@ -60,8 +60,11 @@ export default function UsersPage() {
   const { data: users, isLoading: loadingUsers } = useQuery<User[]>({
     queryKey: ["/api/users"],
     queryFn: async () => {
+      console.log('Fetching users...');
       const res = await apiRequest("GET", "/api/users");
-      return res.json();
+      const data = await res.json();
+      console.log('Users fetched:', data);
+      return data;
     }
   });
 
@@ -69,8 +72,11 @@ export default function UsersPage() {
   const { data: roles } = useQuery<Role[]>({
     queryKey: ["/api/roles"],
     queryFn: async () => {
+      console.log('Fetching roles...');
       const res = await apiRequest("GET", "/api/roles");
-      return res.json();
+      const data = await res.json();
+      console.log('Roles fetched:', data);
+      return data;
     }
   });
 
@@ -78,12 +84,15 @@ export default function UsersPage() {
   const createUserMutation = useMutation({
     mutationFn: async (data: InsertUser) => {
       console.log('Creating user with data:', data);
-      const res = await apiRequest("POST", "/api/register", data);
+      const res = await apiRequest("POST", "/api/users", data);
       if (!res.ok) {
         const error = await res.json();
+        console.error('Create user error:', error);
         throw new Error(error.message || "Failed to create user");
       }
-      return res.json();
+      const result = await res.json();
+      console.log('Create user response:', result);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -95,6 +104,7 @@ export default function UsersPage() {
       });
     },
     onError: (error: Error) => {
+      console.error('Create mutation error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to create user",
@@ -103,12 +113,17 @@ export default function UsersPage() {
     }
   });
 
-  const handleCreateSubmit = (data: InsertUser) => {
-    createUserMutation.mutate({
-      ...data,
-      password: "password123", // Default password
-      confirmPassword: "password123"
-    });
+  const handleCreateSubmit = async (data: InsertUser) => {
+    console.log('Form submitted with data:', data);
+    try {
+      await createUserMutation.mutateAsync({
+        ...data,
+        password: "password123",
+        confirmPassword: "password123"
+      });
+    } catch (error) {
+      console.error('Create user submission error:', error);
+    }
   };
 
   if (loadingUsers) {
@@ -140,7 +155,14 @@ export default function UsersPage() {
                 <DialogTitle>Create New User</DialogTitle>
               </DialogHeader>
               <Form {...createForm}>
-                <form onSubmit={createForm.handleSubmit(handleCreateSubmit)} className="space-y-4">
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    console.log('Form submission event triggered');
+                    createForm.handleSubmit(handleCreateSubmit)(e);
+                  }} 
+                  className="space-y-4"
+                >
                   <FormField
                     control={createForm.control}
                     name="email"
@@ -174,7 +196,10 @@ export default function UsersPage() {
                       <FormItem>
                         <FormLabel>Role</FormLabel>
                         <Select
-                          onValueChange={(value) => field.onChange(Number(value))}
+                          onValueChange={(value) => {
+                            console.log('Role selected:', value);
+                            field.onChange(Number(value));
+                          }}
                           defaultValue={field.value?.toString()}
                         >
                           <FormControl>
