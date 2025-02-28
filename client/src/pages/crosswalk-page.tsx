@@ -318,18 +318,35 @@ export default function CrosswalkPage() {
         return;
       }
 
-      // Convert CSV records to mappings
-      const newMappings: Mapping[] = records.map((record: CSVMapping) => ({
-        sourceValue: record.sourceValue,
-        targetValue: record.targetValue,
-        confidence: calculateSimilarity(record.sourceValue, record.targetValue)
-      }));
+      // Create a Map to track unique source values and their best confidence matches
+      const mappingMap = new Map<string, Mapping>();
+
+      // Process each record and keep the mapping with highest confidence for each source value
+      records.forEach((record: CSVMapping) => {
+        const confidence = calculateSimilarity(record.sourceValue, record.targetValue);
+        const existingMapping = mappingMap.get(record.sourceValue);
+
+        if (!existingMapping || confidence > existingMapping.confidence) {
+          mappingMap.set(record.sourceValue, {
+            sourceValue: record.sourceValue,
+            targetValue: record.targetValue,
+            confidence
+          });
+        }
+      });
+
+      // Convert map back to array
+      const newMappings = Array.from(mappingMap.values());
 
       setMappings(newMappings);
       toast({
         title: "Success",
-        description: `Imported ${newMappings.length} mappings from CSV`,
+        description: `Imported ${records.length} mappings from CSV`,
       });
+
+      // Log for debugging
+      console.log('CSV Records:', records);
+      console.log('New Mappings:', newMappings);
     } catch (error) {
       setUploadError("Failed to parse CSV file: " + (error as Error).message);
     }
