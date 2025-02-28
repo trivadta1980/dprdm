@@ -684,7 +684,7 @@ export default function CrosswalkPage() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {mappings.map((mapping, index) => (
+                            {debugInfo.processedMappings.map((mapping, index) => (
                               <TableRow key={`${mapping.sourceValue}-${index}`}>
                                 <TableCell>{mapping.sourceValue}</TableCell>
                                 <TableCell>{mapping.targetValue}</TableCell>
