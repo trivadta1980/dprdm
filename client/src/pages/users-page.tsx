@@ -172,6 +172,12 @@ export default function UsersPage() {
   function onEdit(data: UpdateUser) {
     if (!editingUser) return;
 
+    // Show immediate test message
+    toast({
+      title: "Update Button Clicked",
+      description: `Attempting to update user: ${editingUser.username} with data: ${JSON.stringify(data)}`,
+    });
+
     setEditDebugInfo(prev => [...prev, {
       timestamp: new Date().toISOString(),
       event: "Form Submission",
