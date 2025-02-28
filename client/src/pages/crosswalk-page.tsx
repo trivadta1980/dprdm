@@ -388,7 +388,7 @@ export default function CrosswalkPage() {
         };
       });
 
-      // Update debug info with raw records and processed mappings
+      // Update debug info
       setDebugInfo({
         rawRecords: records,
         processedMappings: newMappings,
