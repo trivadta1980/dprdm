@@ -55,10 +55,11 @@ export default function UsersPage() {
       data,
       timestamp: new Date().toLocaleTimeString()
     }]);
+    console.log(`Debug Step: ${step}`, data);
   };
 
   // Create form
-  const createForm = useForm<InsertUser>({
+  const form = useForm<InsertUser>({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
       email: "",
@@ -94,7 +95,7 @@ export default function UsersPage() {
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (data: InsertUser) => {
-      addDebugStep("Creating user", data);
+      addDebugStep("Starting user creation", data);
       const res = await apiRequest("POST", "/api/users", data);
       if (!res.ok) {
         const error = await res.json();
@@ -109,7 +110,7 @@ export default function UsersPage() {
       addDebugStep("Mutation success - updating UI");
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       setCreateDialogOpen(false);
-      createForm.reset();
+      form.reset();
       setDebugSteps([]);
       toast({
         title: "Success",
@@ -126,15 +127,26 @@ export default function UsersPage() {
     }
   });
 
-  const handleCreateSubmit = async (data: InsertUser) => {
-    addDebugStep("Form submitted", data);
+  const onSubmit = async (data: InsertUser) => {
+    addDebugStep("Form submission started", data);
+    addDebugStep("Form validation state", form.formState.errors);
+
+    if (!data.email || !data.username || !data.roleId) {
+      addDebugStep("Validation failed - missing required fields", {
+        email: !data.email,
+        username: !data.username,
+        roleId: !data.roleId
+      });
+      return;
+    }
+
     try {
       const formData = {
         ...data,
         password: "password123",
         confirmPassword: "password123"
       };
-      addDebugStep("Processed form data", formData);
+      addDebugStep("Submitting form data", formData);
       await createUserMutation.mutateAsync(formData);
     } catch (error) {
       addDebugStep("Form submission error", error);
@@ -158,10 +170,9 @@ export default function UsersPage() {
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold tracking-tight">Users List</h1>
 
-          {/* Create User Dialog */}
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={() => addDebugStep("Create dialog opened")}>
                 <Plus className="h-4 w-4 mr-2" />
                 New User
               </Button>
@@ -172,17 +183,10 @@ export default function UsersPage() {
               </DialogHeader>
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <Form {...createForm}>
-                    <form 
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        addDebugStep("Form submission triggered");
-                        createForm.handleSubmit(handleCreateSubmit)(e);
-                      }} 
-                      className="space-y-4"
-                    >
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                       <FormField
-                        control={createForm.control}
+                        control={form.control}
                         name="email"
                         render={({ field }) => (
                           <FormItem>
@@ -203,7 +207,7 @@ export default function UsersPage() {
                         )}
                       />
                       <FormField
-                        control={createForm.control}
+                        control={form.control}
                         name="username"
                         render={({ field }) => (
                           <FormItem>
@@ -223,7 +227,7 @@ export default function UsersPage() {
                         )}
                       />
                       <FormField
-                        control={createForm.control}
+                        control={form.control}
                         name="roleId"
                         render={({ field }) => (
                           <FormItem>
@@ -259,6 +263,7 @@ export default function UsersPage() {
                         type="submit"
                         className="w-full"
                         disabled={createUserMutation.isPending}
+                        onClick={() => addDebugStep("Submit button clicked")}
                       >
                         {createUserMutation.isPending ? (
                           <>
@@ -276,6 +281,14 @@ export default function UsersPage() {
                 {/* Debug Panel */}
                 <div className="bg-slate-50 rounded-lg p-4">
                   <h3 className="font-medium mb-2">Debug Steps</h3>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mb-2"
+                    onClick={() => setDebugSteps([])}
+                  >
+                    Clear Debug Log
+                  </Button>
                   <ScrollArea className="h-[300px] w-full rounded-md border p-4">
                     <div className="space-y-4">
                       {debugSteps.map((step, index) => (
