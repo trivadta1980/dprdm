@@ -19,6 +19,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useParams, Link } from "wouter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { parse } from 'csv-parse/browser/esm/sync';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface DataSet {
   id: number;
@@ -661,7 +669,34 @@ export default function CrosswalkPage() {
                       </ScrollArea>
                     </CardContent>
                   </Card>
-                </>
+                  <Card className="mt-4">
+                    <CardHeader>
+                      <CardTitle>Imported Data Preview</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ScrollArea className="h-[400px]">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Source Value</TableHead>
+                              <TableHead>Target Value</TableHead>
+                              <TableHead>Confidence</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {mappings.map((mapping, index) => (
+                              <TableRow key={`${mapping.sourceValue}-${index}`}>
+                                <TableCell>{mapping.sourceValue}</TableCell>
+                                <TableCell>{mapping.targetValue}</TableCell>
+                                <TableCell>{(mapping.confidence * 100).toFixed(0)}%</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
+              </>
             )}
           </CardContent>
         </Card>
