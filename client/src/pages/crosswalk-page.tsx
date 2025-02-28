@@ -388,23 +388,26 @@ export default function CrosswalkPage() {
         };
       });
 
-      // Update debug info
+      // Update debug info with raw records and processed mappings
       setDebugInfo({
         rawRecords: records,
         processedMappings: newMappings,
         displayedMappings: newMappings
       });
 
+      // Update mappings state which will update both grid and payload
       setMappings(newMappings);
-
-      // Log for debugging
-      console.log('CSV Records:', records);
-      console.log('New Mappings:', newMappings);
 
       toast({
         title: "Success",
         description: `Imported ${records.length} mappings from CSV`,
       });
+
+      // Log for debugging
+      console.log('handleCSVUpload - Records:', records);
+      console.log('handleCSVUpload - New Mappings:', newMappings);
+      console.log('handleCSVUpload - Filtered Mappings:', filteredMappings);
+
     } catch (error) {
       setUploadError("Failed to parse CSV file: " + (error as Error).message);
     }
@@ -413,26 +416,12 @@ export default function CrosswalkPage() {
     event.target.value = '';
   };
 
-  const handleExportCSV = () => {
-    const csvContent = [
-      ['sourceValue', 'targetValue'].join(','),
-      ...mappings.map(mapping =>
-        [
-          `"${mapping.sourceValue.replace(/"/g, '""')}"`,
-          `"${mapping.targetValue.replace(/"/g, '""')}"`
-        ].join(',')
-      )
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${mappingName || 'crosswalk'}_mappings.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  useEffect(() => {
+    setDebugInfo(prev => ({
+      ...prev,
+      displayedMappings: filteredMappings
+    }));
+  }, [mappings, filteredMappings]);
 
   return (
     <MainLayout>
