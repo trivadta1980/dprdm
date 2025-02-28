@@ -229,17 +229,33 @@ export default function CrosswalkPage() {
   }, [selectedSourceDatasetObj?.typeId, selectedSourceDataset]);
 
   const filteredMappings = mappings.filter(mapping => {
-    const sourceMatch = mapping.sourceValue.toLowerCase().includes(sourceFilter.toLowerCase());
-    const targetMatch = mapping.targetValue.toLowerCase().includes(targetFilter.toLowerCase());
+    const sourceMatch = !sourceFilter || mapping.sourceValue.toLowerCase().includes(sourceFilter.toLowerCase());
+    const targetMatch = !targetFilter || mapping.targetValue.toLowerCase().includes(targetFilter.toLowerCase());
 
     const confidencePercent = Number((mapping.confidence * 100).toFixed(0));
     const confidenceNumValue = Number(confidenceValue);
 
-    const confidenceMatch = confidenceValue === "" || (
+    const confidenceMatch = !confidenceValue || (
       confidenceOperator === "gt" ? confidencePercent > confidenceNumValue :
       confidenceOperator === "lt" ? confidencePercent < confidenceNumValue :
       confidencePercent === confidenceNumValue
     );
+
+    // Debug logs
+    console.log('Filtering mapping:', {
+      mapping,
+      sourceMatch,
+      targetMatch,
+      confidenceMatch,
+      filters: {
+        source: sourceFilter,
+        target: targetFilter,
+        confidence: {
+          operator: confidenceOperator,
+          value: confidenceValue
+        }
+      }
+    });
 
     return sourceMatch && targetMatch && confidenceMatch;
   });
@@ -329,6 +345,12 @@ export default function CrosswalkPage() {
     const file = event.target.files?.[0];
     setUploadError(null);
 
+    // Reset filters
+    setSourceFilter("");
+    setTargetFilter("");
+    setConfidenceValue("");
+    setConfidenceOperator("gt");
+
     if (!file) return;
 
     if (file.type !== "text/csv") {
@@ -370,25 +392,19 @@ export default function CrosswalkPage() {
       setDebugInfo({
         rawRecords: records,
         processedMappings: newMappings,
-        displayedMappings: newMappings // This will be updated when setMappings is called
+        displayedMappings: newMappings
       });
 
       setMappings(newMappings);
 
-      // Update displayed mappings in debug info
-      setDebugInfo(prev => ({
-        ...prev,
-        displayedMappings: newMappings
-      }));
+      // Log for debugging
+      console.log('CSV Records:', records);
+      console.log('New Mappings:', newMappings);
 
       toast({
         title: "Success",
         description: `Imported ${records.length} mappings from CSV`,
       });
-
-      // Log for debugging
-      console.log('CSV Records:', records);
-      console.log('New Mappings:', newMappings);
     } catch (error) {
       setUploadError("Failed to parse CSV file: " + (error as Error).message);
     }
