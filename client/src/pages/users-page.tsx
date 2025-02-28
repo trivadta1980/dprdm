@@ -86,9 +86,6 @@ export default function UsersPage() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: UpdateUser }) => {
-      console.log('Making API request to:', `/api/users/${id}`);
-      console.log('With data:', data);
-
       const res = await apiRequest("PATCH", `/api/users/${id}`, data);
       if (!res.ok) {
         const error = await res.json();
@@ -97,7 +94,6 @@ export default function UsersPage() {
       return res.json();
     },
     onSuccess: (data) => {
-      console.log('Update successful:', data);
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       setEditDialogOpen(false);
       setEditingUser(null);
@@ -108,7 +104,6 @@ export default function UsersPage() {
       });
     },
     onError: (error: Error) => {
-      console.error('Update failed:', error);
       toast({
         title: "Update failed",
         description: error.message || "Failed to update user. Please try again.",
@@ -181,25 +176,12 @@ export default function UsersPage() {
   function onEdit(data: UpdateUser) {
     if (!editingUser) return;
 
-    // Show immediate test message
-    toast({
-      title: "Update Button Clicked",
-      description: `Attempting to update user: ${editingUser.username} with data: ${JSON.stringify(data)}`,
-    });
-
     const updateData = {
       email: data.email,
       username: editingUser.username,
       roleId: data.roleId,
     };
 
-    // Log the update data
-    console.log('Sending update request:', {
-      id: editingUser.id,
-      data: updateData
-    });
-
-    // Actually send the update
     updateMutation.mutate(
       {
         id: editingUser.id,
@@ -398,18 +380,7 @@ export default function UsersPage() {
             <DialogTitle>Edit User</DialogTitle>
           </DialogHeader>
           <Form {...editForm}>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                console.log('Form submitted');
-                toast({
-                  title: "Form Submitted",
-                  description: "Update form submission triggered"
-                });
-                editForm.handleSubmit(onEdit)(e);
-              }}
-              className="space-y-4"
-            >
+            <form onSubmit={editForm.handleSubmit(onEdit)} className="space-y-4">
               <FormField
                 control={editForm.control}
                 name="email"
@@ -454,13 +425,6 @@ export default function UsersPage() {
                 type="submit"
                 className="w-full"
                 disabled={updateMutation.isPending}
-                onClick={() => {
-                  console.log('Update button clicked');
-                  toast({
-                    title: "Button Clicked",
-                    description: "Update button was clicked"
-                  });
-                }}
               >
                 {updateMutation.isPending ? (
                   <>
@@ -473,30 +437,6 @@ export default function UsersPage() {
               </Button>
             </form>
           </Form>
-          {editDebugInfo.length > 0 && (
-            <Card className="mt-4">
-              <CardHeader>
-                <CardTitle className="text-sm">Debug Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-                  <div className="space-y-4">
-                    {editDebugInfo.map((info, index) => (
-                      <div key={index} className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="font-medium">{info.event}</span>
-                          <span className="text-muted-foreground">{new Date(info.timestamp).toLocaleTimeString()}</span>
-                        </div>
-                        <pre className="text-xs bg-muted p-2 rounded-md overflow-auto">
-                          {JSON.stringify(info.data, null, 2)}
-                        </pre>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          )}
         </DialogContent>
       </Dialog>
     </MainLayout>

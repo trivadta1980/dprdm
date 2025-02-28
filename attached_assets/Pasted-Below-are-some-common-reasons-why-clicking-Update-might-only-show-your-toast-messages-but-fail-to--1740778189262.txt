@@ -1,0 +1,151 @@
+Below are some common reasons why clicking “Update” might only show your toast messages but fail to actually update the user. In short, the form is likely not being submitted properly or the request is failing silently. Here’s how to diagnose and fix it:
+
+1. Ensure the Form is Actually Submitting
+Right now, your edit form looks like this:
+
+tsx
+Copy
+Edit
+<form
+  onSubmit={(e) => {
+    e.preventDefault();
+    console.log('Form submitted');
+    toast({
+      title: "Form Submitted",
+      description: "Update form submission triggered"
+    });
+    editForm.handleSubmit(onEdit)(e);
+  }}
+  className="space-y-4"
+>
+  ...
+</form>
+And your button is:
+
+tsx
+Copy
+Edit
+<Button
+  type="submit"
+  className="w-full"
+  disabled={updateMutation.isPending}
+  onClick={() => {
+    console.log('Update button clicked');
+    toast({
+      title: "Button Clicked",
+      description: "Update button was clicked"
+    });
+  }}
+>
+  {updateMutation.isPending ? (
+    <>
+      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      Updating...
+    </>
+  ) : (
+    "Update User"
+  )}
+</Button>
+Possible Problem
+By using e.preventDefault() in the form’s onSubmit, plus calling editForm.handleSubmit(onEdit)(e) manually, you can accidentally short-circuit React Hook Form’s normal submission process if there’s an error in that manual call.
+You’re also calling toast() in multiple places, so you can see the toast messages even if the actual onEdit function is never reached or is erroring out.
+A Simpler Pattern
+The easiest way to ensure React Hook Form handles the submission is to let it do its job automatically:
+
+tsx
+Copy
+Edit
+<form onSubmit={editForm.handleSubmit(onEdit)} className="space-y-4">
+  {/* form fields... */}
+  <Button type="submit" disabled={updateMutation.isPending} className="w-full">
+    {updateMutation.isPending ? (
+      <>
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        Updating...
+      </>
+    ) : (
+      "Update User"
+    )}
+  </Button>
+</form>
+Remove the manual onSubmit={(e) => { e.preventDefault(); ... }} logic.
+Remove the onClick on the button, so it only triggers a standard form submit.
+Any logs or toast you want can be placed inside the onEdit callback (which is passed to handleSubmit).
+Example:
+
+tsx
+Copy
+Edit
+function onEdit(data: UpdateUser) {
+  // Optionally log or toast here to confirm
+  toast({
+    title: "Attempting to update user",
+    description: `Data: ${JSON.stringify(data)}`
+  });
+
+  if (!editingUser) return;
+
+  const updateData = {
+    email: data.email,
+    username: editingUser.username, // or data.username if you let them edit it
+    roleId: data.roleId,
+  };
+
+  // Actually send the update
+  updateMutation.mutate({ id: editingUser.id, data: updateData });
+}
+Now, React Hook Form will automatically:
+
+Validate your form data.
+Call onEdit if validation passes.
+Pass in the correct data.
+2. Check the Network Request
+Even if you’re calling the mutation, you should confirm the PATCH request is actually happening and not failing. Open your browser’s DevTools (Network tab) and see:
+
+Does a request to /api/users/:id actually fire when you click the button?
+Is it returning 200 OK or some error (400, 500, etc.)?
+Is the request body correct?
+If your server is returning an error (e.g., validation fails on the backend), your code throws an error and calls onError in the mutation, which toasts "Update failed". If that toast never appears, you might not be seeing the actual error or you might be swallowing it somewhere.
+
+3. Verify the Server-Side Route
+Make sure your backend supports PATCH /api/users/:id. If your server expects a PUT or POST instead, you’ll get an error or no change at all.
+
+In your mutation code:
+
+ts
+Copy
+Edit
+const res = await apiRequest("PATCH", `/api/users/${id}`, data);
+if (!res.ok) {
+  const error = await res.json();
+  throw new Error(error.message || 'Failed to update user');
+}
+return res.json();
+Confirm this endpoint matches what the server is actually exposing.
+Confirm the server is returning the correct JSON response on success.
+4. Confirm the Data You Send
+When you do:
+
+ts
+Copy
+Edit
+const updateData = {
+  email: data.email,
+  username: editingUser.username, 
+  roleId: data.roleId,
+};
+You’re not allowing the user to change the username in the form (it’s always the old editingUser.username).
+If the only field changing is the role or email, verify that you can see those changes on the server side after a successful request.
+Also, ensure the updateUserSchema matches what the backend expects (i.e., no required password fields, correct shape for roleId, etc.).
+
+5. Final Tips
+Remove Extra Toasts and Logs: Too many debug logs and toast messages can be confusing. Only show the key success/error toasts and do your debugging in the console or in development mode.
+Use a Single onSubmit: Let React Hook Form handle the submit event:
+tsx
+Copy
+Edit
+<form onSubmit={editForm.handleSubmit(onEdit)}>...</form>
+That’s typically more reliable than juggling preventDefault.
+Check for Errors: If the API is returning an error, your onError callback runs. Make sure to toast or log that error so you know it’s failing.
+Watch the DevTools: The best immediate check is to see if a network request is even being sent.
+By simplifying your form submission approach and verifying the request in DevTools, you should see your user details actually being updated instead of just showing toast messages.
