@@ -229,6 +229,7 @@ export default function CrosswalkPage() {
   }, [selectedSourceDatasetObj?.typeId, selectedSourceDataset]);
 
   const filteredMappings = mappings.filter(mapping => {
+    // Only filter if there are actual filter values
     const sourceMatch = !sourceFilter || mapping.sourceValue.toLowerCase().includes(sourceFilter.toLowerCase());
     const targetMatch = !targetFilter || mapping.targetValue.toLowerCase().includes(targetFilter.toLowerCase());
 
@@ -379,35 +380,34 @@ export default function CrosswalkPage() {
       }
 
       // Process each record to create mappings
-      const newMappings = records.map((record: CSVMapping) => {
-        const confidence = calculateSimilarity(record.sourceValue, record.targetValue);
-        return {
-          sourceValue: record.sourceValue,
-          targetValue: record.targetValue,
-          confidence
-        };
-      });
+      const newMappings = records.map((record: CSVMapping) => ({
+        sourceValue: record.sourceValue,
+        targetValue: record.targetValue,
+        confidence: calculateSimilarity(record.sourceValue, record.targetValue)
+      }));
 
-      // Update debug info
+      // Update debug info first
       setDebugInfo({
         rawRecords: records,
         processedMappings: newMappings,
         displayedMappings: newMappings
       });
 
-      // Update mappings state which will update both grid and payload
+      // Then update the main mappings state
       setMappings(newMappings);
+
+      // Log for debugging
+      console.log('handleCSVUpload - Debug:', {
+        rawRecords: records,
+        processedMappings: newMappings,
+        currentMappings: mappings,
+        filteredMappings: filteredMappings
+      });
 
       toast({
         title: "Success",
         description: `Imported ${records.length} mappings from CSV`,
       });
-
-      // Log for debugging
-      console.log('handleCSVUpload - Records:', records);
-      console.log('handleCSVUpload - New Mappings:', newMappings);
-      console.log('handleCSVUpload - Filtered Mappings:', filteredMappings);
-
     } catch (error) {
       setUploadError("Failed to parse CSV file: " + (error as Error).message);
     }
@@ -444,6 +444,27 @@ export default function CrosswalkPage() {
       displayedMappings: filteredMappings
     }));
   }, [mappings, filteredMappings]);
+
+  useEffect(() => {
+    setDebugInfo(prev => ({
+      ...prev,
+      displayedMappings: filteredMappings
+    }));
+
+    // Debug log
+    console.log('Filtered mappings updated:', {
+      allMappings: mappings.length,
+      filteredCount: filteredMappings.length,
+      filters: {
+        source: sourceFilter,
+        target: targetFilter,
+        confidence: {
+          operator: confidenceOperator,
+          value: confidenceValue
+        }
+      }
+    });
+  }, [mappings, filteredMappings, sourceFilter, targetFilter, confidenceValue, confidenceOperator]);
 
   return (
     <MainLayout>
