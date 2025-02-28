@@ -122,8 +122,37 @@ export default function CrosswalkPage() {
   const calculateSimilarity = (str1: string, str2: string): number => {
     const s1 = str1.toLowerCase();
     const s2 = str2.toLowerCase();
+
+    // Exact match
     if (s1 === s2) return 1;
-    if (s1.includes(s2) || s2.includes(s1)) return 0.8;
+
+    // Handle common city code patterns
+    const isSourceCode = s1.length <= 3;
+    const isTargetCode = s2.length <= 3;
+
+    // If one is a city code and appears in the other string
+    if ((isSourceCode && s2.includes(s1)) || (isTargetCode && s1.includes(s2))) {
+      return 0.8;
+    }
+
+    // If one contains the other
+    if (s1.includes(s2) || s2.includes(s1)) {
+      return 0.8;
+    }
+
+    // Check if it's a potential city code match (e.g., "San Francisco" -> "SFO")
+    if (isSourceCode || isTargetCode) {
+      const longForm = isSourceCode ? s2 : s1;
+      const code = isSourceCode ? s1 : s2;
+
+      // Split long form into words and check if code matches first letters
+      const words = longForm.split(' ');
+      const firstLetters = words.map(word => word[0]).join('');
+      if (code.includes(firstLetters)) {
+        return 0.7;
+      }
+    }
+
     return 0;
   };
 
