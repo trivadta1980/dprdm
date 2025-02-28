@@ -103,7 +103,7 @@ export default function UsersPage() {
       }
       const result = await res.json();
       console.log('Create user response:', result);
-      return result as User;
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -136,7 +136,7 @@ export default function UsersPage() {
       }
       const result = await res.json();
       console.log('Update user response:', result);
-      return result as User;
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -158,7 +158,6 @@ export default function UsersPage() {
     }
   });
 
-  // Delete mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (id: number) => {
       console.log('Deleting user:', id);
@@ -191,7 +190,7 @@ export default function UsersPage() {
     console.log('Create form submitted with data:', data);
     createUserMutation.mutate({
       ...data,
-      password: "password123", // Default password
+      password: "password123",
       confirmPassword: "password123"
     });
   };
@@ -203,11 +202,16 @@ export default function UsersPage() {
     }
 
     console.log('Edit form submitted with data:', data);
+    toast({
+      title: "Processing Update",
+      description: "Attempting to update user..."
+    });
+
     updateUserMutation.mutate({
       id: editingUser.id,
       data: {
         ...data,
-        username: editingUser.username // Keep existing username
+        username: editingUser.username
       }
     });
   };
@@ -251,7 +255,14 @@ export default function UsersPage() {
                 <DialogTitle>Create New User</DialogTitle>
               </DialogHeader>
               <Form {...createForm}>
-                <form onSubmit={createForm.handleSubmit(handleCreateSubmit)} className="space-y-4">
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    console.log('Create form submission triggered');
+                    createForm.handleSubmit(handleCreateSubmit)(e);
+                  }} 
+                  className="space-y-4"
+                >
                   <FormField
                     control={createForm.control}
                     name="email"
@@ -285,7 +296,10 @@ export default function UsersPage() {
                       <FormItem>
                         <FormLabel>Role</FormLabel>
                         <Select
-                          onValueChange={(value) => field.onChange(Number(value))}
+                          onValueChange={(value) => {
+                            console.log('Role selected:', value);
+                            field.onChange(Number(value));
+                          }}
                           defaultValue={field.value?.toString()}
                         >
                           <FormControl>
@@ -312,6 +326,7 @@ export default function UsersPage() {
                     type="submit"
                     className="w-full"
                     disabled={createUserMutation.isPending}
+                    onClick={() => console.log('Create button clicked')}
                   >
                     {createUserMutation.isPending ? (
                       <>
@@ -386,7 +401,14 @@ export default function UsersPage() {
               <DialogTitle>Edit User</DialogTitle>
             </DialogHeader>
             <Form {...editForm}>
-              <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="space-y-4">
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  console.log('Edit form submission triggered');
+                  editForm.handleSubmit(handleEditSubmit)(e);
+                }} 
+                className="space-y-4"
+              >
                 <FormField
                   control={editForm.control}
                   name="email"
@@ -407,7 +429,10 @@ export default function UsersPage() {
                     <FormItem>
                       <FormLabel>Role</FormLabel>
                       <Select
-                        onValueChange={(value) => field.onChange(Number(value))}
+                        onValueChange={(value) => {
+                          console.log('Role selected for edit:', value);
+                          field.onChange(Number(value));
+                        }}
                         defaultValue={field.value?.toString()}
                       >
                         <FormControl>
@@ -431,6 +456,7 @@ export default function UsersPage() {
                   type="submit"
                   className="w-full"
                   disabled={updateUserMutation.isPending}
+                  onClick={() => console.log('Update button clicked')}
                 >
                   {updateUserMutation.isPending ? (
                     <>
