@@ -620,128 +620,131 @@ export default function CrosswalkPage() {
                   </Alert>
                 )}
                 <div className="border rounded-lg">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>
-                          <div className="space-y-2">
-                            <span>Source Value</span>
-                            <Input
-                              placeholder="Filter source..."
-                              value={sourceFilter}
-                              onChange={(e) => setSourceFilter(e.target.value)}
-                              className="w-full"
-                            />
-                          </div>
-                        </TableHead>
-                        <TableHead>
-                          <div className="space-y-2">
-                            <span>Target Value</span>
-                            <Input
-                              placeholder="Filter target..."
-                              value={targetFilter}
-                              onChange={(e) => setTargetFilter(e.target.value)}
-                              className="w-full"
-                            />
-                          </div>
-                        </TableHead>
-                        <TableHead>
-                          <div className="space-y-2">
-                            <span>Confidence</span>
-                            <div className="flex gap-2">
-                              <Select
-                                value={confidenceOperator}
-                                onValueChange={(value: "gt" | "lt" | "eq") => setConfidenceOperator(value)}
-                              >
-                                <SelectTrigger className="w-[100px]">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="gt">&gt;</SelectItem>
-                                  <SelectItem value="lt">&lt;</SelectItem>
-                                  <SelectItem value="eq">=</SelectItem>
-                                </SelectContent>
-                              </Select>
+                  <ScrollArea className="h-[400px]">
+                    <Table>
+                      <TableHeader className="sticky top-0 bg-background">
+                        <TableRow>
+                          <TableHead>
+                            <div className="space-y-2">
+                              <span>Source Value</span>
                               <Input
-                                type="number"
-                                min="0"
-                                max="100"
-                                placeholder="Value %"
-                                value={confidenceValue}
-                                onChange={(e) => {
-                                  const value = Math.max(0, Math.min(100, Number(e.target.value)));
-                                  setConfidenceValue(value.toString());
-                                }}
-                                className="w-[100px]"
+                                placeholder="Filter source..."
+                                value={sourceFilter}
+                                onChange={(e) => setSourceFilter(e.target.value)}
+                                className="w-full"
                               />
                             </div>
-                          </div>
-                        </TableHead>
-                        <TableHead className="w-[100px]">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredMappings.map((mapping, index) => (
-                        <TableRow key={mapping.sourceValue}>
-                          <TableCell>{mapping.sourceValue}</TableCell>
-                          <TableCell>
-                            {editingIndex === index ? (
-                              <Select
-                                value={editValue || mapping.targetValue}
-                                onValueChange={setEditValue}
-                              >
-                                <SelectTrigger className="w-full">
-                                  <SelectValue placeholder="Choose target value" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {targetAttributeValues.map((value) => (
-                                    <SelectItem key={value} value={value}>
-                                      {value}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            ) : (
-                              mapping.targetValue
-                            )}
-                          </TableCell>
-                          <TableCell>{(mapping.confidence * 100).toFixed(0)}%</TableCell>
-                          <TableCell>
-                            {editingIndex === index ? (
-                              <div className="flex space-x-2">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => updateMapping(index, editValue)}
+                          </TableHead>
+                          <TableHead>
+                            <div className="space-y-2">
+                              <span>Target Value</span>
+                              <Input
+                                placeholder="Filter target..."
+                                value={targetFilter}
+                                onChange={(e) => setTargetFilter(e.target.value)}
+                                className="w-full"
+                              />
+                            </div>
+                          </TableHead>
+                          <TableHead>
+                            <div className="space-y-2">
+                              <span>Confidence</span>
+                              <div className="flex gap-2">
+                                <Select
+                                  value={confidenceOperator}
+                                  onValueChange={(value: "gt" | "lt" | "eq") => setConfidenceOperator(value)}
                                 >
-                                  <Check className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => setEditingIndex(null)}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
+                                  <SelectTrigger className="w-[100px]">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="gt">&gt;</SelectItem>
+                                    <SelectItem value="lt">&lt;</SelectItem>
+                                    <SelectItem value="eq">=</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  placeholder="Value %"
+                                  value={confidenceValue}
+                                  onChange={(e) => {
+                                    const value = Math.max(0, Math.min(100, Number(e.target.value)));
+                                    setConfidenceValue(value.toString());
+                                  }}
+                                  className="w-[100px]"
+                                />
                               </div>
-                            ) : (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  setEditingIndex(index);
-                                  setEditValue(mapping.targetValue);
-                                }}
-                              >
-                                <Edit2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </TableCell>
+                            </div>
+                          </TableHead>
+                          <TableHead className="w-[100px] sticky right-0 bg-background">Actions</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredMappings.map((mapping, index) => (
+                          <TableRow key={mapping.sourceValue}>
+                            <TableCell>{mapping.sourceValue}</TableCell>
+                            <TableCell>
+                              {editingIndex === index ? (
+                                <Select
+                                  value={editValue || mapping.targetValue}
+                                  onValueChange={setEditValue}
+                                >
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Choose target value" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {targetAttributeValues.map((value) => (
+                                      <SelectItem key={value} value={value}>
+                                        {value}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                mapping.targetValue
+                              )}
+                            </TableCell>
+                            <TableCell>{(mapping.confidence * 100).toFixed(0)}%</TableCell>
+                            <TableCell className="sticky right-0 bg-background">
+                              {editingIndex === index ? (
+                                <div className="flex space-x-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => updateMapping(index, editValue)}
+                                  >
+                                    <Check className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setEditingIndex(null)}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    setEditingIndex(index);
+                                    setEditValue(mapping.targetValue);
+                                  }}
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </ScrollArea>
                 </div>
+
               </div>
             )}
           </CardContent>
