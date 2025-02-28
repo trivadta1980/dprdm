@@ -35,19 +35,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function UsersPage() {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string[]>([]);
+  const [createDebugInfo, setCreateDebugInfo] = useState<any[]>([]);
+  const [editDebugInfo, setEditDebugInfo] = useState<any[]>([]);
 
   const form = useForm<InsertUser>({
     resolver: zodResolver(insertUserSchema),
   });
 
-  // Separate form for editing
   const editForm = useForm<UpdateUser>({
     resolver: zodResolver(updateUserSchema),
   });
@@ -83,16 +84,12 @@ export default function UsersPage() {
     },
   });
 
-  // Update the mutation definition to add more feedback
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: UpdateUser }) => {
-      console.log('Starting mutation with:', { id, data });
       const res = await apiRequest("PATCH", `/api/users/${id}`, data);
-      console.log('Received response:', res);
       return res.json();
     },
     onSuccess: () => {
-      console.log('Update successful, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       setEditDialogOpen(false);
       setEditingUser(null);
@@ -103,7 +100,6 @@ export default function UsersPage() {
       });
     },
     onError: (error: Error) => {
-      console.error('Update failed:', error);
       toast({
         title: "Update failed",
         description: error.message || "Failed to update user. Please try again.",
@@ -133,28 +129,42 @@ export default function UsersPage() {
   });
 
   function onSubmit(data: InsertUser) {
-    const [debugInfo, setDebugInfo] = useState<string[]>([]);
-    
-    setDebugInfo(prev => [...prev, "Starting user creation..."]);
-    
+    setCreateDebugInfo(prev => [...prev, {
+      timestamp: new Date().toISOString(),
+      event: "Form Submission",
+      data: {
+        formData: data,
+        formState: form.formState
+      }
+    }]);
+
     createMutation.mutate({
       email: data.email,
       username: data.username,
-      password: "password123", // Use default password
-      confirmPassword: "password123", // Add confirmPassword
-      roleId: data.roleId ?? 3, // Default to user role (ID 3) if not selected
+      password: "password123",
+      confirmPassword: "password123",
+      roleId: data.roleId ?? 3,
     }, {
-      onMutate: () => {
-        setDebugInfo(prev => [...prev, `Sending request with data: ${JSON.stringify(data)}`]);
+      onMutate: (variables) => {
+        setCreateDebugInfo(prev => [...prev, {
+          timestamp: new Date().toISOString(),
+          event: "API Request",
+          data: variables
+        }]);
       },
       onError: (error) => {
-        setDebugInfo(prev => [...prev, `Error occurred: ${error.message}`]);
+        setCreateDebugInfo(prev => [...prev, {
+          timestamp: new Date().toISOString(),
+          event: "Error",
+          data: error.message
+        }]);
       },
       onSuccess: (response) => {
-        setDebugInfo(prev => [...prev, `User created successfully: ${JSON.stringify(response)}`]);
-      },
-      onSettled: () => {
-        setDebugInfo(prev => [...prev, "Request completed"]);
+        setCreateDebugInfo(prev => [...prev, {
+          timestamp: new Date().toISOString(),
+          event: "Success",
+          data: response
+        }]);
       }
     });
   }
@@ -162,35 +172,56 @@ export default function UsersPage() {
   function onEdit(data: UpdateUser) {
     if (!editingUser) return;
 
-    // Show immediate feedback
-    toast({
-      title: "Processing Update",
-      description: "Attempting to update user information...",
-    });
+    setEditDebugInfo(prev => [...prev, {
+      timestamp: new Date().toISOString(),
+      event: "Form Submission",
+      data: {
+        formData: data,
+        formState: editForm.formState
+      }
+    }]);
 
-    // Debug log
-    console.log('Starting user update process');
-    console.log('Edit form data:', data);
-    console.log('Current editing user:', editingUser);
-
-    // Ensure we're sending both email and username
     const updateData = {
       email: data.email,
-      username: editingUser.username, // Keep the existing username
+      username: editingUser.username,
       roleId: data.roleId,
     };
 
-    // Debug log
-    console.log('Sending update request with:', updateData);
+    setEditDebugInfo(prev => [...prev, {
+      timestamp: new Date().toISOString(),
+      event: "API Request Payload",
+      data: updateData
+    }]);
 
     updateMutation.mutate({
       id: editingUser.id,
       data: updateData
+    }, {
+      onMutate: (variables) => {
+        setEditDebugInfo(prev => [...prev, {
+          timestamp: new Date().toISOString(),
+          event: "API Request",
+          data: variables
+        }]);
+      },
+      onError: (error) => {
+        setEditDebugInfo(prev => [...prev, {
+          timestamp: new Date().toISOString(),
+          event: "Error",
+          data: error.message
+        }]);
+      },
+      onSuccess: (response) => {
+        setEditDebugInfo(prev => [...prev, {
+          timestamp: new Date().toISOString(),
+          event: "Success",
+          data: response
+        }]);
+      }
     });
   }
 
   function handleEdit(user: User) {
-    console.log('Starting edit for user:', user);
     setEditingUser(user);
     editForm.reset({
       email: user.email,
@@ -293,17 +324,29 @@ export default function UsersPage() {
                     </Button>
                   </form>
                 </Form>
-              {debugInfo.length > 0 && (
-                  <div className="mt-4 p-2 bg-gray-100 rounded-md">
-                    <h3 className="font-semibold mb-2">Debug Information:</h3>
-                    <ul className="text-sm space-y-1">
-                      {debugInfo.map((info, index) => (
-                        <li key={index} className="text-gray-600">
-                          {info}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                {createDebugInfo.length > 0 && (
+                  <Card className="mt-4">
+                    <CardHeader>
+                      <CardTitle className="text-sm">Debug Information</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                        <div className="space-y-4">
+                          {createDebugInfo.map((info, index) => (
+                            <div key={index} className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span className="font-medium">{info.event}</span>
+                                <span className="text-muted-foreground">{new Date(info.timestamp).toLocaleTimeString()}</span>
+                              </div>
+                              <pre className="text-xs bg-muted p-2 rounded-md overflow-auto">
+                                {JSON.stringify(info.data, null, 2)}
+                              </pre>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
                 )}
               </DialogContent>
             </Dialog>
@@ -337,7 +380,7 @@ export default function UsersPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleEdit(user)}
-                        disabled={user.id === 1} // Prevent editing admin user
+                        disabled={user.id === 1}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -349,7 +392,7 @@ export default function UsersPage() {
                             deleteMutation.mutate(user.id);
                           }
                         }}
-                        disabled={deleteMutation.isPending || user.id === 1} // Prevent deleting admin user
+                        disabled={deleteMutation.isPending || user.id === 1}
                       >
                         <UserX className="h-4 w-4" />
                       </Button>
@@ -362,7 +405,6 @@ export default function UsersPage() {
         </Card>
       </div>
 
-      {/* Edit User Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -370,10 +412,7 @@ export default function UsersPage() {
           </DialogHeader>
           <Form {...editForm}>
             <form
-              onSubmit={(e) => {
-                console.log('Form submit event triggered');
-                editForm.handleSubmit(onEdit)(e);
-              }}
+              onSubmit={editForm.handleSubmit(onEdit)}
               className="space-y-4"
             >
               <FormField
@@ -420,7 +459,6 @@ export default function UsersPage() {
                 type="submit"
                 className="w-full"
                 disabled={updateMutation.isPending}
-                onClick={() => console.log('Update button clicked')}
               >
                 {updateMutation.isPending ? (
                   <>
@@ -433,6 +471,30 @@ export default function UsersPage() {
               </Button>
             </form>
           </Form>
+          {editDebugInfo.length > 0 && (
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle className="text-sm">Debug Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                  <div className="space-y-4">
+                    {editDebugInfo.map((info, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="font-medium">{info.event}</span>
+                          <span className="text-muted-foreground">{new Date(info.timestamp).toLocaleTimeString()}</span>
+                        </div>
+                        <pre className="text-xs bg-muted p-2 rounded-md overflow-auto">
+                          {JSON.stringify(info.data, null, 2)}
+                        </pre>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          )}
         </DialogContent>
       </Dialog>
     </MainLayout>
