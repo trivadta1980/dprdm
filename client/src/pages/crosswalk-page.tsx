@@ -67,6 +67,15 @@ export default function CrosswalkPage() {
   const [confidenceOperator, setConfidenceOperator] = useState<"gt" | "lt" | "eq">("gt");
   const [confidenceValue, setConfidenceValue] = useState<string>("");
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<{
+    rawRecords: CSVMapping[],
+    processedMappings: Mapping[],
+    displayedMappings: Mapping[]
+  }>({
+    rawRecords: [],
+    processedMappings: [],
+    displayedMappings: []
+  });
 
   const { data: datasets = [], isLoading: datasetsLoading } = useQuery<DataSet[]>({
     queryKey: ['/api/reference-data']
@@ -333,7 +342,7 @@ export default function CrosswalkPage() {
         columns: true,
         skip_empty_lines: true,
         trim: true
-      });
+      }) as CSVMapping[];
 
       if (!Array.isArray(records) || records.length === 0) {
         setUploadError("The CSV file is empty or invalid");
@@ -357,7 +366,21 @@ export default function CrosswalkPage() {
         };
       });
 
+      // Update debug info
+      setDebugInfo({
+        rawRecords: records,
+        processedMappings: newMappings,
+        displayedMappings: newMappings // This will be updated when setMappings is called
+      });
+
       setMappings(newMappings);
+
+      // Update displayed mappings in debug info
+      setDebugInfo(prev => ({
+        ...prev,
+        displayedMappings: newMappings
+      }));
+
       toast({
         title: "Success",
         description: `Imported ${records.length} mappings from CSV`,
@@ -725,18 +748,50 @@ export default function CrosswalkPage() {
         </Card>
 
         {mappings.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Debug Information - Save Mappings Payload</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-                <pre className="text-sm">
-                  {JSON.stringify(generatePayload(), null, 2)}
-                </pre>
-              </ScrollArea>
-            </CardContent>
-          </Card>
+          <>
+            <Card>
+              <CardHeader>
+                <CardTitle>Debug Information - Save Mappings Payload</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                  <pre className="text-sm">
+                    {JSON.stringify(generatePayload(), null, 2)}
+                  </pre>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle>CSV Import Debug Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="font-semibold mb-2">Raw CSV Records ({debugInfo.rawRecords.length})</h3>
+                      <pre className="text-sm bg-muted p-2 rounded">
+                        {JSON.stringify(debugInfo.rawRecords, null, 2)}
+                      </pre>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-2">Processed Mappings ({debugInfo.processedMappings.length})</h3>
+                      <pre className="text-sm bg-muted p-2 rounded">
+                        {JSON.stringify(debugInfo.processedMappings, null, 2)}
+                      </pre>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-2">Displayed Mappings ({debugInfo.displayedMappings.length})</h3>
+                      <pre className="text-sm bg-muted p-2 rounded">
+                        {JSON.stringify(debugInfo.displayedMappings, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </>
         )}
       </div>
     </MainLayout>
