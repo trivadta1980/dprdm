@@ -1,12 +1,38 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/main-layout";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, UserX, Loader2 } from "lucide-react";
@@ -14,7 +40,14 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { User, Role, InsertUser, UpdateUser } from "@shared/schema";
+import { 
+  User, 
+  Role, 
+  InsertUser, 
+  UpdateUser,
+  insertUserSchema, 
+  updateUserSchema 
+} from "@shared/schema";
 
 export default function ManageUsersPage() {
   const { toast } = useToast();
@@ -22,7 +55,7 @@ export default function ManageUsersPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
 
-  // Forms
+  // Create form
   const createForm = useForm<InsertUser>({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
@@ -32,6 +65,7 @@ export default function ManageUsersPage() {
     }
   });
 
+  // Edit form
   const editForm = useForm<UpdateUser>({
     resolver: zodResolver(updateUserSchema),
     defaultValues: {
@@ -40,24 +74,43 @@ export default function ManageUsersPage() {
     }
   });
 
-  // Queries
-  const { data: users = [], isLoading } = useQuery<User[]>({
-    queryKey: ["/api/users"]
+  // Fetch users
+  const { data: users, isLoading } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+    queryFn: async () => {
+      console.log('Fetching users...');
+      const res = await apiRequest("GET", "/api/users");
+      const data = await res.json();
+      console.log('Users fetched:', data);
+      return data;
+    }
   });
 
-  const { data: roles = [] } = useQuery<Role[]>({
-    queryKey: ["/api/roles"]
+  // Fetch roles
+  const { data: roles } = useQuery<Role[]>({
+    queryKey: ["/api/roles"],
+    queryFn: async () => {
+      console.log('Fetching roles...');
+      const res = await apiRequest("GET", "/api/roles");
+      const data = await res.json();
+      console.log('Roles fetched:', data);
+      return data;
+    }
   });
 
-  // Mutations
+  // Create mutation
   const createUserMutation = useMutation({
     mutationFn: async (data: InsertUser) => {
+      console.log('Creating user with data:', data);
       const res = await apiRequest("POST", "/api/register", data);
       if (!res.ok) {
         const error = await res.json();
+        console.error('Create user error:', error);
         throw new Error(error.message || "Failed to create user");
       }
-      return res.json();
+      const result = await res.json();
+      console.log('Create user response:', result);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -69,22 +122,28 @@ export default function ManageUsersPage() {
       });
     },
     onError: (error: Error) => {
+      console.error('Create mutation error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to create user",
         variant: "destructive"
       });
     }
   });
 
+  // Update mutation
   const updateUserMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: UpdateUser }) => {
+      console.log('Updating user:', id, 'with data:', data);
       const res = await apiRequest("PATCH", `/api/users/${id}`, data);
       if (!res.ok) {
         const error = await res.json();
+        console.error('Update user error:', error);
         throw new Error(error.message || "Failed to update user");
       }
-      return res.json();
+      const result = await res.json();
+      console.log('Update user response:', result);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -97,9 +156,10 @@ export default function ManageUsersPage() {
       });
     },
     onError: (error: Error) => {
+      console.error('Update mutation error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to update user",
         variant: "destructive"
       });
     }
@@ -107,9 +167,12 @@ export default function ManageUsersPage() {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (id: number) => {
+      console.log('Deleting user:', id);
       const res = await apiRequest("DELETE", `/api/users/${id}`);
       if (!res.ok) {
-        throw new Error("Failed to delete user");
+        const error = await res.json();
+        console.error('Delete user error:', error);
+        throw new Error(error.message || "Failed to delete user");
       }
     },
     onSuccess: () => {
@@ -120,15 +183,18 @@ export default function ManageUsersPage() {
       });
     },
     onError: (error: Error) => {
+      console.error('Delete mutation error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to delete user",
         variant: "destructive"
       });
     }
   });
 
+  // Form handlers
   const handleCreateSubmit = (data: InsertUser) => {
+    console.log('Create form submitted with data:', data);
     createUserMutation.mutate({
       ...data,
       password: "password123",
@@ -137,7 +203,17 @@ export default function ManageUsersPage() {
   };
 
   const handleEditSubmit = (data: UpdateUser) => {
-    if (!editingUser) return;
+    if (!editingUser) {
+      console.error('No user selected for editing');
+      return;
+    }
+
+    console.log('Edit form submitted with data:', data);
+    toast({
+      title: "Processing Update",
+      description: "Attempting to update user..."
+    });
+
     updateUserMutation.mutate({
       id: editingUser.id,
       data: {
@@ -148,6 +224,7 @@ export default function ManageUsersPage() {
   };
 
   const handleEditClick = (user: User) => {
+    console.log('Edit clicked for user:', user);
     setEditingUser(user);
     editForm.reset({
       email: user.email,
@@ -169,98 +246,113 @@ export default function ManageUsersPage() {
   return (
     <MainLayout>
       <div className="container py-6 space-y-4">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold tracking-tight">Users</h1>
+
+          {/* Create User Dialog */}
+          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                New User
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New User</DialogTitle>
+              </DialogHeader>
+              <Form {...createForm}>
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    console.log('Create form submission triggered');
+                    createForm.handleSubmit(handleCreateSubmit)(e);
+                  }} 
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={createForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="user@example.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Username</FormLabel>
+                        <FormControl>
+                          <Input placeholder="username" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="roleId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Role</FormLabel>
+                        <Select
+                          onValueChange={(value) => {
+                            console.log('Role selected:', value);
+                            field.onChange(Number(value));
+                          }}
+                          defaultValue={field.value?.toString()}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a role" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {roles?.map((role) => (
+                              <SelectItem
+                                key={role.id}
+                                value={role.id.toString()}
+                              >
+                                {role.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={createUserMutation.isPending}
+                    onClick={() => console.log('Create button clicked')}
+                  >
+                    {createUserMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      "Create User"
+                    )}
+                  </Button>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Users Table */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>User Management</CardTitle>
-            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add User
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New User</DialogTitle>
-                </DialogHeader>
-                <Form {...createForm}>
-                  <form onSubmit={createForm.handleSubmit(handleCreateSubmit)} className="space-y-4">
-                    <FormField
-                      control={createForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input type="email" placeholder="user@example.com" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={createForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Username</FormLabel>
-                          <FormControl>
-                            <Input placeholder="username" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={createForm.control}
-                      name="roleId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Role</FormLabel>
-                          <Select
-                            onValueChange={(value) => field.onChange(Number(value))}
-                            defaultValue={field.value?.toString()}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a role" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {roles.map((role) => (
-                                <SelectItem
-                                  key={role.id}
-                                  value={role.id.toString()}
-                                >
-                                  {role.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={createUserMutation.isPending}
-                    >
-                      {createUserMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Creating...
-                        </>
-                      ) : (
-                        "Create User"
-                      )}
-                    </Button>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -271,13 +363,13 @@ export default function ManageUsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
+                {users?.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.username}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {roles.find((r) => r.id === user.roleId)?.name}
+                        {roles?.find((r) => r.id === user.roleId)?.name}
                       </Badge>
                     </TableCell>
                     <TableCell className="flex gap-2">
@@ -309,13 +401,21 @@ export default function ManageUsersPage() {
           </CardContent>
         </Card>
 
+        {/* Edit User Dialog */}
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Edit User</DialogTitle>
             </DialogHeader>
             <Form {...editForm}>
-              <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="space-y-4">
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  console.log('Edit form submission triggered');
+                  editForm.handleSubmit(handleEditSubmit)(e);
+                }} 
+                className="space-y-4"
+              >
                 <FormField
                   control={editForm.control}
                   name="email"
@@ -336,7 +436,10 @@ export default function ManageUsersPage() {
                     <FormItem>
                       <FormLabel>Role</FormLabel>
                       <Select
-                        onValueChange={(value) => field.onChange(Number(value))}
+                        onValueChange={(value) => {
+                          console.log('Role selected for edit:', value);
+                          field.onChange(Number(value));
+                        }}
                         defaultValue={field.value?.toString()}
                       >
                         <FormControl>
@@ -345,7 +448,7 @@ export default function ManageUsersPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {roles.map((role) => (
+                          {roles?.map((role) => (
                             <SelectItem key={role.id} value={role.id.toString()}>
                               {role.name}
                             </SelectItem>
@@ -360,6 +463,7 @@ export default function ManageUsersPage() {
                   type="submit"
                   className="w-full"
                   disabled={updateUserMutation.isPending}
+                  onClick={() => console.log('Update button clicked')}
                 >
                   {updateUserMutation.isPending ? (
                     <>
