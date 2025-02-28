@@ -7,6 +7,10 @@ import { parse } from "csv-parse";
 import { insertRelationshipSchema } from "@shared/schema";
 import { insertCrosswalkMappingSchema } from "@shared/schema";
 import { sql } from "drizzle-orm";
+import { scrypt, randomBytes } from "crypto";
+import { promisify } from "util";
+
+const scryptAsync = promisify(scrypt);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication and user management routes
@@ -46,6 +50,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
+      // If changing password, hash it first
+      if (req.body.password) {
+        const salt = randomBytes(16).toString("hex");
+        const buf = (await scryptAsync(req.body.password, salt, 64)) as Buffer;
+        req.body.password = `${buf.toString("hex")}.${salt}`;
+      }
+
       const user = await storage.updateUser(userId, req.body);
       console.log('PATCH /api/users/:id - Update result:', user); // Added logging
       if (user) {
@@ -78,7 +89,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/reference-types", async (req, res) => {
+app.post("/api/reference-types", async (req, res) => {
     console.log('POST /api/reference-types - Request received'); //Added logging
     if (!req.isAuthenticated()) {
         console.log('POST /api/reference-types - Unauthorized access'); //Added logging
