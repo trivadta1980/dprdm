@@ -12,7 +12,8 @@ import {
   Laptop2,
   TestTube2,
   ArrowRightLeft,
-  LogOut
+  LogOut,
+  UserPlus, // Added import for UserPlus icon
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -37,6 +38,11 @@ export function Sidebar({ className }: SidebarProps) {
             title: "Role Management",
             href: "/roles",
             icon: UserCog,
+          },
+          { // Added new menu item here
+            title: "Test User Creation",
+            href: "/users/test",
+            icon: UserPlus,
           },
         ]
       : []),
