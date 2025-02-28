@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/main-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -57,22 +57,27 @@ export default function UsersPage() {
     resolver: zodResolver(updateUserSchema),
   });
 
+  // Fetch users
   const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],
+    queryFn: () => apiRequest("GET", "/api/users").then(res => res.json()),
   });
 
+  // Fetch roles
   const { data: roles } = useQuery<Role[]>({
     queryKey: ["/api/roles"],
+    queryFn: () => apiRequest("GET", "/api/roles").then(res => res.json()),
   });
 
+  // Create user mutation
   const createMutation = useMutation({
     mutationFn: async (data: InsertUser) => {
-      const res = await apiRequest("POST", "/api/users", data);
+      const res = await apiRequest("POST", "/api/register", data);
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.message || 'Failed to create user');
       }
-      return res.json();
+      return res.json() as Promise<User>;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -92,6 +97,7 @@ export default function UsersPage() {
     },
   });
 
+  // Update user mutation
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: UpdateUser }) => {
       const res = await apiRequest("PATCH", `/api/users/${id}`, data);
@@ -99,7 +105,7 @@ export default function UsersPage() {
         const error = await res.json();
         throw new Error(error.message || 'Failed to update user');
       }
-      return res.json();
+      return res.json() as Promise<User>;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -108,7 +114,7 @@ export default function UsersPage() {
       editForm.reset();
       toast({
         title: "Success",
-        description: "User updated successfully",
+        description: `User "${data.username}" updated successfully`,
       });
     },
     onError: (error: Error) => {
@@ -120,11 +126,13 @@ export default function UsersPage() {
     },
   });
 
+  // Delete user mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
       const res = await apiRequest("DELETE", `/api/users/${id}`);
       if (!res.ok) {
-        throw new Error("Failed to delete user");
+        const error = await res.json();
+        throw new Error(error.message || "Failed to delete user");
       }
     },
     onSuccess: () => {
@@ -134,10 +142,10 @@ export default function UsersPage() {
         description: "User deleted successfully",
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to delete user",
+        description: error.message || "Failed to delete user",
         variant: "destructive",
       });
     },
@@ -161,6 +169,11 @@ export default function UsersPage() {
       username: editingUser.username,
       roleId: data.roleId,
     };
+
+    console.log('Submitting update:', {
+      id: editingUser.id,
+      data: updateData
+    });
 
     updateMutation.mutate({
       id: editingUser.id,
