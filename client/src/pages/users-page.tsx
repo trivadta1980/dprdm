@@ -40,16 +40,26 @@ import {
 } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { User, Role, InsertUser, insertUserSchema } from "@shared/schema";
+import { User, Role, InsertUser } from "@shared/schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { z } from "zod";
+
+// Define validation schema
+const createUserSchema = z.object({
+  email: z.string().email("Invalid email address").min(1, "Email is required"),
+  username: z.string().min(1, "Username is required"),
+  roleId: z.number({ required_error: "Role is required" }),
+  password: z.string().optional(),
+  confirmPassword: z.string().optional()
+});
+
+type CreateUserForm = z.infer<typeof createUserSchema>;
 
 export default function UsersPage() {
   const { toast } = useToast();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [debugSteps, setDebugSteps] = useState<Array<{ step: string; data?: any; timestamp: string }>>([]);
 
-  // Debug logging function
   const addDebugStep = (step: string, data?: any) => {
     setDebugSteps(prev => [...prev, {
       step,
@@ -59,16 +69,9 @@ export default function UsersPage() {
     console.log(`Debug Step: ${step}`, data);
   };
 
-  // Extended schema with validation messages
-  const formSchema = insertUserSchema.extend({
-    email: z.string().email("Invalid email address").min(1, "Email is required"),
-    username: z.string().min(1, "Username is required"),
-    roleId: z.number({ required_error: "Role is required" })
-  });
-
-  // Create form with extended schema
-  const form = useForm<InsertUser>({
-    resolver: zodResolver(formSchema),
+  // Create form with validation schema
+  const form = useForm<CreateUserForm>({
+    resolver: zodResolver(createUserSchema),
     defaultValues: {
       email: "",
       username: "",
@@ -135,7 +138,7 @@ export default function UsersPage() {
     }
   });
 
-  const handleSubmit = form.handleSubmit(async (formData) => {
+  const handleSubmit = async (formData: CreateUserForm) => {
     addDebugStep("Form submission started", formData);
     addDebugStep("Form validation state", form.formState);
 
@@ -147,12 +150,12 @@ export default function UsersPage() {
       };
 
       addDebugStep("Submitting form data", data);
-      await createUserMutation.mutateAsync(data);
+      await createUserMutation.mutateAsync(data as InsertUser);
     } catch (error) {
       addDebugStep("Form submission error", error);
       console.error('Form submission error:', error);
     }
-  });
+  };
 
   if (loadingUsers) {
     return (
@@ -184,7 +187,7 @@ export default function UsersPage() {
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <Form {...form}>
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
                       <FormField
                         control={form.control}
                         name="email"
