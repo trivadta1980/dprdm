@@ -590,7 +590,7 @@ export default function CrosswalkPage() {
               <div className="mt-8">
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center gap-4">
-                    <h2 className="text-xl font-semibold">Value Mappings</h2>
+                    <h2 className="text-xl font-semibold">Value Mappings ({filteredMappings.length})</h2>
                     <div className="flex items-center gap-2">
                       <Input
                         type="file"
@@ -640,189 +640,192 @@ export default function CrosswalkPage() {
                     )}
                   </Button>
                 </div>
+
                 {uploadError && (
                   <Alert variant="destructive" className="mb-4">
                     <AlertTitle>Error</AlertTitle>
                     <AlertDescription>{uploadError}</AlertDescription>
                   </Alert>
                 )}
+
                 <div className="border rounded-lg">
                   <ScrollArea className="h-[400px]">
-                    <Table>
-                      <TableHeader className="sticky top-0 bg-background">
-                        <TableRow>
-                          <TableHead>
-                            <div className="space-y-2">
-                              <span>Source Value</span>
-                              <Input
-                                placeholder="Filter source..."
-                                value={sourceFilter}
-                                onChange={(e) => setSourceFilter(e.target.value)}
-                                className="w-full"
-                              />
-                            </div>
-                          </TableHead>
-                          <TableHead>
-                            <div className="space-y-2">
-                              <span>Target Value</span>
-                              <Input
-                                placeholder="Filter target..."
-                                value={targetFilter}
-                                onChange={(e) => setTargetFilter(e.target.value)}
-                                className="w-full"
-                              />
-                            </div>
-                          </TableHead>
-                          <TableHead>
-                            <div className="space-y-2">
-                              <span>Confidence</span>
-                              <div className="flex gap-2">
-                                <Select
-                                  value={confidenceOperator}
-                                  onValueChange={(value: "gt" | "lt" | "eq") => setConfidenceOperator(value)}
-                                >
-                                  <SelectTrigger className="w-[100px]">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="gt">&gt;</SelectItem>
-                                    <SelectItem value="lt">&lt;</SelectItem>
-                                    <SelectItem value="eq">=</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                    <div className="min-w-full">
+                      <Table>
+                        <TableHeader className="sticky top-0 bg-background z-10">
+                          <TableRow>
+                            <TableHead className="min-w-[200px]">
+                              <div className="space-y-2">
+                                <span>Source Value</span>
                                 <Input
-                                  type="number"
-                                  min="0"
-                                  max="100"
-                                  placeholder="Value %"
-                                  value={confidenceValue}
-                                  onChange={(e) => {
-                                    const value = Math.max(0, Math.min(100, Number(e.target.value)));
-                                    setConfidenceValue(value.toString());
-                                  }}
-                                  className="w-[100px]"
+                                  placeholder="Filter source..."
+                                  value={sourceFilter}
+                                  onChange={(e) => setSourceFilter(e.target.value)}
+                                  className="w-full"
                                 />
                               </div>
-                            </div>
-                          </TableHead>
-                          <TableHead className="w-[100px] sticky right-0 bg-background">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredMappings.map((mapping, index) => (
-                          <TableRow key={mapping.sourceValue}>
-                            <TableCell>{mapping.sourceValue}</TableCell>
-                            <TableCell>
-                              {editingIndex === index ? (
-                                <Select
-                                  value={editValue || mapping.targetValue}
-                                  onValueChange={setEditValue}
-                                >
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Choose target value" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {targetAttributeValues.map((value) => (
-                                      <SelectItem key={value} value={value}>
-                                        {value}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              ) : (
-                                mapping.targetValue
-                              )}
-                            </TableCell>
-                            <TableCell>{(mapping.confidence * 100).toFixed(0)}%</TableCell>
-                            <TableCell className="sticky right-0 bg-background">
-                              {editingIndex === index ? (
-                                <div className="flex space-x-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => updateMapping(index, editValue)}
+                            </TableHead>
+                            <TableHead className="min-w-[200px]">
+                              <div className="space-y-2">
+                                <span>Target Value</span>
+                                <Input
+                                  placeholder="Filter target..."
+                                  value={targetFilter}
+                                  onChange={(e) => setTargetFilter(e.target.value)}
+                                  className="w-full"
+                                />
+                              </div>
+                            </TableHead>
+                            <TableHead className="min-w-[200px]">
+                              <div className="space-y-2">
+                                <span>Confidence</span>
+                                <div className="flex gap-2">
+                                  <Select
+                                    value={confidenceOperator}
+                                    onValueChange={(value: "gt" | "lt" | "eq") => setConfidenceOperator(value)}
                                   >
-                                    <Check className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setEditingIndex(null)}
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
+                                    <SelectTrigger className="w-[100px]">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="gt">&gt;</SelectItem>
+                                      <SelectItem value="lt">&lt;</SelectItem>
+                                      <SelectItem value="eq">=</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    placeholder="Value %"
+                                    value={confidenceValue}
+                                    onChange={(e) => {
+                                      const value = Math.max(0, Math.min(100, Number(e.target.value)));
+                                      setConfidenceValue(value.toString());
+                                    }}
+                                    className="w-[100px]"
+                                  />
                                 </div>
-                              ) : (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => {
-                                    setEditingIndex(index);
-                                    setEditValue(mapping.targetValue);
-                                  }}
-                                >
-                                  <Edit2 className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </TableCell>
+                              </div>
+                            </TableHead>
+                            <TableHead className="w-[100px] sticky right-0 bg-background">Actions</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {console.log('Rendering mappings:', filteredMappings)}
+                          {filteredMappings.map((mapping, index) => (
+                            <TableRow key={`${mapping.sourceValue}-${index}`}>
+                              <TableCell>{mapping.sourceValue}</TableCell>
+                              <TableCell>
+                                {editingIndex === index ? (
+                                  <Select
+                                    value={editValue || mapping.targetValue}
+                                    onValueChange={setEditValue}
+                                  >
+                                    <SelectTrigger className="w-full">
+                                      <SelectValue placeholder="Choose target value" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {targetAttributeValues.map((value) => (
+                                        <SelectItem key={value} value={value}>
+                                          {value}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                ) : (
+                                  mapping.targetValue
+                                )}
+                              </TableCell>
+                              <TableCell>{(mapping.confidence * 100).toFixed(0)}%</TableCell>
+                              <TableCell className="sticky right-0 bg-background">
+                                {editingIndex === index ? (
+                                  <div className="flex space-x-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => updateMapping(index, editValue)}
+                                    >
+                                      <Check className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => setEditingIndex(null)}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                      setEditingIndex(index);
+                                      setEditValue(mapping.targetValue);
+                                    }}
+                                  >
+                                    <Edit2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </ScrollArea>
                 </div>
-
               </div>
+            )}
+            {mappings.length > 0 && (
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Debug Information - Save Mappings Payload</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                      <pre className="text-sm">
+                        {JSON.stringify(generatePayload(), null, 2)}
+                      </pre>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+
+                <Card className="mt-4">
+                  <CardHeader>
+                    <CardTitle>CSV Import Debug Information</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                      <div className="space-y-4">
+                        <div>
+                          <h3 className="font-semibold mb-2">Raw CSV Records ({debugInfo.rawRecords.length})</h3>
+                          <pre className="text-sm bg-muted p-2 rounded">
+                            {JSON.stringify(debugInfo.rawRecords, null, 2)}
+                          </pre>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-2">Processed Mappings ({debugInfo.processedMappings.length})</h3>
+                          <pre className="text-sm bg-muted p-2 rounded">
+                            {JSON.stringify(debugInfo.processedMappings, null, 2)}
+                          </pre>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-2">Displayed Mappings ({debugInfo.displayedMappings.length})</h3>
+                          <pre className="text-sm bg-muted p-2 rounded">
+                            {JSON.stringify(debugInfo.displayedMappings, null, 2)}
+                          </pre>
+                        </div>
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </>
             )}
           </CardContent>
         </Card>
-
-        {mappings.length > 0 && (
-          <>
-            <Card>
-              <CardHeader>
-                <CardTitle>Debug Information - Save Mappings Payload</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-                  <pre className="text-sm">
-                    {JSON.stringify(generatePayload(), null, 2)}
-                  </pre>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-
-            <Card className="mt-4">
-              <CardHeader>
-                <CardTitle>CSV Import Debug Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="font-semibold mb-2">Raw CSV Records ({debugInfo.rawRecords.length})</h3>
-                      <pre className="text-sm bg-muted p-2 rounded">
-                        {JSON.stringify(debugInfo.rawRecords, null, 2)}
-                      </pre>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-2">Processed Mappings ({debugInfo.processedMappings.length})</h3>
-                      <pre className="text-sm bg-muted p-2 rounded">
-                        {JSON.stringify(debugInfo.processedMappings, null, 2)}
-                      </pre>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-2">Displayed Mappings ({debugInfo.displayedMappings.length})</h3>
-                      <pre className="text-sm bg-muted p-2 rounded">
-                        {JSON.stringify(debugInfo.displayedMappings, null, 2)}
-                      </pre>
-                    </div>
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </>
-        )}
       </div>
     </MainLayout>
   );
