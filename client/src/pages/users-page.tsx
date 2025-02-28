@@ -418,7 +418,15 @@ export default function UsersPage() {
           </DialogHeader>
           <Form {...editForm}>
             <form
-              onSubmit={editForm.handleSubmit(onEdit)}
+              onSubmit={(e) => {
+                e.preventDefault();
+                console.log('Form submitted');
+                toast({
+                  title: "Form Submitted",
+                  description: "Update form submission triggered"
+                });
+                editForm.handleSubmit(onEdit)(e);
+              }}
               className="space-y-4"
             >
               <FormField
@@ -465,6 +473,13 @@ export default function UsersPage() {
                 type="submit"
                 className="w-full"
                 disabled={updateMutation.isPending}
+                onClick={() => {
+                  console.log('Update button clicked');
+                  toast({
+                    title: "Button Clicked",
+                    description: "Update button was clicked"
+                  });
+                }}
               >
                 {updateMutation.isPending ? (
                   <>
