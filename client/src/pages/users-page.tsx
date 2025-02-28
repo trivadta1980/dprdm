@@ -86,10 +86,18 @@ export default function UsersPage() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: UpdateUser }) => {
+      console.log('Making API request to:', `/api/users/${id}`);
+      console.log('With data:', data);
+
       const res = await apiRequest("PATCH", `/api/users/${id}`, data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Failed to update user');
+      }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Update successful:', data);
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       setEditDialogOpen(false);
       setEditingUser(null);
@@ -100,6 +108,7 @@ export default function UsersPage() {
       });
     },
     onError: (error: Error) => {
+      console.error('Update failed:', error);
       toast({
         title: "Update failed",
         description: error.message || "Failed to update user. Please try again.",
@@ -178,53 +187,25 @@ export default function UsersPage() {
       description: `Attempting to update user: ${editingUser.username} with data: ${JSON.stringify(data)}`,
     });
 
-    setEditDebugInfo(prev => [...prev, {
-      timestamp: new Date().toISOString(),
-      event: "Form Submission",
-      data: {
-        formData: data,
-        formState: editForm.formState
-      }
-    }]);
-
     const updateData = {
       email: data.email,
       username: editingUser.username,
       roleId: data.roleId,
     };
 
-    setEditDebugInfo(prev => [...prev, {
-      timestamp: new Date().toISOString(),
-      event: "API Request Payload",
-      data: updateData
-    }]);
-
-    updateMutation.mutate({
+    // Log the update data
+    console.log('Sending update request:', {
       id: editingUser.id,
       data: updateData
-    }, {
-      onMutate: (variables) => {
-        setEditDebugInfo(prev => [...prev, {
-          timestamp: new Date().toISOString(),
-          event: "API Request",
-          data: variables
-        }]);
-      },
-      onError: (error) => {
-        setEditDebugInfo(prev => [...prev, {
-          timestamp: new Date().toISOString(),
-          event: "Error",
-          data: error.message
-        }]);
-      },
-      onSuccess: (response) => {
-        setEditDebugInfo(prev => [...prev, {
-          timestamp: new Date().toISOString(),
-          event: "Success",
-          data: response
-        }]);
-      }
     });
+
+    // Actually send the update
+    updateMutation.mutate(
+      {
+        id: editingUser.id,
+        data: updateData
+      }
+    );
   }
 
   function handleEdit(user: User) {
