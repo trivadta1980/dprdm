@@ -10,6 +10,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Edit2, Check, X, Save, ArrowLeft, Upload, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -19,14 +27,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useParams, Link } from "wouter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { parse } from 'csv-parse/browser/esm/sync';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 interface DataSet {
   id: number;
@@ -67,15 +67,6 @@ export default function CrosswalkPage() {
   const [confidenceOperator, setConfidenceOperator] = useState<"gt" | "lt" | "eq">("gt");
   const [confidenceValue, setConfidenceValue] = useState<string>("");
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<{
-    rawRecords: CSVMapping[],
-    processedMappings: Mapping[],
-    displayedMappings: Mapping[]
-  }>({
-    rawRecords: [],
-    processedMappings: [],
-    displayedMappings: []
-  });
 
   const { data: datasets = [], isLoading: datasetsLoading } = useQuery<DataSet[]>({
     queryKey: ['/api/reference-data']
@@ -131,37 +122,8 @@ export default function CrosswalkPage() {
   const calculateSimilarity = (str1: string, str2: string): number => {
     const s1 = str1.toLowerCase();
     const s2 = str2.toLowerCase();
-
-    // Exact match
     if (s1 === s2) return 1;
-
-    // Handle common city code patterns
-    const isSourceCode = s1.length <= 3;
-    const isTargetCode = s2.length <= 3;
-
-    // If one is a city code and appears in the other string
-    if ((isSourceCode && s2.includes(s1)) || (isTargetCode && s1.includes(s2))) {
-      return 0.8;
-    }
-
-    // If one contains the other
-    if (s1.includes(s2) || s2.includes(s1)) {
-      return 0.8;
-    }
-
-    // Check if it's a potential city code match (e.g., "San Francisco" -> "SFO")
-    if (isSourceCode || isTargetCode) {
-      const longForm = isSourceCode ? s2 : s1;
-      const code = isSourceCode ? s1 : s2;
-
-      // Split long form into words and check if code matches first letters
-      const words = longForm.split(' ');
-      const firstLetters = words.map(word => word[0]).join('');
-      if (code.includes(firstLetters)) {
-        return 0.7;
-      }
-    }
-
+    if (s1.includes(s2) || s2.includes(s1)) return 0.8;
     return 0;
   };
 
@@ -229,34 +191,17 @@ export default function CrosswalkPage() {
   }, [selectedSourceDatasetObj?.typeId, selectedSourceDataset]);
 
   const filteredMappings = mappings.filter(mapping => {
-    // Only filter if there are actual filter values
-    const sourceMatch = !sourceFilter || mapping.sourceValue.toLowerCase().includes(sourceFilter.toLowerCase());
-    const targetMatch = !targetFilter || mapping.targetValue.toLowerCase().includes(targetFilter.toLowerCase());
+    const sourceMatch = mapping.sourceValue.toLowerCase().includes(sourceFilter.toLowerCase());
+    const targetMatch = mapping.targetValue.toLowerCase().includes(targetFilter.toLowerCase());
 
     const confidencePercent = Number((mapping.confidence * 100).toFixed(0));
     const confidenceNumValue = Number(confidenceValue);
 
-    const confidenceMatch = !confidenceValue || (
+    const confidenceMatch = confidenceValue === "" || (
       confidenceOperator === "gt" ? confidencePercent > confidenceNumValue :
       confidenceOperator === "lt" ? confidencePercent < confidenceNumValue :
       confidencePercent === confidenceNumValue
     );
-
-    // Debug logs
-    console.log('Filtering mapping:', {
-      mapping,
-      sourceMatch,
-      targetMatch,
-      confidenceMatch,
-      filters: {
-        source: sourceFilter,
-        target: targetFilter,
-        confidence: {
-          operator: confidenceOperator,
-          value: confidenceValue
-        }
-      }
-    });
 
     return sourceMatch && targetMatch && confidenceMatch;
   });
@@ -346,12 +291,6 @@ export default function CrosswalkPage() {
     const file = event.target.files?.[0];
     setUploadError(null);
 
-    // Reset filters
-    setSourceFilter("");
-    setTargetFilter("");
-    setConfidenceValue("");
-    setConfidenceOperator("gt");
-
     if (!file) return;
 
     if (file.type !== "text/csv") {
@@ -365,7 +304,7 @@ export default function CrosswalkPage() {
         columns: true,
         skip_empty_lines: true,
         trim: true
-      }) as CSVMapping[];
+      });
 
       if (!Array.isArray(records) || records.length === 0) {
         setUploadError("The CSV file is empty or invalid");
@@ -379,34 +318,17 @@ export default function CrosswalkPage() {
         return;
       }
 
-      // Process each record to create mappings
-      const newMappings = records.map((record: CSVMapping) => ({
+      // Convert CSV records to mappings
+      const newMappings: Mapping[] = records.map((record: CSVMapping) => ({
         sourceValue: record.sourceValue,
         targetValue: record.targetValue,
         confidence: calculateSimilarity(record.sourceValue, record.targetValue)
       }));
 
-      // Update debug info first
-      setDebugInfo({
-        rawRecords: records,
-        processedMappings: newMappings,
-        displayedMappings: newMappings
-      });
-
-      // Then update the main mappings state
       setMappings(newMappings);
-
-      // Log for debugging
-      console.log('handleCSVUpload - Debug:', {
-        rawRecords: records,
-        processedMappings: newMappings,
-        currentMappings: mappings,
-        filteredMappings: filteredMappings
-      });
-
       toast({
         title: "Success",
-        description: `Imported ${records.length} mappings from CSV`,
+        description: `Imported ${newMappings.length} mappings from CSV`,
       });
     } catch (error) {
       setUploadError("Failed to parse CSV file: " + (error as Error).message);
@@ -435,36 +357,7 @@ export default function CrosswalkPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(url); // Clean up the URL object
   };
-
-  useEffect(() => {
-    setDebugInfo(prev => ({
-      ...prev,
-      displayedMappings: filteredMappings
-    }));
-  }, [mappings, filteredMappings]);
-
-  useEffect(() => {
-    setDebugInfo(prev => ({
-      ...prev,
-      displayedMappings: filteredMappings
-    }));
-
-    // Debug log
-    console.log('Filtered mappings updated:', {
-      allMappings: mappings.length,
-      filteredCount: filteredMappings.length,
-      filters: {
-        source: sourceFilter,
-        target: targetFilter,
-        confidence: {
-          operator: confidenceOperator,
-          value: confidenceValue
-        }
-      }
-    });
-  }, [mappings, filteredMappings, sourceFilter, targetFilter, confidenceValue, confidenceOperator]);
 
   return (
     <MainLayout>
@@ -608,119 +501,207 @@ export default function CrosswalkPage() {
             </div>
 
             {mappings.length > 0 && (
-              <>
-                {uploadError && (
-                    <Alert variant="destructive" className="mb-4">
-                      <AlertTitle>Error</AlertTitle>
-                      <AlertDescription>{uploadError}</AlertDescription>
-                    </Alert>
-                  )}
-
-                  <div className="mb-4">
-                    <div className="flex items-center gap-4">
-                      <h2 className="text-xl font-semibold">Value Mappings ({filteredMappings.length})</h2>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="file"
-                          accept=".csv"
-                          onChange={handleCSVUpload}
-                          className="hidden"
-                          id="csv-upload"
-                        />
-                        <label htmlFor="csv-upload">
-                          <Button variant="outline" asChild>
-                            <span>
-                              <Upload className="h-4 w-4 mr-2" />
-                              Import from CSV
-                            </span>
-                          </Button>
-                        </label>
-                        <Button
-                          variant="outline"
-                          onClick={handleExportCSV}
-                          disabled={mappings.length === 0}
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Export to CSV
+              <div className="mt-8">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-xl font-semibold">Value Mappings</h2>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="file"
+                        accept=".csv"
+                        onChange={handleCSVUpload}
+                        className="hidden"
+                        id="csv-upload"
+                      />
+                      <label htmlFor="csv-upload">
+                        <Button variant="outline" asChild>
+                          <span>
+                            <Upload className="h-4 w-4 mr-2" />
+                            Import from CSV
+                          </span>
                         </Button>
-                      </div>
+                      </label>
+                      <Button
+                        variant="outline"
+                        onClick={handleExportCSV}
+                        disabled={mappings.length === 0}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Export to CSV
+                      </Button>
                     </div>
                   </div>
-
-                  {/* Debug Information */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Debug Information - Save Mappings Payload</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-                        <pre className="text-sm">
-                          {JSON.stringify(generatePayload(), null, 2)}
-                        </pre>
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="mt-4">
-                    <CardHeader>
-                      <CardTitle>CSV Import Debug Information</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                        <div className="space-y-4">
-                          <div>
-                            <h3 className="font-semibold mb-2">Raw CSV Records ({debugInfo.rawRecords.length})</h3>
-                            <pre className="text-sm bg-muted p-2 rounded">
-                              {JSON.stringify(debugInfo.rawRecords, null, 2)}
-                            </pre>
+                  <Button
+                    onClick={() => saveMappingsMutation.mutate()}
+                    disabled={
+                      saveMappingsMutation.isPending ||
+                      !mappingName ||
+                      !selectedSourceDataset ||
+                      !selectedTargetDataset ||
+                      !selectedSourceAttribute ||
+                      mappings.length === 0
+                    }
+                  >
+                    {saveMappingsMutation.isPending ? (
+                      <span className="flex items-center gap-2">
+                        Saving...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Save className="h-4 w-4" />
+                        Save Mappings
+                      </span>
+                    )}
+                  </Button>
+                </div>
+                {uploadError && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>{uploadError}</AlertDescription>
+                  </Alert>
+                )}
+                <div className="border rounded-lg">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>
+                          <div className="space-y-2">
+                            <span>Source Value</span>
+                            <Input
+                              placeholder="Filter source..."
+                              value={sourceFilter}
+                              onChange={(e) => setSourceFilter(e.target.value)}
+                              className="w-full"
+                            />
                           </div>
-                          <div>
-                            <h3 className="font-semibold mb-2">Processed Mappings ({debugInfo.processedMappings.length})</h3>
-                            <pre className="text-sm bg-muted p-2 rounded">
-                              {JSON.stringify(debugInfo.processedMappings, null, 2)}
-                            </pre>
+                        </TableHead>
+                        <TableHead>
+                          <div className="space-y-2">
+                            <span>Target Value</span>
+                            <Input
+                              placeholder="Filter target..."
+                              value={targetFilter}
+                              onChange={(e) => setTargetFilter(e.target.value)}
+                              className="w-full"
+                            />
                           </div>
-                          <div>
-                            <h3 className="font-semibold mb-2">Displayed Mappings ({debugInfo.displayedMappings.length})</h3>
-                            <pre className="text-sm bg-muted p-2 rounded">
-                              {JSON.stringify(debugInfo.displayedMappings, null, 2)}
-                            </pre>
+                        </TableHead>
+                        <TableHead>
+                          <div className="space-y-2">
+                            <span>Confidence</span>
+                            <div className="flex gap-2">
+                              <Select
+                                value={confidenceOperator}
+                                onValueChange={(value: "gt" | "lt" | "eq") => setConfidenceOperator(value)}
+                              >
+                                <SelectTrigger className="w-[100px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="gt">&gt;</SelectItem>
+                                  <SelectItem value="lt">&lt;</SelectItem>
+                                  <SelectItem value="eq">=</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Input
+                                type="number"
+                                min="0"
+                                max="100"
+                                placeholder="Value %"
+                                value={confidenceValue}
+                                onChange={(e) => {
+                                  const value = Math.max(0, Math.min(100, Number(e.target.value)));
+                                  setConfidenceValue(value.toString());
+                                }}
+                                className="w-[100px]"
+                              />
+                            </div>
                           </div>
-                        </div>
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
-                  <Card className="mt-4">
-                    <CardHeader>
-                      <CardTitle>Imported Data Preview</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ScrollArea className="h-[400px]">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Source Value</TableHead>
-                              <TableHead>Target Value</TableHead>
-                              <TableHead>Confidence</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {debugInfo.processedMappings.map((mapping, index) => (
-                              <TableRow key={`${mapping.sourceValue}-${index}`}>
-                                <TableCell>{mapping.sourceValue}</TableCell>
-                                <TableCell>{mapping.targetValue}</TableCell>
-                                <TableCell>{(mapping.confidence * 100).toFixed(0)}%</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
-              </>
+                        </TableHead>
+                        <TableHead className="w-[100px]">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredMappings.map((mapping, index) => (
+                        <TableRow key={mapping.sourceValue}>
+                          <TableCell>{mapping.sourceValue}</TableCell>
+                          <TableCell>
+                            {editingIndex === index ? (
+                              <Select
+                                value={editValue || mapping.targetValue}
+                                onValueChange={setEditValue}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Choose target value" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {targetAttributeValues.map((value) => (
+                                    <SelectItem key={value} value={value}>
+                                      {value}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              mapping.targetValue
+                            )}
+                          </TableCell>
+                          <TableCell>{(mapping.confidence * 100).toFixed(0)}%</TableCell>
+                          <TableCell>
+                            {editingIndex === index ? (
+                              <div className="flex space-x-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => updateMapping(index, editValue)}
+                                >
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setEditingIndex(null)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setEditingIndex(index);
+                                  setEditValue(mapping.targetValue);
+                                }}
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
+
+        {mappings.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Debug Information - Save Mappings Payload</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                <pre className="text-sm">
+                  {JSON.stringify(generatePayload(), null, 2)}
+                </pre>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </MainLayout>
   );
