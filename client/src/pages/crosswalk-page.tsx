@@ -347,25 +347,15 @@ export default function CrosswalkPage() {
         return;
       }
 
-      // Create a Map to track unique source values and their best confidence matches
-      const mappingMap = new Map<string, Mapping>();
-
-      // Process each record and keep the mapping with highest confidence for each source value
-      records.forEach((record: CSVMapping) => {
+      // Process each record to create mappings
+      const newMappings = records.map((record: CSVMapping) => {
         const confidence = calculateSimilarity(record.sourceValue, record.targetValue);
-        const existingMapping = mappingMap.get(record.sourceValue);
-
-        if (!existingMapping || confidence > existingMapping.confidence) {
-          mappingMap.set(record.sourceValue, {
-            sourceValue: record.sourceValue,
-            targetValue: record.targetValue,
-            confidence
-          });
-        }
+        return {
+          sourceValue: record.sourceValue,
+          targetValue: record.targetValue,
+          confidence
+        };
       });
-
-      // Convert map back to array
-      const newMappings = Array.from(mappingMap.values());
 
       setMappings(newMappings);
       toast({
