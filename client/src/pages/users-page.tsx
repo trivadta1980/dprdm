@@ -41,10 +41,21 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { User, Role, InsertUser, insertUserSchema } from "@shared/schema";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function UsersPage() {
   const { toast } = useToast();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [debugSteps, setDebugSteps] = useState<Array<{ step: string; data?: any; timestamp: string }>>([]);
+
+  // Debug logging function
+  const addDebugStep = (step: string, data?: any) => {
+    setDebugSteps(prev => [...prev, {
+      step,
+      data,
+      timestamp: new Date().toLocaleTimeString()
+    }]);
+  };
 
   // Create form
   const createForm = useForm<InsertUser>({
@@ -60,10 +71,10 @@ export default function UsersPage() {
   const { data: users, isLoading: loadingUsers } = useQuery<User[]>({
     queryKey: ["/api/users"],
     queryFn: async () => {
-      console.log('Fetching users...');
+      addDebugStep("Fetching users");
       const res = await apiRequest("GET", "/api/users");
       const data = await res.json();
-      console.log('Users fetched:', data);
+      addDebugStep("Users fetched", data);
       return data;
     }
   });
@@ -72,10 +83,10 @@ export default function UsersPage() {
   const { data: roles } = useQuery<Role[]>({
     queryKey: ["/api/roles"],
     queryFn: async () => {
-      console.log('Fetching roles...');
+      addDebugStep("Fetching roles");
       const res = await apiRequest("GET", "/api/roles");
       const data = await res.json();
-      console.log('Roles fetched:', data);
+      addDebugStep("Roles fetched", data);
       return data;
     }
   });
@@ -83,28 +94,30 @@ export default function UsersPage() {
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (data: InsertUser) => {
-      console.log('Creating user with data:', data);
+      addDebugStep("Creating user", data);
       const res = await apiRequest("POST", "/api/users", data);
       if (!res.ok) {
         const error = await res.json();
-        console.error('Create user error:', error);
+        addDebugStep("Create user error", error);
         throw new Error(error.message || "Failed to create user");
       }
       const result = await res.json();
-      console.log('Create user response:', result);
+      addDebugStep("Create user success", result);
       return result;
     },
     onSuccess: () => {
+      addDebugStep("Mutation success - updating UI");
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       setCreateDialogOpen(false);
       createForm.reset();
+      setDebugSteps([]);
       toast({
         title: "Success",
         description: "User created successfully"
       });
     },
     onError: (error: Error) => {
-      console.error('Create mutation error:', error);
+      addDebugStep("Mutation error", error.message);
       toast({
         title: "Error",
         description: error.message || "Failed to create user",
@@ -114,14 +127,17 @@ export default function UsersPage() {
   });
 
   const handleCreateSubmit = async (data: InsertUser) => {
-    console.log('Form submitted with data:', data);
+    addDebugStep("Form submitted", data);
     try {
-      await createUserMutation.mutateAsync({
+      const formData = {
         ...data,
         password: "password123",
         confirmPassword: "password123"
-      });
+      };
+      addDebugStep("Processed form data", formData);
+      await createUserMutation.mutateAsync(formData);
     } catch (error) {
+      addDebugStep("Form submission error", error);
       console.error('Create user submission error:', error);
     }
   };
@@ -130,7 +146,7 @@ export default function UsersPage() {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="h-8 w-8 animate-spin" />
+          <Loader2 className="h-8 w-8 animate-spin text-border" />
         </div>
       </MainLayout>
     );
@@ -150,94 +166,135 @@ export default function UsersPage() {
                 New User
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Create New User</DialogTitle>
               </DialogHeader>
-              <Form {...createForm}>
-                <form 
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    console.log('Form submission event triggered');
-                    createForm.handleSubmit(handleCreateSubmit)(e);
-                  }} 
-                  className="space-y-4"
-                >
-                  <FormField
-                    control={createForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="user@example.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={createForm.control}
-                    name="username"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Username</FormLabel>
-                        <FormControl>
-                          <Input placeholder="username" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={createForm.control}
-                    name="roleId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Role</FormLabel>
-                        <Select
-                          onValueChange={(value) => {
-                            console.log('Role selected:', value);
-                            field.onChange(Number(value));
-                          }}
-                          defaultValue={field.value?.toString()}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a role" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {roles?.map((role) => (
-                              <SelectItem
-                                key={role.id}
-                                value={role.id.toString()}
-                              >
-                                {role.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={createUserMutation.isPending}
-                  >
-                    {createUserMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      "Create User"
-                    )}
-                  </Button>
-                </form>
-              </Form>
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <Form {...createForm}>
+                    <form 
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        addDebugStep("Form submission triggered");
+                        createForm.handleSubmit(handleCreateSubmit)(e);
+                      }} 
+                      className="space-y-4"
+                    >
+                      <FormField
+                        control={createForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="email" 
+                                placeholder="user@example.com" 
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  addDebugStep("Email field changed", e.target.value);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={createForm.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Username</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="username" 
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  addDebugStep("Username field changed", e.target.value);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={createForm.control}
+                        name="roleId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Role</FormLabel>
+                            <Select
+                              onValueChange={(value) => {
+                                addDebugStep("Role selected", value);
+                                field.onChange(Number(value));
+                              }}
+                              defaultValue={field.value?.toString()}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a role" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {roles?.map((role) => (
+                                  <SelectItem
+                                    key={role.id}
+                                    value={role.id.toString()}
+                                  >
+                                    {role.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={createUserMutation.isPending}
+                      >
+                        {createUserMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Creating...
+                          </>
+                        ) : (
+                          "Create User"
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </div>
+
+                {/* Debug Panel */}
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <h3 className="font-medium mb-2">Debug Steps</h3>
+                  <ScrollArea className="h-[300px] w-full rounded-md border p-4">
+                    <div className="space-y-4">
+                      {debugSteps.map((step, index) => (
+                        <div key={index} className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="font-medium">{step.step}</span>
+                            <span className="text-muted-foreground">{step.timestamp}</span>
+                          </div>
+                          {step.data && (
+                            <pre className="text-xs bg-slate-100 p-2 rounded-md overflow-auto">
+                              {JSON.stringify(step.data, null, 2)}
+                            </pre>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </div>
             </DialogContent>
           </Dialog>
         </div>
