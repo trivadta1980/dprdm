@@ -698,18 +698,33 @@ export default function CrosswalkPage() {
         </Card>
 
         {mappings.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Debug Information - Save Mappings Payload</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-                <pre className="text-sm">
-                  {JSON.stringify(generatePayload(), null, 2)}
-                </pre>
-              </ScrollArea>
-            </CardContent>
-          </Card>
+          <>
+            <Card>
+              <CardHeader>
+                <CardTitle>Debug Information - CSV Import Data</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                  <pre className="text-sm">
+                    {JSON.stringify(mappings, null, 2)}
+                  </pre>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Debug Information - Save Mappings Payload</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                  <pre className="text-sm">
+                    {JSON.stringify(generatePayload(), null, 2)}
+                  </pre>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </>
         )}
       </div>
     </MainLayout>
