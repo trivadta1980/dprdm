@@ -29,8 +29,8 @@ export function Sidebar({ className }: SidebarProps) {
     ...(isAdmin
       ? [
           {
-            title: "User Management",
-            href: "/manage-users",
+            title: "Users",
+            href: "/users",
             icon: Users,
           },
           {
