@@ -49,7 +49,7 @@ export default function UsersPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
 
-  // Forms
+  // Create form
   const createForm = useForm<InsertUser>({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
@@ -59,6 +59,7 @@ export default function UsersPage() {
     }
   });
 
+  // Edit form
   const editForm = useForm<UpdateUser>({
     resolver: zodResolver(updateUserSchema),
     defaultValues: {
@@ -70,23 +71,39 @@ export default function UsersPage() {
   // Queries
   const { data: users, isLoading: loadingUsers } = useQuery<User[]>({
     queryKey: ["/api/users"],
-    queryFn: () => apiRequest("GET", "/api/users").then(res => res.json())
+    queryFn: async () => {
+      console.log('Fetching users...');
+      const res = await apiRequest("GET", "/api/users");
+      const data = await res.json();
+      console.log('Users fetched:', data);
+      return data;
+    }
   });
 
   const { data: roles } = useQuery<Role[]>({
     queryKey: ["/api/roles"],
-    queryFn: () => apiRequest("GET", "/api/roles").then(res => res.json())
+    queryFn: async () => {
+      console.log('Fetching roles...');
+      const res = await apiRequest("GET", "/api/roles");
+      const data = await res.json();
+      console.log('Roles fetched:', data);
+      return data;
+    }
   });
 
-  // Mutations
+  // Create mutation
   const createUserMutation = useMutation({
     mutationFn: async (data: InsertUser) => {
+      console.log('Creating user with data:', data);
       const res = await apiRequest("POST", "/api/register", data);
       if (!res.ok) {
         const error = await res.json();
+        console.error('Create user error:', error);
         throw new Error(error.message || "Failed to create user");
       }
-      return res.json() as Promise<User>;
+      const result = await res.json();
+      console.log('Create user response:', result);
+      return result as User;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -98,6 +115,7 @@ export default function UsersPage() {
       });
     },
     onError: (error: Error) => {
+      console.error('Create mutation error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to create user",
@@ -106,14 +124,19 @@ export default function UsersPage() {
     }
   });
 
+  // Update mutation
   const updateUserMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: UpdateUser }) => {
+      console.log('Updating user:', id, 'with data:', data);
       const res = await apiRequest("PATCH", `/api/users/${id}`, data);
       if (!res.ok) {
         const error = await res.json();
+        console.error('Update user error:', error);
         throw new Error(error.message || "Failed to update user");
       }
-      return res.json() as Promise<User>;
+      const result = await res.json();
+      console.log('Update user response:', result);
+      return result as User;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -126,6 +149,7 @@ export default function UsersPage() {
       });
     },
     onError: (error: Error) => {
+      console.error('Update mutation error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to update user",
@@ -134,11 +158,14 @@ export default function UsersPage() {
     }
   });
 
+  // Delete mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (id: number) => {
+      console.log('Deleting user:', id);
       const res = await apiRequest("DELETE", `/api/users/${id}`);
       if (!res.ok) {
         const error = await res.json();
+        console.error('Delete user error:', error);
         throw new Error(error.message || "Failed to delete user");
       }
     },
@@ -150,6 +177,7 @@ export default function UsersPage() {
       });
     },
     onError: (error: Error) => {
+      console.error('Delete mutation error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to delete user",
@@ -160,6 +188,7 @@ export default function UsersPage() {
 
   // Form handlers
   const handleCreateSubmit = (data: InsertUser) => {
+    console.log('Create form submitted with data:', data);
     createUserMutation.mutate({
       ...data,
       password: "password123", // Default password
@@ -168,8 +197,12 @@ export default function UsersPage() {
   };
 
   const handleEditSubmit = (data: UpdateUser) => {
-    if (!editingUser) return;
+    if (!editingUser) {
+      console.error('No user selected for editing');
+      return;
+    }
 
+    console.log('Edit form submitted with data:', data);
     updateUserMutation.mutate({
       id: editingUser.id,
       data: {
@@ -180,6 +213,7 @@ export default function UsersPage() {
   };
 
   const handleEditClick = (user: User) => {
+    console.log('Edit clicked for user:', user);
     setEditingUser(user);
     editForm.reset({
       email: user.email,
