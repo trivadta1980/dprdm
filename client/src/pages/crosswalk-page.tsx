@@ -300,11 +300,15 @@ export default function CrosswalkPage() {
 
     try {
       const text = await file.text();
+      console.log('CSV Content:', text); // Debug log
+
       const records = parse(text, {
         columns: true,
         skip_empty_lines: true,
         trim: true
       });
+
+      console.log('Parsed Records:', records); // Debug log
 
       if (!Array.isArray(records) || records.length === 0) {
         setUploadError("The CSV file is empty or invalid");
@@ -325,12 +329,17 @@ export default function CrosswalkPage() {
         confidence: calculateSimilarity(record.sourceValue, record.targetValue)
       }));
 
-      setMappings(newMappings);
+      console.log('New Mappings:', newMappings); // Debug log
+
+      // Create a new array instead of mutating the state directly
+      setMappings([...newMappings]);
+
       toast({
         title: "Success",
         description: `Imported ${newMappings.length} mappings from CSV`,
       });
     } catch (error) {
+      console.error('CSV Import Error:', error);
       setUploadError("Failed to parse CSV file: " + (error as Error).message);
     }
 
