@@ -96,7 +96,7 @@ export default function UsersPage() {
   const createUserMutation = useMutation({
     mutationFn: async (data: InsertUser) => {
       addDebugStep("Starting user creation", data);
-      const res = await apiRequest("POST", "/api/users", data);
+      const res = await apiRequest("POST", "/api/register", data);
       if (!res.ok) {
         const error = await res.json();
         addDebugStep("Create user error", error);
@@ -136,6 +136,11 @@ export default function UsersPage() {
         email: !data.email,
         username: !data.username,
         roleId: !data.roleId
+      });
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
       });
       return;
     }
