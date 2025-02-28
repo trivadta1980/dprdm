@@ -30,7 +30,7 @@ export function Sidebar({ className }: SidebarProps) {
       ? [
           {
             title: "User Management",
-            href: "/users",
+            href: "/manage-users",
             icon: Users,
           },
           {

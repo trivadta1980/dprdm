@@ -6,11 +6,9 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
-import UsersPage from "@/pages/users-page";
+import ManageUsersPage from "@/pages/manage-users-page";
 import RolesPage from "@/pages/roles-page";
 import ReferenceTypesPage from "@/pages/reference-types-page";
-import PlaceholderPage from "@/pages/placeholder-page";
-import NotFound from "@/pages/not-found";
 import ReferenceDataPage from "@/pages/reference-data-page";
 import ReferenceDataCreatePage from "@/pages/reference-data-create-page";
 import ReferenceDataInstancesPage from "@/pages/reference-data-instances-page";
@@ -20,6 +18,7 @@ import RelationshipValuesPage from "@/pages/relationship-values-page";
 import ApiTestPage from "@/pages/api-test-page";
 import CrosswalkPage from "@/pages/crosswalk-page";
 import CrosswalksListPage from "@/pages/crosswalks-list-page";
+import NotFound from "@/pages/not-found";
 
 function Router() {
   console.log('Router: Initializing routes');
@@ -27,7 +26,7 @@ function Router() {
     <Switch>
       <Route path="/auth" component={AuthPage} />
       <ProtectedRoute path="/" component={HomePage} />
-      <ProtectedRoute path="/users" component={UsersPage} adminOnly />
+      <ProtectedRoute path="/manage-users" component={ManageUsersPage} adminOnly />
       <ProtectedRoute path="/roles" component={RolesPage} adminOnly />
       <ProtectedRoute path="/reference-types" component={ReferenceTypesPage} />
       <ProtectedRoute path="/reference-data" component={ReferenceDataPage} />
