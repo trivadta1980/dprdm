@@ -52,7 +52,7 @@ const apiRequest = async (method: string, url: string, body?: any) => {
   }
 
   return fetch(url, options);
-}
+};
 
 export default function ApiTestPage() {
   const { toast } = useToast();
@@ -160,11 +160,11 @@ export default function ApiTestPage() {
   });
 
   // Fetch roles for the select input
-  const { data: roles, isLoading: rolesLoading } = useQuery({
+  const { data: roles } = useQuery({
     queryKey: ["/api/roles"],
     queryFn: async () => {
       addDebugLog("Fetching roles");
-      const res = await apiRequest("GET", "/api/roles");
+      const res = await fetch("/api/roles");
       const data = await res.json();
       addDebugLog("Roles fetched", data);
       return data;
@@ -175,12 +175,20 @@ export default function ApiTestPage() {
   const createUser = useMutation({
     mutationFn: async (data: InsertUser) => {
       addDebugLog("Creating user", data);
-      const res = await apiRequest("POST", "/api/register", data);
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
       if (!res.ok) {
         const error = await res.json();
         addDebugLog("Create user error", error);
         throw new Error(error.message || "Failed to create user");
       }
+
       const result = await res.json();
       addDebugLog("User created successfully", result);
       return result;
@@ -203,23 +211,24 @@ export default function ApiTestPage() {
     },
   });
 
-  const onSubmit = form.handleSubmit(async (data) => {
-    addDebugLog("Form submitted", data);
+  const onSubmit = async (formData: InsertUser) => {
+    addDebugLog("Form submission started", formData);
     addDebugLog("Form state", form.formState);
 
     try {
-      await createUser.mutateAsync(data);
+      await createUser.mutateAsync(formData);
     } catch (error) {
       addDebugLog("Submit handler error", error);
+      console.error('Submit handler error:', error);
     }
-  });
+  };
 
   return (
     <MainLayout>
       <div className="container mx-auto p-6 space-y-8">
         <h1 className="text-3xl font-bold">API Endpoint Testing</h1>
 
-        <Tabs defaultValue="crosswalks" className="w-full">
+        <Tabs defaultValue="auth" className="w-full">
           <TabsList>
             <TabsTrigger value="auth">Authentication</TabsTrigger>
             <TabsTrigger value="types">Reference Types</TabsTrigger>
@@ -237,7 +246,14 @@ export default function ApiTestPage() {
               <CardContent>
                 <div className="grid grid-cols-2 gap-6">
                   <Form {...form}>
-                    <form onSubmit={onSubmit} className="space-y-4">
+                    <form 
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        addDebugLog("Form submission event triggered");
+                        form.handleSubmit(onSubmit)(e);
+                      }} 
+                      className="space-y-4"
+                    >
                       <FormField
                         control={form.control}
                         name="email"
@@ -298,9 +314,7 @@ export default function ApiTestPage() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {rolesLoading ? (
-                                  <SelectItem value="loading">Loading roles...</SelectItem>
-                                ) : roles?.map((role) => (
+                                {roles?.map((role) => (
                                   <SelectItem
                                     key={role.id}
                                     value={role.id.toString()}
