@@ -230,17 +230,26 @@ export default function CrosswalkPage() {
 
   const { data: existingCrosswalk, isLoading: crosswalkLoading } = useQuery({
     queryKey: [`/api/crosswalks/${id}`],
-    enabled: isEditMode,
+    enabled: isEditMode && !!id,
+    onError: (error) => {
+      console.error("Error loading crosswalk data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load crosswalk data",
+        variant: "destructive",
+      });
+    }
   });
 
   useEffect(() => {
     if (existingCrosswalk && isEditMode) {
-      setMappingName(existingCrosswalk.name);
-      setMappingDescription(existingCrosswalk.description);
-      setSelectedSourceDataset(String(existingCrosswalk.sourceSystemId));
-      setSelectedTargetDataset(String(existingCrosswalk.targetSystemId));
-      setSelectedSourceAttribute(existingCrosswalk.mappingData.sourceAttribute);
-      setMappings(existingCrosswalk.mappingData.mappings);
+      console.log("Loading existing crosswalk data:", existingCrosswalk);
+      setMappingName(existingCrosswalk.name || "");
+      setMappingDescription(existingCrosswalk.description || "");
+      setSelectedSourceDataset(String(existingCrosswalk.sourceSystemId) || null);
+      setSelectedTargetDataset(String(existingCrosswalk.targetSystemId) || null);
+      setSelectedSourceAttribute(existingCrosswalk.mappingData?.sourceAttribute || null);
+      setMappings(existingCrosswalk.mappingData?.mappings || []);
     }
   }, [existingCrosswalk, isEditMode]);
 
@@ -367,6 +376,22 @@ export default function CrosswalkPage() {
     link.click();
     document.body.removeChild(link);
   };
+
+  // Add debug output when in edit mode
+  useEffect(() => {
+    if (isEditMode) {
+      console.log("Edit mode activated, ID:", id);
+      console.log("Existing crosswalk data loaded:", existingCrosswalk);
+      console.log("Current state:", {
+        mappingName,
+        mappingDescription,
+        selectedSourceDataset,
+        selectedTargetDataset,
+        selectedSourceAttribute,
+        mappings
+      });
+    }
+  }, [isEditMode, id, existingCrosswalk]);
 
   return (
     <MainLayout>
