@@ -1,58 +1,85 @@
-import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
+
 import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./lib/queryClient";
+import { lazy, Suspense } from "react";
+import { Route, Router } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
-import { ProtectedRoute } from "@/lib/protected-route";
-import HomePage from "@/pages/home-page";
-import AuthPage from "@/pages/auth-page";
-import ManageUsersPage from "@/pages/manage-users-page";
-import RolesPage from "@/pages/roles-page";
-import ReferenceTypesPage from "@/pages/reference-types-page";
-import ReferenceDataPage from "@/pages/reference-data-page";
-import ReferenceDataCreatePage from "@/pages/reference-data-create-page";
-import ReferenceDataInstancesPage from "@/pages/reference-data-instances-page";
-import HelpPage from "@/pages/help-page";
-import RelationshipsPage from "@/pages/relationships-page";
-import RelationshipValuesPage from "@/pages/relationship-values-page";
-import ApiTestPage from "@/pages/api-test-page";
-import CrosswalkPage from "@/pages/crosswalk-page";
-import CrosswalksListPage from "@/pages/crosswalks-list-page";
-import NotFound from "@/pages/not-found";
+import { SidebarProvider } from "@/components/layout/sidebar";
+import ProtectedRoute from "@/lib/protected-route";
 
-function Router() {
-  return (
-    <Switch>
-      <Route path="/auth" component={AuthPage} />
-      <ProtectedRoute path="/" component={HomePage} />
-      <ProtectedRoute path="/manage-users" component={ManageUsersPage} adminOnly />
-      <ProtectedRoute path="/roles" component={RolesPage} adminOnly />
-      <ProtectedRoute path="/reference-types" component={ReferenceTypesPage} />
-      <ProtectedRoute path="/reference-data" component={ReferenceDataPage} />
-      <ProtectedRoute path="/reference-data/create" component={ReferenceDataCreatePage} />
-      <ProtectedRoute path="/reference-data/:id/instances" component={ReferenceDataInstancesPage} />
-      <ProtectedRoute path="/relationships" component={RelationshipsPage} />
-      <ProtectedRoute path="/relationships/:id/values" component={RelationshipValuesPage} />
-      <ProtectedRoute path="/crosswalks/create" component={CrosswalkPage} />
-      <ProtectedRoute path="/crosswalks/:id/edit" component={CrosswalkPage} />
-      <ProtectedRoute path="/crosswalks/:id" component={CrosswalkPage} />
-      <ProtectedRoute path="/crosswalks" component={CrosswalksListPage} />
-      <ProtectedRoute path="/help" component={HelpPage} />
-      <ProtectedRoute path="/api-test" component={ApiTestPage} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
+// Lazy load pages
+const HomePage = lazy(() => import("@/pages/home-page"));
+const AuthPage = lazy(() => import("@/pages/auth-page"));
+const ManageUsersPage = lazy(() => import("@/pages/manage-users-page"));
+const RolesPage = lazy(() => import("@/pages/roles-page"));
+const ReferenceTypesPage = lazy(() => import("@/pages/reference-types-page"));
+const ReferenceDataPage = lazy(() => import("@/pages/reference-data-page"));
+const RelationshipsPage = lazy(() => import("@/pages/relationships-page"));
+const CrosswalksPage = lazy(() => import("@/pages/crosswalks-page"));
+const ChangePasswordPage = lazy(() => import("@/pages/change-password-page"));
+const ApiTestPage = lazy(() => import("@/pages/api-test-page"));
+const ResetPasswordPage = lazy(() => import("@/pages/reset-password-page"));
 
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router />
-        <Toaster />
+        <SidebarProvider>
+          <Suspense fallback={<div>Loading...</div>}>
+            <Router>
+              <Route path="/auth" component={AuthPage} />
+              <Route path="/reset-password" component={ResetPasswordPage} />
+              <Route path="/">
+                <ProtectedRoute>
+                  <HomePage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/manage-users">
+                <ProtectedRoute adminOnly>
+                  <ManageUsersPage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/roles">
+                <ProtectedRoute adminOnly>
+                  <RolesPage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/reference-types">
+                <ProtectedRoute>
+                  <ReferenceTypesPage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/reference-data">
+                <ProtectedRoute>
+                  <ReferenceDataPage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/relationships">
+                <ProtectedRoute>
+                  <RelationshipsPage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/crosswalks">
+                <ProtectedRoute>
+                  <CrosswalksPage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/change-password">
+                <ProtectedRoute>
+                  <ChangePasswordPage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/api-test">
+                <ProtectedRoute>
+                  <ApiTestPage />
+                </ProtectedRoute>
+              </Route>
+            </Router>
+          </Suspense>
+          <Toaster />
+        </SidebarProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
 }
-
-export default App;

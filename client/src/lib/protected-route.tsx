@@ -1,48 +1,63 @@
+
 import { useAuth } from "@/hooks/use-auth";
-import { Loader2 } from "lucide-react";
-import { Redirect, Route } from "wouter";
+import { useLocation } from "wouter";
+import { ReactNode, useEffect } from "react";
 
-export function ProtectedRoute({
+interface ProtectedRouteProps {
+  children: ReactNode;
+  adminOnly?: boolean;
+}
+
+export default function ProtectedRoute({
+  children,
+  adminOnly = false,
+}: ProtectedRouteProps) {
+  const [, setLocation] = useLocation();
+  const { user, isLoading, isAdmin } = useAuth();
+  const path = window.location.pathname;
+
+  console.log("ProtectedRoute Debug:", {
     path,
-    component: Component,
-    adminOnly = false,
-  }: {
-    path: string;
-    component: React.ComponentType<any>;
-    adminOnly?: boolean;
-  }) {
-    const { user, isLoading } = useAuth();
-    // Force convert roleId to a number to ensure correct comparison
-    const isAdmin = user?.roleId === 1 || Number(user?.roleId) === 1;
-    
-    console.log('ProtectedRoute Debug:', {
-      path,
-      isLoading,
-      hasUser: !!user,
-      isAdmin,
-      roleId: user?.roleId,
-      roleIdType: user ? typeof user.roleId : 'undefined'
-    });
+    isLoading,
+    hasUser: !!user,
+    isAdmin,
+  });
 
-    if (isLoading) {
-      return (
-        <Route path={path}>
-          <div className="flex items-center justify-center min-h-screen">
-            <Loader2 className="h-8 w-8 animate-spin text-border" />
-          </div>
-        </Route>
-      );
+  useEffect(() => {
+    if (!isLoading) {
+      // Not logged in
+      if (!user) {
+        console.log("ProtectedRoute: Redirecting to auth, not authenticated");
+        setLocation("/auth");
+        return;
+      }
+
+      // Require admin but user is not admin
+      if (adminOnly && !isAdmin) {
+        console.log("ProtectedRoute: Redirecting to auth, not authenticated or not admin");
+        setLocation("/");
+        return;
+      }
+
+      console.log("ProtectedRoute: Rendering protected component for path:", path);
     }
+  }, [isLoading, user, adminOnly, isAdmin, setLocation, path]);
 
-    if (!user || (adminOnly && !isAdmin)) {
-      console.log('ProtectedRoute: Redirecting to auth, not authenticated or not admin');
-      return (
-        <Route path={path}>
-          <Redirect to="/auth" />
-        </Route>
-      );
-    }
-
-    console.log('ProtectedRoute: Rendering protected component for path:', path);
-    return <Route path={path} component={Component} />;
+  // Show loading state
+  if (isLoading) {
+    return <div>Loading...</div>;
   }
+
+  // If not logged in, don't render anything (redirect happens in useEffect)
+  if (!user) {
+    return null;
+  }
+
+  // Admin only and user is not admin
+  if (adminOnly && !isAdmin) {
+    return null;
+  }
+
+  // Otherwise render children
+  return <>{children}</>;
+}
