@@ -16,6 +16,7 @@ const ReferenceTypesPage = lazy(() => import("@/pages/reference-types-page"));
 const ReferenceDataPage = lazy(() => import("@/pages/reference-data-page"));
 const RelationshipsPage = lazy(() => import("@/pages/relationships-page"));
 const CrosswalksPage = lazy(() => import("@/pages/crosswalks-list-page"));
+const CrosswalkPage = lazy(() => import("@/pages/crosswalk-page"));
 // Check if the file exists with different name or create it
 const ChangePasswordPage = lazy(() => import("@/pages/change-password"));
 const ApiTestPage = lazy(() => import("@/pages/api-test-page"));
@@ -63,6 +64,11 @@ export default function App() {
               <Route path="/crosswalks">
                 <ProtectedRoute>
                   <CrosswalksPage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/crosswalks/:id/edit">
+                <ProtectedRoute>
+                  <CrosswalkPage />
                 </ProtectedRoute>
               </Route>
               <Route path="/change-password">
