@@ -152,7 +152,13 @@ export default function ManageUsersPage() {
 
   // Handle create form submission
   const onCreateSubmit = createForm.handleSubmit(async (data) => {
-    await createUser.mutateAsync(data);
+    try {
+      await createUser.mutateAsync(data);
+      // Toast and dialog closing are handled in onSuccess callback
+    } catch (error) {
+      // Error handling already done in the mutation
+      console.error("Error creating user:", error);
+    }
   });
 
   // Handle edit form submission
