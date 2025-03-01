@@ -6,8 +6,6 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
-import UsersPage from "@/pages/users-page";
-import UserTestPage from "@/pages/user-test-page";
 import RolesPage from "@/pages/roles-page";
 import ReferenceTypesPage from "@/pages/reference-types-page";
 import ReferenceDataPage from "@/pages/reference-data-page";
@@ -26,8 +24,6 @@ function Router() {
     <Switch>
       <Route path="/auth" component={AuthPage} />
       <ProtectedRoute path="/" component={HomePage} />
-      <ProtectedRoute path="/users" component={UsersPage} adminOnly />
-      <ProtectedRoute path="/users/test" component={UserTestPage} adminOnly />
       <ProtectedRoute path="/roles" component={RolesPage} adminOnly />
       <ProtectedRoute path="/reference-types" component={ReferenceTypesPage} />
       <ProtectedRoute path="/reference-data" component={ReferenceDataPage} />
