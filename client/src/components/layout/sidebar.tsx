@@ -73,9 +73,11 @@ export function Sidebar({ className }: SidebarProps) {
   ];
 
   const filteredMenuItems = menuItems.filter(item => {
-    if (!item.requiresPermission) return true;
-    if (isAdmin) return true;
-    return user?.routes?.includes(item.href);
+    // If no permission required or user is admin, always show the item
+    if (!item.requiresPermission || isAdmin) return true;
+    
+    // Otherwise check if the user has the route in their routes array
+    return Array.isArray(user?.routes) && user.routes.includes(item.href);
   });
 
   return (
