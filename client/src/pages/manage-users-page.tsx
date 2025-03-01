@@ -2,9 +2,9 @@ import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, Pencil } from "lucide-react";
+import { Loader2, Plus, Pencil, AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -47,7 +47,7 @@ export default function ManageUsersPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
 
   // Fetch users
-  const { data: users = [], isLoading: loadingUsers } = useQuery<User[]>({
+  const { data: users = [], isLoading: loadingUsers, refetch } = useQuery<User[]>({
     queryKey: ["/api/users"],
   });
 
@@ -149,6 +149,41 @@ export default function ManageUsersPage() {
       });
     },
   });
+
+  const deleteUser = useMutation({
+    mutationFn: async (userId: number) => {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete user");
+      }
+
+      return true;
+    },
+    onSuccess: () => {
+      toast({
+        title: "User deleted",
+        description: "The user has been successfully deleted",
+      });
+
+      // Refetch the users list
+      refetch();
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to delete user",
+      });
+    },
+  });
+
+  const handleDeleteUser = (userId: number) => {
+    deleteUser.mutate(userId);
+  };
 
   // Handle create form submission
   const onCreateSubmit = createForm.handleSubmit(async (data) => {
@@ -343,127 +378,136 @@ export default function ManageUsersPage() {
                       {user.isActive ? "Active" : "Inactive"}
                     </TableCell>
                     <TableCell>
-                      <Dialog
-                        open={editingUser?.id === user.id}
-                        onOpenChange={(open) => !open && setEditingUser(null)}
-                      >
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleEditUser(user)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Edit User</DialogTitle>
-                          </DialogHeader>
-                          <Form {...editForm}>
-                            <form onSubmit={onEditSubmit} className="space-y-4">
-                              <FormField
-                                control={editForm.control}
-                                name="email"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Email</FormLabel>
-                                    <FormControl>
-                                      <Input type="email" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={editForm.control}
-                                name="username"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Username</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={editForm.control}
-                                name="roleId"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Role</FormLabel>
-                                    <Select
-                                      onValueChange={(value) =>
-                                        field.onChange(Number(value))
-                                      }
-                                      defaultValue={field.value?.toString()}
-                                    >
+                      <div className="flex space-x-2">
+                        <Dialog
+                          open={editingUser?.id === user.id}
+                          onOpenChange={(open) => !open && setEditingUser(null)}
+                        >
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleEditUser(user)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Edit User</DialogTitle>
+                            </DialogHeader>
+                            <Form {...editForm}>
+                              <form onSubmit={onEditSubmit} className="space-y-4">
+                                <FormField
+                                  control={editForm.control}
+                                  name="email"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Email</FormLabel>
                                       <FormControl>
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="Select a role" />
-                                        </SelectTrigger>
+                                        <Input type="email" {...field} />
                                       </FormControl>
-                                      <SelectContent>
-                                        {roles.map((role) => (
-                                          <SelectItem
-                                            key={role.id}
-                                            value={role.id.toString()}
-                                          >
-                                            {role.name}
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={editForm.control}
+                                  name="username"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Username</FormLabel>
+                                      <FormControl>
+                                        <Input {...field} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={editForm.control}
+                                  name="roleId"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Role</FormLabel>
+                                      <Select
+                                        onValueChange={(value) =>
+                                          field.onChange(Number(value))
+                                        }
+                                        defaultValue={field.value?.toString()}
+                                      >
+                                        <FormControl>
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select a role" />
+                                          </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                          {roles.map((role) => (
+                                            <SelectItem
+                                              key={role.id}
+                                              value={role.id.toString()}
+                                            >
+                                              {role.name}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={editForm.control}
+                                  name="isActive"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Status</FormLabel>
+                                      <Select
+                                        onValueChange={(value) =>
+                                          field.onChange(value === "true")
+                                        }
+                                        defaultValue={String(field.value)}
+                                      >
+                                        <FormControl>
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select status" />
+                                          </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                          <SelectItem value="true">
+                                            Active
                                           </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={editForm.control}
-                                name="isActive"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Status</FormLabel>
-                                    <Select
-                                      onValueChange={(value) =>
-                                        field.onChange(value === "true")
-                                      }
-                                      defaultValue={String(field.value)}
-                                    >
-                                      <FormControl>
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                        <SelectItem value="true">
-                                          Active
-                                        </SelectItem>
-                                        <SelectItem value="false">
-                                          Inactive
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <Button
-                                type="submit"
-                                className="w-full"
-                                disabled={updateUser.isPending}
-                              >
-                                {updateUser.isPending && (
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                )}
-                                Update User
-                              </Button>
-                            </form>
-                          </Form>
-                        </DialogContent>
-                      </Dialog>
+                                          <SelectItem value="false">
+                                            Inactive
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <Button
+                                  type="submit"
+                                  className="w-full"
+                                  disabled={updateUser.isPending}
+                                >
+                                  {updateUser.isPending && (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  )}
+                                  Update User
+                                </Button>
+                              </form>
+                            </Form>
+                          </DialogContent>
+                        </Dialog>
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => handleDeleteUser(user.id)}
+                        >
+                          <AlertCircle className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

@@ -71,6 +71,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete user route
+  app.delete("/api/users/:id", async (req, res) => {
+    console.log('DELETE /api/users/:id - Request received for user ID:', req.params.id); // Added logging
+
+    if (!req.isAuthenticated()) {
+      console.log('DELETE /api/users/:id - User not authenticated'); // Added logging
+      return res.sendStatus(401);
+    }
+
+    // Only admin can delete users
+    if (req.user.roleId !== 1) {
+      console.log('DELETE /api/users/:id - Permission denied: User is not admin'); // Added logging
+      return res.sendStatus(403);
+    }
+
+    const userId = Number(req.params.id);
+
+    // Prevent deleting the admin user (assuming user with ID 1 is the main admin)
+    if (userId === 1) {
+      console.log('DELETE /api/users/:id - Cannot delete main admin user'); // Added logging
+      return res.status(403).json({ error: "Cannot delete the main admin user" });
+    }
+
+    try {
+      const success = await storage.deleteUser(userId);
+      
+      if (success) {
+        console.log('DELETE /api/users/:id - User deleted successfully'); // Added logging
+        res.sendStatus(200);
+      } else {
+        console.log('DELETE /api/users/:id - User not found'); // Added logging
+        res.sendStatus(404);
+      }
+    } catch (error) {
+      console.error('DELETE /api/users/:id - Error deleting user:', error); // Added logging
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   // Reference Data Types routes
   app.get("/api/reference-types", async (req, res) => {
     console.log('GET /api/reference-types - Request received'); //Added logging
