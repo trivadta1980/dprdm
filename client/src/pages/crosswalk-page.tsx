@@ -230,6 +230,16 @@ export default function CrosswalkPage() {
 
   const { data: existingCrosswalk, isLoading: crosswalkLoading } = useQuery({
     queryKey: [`/api/crosswalks/${id}`],
+    queryFn: async () => {
+      const response = await fetch(`/api/crosswalks/${id}`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch crosswalk data');
+      }
+      return response.json();
+    },
     enabled: isEditMode && !!id,
     onError: (error) => {
       console.error("Error loading crosswalk data:", error);
@@ -244,12 +254,36 @@ export default function CrosswalkPage() {
   useEffect(() => {
     if (existingCrosswalk && isEditMode) {
       console.log("Loading existing crosswalk data:", existingCrosswalk);
+      
+      // Set basic fields with fallbacks
       setMappingName(existingCrosswalk.name || "");
       setMappingDescription(existingCrosswalk.description || "");
-      setSelectedSourceDataset(String(existingCrosswalk.sourceSystemId) || null);
-      setSelectedTargetDataset(String(existingCrosswalk.targetSystemId) || null);
-      setSelectedSourceAttribute(existingCrosswalk.mappingData?.sourceAttribute || null);
-      setMappings(existingCrosswalk.mappingData?.mappings || []);
+      
+      // Handle numeric IDs properly
+      if (existingCrosswalk.sourceSystemId) {
+        setSelectedSourceDataset(String(existingCrosswalk.sourceSystemId));
+      }
+      
+      if (existingCrosswalk.targetSystemId) {
+        setSelectedTargetDataset(String(existingCrosswalk.targetSystemId));
+      }
+      
+      // Handle mapping data with thorough checks
+      if (existingCrosswalk.mappingData) {
+        if (existingCrosswalk.mappingData.sourceAttribute) {
+          setSelectedSourceAttribute(existingCrosswalk.mappingData.sourceAttribute);
+        }
+        
+        if (Array.isArray(existingCrosswalk.mappingData.mappings)) {
+          setMappings(existingCrosswalk.mappingData.mappings);
+        } else {
+          console.warn("Mappings is not an array:", existingCrosswalk.mappingData.mappings);
+          setMappings([]);
+        }
+      } else {
+        console.warn("No mapping data found in crosswalk");
+        setMappings([]);
+      }
     }
   }, [existingCrosswalk, isEditMode]);
 
@@ -382,6 +416,16 @@ export default function CrosswalkPage() {
     if (isEditMode) {
       console.log("Edit mode activated, ID:", id);
       console.log("Existing crosswalk data loaded:", existingCrosswalk);
+      
+      // Check the structure of mappingData
+      if (existingCrosswalk) {
+        console.log("Mapping data structure:", {
+          hasSourceAttribute: existingCrosswalk.mappingData?.sourceAttribute ? true : false,
+          mappingsArray: Array.isArray(existingCrosswalk.mappingData?.mappings),
+          mappingsLength: existingCrosswalk.mappingData?.mappings?.length || 0
+        });
+      }
+      
       console.log("Current state:", {
         mappingName,
         mappingDescription,
