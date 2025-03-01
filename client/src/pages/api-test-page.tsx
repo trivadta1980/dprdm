@@ -340,7 +340,7 @@ export default function ApiTestPage() {
                               <Input
                                 type="password"
                                 {...field}
-                                value="Password123" // Set default password
+                                value={process.env.DEFAULT_USER_PASSWORD || "Password123"} // Use env variable with fallback
                                 disabled // Disable editing since we're using a default password
                               />
                             </FormControl>
@@ -358,7 +358,7 @@ export default function ApiTestPage() {
                               <Input
                                 type="password"
                                 {...field}
-                                value="Password123" // Set default confirmation
+                                value={process.env.DEFAULT_USER_PASSWORD || "Password123"} // Use env variable with fallback
                                 disabled // Disable editing since we're using a default password
                               />
                             </FormControl>
