@@ -63,8 +63,8 @@ export default function ManageUsersPage() {
       email: "",
       username: "",
       roleId: undefined,
-      password: import.meta.env.DEFAULT_USER_PASSWORD,
-      confirmPassword: import.meta.env.DEFAULT_USER_PASSWORD,
+      password: import.meta.env.VITE_DEFAULT_USER_PASSWORD || "Password123",
+      confirmPassword: import.meta.env.VITE_DEFAULT_USER_PASSWORD || "Password123",
     },
   });
 
@@ -233,7 +233,9 @@ export default function ManageUsersPage() {
                       <FormItem>
                         <FormLabel>Role</FormLabel>
                         <Select
-                          onValueChange={(value) => field.onChange(Number(value))}
+                          onValueChange={(value) =>
+                            field.onChange(parseInt(value))
+                          }
                           defaultValue={field.value?.toString()}
                         >
                           <FormControl>
@@ -266,7 +268,8 @@ export default function ManageUsersPage() {
                           <Input
                             type="password"
                             {...field}
-                            placeholder="Enter password"
+                            value={import.meta.env.VITE_DEFAULT_USER_PASSWORD || "Password123"}
+                            disabled
                           />
                         </FormControl>
                         <FormMessage />
@@ -283,7 +286,8 @@ export default function ManageUsersPage() {
                           <Input
                             type="password"
                             {...field}
-                            placeholder="Confirm password"
+                            value={import.meta.env.VITE_DEFAULT_USER_PASSWORD || "Password123"}
+                            disabled
                           />
                         </FormControl>
                         <FormMessage />
