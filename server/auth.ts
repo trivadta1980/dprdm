@@ -33,7 +33,7 @@ async function generateResetToken() {
   return randomBytes(32).toString("hex");
 }
 
-const DEFAULT_PASSWORD = "password123";
+const DEFAULT_PASSWORD = process.env.DEFAULT_USER_PASSWORD || "Password123";
 
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
@@ -76,12 +76,18 @@ export function setupAuth(app: Express) {
       return res.status(400).send("Email already exists");
     }
 
-    const hashedPassword = await hashPassword(DEFAULT_PASSWORD);
+    // Use submitted password if provided, otherwise use DEFAULT_PASSWORD
+    const passwordToUse = req.body.password || DEFAULT_PASSWORD;
+    const hashedPassword = await hashPassword(passwordToUse);
+    
+    // If password was provided by user, they don't need to change it
+    const requireChange = !req.body.password;
+    
     const user = await storage.createUser({
       ...req.body,
       password: hashedPassword,
-      requirePasswordChange: true,
-      roleId: 3 // Set default role to 'user' (ID 3)
+      requirePasswordChange: requireChange,
+      roleId: req.body.roleId || 3 // Use provided role or default to 'user' (ID 3)
     });
 
     req.login(user, (err) => {
