@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
+  Users,
   UserCog,
   Database,
   GitFork,
@@ -27,6 +28,11 @@ export function Sidebar({ className }: SidebarProps) {
   const menuItems = [
     ...(isAdmin
       ? [
+          {
+            title: "User Management",
+            href: "/manage-users",
+            icon: Users,
+          },
           {
             title: "Role Management",
             href: "/roles",
@@ -66,7 +72,6 @@ export function Sidebar({ className }: SidebarProps) {
     },
   ];
 
-  // Filter menu items based on user role and permissions
   const filteredMenuItems = menuItems.filter(item => {
     if (!item.requiresPermission) return true;
     if (isAdmin) return true;
