@@ -18,6 +18,7 @@ type AuthContextType = {
   registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
   requestResetMutation: UseMutationResult<void, Error, { email: string }>;
   resetPasswordMutation: UseMutationResult<void, Error, z.infer<typeof resetPasswordSchema>>;
+  isAdmin: boolean; // Added isAdmin property
 };
 
 type LoginData = Pick<InsertUser, "username" | "password">;
@@ -126,6 +127,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  // Force convert roleId to a number to ensure correct comparison
+  const isAdmin = user?.roleId === 1 || Number(user?.roleId) === 1;
+
   return (
     <AuthContext.Provider
       value={{
@@ -137,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         registerMutation,
         requestResetMutation,
         resetPasswordMutation,
+        isAdmin, // Pass isAdmin to the context
       }}
     >
       {children}

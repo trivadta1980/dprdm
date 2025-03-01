@@ -25,7 +25,7 @@ export function Sidebar({ className }: SidebarProps) {
   const { user, logoutMutation } = useAuth();
   // Force convert roleId to a number to ensure correct comparison
   const isAdmin = user?.roleId === 1 || Number(user?.roleId) === 1;
-  
+
   console.log('Sidebar Debug:', {
     user: !!user,
     roleId: user?.roleId,
@@ -33,21 +33,26 @@ export function Sidebar({ className }: SidebarProps) {
     isAdmin
   });
 
+  // Define admin menu items separately for clarity
+  const adminMenuItems = [
+    {
+      title: "Manage Users",
+      href: "/manage-users",
+      icon: Users,
+      requiresPermission: true,
+    },
+    {
+      title: "Manage Roles",
+      href: "/roles",
+      icon: UserCog,
+      requiresPermission: true,
+    },
+  ];
+
+  console.log('Admin check before menu creation:', { isAdmin, roleId: user?.roleId });
+
   const menuItems = [
-    ...(isAdmin
-      ? [
-          {
-            title: "User Management",
-            href: "/manage-users",
-            icon: Users,
-          },
-          {
-            title: "Role Management",
-            href: "/roles",
-            icon: UserCog,
-          },
-        ]
-      : []),
+    ...(isAdmin ? adminMenuItems : []),
     {
       title: "Reference Data Types",
       href: "/reference-types",
@@ -83,7 +88,7 @@ export function Sidebar({ className }: SidebarProps) {
   const filteredMenuItems = menuItems.filter(item => {
     // If no permission required or user is admin, always show the item
     if (!item.requiresPermission || isAdmin) return true;
-    
+
     // Otherwise check if the user has the route in their routes array
     return Array.isArray(user?.routes) && user.routes.includes(item.href);
   });
