@@ -16,7 +16,8 @@ const ReferenceTypesPage = lazy(() => import("@/pages/reference-types-page"));
 const ReferenceDataPage = lazy(() => import("@/pages/reference-data-page"));
 const RelationshipsPage = lazy(() => import("@/pages/relationships-page"));
 const CrosswalksPage = lazy(() => import("@/pages/crosswalks-list-page"));
-const ChangePasswordPage = lazy(() => import("@/pages/change-password-page"));
+// Check if the file exists with different name or create it
+const ChangePasswordPage = lazy(() => import("@/pages/change-password"));
 const ApiTestPage = lazy(() => import("@/pages/api-test-page"));
 const ResetPasswordPage = lazy(() => import("@/pages/reset-password-page"));
 

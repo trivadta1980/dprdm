@@ -19,6 +19,7 @@ type AuthContextType = {
   requestResetMutation: UseMutationResult<void, Error, { email: string }>;
   resetPasswordMutation: UseMutationResult<void, Error, z.infer<typeof resetPasswordSchema>>;
   isAdmin: boolean; // Added isAdmin property
+  changePassword: (currentPassword: string, newPassword: string) => Promise<any>; // Added changePassword function
 };
 
 type LoginData = Pick<InsertUser, "username" | "password">;
@@ -130,6 +131,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Force convert roleId to a number to ensure correct comparison
   const isAdmin = user?.roleId === 1 || Number(user?.roleId) === 1;
 
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    const response = await fetch("/api/auth/change-password", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to change password");
+    }
+
+    return await response.json();
+  };
+
+
   return (
     <AuthContext.Provider
       value={{
@@ -142,6 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         requestResetMutation,
         resetPasswordMutation,
         isAdmin, // Pass isAdmin to the context
+        changePassword,
       }}
     >
       {children}
