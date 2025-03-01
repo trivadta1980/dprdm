@@ -147,15 +147,15 @@ export default function ApiTestPage() {
     );
   };
 
-  // Initialize form
+  // Initialize form with valid default password values
   const form = useForm<InsertUser>({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
       email: "",
       username: "",
       roleId: undefined,
-      password: "password123",
-      confirmPassword: "password123"
+      password: "Password123", // Meets password requirements
+      confirmPassword: "Password123" // Matches password
     }
   });
 
@@ -174,7 +174,7 @@ export default function ApiTestPage() {
   // Create user mutation
   const createUser = useMutation({
     mutationFn: async (data: InsertUser) => {
-      addDebugLog("Creating user", data);
+      addDebugLog("Starting user creation", data);
       const res = await fetch("/api/register", {
         method: "POST",
         headers: {
@@ -196,6 +196,7 @@ export default function ApiTestPage() {
     onSuccess: () => {
       addDebugLog("Create user mutation succeeded");
       form.reset();
+      setDebugLogs([]); // Clear debug logs on success
       toast({
         title: "Success",
         description: "User created successfully",
@@ -212,8 +213,9 @@ export default function ApiTestPage() {
   });
 
   const onSubmit = async (formData: InsertUser) => {
+    setDebugLogs([]); // Clear previous debug logs
     addDebugLog("Form submission started", formData);
-    addDebugLog("Form state", form.formState);
+    addDebugLog("Form validation state", form.formState);
 
     try {
       await createUser.mutateAsync(formData);
@@ -246,12 +248,12 @@ export default function ApiTestPage() {
               <CardContent>
                 <div className="grid grid-cols-2 gap-6">
                   <Form {...form}>
-                    <form 
+                    <form
                       onSubmit={(e) => {
                         e.preventDefault();
                         addDebugLog("Form submission event triggered");
                         form.handleSubmit(onSubmit)(e);
-                      }} 
+                      }}
                       className="space-y-4"
                     >
                       <FormField
@@ -261,9 +263,9 @@ export default function ApiTestPage() {
                           <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="email" 
-                                placeholder="test@example.com" 
+                              <Input
+                                type="email"
+                                placeholder="test@example.com"
                                 {...field}
                                 onChange={(e) => {
                                   field.onChange(e);
@@ -282,8 +284,8 @@ export default function ApiTestPage() {
                           <FormItem>
                             <FormLabel>Username</FormLabel>
                             <FormControl>
-                              <Input 
-                                placeholder="testuser" 
+                              <Input
+                                placeholder="testuser"
                                 {...field}
                                 onChange={(e) => {
                                   field.onChange(e);
@@ -328,6 +330,42 @@ export default function ApiTestPage() {
                           </FormItem>
                         )}
                       />
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="password"
+                                {...field}
+                                value="Password123" // Set default password
+                                disabled // Disable editing since we're using a default password
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Confirm Password</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="password"
+                                {...field}
+                                value="Password123" // Set default confirmation
+                                disabled // Disable editing since we're using a default password
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       <Button
                         type="submit"
                         className="w-full"
@@ -351,9 +389,9 @@ export default function ApiTestPage() {
                       <CardTitle>Debug Log</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         className="mb-4"
                         onClick={() => setDebugLogs([])}
                       >
