@@ -1,4 +1,3 @@
-
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { lazy, Suspense } from "react";
@@ -16,7 +15,7 @@ const RolesPage = lazy(() => import("@/pages/roles-page"));
 const ReferenceTypesPage = lazy(() => import("@/pages/reference-types-page"));
 const ReferenceDataPage = lazy(() => import("@/pages/reference-data-page"));
 const RelationshipsPage = lazy(() => import("@/pages/relationships-page"));
-const CrosswalksPage = lazy(() => import("@/pages/crosswalks-page"));
+const CrosswalksPage = lazy(() => import("@/pages/crosswalks-list-page"));
 const ChangePasswordPage = lazy(() => import("@/pages/change-password-page"));
 const ApiTestPage = lazy(() => import("@/pages/api-test-page"));
 const ResetPasswordPage = lazy(() => import("@/pages/reset-password-page"));
