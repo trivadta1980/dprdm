@@ -12,11 +12,16 @@ export function ProtectedRoute({
     adminOnly?: boolean;
   }) {
     const { user, isLoading } = useAuth();
+    // Force convert roleId to a number to ensure correct comparison
+    const isAdmin = user?.roleId === 1 || Number(user?.roleId) === 1;
+    
     console.log('ProtectedRoute Debug:', {
       path,
       isLoading,
       hasUser: !!user,
-      isAdmin: user?.roleId === 1
+      isAdmin,
+      roleId: user?.roleId,
+      roleIdType: user ? typeof user.roleId : 'undefined'
     });
 
     if (isLoading) {
@@ -29,7 +34,7 @@ export function ProtectedRoute({
       );
     }
 
-    if (!user || (adminOnly && user.roleId !== 1)) {
+    if (!user || (adminOnly && !isAdmin)) {
       console.log('ProtectedRoute: Redirecting to auth, not authenticated or not admin');
       return (
         <Route path={path}>

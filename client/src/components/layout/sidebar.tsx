@@ -23,7 +23,15 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
-  const isAdmin = user?.roleId === 1;
+  // Force convert roleId to a number to ensure correct comparison
+  const isAdmin = user?.roleId === 1 || Number(user?.roleId) === 1;
+  
+  console.log('Sidebar Debug:', {
+    user: !!user,
+    roleId: user?.roleId,
+    roleIdType: user ? typeof user.roleId : 'undefined',
+    isAdmin
+  });
 
   const menuItems = [
     ...(isAdmin
