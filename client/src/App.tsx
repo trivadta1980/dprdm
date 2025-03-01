@@ -4,7 +4,7 @@ import { lazy, Suspense } from "react";
 import { Route, Router } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
-import { SidebarProvider } from "@/components/layout/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import ProtectedRoute from "@/lib/protected-route";
 
 // Lazy load pages
