@@ -256,6 +256,40 @@ export default function ManageUsersPage() {
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={createForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            {...field}
+                            placeholder="Enter password"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            {...field}
+                            placeholder="Confirm password"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <Button
                     type="submit"
                     className="w-full"
