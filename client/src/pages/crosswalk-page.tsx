@@ -239,11 +239,15 @@ export default function CrosswalkPage() {
   }, [mappings]);
 
   useEffect(() => {
-    console.log('Filtering mappings from array:', JSON.stringify(mappings));
+    console.log('FILTERING DEBUG - Starting filtering process');
+    console.log('FILTERING DEBUG - Mappings state before filtering:', JSON.stringify(mappings));
+    console.log('FILTERING DEBUG - Filtering mappings from array:', JSON.stringify(mappings));
+    console.log('FILTERING DEBUG - Array.isArray(mappings):', Array.isArray(mappings));
+    console.log('FILTERING DEBUG - mappings.length:', mappings?.length);
 
     // Ensure mappings is actually an array before filtering
     if (!Array.isArray(mappings)) {
-      console.warn('Mappings is not an array, cannot filter');
+      console.warn('FILTERING DEBUG - Mappings is not an array, cannot filter');
       setFilteredMappings([]);
       return;
     }
@@ -278,9 +282,21 @@ export default function CrosswalkPage() {
       return sourceMatch && targetMatch && confidenceMatch;
     });
 
-    console.log('Filtered mappings result:', JSON.stringify(filteredMappings));
+    console.log('FILTERING DEBUG - Filtered mappings result:', JSON.stringify(filteredMappings));
+    console.log('FILTERING DEBUG - Filter conditions:', {
+      sourceFilter,
+      targetFilter,
+      confidenceOperator,
+      confidenceValue
+    });
+    
     // Update the filteredMappings state to trigger a re-render
     setFilteredMappings(filteredMappings);
+    
+    // Check what's displayed in the debug section
+    setTimeout(() => {
+      console.log('FILTERING DEBUG - Save Mappings Payload:', JSON.stringify(generatePayload()));
+    }, 100);
 
   }, [mappings, sourceFilter, targetFilter, confidenceOperator, confidenceValue]);
 
@@ -367,12 +383,13 @@ export default function CrosswalkPage() {
 
         // Process mappings array
         if (Array.isArray(existingCrosswalk.mappingData.mappings)) {
-          console.log("Loading all mappings from DB:", JSON.stringify(existingCrosswalk.mappingData.mappings));
-          console.log("Mappings array length:", existingCrosswalk.mappingData.mappings.length);
+          console.log("DETAILED DEBUG - Loading all mappings from DB:", JSON.stringify(existingCrosswalk.mappingData.mappings));
+          console.log("DETAILED DEBUG - Raw mappingData object:", JSON.stringify(existingCrosswalk.mappingData));
+          console.log("DETAILED DEBUG - Mappings array length:", existingCrosswalk.mappingData.mappings.length);
 
           // Inspect each mapping in the array
           existingCrosswalk.mappingData.mappings.forEach((mapping, index) => {
-            console.log(`Mapping ${index}:`, JSON.stringify(mapping));
+            console.log(`DETAILED DEBUG - Mapping ${index}:`, JSON.stringify(mapping));
           });
 
           // Deep clone to ensure we get a completely new array
@@ -382,13 +399,18 @@ export default function CrosswalkPage() {
             confidence: mapping.confidence
           }));
 
-          console.log("Cloned mappings to set:", JSON.stringify(mappingsClone));
-          console.log("Setting mappings state with array of length:", mappingsClone.length);
+          console.log("DETAILED DEBUG - Cloned mappings to set:", JSON.stringify(mappingsClone));
+          console.log("DETAILED DEBUG - Setting mappings state with array of length:", mappingsClone.length);
 
           // Force a new array reference to ensure React detects the change
           setMappings([...mappingsClone]);
+          
+          // Log after state update
+          setTimeout(() => {
+            console.log("DETAILED DEBUG - Mappings state after update:", JSON.stringify(mappings));
+          }, 0);
         } else {
-          console.warn("Mappings is not an array:", existingCrosswalk.mappingData.mappings);
+          console.warn("DETAILED DEBUG - Mappings is not an array:", existingCrosswalk.mappingData.mappings);
           setMappings([]);
         }
       } else {
