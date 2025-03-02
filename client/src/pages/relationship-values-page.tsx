@@ -36,33 +36,42 @@ import type {
 } from "@shared/schema";
 
 export default function RelationshipValuesPage() {
+  // Get the relationship ID from the URL parameters
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
 
+  console.log('RelationshipValuesPage mounted with ID:', id); // Debug log
+
   // Fetch relationship details
-  const { data: relationship } = useQuery<Relationship>({
+  const { data: relationship, isLoading: isLoadingRelationship } = useQuery<Relationship>({
     queryKey: [`/api/relationships/${id}`],
     enabled: !!id,
+    onSuccess: (data) => console.log('Relationship data loaded:', data), // Debug log
+    onError: (error) => console.error('Error loading relationship:', error), // Debug log
   });
 
   // Fetch relationship values
   const { data: values = [], isLoading: isLoadingValues } = useQuery<RelationshipValue[]>({
     queryKey: [`/api/relationships/${id}/values`],
     enabled: !!id,
+    onSuccess: (data) => console.log('Values loaded:', data), // Debug log
+    onError: (error) => console.error('Error loading values:', error), // Debug log
   });
 
   // Fetch source and target datasets
   const { data: sourceDataSet } = useQuery<ReferenceDataSet>({
     queryKey: [`/api/reference-data/${relationship?.sourceDataSetId}`],
     enabled: !!relationship?.sourceDataSetId,
+    onSuccess: (data) => console.log('Source dataset loaded:', data), // Debug log
   });
 
   const { data: targetDataSet } = useQuery<ReferenceDataSet>({
     queryKey: [`/api/reference-data/${relationship?.targetDataSetId}`],
     enabled: !!relationship?.targetDataSetId,
+    onSuccess: (data) => console.log('Target dataset loaded:', data), // Debug log
   });
 
   // Fetch available targets for selected source
@@ -147,6 +156,35 @@ export default function RelationshipValuesPage() {
     return instance && field in instance ? String(instance[field]) : instanceId;
   }
 
+  // Show loading state if any of the required data is still loading
+  if (isLoadingRelationship || isLoadingValues) {
+    return (
+      <MainLayout>
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Show error state if relationship is not found
+  if (!relationship) {
+    return (
+      <MainLayout>
+        <div className="max-w-6xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-red-600">Error</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Relationship not found or you don't have permission to view it.</p>
+            </CardContent>
+          </Card>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <div className="max-w-6xl mx-auto space-y-6">
@@ -156,13 +194,16 @@ export default function RelationshipValuesPage() {
               <GitFork className="h-5 w-5" />
               Relationship Values: {relationship?.name}
             </CardTitle>
-            <Dialog open={isDialogOpen} onOpenChange={(open) => {
-              if (!open) {
-                setSelectedSource(null);
-                setSelectedTarget(null);
-              }
-              setIsDialogOpen(open);
-            }}>
+            <Dialog
+              open={isDialogOpen}
+              onOpenChange={(open) => {
+                if (!open) {
+                  setSelectedSource(null);
+                  setSelectedTarget(null);
+                }
+                setIsDialogOpen(open);
+              }}
+            >
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
