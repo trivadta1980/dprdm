@@ -838,11 +838,21 @@ app.get('/api/crosswalks/debug', async (req, res) => {
     // Get all crosswalks with their raw data
     const crosswalks = await storage.getAllCrosswalkMappings();
     
-    console.log('GET /api/crosswalks/debug - Raw data fetched successfully');
+    // Add more detailed logging for debugging
+    console.log('GET /api/crosswalks/debug - Raw data fetched successfully, count:', crosswalks.length);
+    console.log('GET /api/crosswalks/debug - First record sample:', 
+                crosswalks.length > 0 ? JSON.stringify(crosswalks[0]) : 'No records');
+    
+    // Add a specific mapping data example for debugging
+    if (crosswalks.length > 0 && crosswalks[0].mappingData) {
+      console.log('GET /api/crosswalks/debug - First record mapping data:', 
+                  JSON.stringify(crosswalks[0].mappingData));
+    }
+    
     return res.json(crosswalks);
   } catch (error) {
     console.error('GET /api/crosswalks/debug - Error:', error);
-    return res.status(500).json({ error: 'Failed to fetch crosswalk debug data' });
+    return res.status(500).json({ error: String(error) });
   }
 });
 
