@@ -82,6 +82,7 @@ export default function App() {
                   <ApiTestPage />
                 </ProtectedRoute>
               </Route>
+              <Route path="/debug" component={DebugPanel} /> {/* Added debug route */}
             </Router>
           </Suspense>
           <Toaster />

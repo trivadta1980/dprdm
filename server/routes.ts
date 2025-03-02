@@ -826,6 +826,26 @@ app.get('/api/crosswalks/debug', async (req, res) => {
     }
   });
 
+// Debug endpoint to get raw crosswalk data
+app.get('/api/crosswalks/debug', async (req, res) => {
+  try {
+    console.log('GET /api/crosswalks/debug - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/crosswalks/debug - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    
+    // Get all crosswalks with their raw data
+    const crosswalks = await storage.getAllCrosswalkMappings();
+    
+    console.log('GET /api/crosswalks/debug - Raw data fetched successfully');
+    return res.json(crosswalks);
+  } catch (error) {
+    console.error('GET /api/crosswalks/debug - Error:', error);
+    return res.status(500).json({ error: 'Failed to fetch crosswalk debug data' });
+  }
+});
+
 
   const httpServer = createServer(app);
   return httpServer;
