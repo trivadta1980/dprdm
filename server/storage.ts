@@ -3,7 +3,7 @@ import { db } from "./db";
 import { eq, or, and, sql, desc } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
-import { pool } from "./db";
+import { Pool } from '@neondatabase/serverless';
 import { type ReferenceDataType, type InsertReferenceDataType, type ReferenceDataTypeSchema } from "@shared/schema"; // Import necessary types
 import { referenceDataTypes, referenceDataTypeSchemas } from "@shared/schema"; //Import necessary tables
 import { type ReferenceDataSet, type InsertReferenceDataSet, type ReferenceDataInstance } from "@shared/schema"; //Import necessary types for ReferenceDataSet
@@ -108,8 +108,11 @@ export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
 
   constructor() {
+    // Create a new pool specifically for the session store
+    const sessionPool = new Pool({ connectionString: process.env.DATABASE_URL });
+    
     this.sessionStore = new PostgresSessionStore({
-      pool,
+      pool: sessionPool,
       createTableIfMissing: true,
     });
   }
