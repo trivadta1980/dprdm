@@ -989,8 +989,7 @@ export default function CrosswalkPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Debug Information - Save Mappings Payload</CardTitle>
-              </CardHeader>
+                <CardTitle>Debug Information - Save Mappings Payload</CardTitle>              </CardHeader>
               <CardContent>
                 <ScrollArea className="h[200px] w-full rounded-md border p-4">
                   <pre className="text-sm">
