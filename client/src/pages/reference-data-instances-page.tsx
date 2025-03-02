@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Loader2, ArrowLeft, Plus, Pencil, Trash2, History, Database, Upload, Download } from "lucide-react";
 import type { ReferenceDataSet, ReferenceDataInstance, HistoryEntry } from "@shared/schema";
-import { useLocation } from "wouter";
+import { useLocation, useParams } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -30,14 +30,11 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState, useRef } from "react";
 import { format } from "date-fns";
 
-interface Params {
-  id: string;
-}
-
-export default function ReferenceDataInstancesPage({ params }: { params: Params }) {
+export default function ReferenceDataInstancesPage() {
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
-  const dataSetId = Number(params.id);
+  const params = useParams("/reference-data/:id/instances");
+  const dataSetId = params ? Number(params.id) : null;
   const [editingDataSet, setEditingDataSet] = useState<ReferenceDataInstance | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
@@ -291,7 +288,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     }
   };
 
-  function onSubmit(data: InstanceFormData) {
+  const onSubmit = (data: InstanceFormData) => {
     if (editingDataSet) {
       editMutation.mutate({ id: editingDataSet.id, data });
     } else {
@@ -299,7 +296,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     }
   }
 
-  function handleEdit(instance: { id: string } & ReferenceDataInstance) {
+  const handleEdit = (instance: { id: string } & ReferenceDataInstance) => {
     setEditingDataSet(instance);
     // Pre-fill form with instance data
     Object.entries(instance).forEach(([key, value]) => {
@@ -310,13 +307,13 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     setIsDialogOpen(true);
   }
 
-  function handleDelete(instanceId: string) {
+  const handleDelete = (instanceId: string) => {
     if (window.confirm("Are you sure you want to delete this instance?")) {
       deleteMutation.mutate(instanceId);
     }
   }
 
-  function handleShowHistory(instance: { id: string } & ReferenceDataInstance) {
+  const handleShowHistory = (instance: { id: string } & ReferenceDataInstance) => {
     setSelectedInstanceHistory({
       id: instance.id,
       history: instance._history || []
@@ -324,7 +321,7 @@ export default function ReferenceDataInstancesPage({ params }: { params: Params 
     setIsHistoryDialogOpen(true);
   }
 
-  function handleDialogOpenChange(open: boolean) {
+  const handleDialogOpenChange = (open: boolean) => {
     if (!open) {
       form.reset();
       setEditingDataSet(null);
