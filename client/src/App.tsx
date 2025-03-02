@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import ProtectedRoute from "@/lib/protected-route";
-import DebugPanel from '@/pages/debug-panel'; // Added import for DebugPanel
+import DebugPanel from '@/pages/debug-panel';
 
 // Lazy load pages
 const HomePage = lazy(() => import("@/pages/home-page"));
@@ -15,10 +15,10 @@ const ManageUsersPage = lazy(() => import("@/pages/manage-users-page"));
 const RolesPage = lazy(() => import("@/pages/roles-page"));
 const ReferenceTypesPage = lazy(() => import("@/pages/reference-types-page"));
 const ReferenceDataPage = lazy(() => import("@/pages/reference-data-page"));
+const ReferenceDataCreatePage = lazy(() => import("@/pages/reference-data-create-page"));
 const RelationshipsPage = lazy(() => import("@/pages/relationships-page"));
 const CrosswalksPage = lazy(() => import("@/pages/crosswalks-list-page"));
 const CrosswalkPage = lazy(() => import("@/pages/crosswalk-page"));
-// Check if the file exists with different name or create it
 const ChangePasswordPage = lazy(() => import("@/pages/change-password"));
 const ApiTestPage = lazy(() => import("@/pages/api-test-page"));
 const ResetPasswordPage = lazy(() => import("@/pages/reset-password-page"));
@@ -52,6 +52,12 @@ export default function App() {
                   <ReferenceTypesPage />
                 </ProtectedRoute>
               </Route>
+              {/* Add create route before the main reference-data route */}
+              <Route path="/reference-data/create">
+                <ProtectedRoute>
+                  <ReferenceDataCreatePage />
+                </ProtectedRoute>
+              </Route>
               <Route path="/reference-data">
                 <ProtectedRoute>
                   <ReferenceDataPage />
@@ -82,7 +88,7 @@ export default function App() {
                   <ApiTestPage />
                 </ProtectedRoute>
               </Route>
-              <Route path="/debug" component={DebugPanel} /> {/* Added debug route */}
+              <Route path="/debug" component={DebugPanel} />
             </Router>
           </Suspense>
           <Toaster />
