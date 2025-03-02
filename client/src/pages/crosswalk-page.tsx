@@ -224,32 +224,24 @@ export default function CrosswalkPage() {
 
   const generatePayload = () => {
     if (!selectedSourceDataset || !selectedTargetDataset || !selectedSourceAttribute || !mappingName) {
-      console.log("Generate Payload - Missing required fields:", { 
-        selectedSourceDataset, 
-        selectedTargetDataset, 
-        selectedSourceAttribute, 
-        mappingName 
-      });
       return null;
     }
 
-    // Log the current state of mappings before generating payload
-    console.log("Generate Payload - Current mappings:", mappings);
-    console.log("Generate Payload - Current filtered mappings:", filteredMappings);
-
-    const payload = {
+    return {
       name: mappingName,
       description: mappingDescription,
       sourceSystemId: Number(selectedSourceDataset),
       targetSystemId: Number(selectedTargetDataset),
       mappingData: {
         sourceAttribute: selectedSourceAttribute,
-        mappings: mappings // Use the full mappings array, not filtered
+        targetAttribute: selectedSourceAttribute,
+        mappings: mappings.map(m => ({
+          sourceValue: m.sourceValue,
+          targetValue: m.targetValue,
+          confidence: m.confidence
+        }))
       }
     };
-
-    console.log("Generate Payload - Final payload:", payload);
-    return payload;
   };
 
   const { data: existingCrosswalk, isLoading: crosswalkLoading } = useQuery({
@@ -360,9 +352,8 @@ export default function CrosswalkPage() {
 
     if (!file) return;
 
-    if (file.type !== "text/csv" && file.type !== 'application/csv' && !file.name.endsWith('.csv')) {
+    if (file.type !== "text/csv") {
       setUploadError("Please upload a CSV file");
-      console.error("CSV Import - Invalid file type:", file.type);
       return;
     }
 
@@ -401,7 +392,6 @@ export default function CrosswalkPage() {
 
       // Create a new array instead of mutating the state directly
       setMappings([...newMappings]);
-      setFilteredMappings([...newMappings]); // Update filteredMappings as well
 
       toast({
         title: "Success",
@@ -664,127 +654,129 @@ export default function CrosswalkPage() {
                     <AlertDescription>{uploadError}</AlertDescription>
                   </Alert>
                 )}
-                <div className="border rounded-md overflow-hidden">
-                    <div className="p-2 bg-muted">
-                      <span className="text-sm font-medium">
-                        {mappings.length} total mappings / {filteredMappings.length} displayed after filtering
-                      </span>
-                    </div>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-1/3">Source Value</TableHead>
-                          <TableHead className="w-1/3">Target Value</TableHead>
-                          <TableHead className="w-1/6">Confidence</TableHead>
-                          <TableHead className="w-1/6">Actions</TableHead>
+                <div className="border rounded-lg">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>
+                          <div className="space-y-2">
+                            <span>Source Value</span>
+                            <Input
+                              placeholder="Filter source..."
+                              value={sourceFilter}
+                              onChange={(e) => setSourceFilter(e.target.value)}
+                              className="w-full"
+                            />
+                          </div>
+                        </TableHead>
+                        <TableHead>
+                          <div className="space-y-2">
+                            <span>Target Value</span>
+                            <Input
+                              placeholder="Filter target..."
+                              value={targetFilter}
+                              onChange={(e) => setTargetFilter(e.target.value)}
+                              className="w-full"
+                            />
+                          </div>
+                        </TableHead>
+                        <TableHead>
+                          <div className="space-y-2">
+                            <span>Confidence</span>
+                            <div className="flex gap-2">
+                              <Select
+                                value={confidenceOperator}
+                                onValueChange={(value: "gt" | "lt" | "eq") => setConfidenceOperator(value)}
+                              >
+                                <SelectTrigger className="w-[100px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="gt">&gt;</SelectItem>
+                                  <SelectItem value="lt">&lt;</SelectItem>
+                                  <SelectItem value="eq">=</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Input
+                                type="number"
+                                min="0"
+                                max="100"
+                                placeholder="Value %"
+                                value={confidenceValue}
+                                onChange={(e) => {
+                                  const value = Math.max(0, Math.min(100, Number(e.target.value)));
+                                  setConfidenceValue(value.toString());
+                                }}
+                                className="w-[100px]"
+                              />
+                            </div>
+                          </div>
+                        </TableHead>
+                        <TableHead className="w-[100px]">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredMappings.map((mapping, index) => (
+                        <TableRow key={mapping.sourceValue}>
+                          <TableCell>{mapping.sourceValue}</TableCell>
+                          <TableCell>
+                            {editingIndex === index ? (
+                              <Select
+                                value={editValue || mapping.targetValue}
+                                onValueChange={setEditValue}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Choose target value" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {targetAttributeValues.map((value) => (
+                                    <SelectItem key={value} value={value}>
+                                      {value}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              mapping.targetValue
+                            )}
+                          </TableCell>
+                          <TableCell>{(mapping.confidence * 100).toFixed(0)}%</TableCell>
+                          <TableCell>
+                            {editingIndex === index ? (
+                              <div className="flex space-x-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => updateMapping(index, editValue)}
+                                >
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setEditingIndex(null)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setEditingIndex(index);
+                                  setEditValue(mapping.targetValue);
+                                }}
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredMappings.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={4} className="text-center">
-                              {mappings.length > 0 ? (
-                                "No mappings match the current filters"
-                              ) : (
-                                "No mappings found - import from CSV or add manually"
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredMappings.map((mapping, index) => (
-                            <TableRow key={index}>
-                              <TableCell>
-                                {editingIndex === index ? (
-                                  <Input
-                                    value={editValue}
-                                    onChange={(e) => setEditValue(e.target.value)}
-                                    onBlur={() => {
-                                      if (editValue) {
-                                        const newMappings = [...mappings];
-                                        // Find the actual index in the main mappings array
-                                        const realIndex = mappings.findIndex(
-                                          m => m.sourceValue === mapping.sourceValue && m.targetValue === mapping.targetValue
-                                        );
-                                        if (realIndex !== -1) {
-                                          newMappings[realIndex].sourceValue = editValue;
-                                          setMappings(newMappings);
-                                          console.log("Updated mapping at index", realIndex, "new value:", editValue);
-                                        }
-                                      }
-                                      setEditingIndex(null);
-                                    }}
-                                    autoFocus
-                                  />
-                                ) : (
-                                  <span
-                                    className="cursor-pointer"
-                                    onClick={() => {
-                                      setEditValue(mapping.sourceValue);
-                                      setEditingIndex(index);
-                                    }}
-                                  >
-                                    {mapping.sourceValue}
-                                  </span>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                {editingIndex === index ? (
-                                  <Select
-                                    value={editValue || mapping.targetValue}
-                                    onValueChange={setEditValue}
-                                  >
-                                    <SelectTrigger className="w-full">
-                                      <SelectValue placeholder="Choose target value" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {targetAttributeValues.map((value) => (
-                                        <SelectItem key={value} value={value}>
-                                          {value}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                ) : (
-                                  mapping.targetValue
-                                )}
-                              </TableCell>
-                              <TableCell>{(mapping.confidence * 100).toFixed(0)}%</TableCell>
-                              <TableCell>
-                                {editingIndex === index ? (
-                                  <div className="flex space-x-2">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => updateMapping(index, editValue)}
-                                    >
-                                      <Check className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => setEditingIndex(null)}
-                                    >
-                                      <X className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => {
-                                      setEditingIndex(index);
-                                      setEditValue(mapping.targetValue);
-                                    }}
-                                  >
-                                    <Edit2 className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </tbody>
-                    </Table>
-                  </div>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             )}
           </CardContent>
