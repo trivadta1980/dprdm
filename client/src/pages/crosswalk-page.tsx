@@ -332,9 +332,16 @@ export default function CrosswalkPage() {
         if (existingCrosswalk.mappingData.sourceAttribute) {
           setSelectedSourceAttribute(existingCrosswalk.mappingData.sourceAttribute);
         }
+        
+        if (existingCrosswalk.mappingData.targetAttribute) {
+          // Make sure to set the target attribute too
+          console.log("Setting target attribute:", existingCrosswalk.mappingData.targetAttribute);
+        }
 
         if (Array.isArray(existingCrosswalk.mappingData.mappings)) {
-          setMappings(existingCrosswalk.mappingData.mappings);
+          console.log("Loading all mappings from DB:", JSON.stringify(existingCrosswalk.mappingData.mappings));
+          // Create a new array to avoid reference issues
+          setMappings([...existingCrosswalk.mappingData.mappings]);
         } else {
           console.warn("Mappings is not an array:", existingCrosswalk.mappingData.mappings);
           setMappings([]);
