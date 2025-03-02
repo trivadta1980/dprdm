@@ -47,31 +47,29 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { parse } from "csv-parse/browser/esm/sync";
-import { useParams } from "wouter";
-import { useState, useEffect } from "react";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select as Select2,
+  SelectContent as SelectContent2,
+  SelectItem as SelectItem2,
+  SelectTrigger as SelectTrigger2,
+  SelectValue as SelectValue2,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table as Table2,
+  TableBody as TableBody2,
+  TableCell as TableCell2,
+  TableHead as TableHead2,
+  TableHeader as TableHeader2,
+  TableRow as TableRow2,
 } from "@/components/ui/table";
-import { Edit2, Check, X, Save, ArrowLeft, Upload, Download } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { Edit2, Check, X, Save, ArrowLeft as ArrowLeft2, Upload as Upload2, Download as Download2 } from "lucide-react";
+import { Input as Input2 } from "@/components/ui/input";
+import { useToast as useToast2 } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { parse } from 'csv-parse/browser/esm/sync';
+import { parse as parse2 } from 'csv-parse/browser/esm/sync';
 
 interface DataSet {
   id: number;
