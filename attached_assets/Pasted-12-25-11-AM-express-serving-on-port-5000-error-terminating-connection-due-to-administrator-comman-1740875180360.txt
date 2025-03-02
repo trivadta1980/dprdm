@@ -1,0 +1,32 @@
+12:25:11 AM [express] serving on port 5000
+error: terminating connection due to administrator command
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async PGStore._asyncQuery (/home/runner/workspace/node_modules/connect-pg-simple/index.js:322:21)
+error: terminating connection due to administrator command
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async PGStore._asyncQuery (/home/runner/workspace/node_modules/connect-pg-simple/index.js:322:21)
+error: terminating connection due to administrator command
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async PGStore._asyncQuery (/home/runner/workspace/node_modules/connect-pg-simple/index.js:322:21)
+error: terminating connection due to administrator command
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async PGStore._asyncQuery (/home/runner/workspace/node_modules/connect-pg-simple/index.js:322:21)
+error: terminating connection due to administrator command
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async PGStore._asyncQuery (/home/runner/workspace/node_modules/connect-pg-simple/index.js:322:21)
+error: terminating connection due to administrator command
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async PGStore._asyncQuery (/home/runner/workspace/node_modules/connect-pg-simple/index.js:322:21)
+12:25:23 AM [express] GET /api/user 304 in 197ms :: {"id":1,"email":"jitender.nankani@gmail.com","use…
+GET /api/metrics - Request received
+GET /api/recent-activity - Request received
+GET /api/recent-activity - Activity fetched successfully
+12:25:25 AM [express] GET /api/recent-activity 304 in 413ms :: [{"type":"mapping","description":"Ente…
+GET /api/metrics - Metrics fetched successfully
+12:25:25 AM [express] GET /api/metrics 304 in 679ms :: {"totalDatasets":7,"totalDataTypes":5,"totalRe…
