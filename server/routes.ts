@@ -631,6 +631,8 @@ app.post("/api/reference-types", async (req, res) => {
     }
     try {
       const crosswalkId = Number(req.params.id);
+      console.log('GET /api/crosswalks/:id/template - Crosswalk ID:', crosswalkId);
+      
       const crosswalk = await storage.getCrosswalkMapping(crosswalkId);
       
       if (!crosswalk) {
@@ -638,12 +640,24 @@ app.post("/api/reference-types", async (req, res) => {
         return res.status(404).json({ error: "Crosswalk mapping not found" });
       }
       
+      console.log('GET /api/crosswalks/:id/template - Crosswalk found:', {
+        id: crosswalk.id,
+        name: crosswalk.name,
+        sourceSystemId: crosswalk.sourceSystemId,
+        targetSystemId: crosswalk.targetSystemId
+      });
+      
       // Get source and target data sets
-      const sourceDataSet = await storage.getReferenceDataSet(crosswalk.sourceDataSetId);
-      const targetDataSet = await storage.getReferenceDataSet(crosswalk.targetDataSetId);
+      const sourceDataSet = await storage.getReferenceDataSet(crosswalk.sourceSystemId);
+      const targetDataSet = await storage.getReferenceDataSet(crosswalk.targetSystemId);
       
       if (!sourceDataSet || !targetDataSet) {
-        console.log('GET /api/crosswalks/:id/template - Source or target dataset not found');
+        console.log('GET /api/crosswalks/:id/template - Source or target dataset not found:', {
+          sourceFound: !!sourceDataSet,
+          targetFound: !!targetDataSet,
+          sourceId: crosswalk.sourceSystemId,
+          targetId: crosswalk.targetSystemId
+        });
         return res.status(404).json({ error: "Source or target data set not found" });
       }
       
