@@ -1,6 +1,53 @@
 import { MainLayout } from "@/components/layout/main-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Edit, FileText, Loader2, Upload, Download } from "lucide-react";
+import { useState, useRef } from "react";
+import { useForm } from "react-hook-form";
+import { useLocation, useParams } from "wouter";
+import { z } from "zod";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { parse } from "csv-parse/browser/esm/sync";
+import { useParams } from "wouter";
 import { useState, useEffect } from "react";
 import {
   Select,
@@ -18,13 +65,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Edit2, Check, X, Save, ArrowLeft, Upload, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useParams, Link } from "wouter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { parse } from 'csv-parse/browser/esm/sync';
 
@@ -453,6 +498,143 @@ export default function CrosswalkPage() {
     }
   }, [isEditMode, id, existingCrosswalk]);
 
+  const handleDownloadTemplate = async () => {
+    if (!id) {
+      // Use client-side generation if no ID (creating new crosswalk)
+      if (!sourceDatasetData || !targetDatasetData || !sourceSchemas || !sourceSchemas) {
+        toast({
+          title: "Cannot generate template",
+          description: "Source or target data is not available.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Create CSV header with source and target column names
+      const sourcePrimaryColumn = sourceSchemas[0]?.name || "SourceID";
+      const targetPrimaryColumn = sourceSchemas[0]?.name || "TargetID"; //using sourceSchemas as a placeholder,  targetSchemas should be used if available
+      const headers = [`Source_${sourcePrimaryColumn}`, `Target_${targetPrimaryColumn}`];
+
+      // Create CSV content with just headers for the template
+      const csvContent = headers.join(",") + "\n";
+
+      // Create downloadable link
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `${mappingName || "crosswalk"}_template.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } else {
+      // Use server endpoint if we have an ID
+      try {
+        const response = await fetch(`/api/crosswalks/${id}/template`, {
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to download template: ${response.statusText}`);
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `${mappingName || "crosswalk"}_template.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error("Error downloading template:", error);
+        toast({
+          title: "Error downloading template",
+          description: error instanceof Error ? error.message : "Unknown error",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
+    toast({
+      title: "Template Downloaded",
+      description: "You can now fill it with mappings and import it back.",
+    });
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      if (file.type !== "text/csv") {
+        setUploadError("Please upload a CSV file");
+        return;
+      }
+
+      try {
+        const text = await file.text();
+        console.log('CSV Content:', text); // Debug log
+
+        const records = parse(text, {
+          columns: true,
+          skip_empty_lines: true,
+          trim: true
+        });
+
+        console.log('Parsed Records:', records); // Debug log
+
+        if (!Array.isArray(records) || records.length === 0) {
+          setUploadError("The CSV file is empty or invalid");
+          return;
+        }
+
+        // Validate CSV structure
+        const firstRecord = records[0];
+        if (!('sourceValue' in firstRecord && 'targetValue' in firstRecord)) {
+          setUploadError("CSV must have 'sourceValue' and 'targetValue' columns");
+          return;
+        }
+
+        // Convert CSV records to mappings
+        const newMappings: Mapping[] = records.map((record: CSVMapping) => ({
+          sourceValue: record.sourceValue,
+          targetValue: record.targetValue,
+          confidence: calculateSimilarity(record.sourceValue, record.targetValue)
+        }));
+
+        console.log('New Mappings:', newMappings); // Debug log
+
+        // Create a new array instead of mutating the state directly
+        setMappings([...newMappings]);
+
+        toast({
+          title: "Success",
+          description: `Imported ${newMappings.length} mappings from CSV`,
+        });
+      } catch (error) {
+        console.error('CSV Import Error:', error);
+        setUploadError("Failed to parse CSV file: " + (error as Error).message);
+      }
+
+      // Reset the file input
+      event.target.value = '';
+    } catch (error) {
+      console.error("Error handling file upload:", error);
+      setUploadError("An unexpected error occurred during file upload.");
+    }
+  };
+
+
   return (
     <MainLayout>
       <div className="container mx-auto p-6 space-y-8">
@@ -600,10 +782,11 @@ export default function CrosswalkPage() {
                   <div className="flex items-center gap-4">
                     <h2 className="text-xl font-semibold">Value Mappings</h2>
                     <div className="flex items-center gap-2">
-                      <Input
+                      <input
                         type="file"
                         accept=".csv"
-                        onChange={handleCSVUpload}
+                        onChange={handleFileChange}
+                        ref={fileInputRef}
                         className="hidden"
                         id="csv-upload"
                       />
@@ -622,6 +805,15 @@ export default function CrosswalkPage() {
                       >
                         <Download className="h-4 w-4 mr-2" />
                         Export to CSV
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={handleDownloadTemplate}
+                        variant="outline"
+                        className="bg-white hover:bg-blue-50 mr-2"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download Template
                       </Button>
                     </div>
                   </div>
@@ -802,7 +994,7 @@ export default function CrosswalkPage() {
                 <CardTitle>Debug Information - Save Mappings Payload</CardTitle>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                <ScrollArea className="h[200px] w-full rounded-md border p-4">
                   <pre className="text-sm">
                     {JSON.stringify(generatePayload(), null, 2)}
                   </pre>

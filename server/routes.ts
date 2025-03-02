@@ -621,6 +621,58 @@ app.post("/api/reference-types", async (req, res) => {
       res.status(500).json({ error: String(error) });
     }
   });
+  
+  // Add new route for downloading crosswalk template
+  app.get("/api/crosswalks/:id/template", async (req, res) => {
+    console.log('GET /api/crosswalks/:id/template - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/crosswalks/:id/template - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const crosswalkId = Number(req.params.id);
+      const crosswalk = await storage.getCrosswalkMapping(crosswalkId);
+      
+      if (!crosswalk) {
+        console.log('GET /api/crosswalks/:id/template - Crosswalk not found');
+        return res.status(404).json({ error: "Crosswalk mapping not found" });
+      }
+      
+      // Get source and target data sets
+      const sourceDataSet = await storage.getReferenceDataSet(crosswalk.sourceDataSetId);
+      const targetDataSet = await storage.getReferenceDataSet(crosswalk.targetDataSetId);
+      
+      if (!sourceDataSet || !targetDataSet) {
+        console.log('GET /api/crosswalks/:id/template - Source or target dataset not found');
+        return res.status(404).json({ error: "Source or target data set not found" });
+      }
+      
+      // Get schemas for source and target
+      const sourceSchemas = await storage.getReferenceDataTypeSchemas(sourceDataSet.typeId);
+      const targetSchemas = await storage.getReferenceDataTypeSchemas(targetDataSet.typeId);
+      
+      if (!sourceSchemas.length || !targetSchemas.length) {
+        console.log('GET /api/crosswalks/:id/template - Schemas not found');
+        return res.status(404).json({ error: "Source or target schemas not found" });
+      }
+      
+      // Create CSV header with source and target column names
+      const sourcePrimaryColumn = sourceSchemas[0].name;
+      const targetPrimaryColumn = targetSchemas[0].name;
+      const headers = `Source_${sourcePrimaryColumn},Target_${targetPrimaryColumn}`;
+      
+      // Set response headers for CSV download
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename=${crosswalk.name}_template.csv`);
+      
+      // Send as CSV file with just the headers
+      res.send(headers);
+      console.log('GET /api/crosswalks/:id/template - Template generated successfully');
+    } catch (error) {
+      console.error('GET /api/crosswalks/:id/template - Error generating template:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
 
   app.post("/api/crosswalks", async (req, res) => {
     console.log('POST /api/crosswalks - Request received');
