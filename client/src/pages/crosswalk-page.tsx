@@ -368,6 +368,12 @@ export default function CrosswalkPage() {
         // Process mappings array
         if (Array.isArray(existingCrosswalk.mappingData.mappings)) {
           console.log("Loading all mappings from DB:", JSON.stringify(existingCrosswalk.mappingData.mappings));
+          console.log("Mappings array length:", existingCrosswalk.mappingData.mappings.length);
+
+          // Inspect each mapping in the array
+          existingCrosswalk.mappingData.mappings.forEach((mapping, index) => {
+            console.log(`Mapping ${index}:`, JSON.stringify(mapping));
+          });
 
           // Deep clone to ensure we get a completely new array
           const mappingsClone = existingCrosswalk.mappingData.mappings.map(mapping => ({
@@ -377,7 +383,10 @@ export default function CrosswalkPage() {
           }));
 
           console.log("Cloned mappings to set:", JSON.stringify(mappingsClone));
-          setMappings(mappingsClone);
+          console.log("Setting mappings state with array of length:", mappingsClone.length);
+
+          // Force a new array reference to ensure React detects the change
+          setMappings([...mappingsClone]);
         } else {
           console.warn("Mappings is not an array:", existingCrosswalk.mappingData.mappings);
           setMappings([]);
@@ -962,7 +971,7 @@ export default function CrosswalkPage() {
                                   <SelectValue placeholder="Choose target value" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {targetAttributeValues.map((value) => (
+                  {targetAttributeValues.map((value) => (
                                     <SelectItem key={value} value={value}>
                                       {value}
                                     </SelectItem>
