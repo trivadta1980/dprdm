@@ -16,6 +16,7 @@ const RolesPage = lazy(() => import("@/pages/roles-page"));
 const ReferenceTypesPage = lazy(() => import("@/pages/reference-types-page"));
 const ReferenceDataPage = lazy(() => import("@/pages/reference-data-page"));
 const ReferenceDataCreatePage = lazy(() => import("@/pages/reference-data-create-page"));
+const ReferenceDataInstancesPage = lazy(() => import("@/pages/reference-data-instances-page"));
 const RelationshipsPage = lazy(() => import("@/pages/relationships-page"));
 const CrosswalksPage = lazy(() => import("@/pages/crosswalks-list-page"));
 const CrosswalkPage = lazy(() => import("@/pages/crosswalk-page"));
@@ -52,10 +53,14 @@ export default function App() {
                   <ReferenceTypesPage />
                 </ProtectedRoute>
               </Route>
-              {/* Add create route before the main reference-data route */}
               <Route path="/reference-data/create">
                 <ProtectedRoute>
                   <ReferenceDataCreatePage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/reference-data/:id/instances">
+                <ProtectedRoute>
+                  <ReferenceDataInstancesPage />
                 </ProtectedRoute>
               </Route>
               <Route path="/reference-data">
