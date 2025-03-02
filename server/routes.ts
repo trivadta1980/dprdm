@@ -636,7 +636,15 @@ app.get('/api/crosswalks/debug', async (req, res) => {
       return res.sendStatus(401);
     }
     try {
-      const mapping = await storage.getCrosswalkMapping(Number(req.params.id));
+      const id = Number(req.params.id);
+      
+      // Validate that the ID is a valid number
+      if (isNaN(id)) {
+        console.log('GET /api/crosswalks/:id - Invalid ID parameter:', req.params.id);
+        return res.status(400).json({ error: "Invalid crosswalk ID - must be a number" });
+      }
+      
+      const mapping = await storage.getCrosswalkMapping(id);
       if (mapping) {
         console.log('GET /api/crosswalks/:id - Mapping found');
         res.json(mapping);
@@ -840,16 +848,19 @@ app.get('/api/crosswalks/debug', async (req, res) => {
     
     // Add more detailed logging for debugging
     console.log('GET /api/crosswalks/debug - Raw data fetched successfully, count:', crosswalks.length);
-    console.log('GET /api/crosswalks/debug - First record sample:', 
-                crosswalks.length > 0 ? JSON.stringify(crosswalks[0]) : 'No records');
-    
-    // Add a specific mapping data example for debugging
-    if (crosswalks.length > 0 && crosswalks[0].mappingData) {
-      console.log('GET /api/crosswalks/debug - First record mapping data:', 
-                  JSON.stringify(crosswalks[0].mappingData));
+    if (crosswalks.length > 0) {
+      console.log('GET /api/crosswalks/debug - First record sample:', JSON.stringify(crosswalks[0]));
+      
+      // Add a specific mapping data example for debugging
+      if (crosswalks[0].mappingData) {
+        console.log('GET /api/crosswalks/debug - First record mapping data:', 
+                   JSON.stringify(crosswalks[0].mappingData));
+      }
+    } else {
+      console.log('GET /api/crosswalks/debug - No records found');
     }
     
-    return res.json(crosswalks);
+    return res.json(crosswalks || []);
   } catch (error) {
     console.error('GET /api/crosswalks/debug - Error:', error);
     return res.status(500).json({ error: String(error) });
