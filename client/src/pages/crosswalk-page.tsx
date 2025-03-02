@@ -781,7 +781,7 @@ export default function CrosswalkPage() {
                                 )}
                               </TableCell>
                             </TableRow>
-                          ))}
+                          )}
                       </TableBody>
                     </Table>
                   </div>
