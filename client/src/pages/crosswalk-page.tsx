@@ -100,8 +100,9 @@ export default function CrosswalkPage() {
   const [mappingName, setMappingName] = useState("");
   const [mappingDescription, setMappingDescription] = useState("");
   const [selectedSourceDataset, setSelectedSourceDataset] = useState<string | null>(null);
-  const [selectedSourceAttribute, setSelectedSourceAttribute] = useState<string | null>(null);
   const [selectedTargetDataset, setSelectedTargetDataset] = useState<string | null>(null);
+  const [selectedSourceAttribute, setSelectedSourceAttribute] = useState<string | null>(null);
+  const [selectedTargetAttribute, setSelectedTargetAttribute] = useState<string | null>(null);
   const [mappings, setMappings] = useState<Mapping[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState<string>("");
@@ -239,26 +240,26 @@ export default function CrosswalkPage() {
 
   useEffect(() => {
     console.log('Filtering mappings from array:', JSON.stringify(mappings));
-    
+
     // Ensure mappings is actually an array before filtering
     if (!Array.isArray(mappings)) {
       console.warn('Mappings is not an array, cannot filter');
       setFilteredMappings([]);
       return;
     }
-    
+
     const filteredMappings = mappings.filter(mapping => {
       // Skip undefined mappings
       if (!mapping || typeof mapping !== 'object') {
         console.warn('Invalid mapping item:', mapping);
         return false;
       }
-      
+
       // Guard against missing properties
       const sourceValue = mapping.sourceValue || '';
       const targetValue = mapping.targetValue || '';
       const confidence = mapping.confidence ?? 0;
-      
+
       const sourceMatch = sourceFilter === '' || 
         sourceValue.toLowerCase().includes(sourceFilter.toLowerCase());
 
@@ -276,7 +277,7 @@ export default function CrosswalkPage() {
 
       return sourceMatch && targetMatch && confidenceMatch;
     });
-    
+
     console.log('Filtered mappings result:', JSON.stringify(filteredMappings));
     // Update the filteredMappings state to trigger a re-render
     setFilteredMappings(filteredMappings);
@@ -298,7 +299,7 @@ export default function CrosswalkPage() {
       targetSystemId: Number(selectedTargetDataset),
       mappingData: {
         sourceAttribute: selectedSourceAttribute,
-        targetAttribute: selectedSourceAttribute,
+        targetAttribute: selectedTargetAttribute, // Use the new state variable
         mappings: mappings.map(m => ({
           sourceValue: m.sourceValue,
           targetValue: m.targetValue,
@@ -351,13 +352,13 @@ export default function CrosswalkPage() {
       // Handle mapping data with thorough checks
       if (existingCrosswalk.mappingData) {
         console.log("Full mapping data:", JSON.stringify(existingCrosswalk.mappingData));
-        
+
         // Set source attribute
         if (existingCrosswalk.mappingData.sourceAttribute) {
           console.log("Setting source attribute:", existingCrosswalk.mappingData.sourceAttribute);
           setSelectedSourceAttribute(existingCrosswalk.mappingData.sourceAttribute);
         }
-        
+
         // Set target attribute - CRITICAL FIX HERE
         if (existingCrosswalk.mappingData.targetAttribute) {
           console.log("Setting target attribute:", existingCrosswalk.mappingData.targetAttribute);
@@ -367,14 +368,14 @@ export default function CrosswalkPage() {
         // Process mappings array
         if (Array.isArray(existingCrosswalk.mappingData.mappings)) {
           console.log("Loading all mappings from DB:", JSON.stringify(existingCrosswalk.mappingData.mappings));
-          
+
           // Deep clone to ensure we get a completely new array
           const mappingsClone = existingCrosswalk.mappingData.mappings.map(mapping => ({
             sourceValue: mapping.sourceValue,
             targetValue: mapping.targetValue,
             confidence: mapping.confidence
           }));
-          
+
           console.log("Cloned mappings to set:", JSON.stringify(mappingsClone));
           setMappings(mappingsClone);
         } else {
@@ -974,7 +975,7 @@ export default function CrosswalkPage() {
                           </TableCell>
                           <TableCell>{(mapping.confidence * 100).toFixed(0)}%</TableCell>
                           <TableCell>
-                            {editingIndex === index ? (
+                            {editingIndex === index ?(
                               <div className="flex space-x-2">
                                 <Button
                                   variant="ghost"
