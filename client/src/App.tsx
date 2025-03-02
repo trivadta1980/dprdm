@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import ProtectedRoute from "@/lib/protected-route";
+import DebugPanel from '@/pages/debug-panel'; // Added import for DebugPanel
 
 // Lazy load pages
 const HomePage = lazy(() => import("@/pages/home-page"));

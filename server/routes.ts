@@ -577,6 +577,34 @@ app.post("/api/reference-types", async (req, res) => {
       }
       const targets = await storage.getAvailableTargets(Number(req.params.id), sourceId);
       console.log('GET /api/relationships/:id/values/available-targets - Targets fetched successfully');
+
+// Debug endpoint to get raw crosswalk data
+app.get('/api/crosswalks/debug', async (req, res) => {
+  try {
+    console.log('GET /api/crosswalks/debug - Request received');
+    
+    // Get all crosswalks with their raw data
+    const crosswalks = await db.query.crosswalkMappings.findMany({
+      columns: {
+        id: true,
+        name: true,
+        description: true,
+        mappingData: true,
+        sourceSystemId: true,
+        targetSystemId: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+    
+    console.log('GET /api/crosswalks/debug - Raw data fetched successfully');
+    return res.json(crosswalks);
+  } catch (error) {
+    console.error('GET /api/crosswalks/debug - Error:', error);
+    return res.status(500).json({ error: 'Failed to fetch crosswalk debug data' });
+  }
+});
+
       res.json(targets);
     } catch (error) {
       console.error('GET /api/relationships/:id/values/available-targets - Error:', error);
