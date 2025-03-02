@@ -190,21 +190,37 @@ export default function CrosswalkPage() {
     }
   }, [selectedSourceDatasetObj?.typeId, selectedSourceDataset]);
 
-  const filteredMappings = mappings.filter(mapping => {
-    const sourceMatch = mapping.sourceValue.toLowerCase().includes(sourceFilter.toLowerCase());
-    const targetMatch = mapping.targetValue.toLowerCase().includes(targetFilter.toLowerCase());
+  useEffect(() => {
+    console.log('Mappings state changed:', mappings);
+  }, [mappings]);
 
-    const confidencePercent = Number((mapping.confidence * 100).toFixed(0));
-    const confidenceNumValue = Number(confidenceValue);
+  useEffect(() => {
+    console.log('Filtering mappings...');
+    const filteredMappings = mappings.filter(mapping => {
+      const sourceMatch = sourceFilter === '' || 
+        mapping.sourceValue.toLowerCase().includes(sourceFilter.toLowerCase());
 
-    const confidenceMatch = confidenceValue === "" || (
-      confidenceOperator === "gt" ? confidencePercent > confidenceNumValue :
-      confidenceOperator === "lt" ? confidencePercent < confidenceNumValue :
-      confidencePercent === confidenceNumValue
-    );
+      const targetMatch = targetFilter === '' || 
+        mapping.targetValue.toLowerCase().includes(targetFilter.toLowerCase());
 
-    return sourceMatch && targetMatch && confidenceMatch;
-  });
+      const confidencePercent = Number((mapping.confidence * 100).toFixed(0));
+      const confidenceNumValue = Number(confidenceValue);
+
+      const confidenceMatch = confidenceValue === "" || (
+        confidenceOperator === "gt" ? confidencePercent > confidenceNumValue :
+        confidenceOperator === "lt" ? confidencePercent < confidenceNumValue :
+        confidencePercent === confidenceNumValue
+      );
+
+      return sourceMatch && targetMatch && confidenceMatch;
+    });
+    // Update the filteredMappings state to trigger a re-render
+    setFilteredMappings(filteredMappings);
+
+  }, [mappings, sourceFilter, targetFilter, confidenceOperator, confidenceValue]);
+
+
+  const [filteredMappings, setFilteredMappings] = useState<Mapping[]>([]);
 
   const generatePayload = () => {
     if (!selectedSourceDataset || !selectedTargetDataset || !selectedSourceAttribute || !mappingName) {
@@ -254,26 +270,26 @@ export default function CrosswalkPage() {
   useEffect(() => {
     if (existingCrosswalk && isEditMode) {
       console.log("Loading existing crosswalk data:", existingCrosswalk);
-      
+
       // Set basic fields with fallbacks
       setMappingName(existingCrosswalk.name || "");
       setMappingDescription(existingCrosswalk.description || "");
-      
+
       // Handle numeric IDs properly
       if (existingCrosswalk.sourceSystemId) {
         setSelectedSourceDataset(String(existingCrosswalk.sourceSystemId));
       }
-      
+
       if (existingCrosswalk.targetSystemId) {
         setSelectedTargetDataset(String(existingCrosswalk.targetSystemId));
       }
-      
+
       // Handle mapping data with thorough checks
       if (existingCrosswalk.mappingData) {
         if (existingCrosswalk.mappingData.sourceAttribute) {
           setSelectedSourceAttribute(existingCrosswalk.mappingData.sourceAttribute);
         }
-        
+
         if (Array.isArray(existingCrosswalk.mappingData.mappings)) {
           setMappings(existingCrosswalk.mappingData.mappings);
         } else {
@@ -416,7 +432,7 @@ export default function CrosswalkPage() {
     if (isEditMode) {
       console.log("Edit mode activated, ID:", id);
       console.log("Existing crosswalk data loaded:", existingCrosswalk);
-      
+
       // Check the structure of mappingData
       if (existingCrosswalk) {
         console.log("Mapping data structure:", {
@@ -425,7 +441,7 @@ export default function CrosswalkPage() {
           mappingsLength: existingCrosswalk.mappingData?.mappings?.length || 0
         });
       }
-      
+
       console.log("Current state:", {
         mappingName,
         mappingDescription,
