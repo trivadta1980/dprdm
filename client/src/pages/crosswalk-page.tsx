@@ -238,15 +238,34 @@ export default function CrosswalkPage() {
   }, [mappings]);
 
   useEffect(() => {
-    console.log('Filtering mappings...');
+    console.log('Filtering mappings from array:', JSON.stringify(mappings));
+    
+    // Ensure mappings is actually an array before filtering
+    if (!Array.isArray(mappings)) {
+      console.warn('Mappings is not an array, cannot filter');
+      setFilteredMappings([]);
+      return;
+    }
+    
     const filteredMappings = mappings.filter(mapping => {
+      // Skip undefined mappings
+      if (!mapping || typeof mapping !== 'object') {
+        console.warn('Invalid mapping item:', mapping);
+        return false;
+      }
+      
+      // Guard against missing properties
+      const sourceValue = mapping.sourceValue || '';
+      const targetValue = mapping.targetValue || '';
+      const confidence = mapping.confidence ?? 0;
+      
       const sourceMatch = sourceFilter === '' || 
-        mapping.sourceValue.toLowerCase().includes(sourceFilter.toLowerCase());
+        sourceValue.toLowerCase().includes(sourceFilter.toLowerCase());
 
       const targetMatch = targetFilter === '' || 
-        mapping.targetValue.toLowerCase().includes(targetFilter.toLowerCase());
+        targetValue.toLowerCase().includes(targetFilter.toLowerCase());
 
-      const confidencePercent = Number((mapping.confidence * 100).toFixed(0));
+      const confidencePercent = Number((confidence * 100).toFixed(0));
       const confidenceNumValue = Number(confidenceValue);
 
       const confidenceMatch = confidenceValue === "" || (
@@ -257,6 +276,8 @@ export default function CrosswalkPage() {
 
       return sourceMatch && targetMatch && confidenceMatch;
     });
+    
+    console.log('Filtered mappings result:', JSON.stringify(filteredMappings));
     // Update the filteredMappings state to trigger a re-render
     setFilteredMappings(filteredMappings);
 
@@ -312,7 +333,7 @@ export default function CrosswalkPage() {
 
   useEffect(() => {
     if (existingCrosswalk && isEditMode) {
-      console.log("Loading existing crosswalk data:", existingCrosswalk);
+      console.log("Loading existing crosswalk data:", JSON.stringify(existingCrosswalk));
 
       // Set basic fields with fallbacks
       setMappingName(existingCrosswalk.name || "");
@@ -329,19 +350,33 @@ export default function CrosswalkPage() {
 
       // Handle mapping data with thorough checks
       if (existingCrosswalk.mappingData) {
+        console.log("Full mapping data:", JSON.stringify(existingCrosswalk.mappingData));
+        
+        // Set source attribute
         if (existingCrosswalk.mappingData.sourceAttribute) {
+          console.log("Setting source attribute:", existingCrosswalk.mappingData.sourceAttribute);
           setSelectedSourceAttribute(existingCrosswalk.mappingData.sourceAttribute);
         }
         
+        // Set target attribute - CRITICAL FIX HERE
         if (existingCrosswalk.mappingData.targetAttribute) {
-          // Make sure to set the target attribute too
           console.log("Setting target attribute:", existingCrosswalk.mappingData.targetAttribute);
+          setSelectedTargetAttribute(existingCrosswalk.mappingData.targetAttribute);
         }
 
+        // Process mappings array
         if (Array.isArray(existingCrosswalk.mappingData.mappings)) {
           console.log("Loading all mappings from DB:", JSON.stringify(existingCrosswalk.mappingData.mappings));
-          // Create a new array to avoid reference issues
-          setMappings([...existingCrosswalk.mappingData.mappings]);
+          
+          // Deep clone to ensure we get a completely new array
+          const mappingsClone = existingCrosswalk.mappingData.mappings.map(mapping => ({
+            sourceValue: mapping.sourceValue,
+            targetValue: mapping.targetValue,
+            confidence: mapping.confidence
+          }));
+          
+          console.log("Cloned mappings to set:", JSON.stringify(mappingsClone));
+          setMappings(mappingsClone);
         } else {
           console.warn("Mappings is not an array:", existingCrosswalk.mappingData.mappings);
           setMappings([]);
