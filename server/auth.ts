@@ -131,12 +131,50 @@ export function setupAuth(app: Express) {
 
     await storage.setResetToken(user.id, token, expiry);
 
-    // TODO: Send email with reset link
-    // For development, we'll just return the token
-    if (process.env.NODE_ENV === "development") {
-      res.json({ token });
-    } else {
+    // Configure email
+    const nodemailer = require('nodemailer');
+    
+    // Create a transporter using SMTP
+    // You should set these environment variables in .env file
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.example.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER || '',
+        pass: process.env.SMTP_PASS || ''
+      }
+    });
+    
+    // Reset link that includes the token
+    const resetLink = `${process.env.APP_URL || req.headers.origin}/reset-password?token=${token}`;
+    
+    try {
+      // Send email
+      await transporter.sendMail({
+        from: process.env.EMAIL_FROM || '"Password Reset" <noreply@example.com>',
+        to: result.data.email,
+        subject: 'Password Reset Request',
+        text: `You requested a password reset. Please use the following link to reset your password: ${resetLink}`,
+        html: `
+          <p>You requested a password reset.</p>
+          <p>Please click the link below to reset your password:</p>
+          <p><a href="${resetLink}">Reset Password</a></p>
+          <p>This link will expire in 1 hour.</p>
+          <p>If you did not request this reset, please ignore this email.</p>
+        `
+      });
+      
+      console.log('Password reset email sent to:', result.data.email);
       res.sendStatus(200);
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      // For development, return the token even if email fails
+      if (process.env.NODE_ENV === "development") {
+        res.json({ token, emailError: error.message });
+      } else {
+        res.status(500).json({ message: "Failed to send reset email" });
+      }
     }
   });
 
