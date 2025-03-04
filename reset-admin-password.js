@@ -1,10 +1,11 @@
 
-require('dotenv').config();
-const { scrypt, randomBytes } = require('crypto');
-const { promisify } = require('util');
-const { Pool } = require('@neondatabase/serverless');
-const ws = require('ws');
+import dotenv from 'dotenv';
+import { scrypt, randomBytes } from 'crypto';
+import { promisify } from 'util';
+import { Pool } from '@neondatabase/serverless';
+import ws from 'ws';
 
+dotenv.config();
 const scryptAsync = promisify(scrypt);
 
 async function hashPassword(password) {
