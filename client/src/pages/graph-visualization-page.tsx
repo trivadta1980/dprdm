@@ -30,8 +30,9 @@ export default function GraphVisualizationPage() {
     setError(null);
     try {
       const response = await apiRequest('/api/graph/visualization', { method: 'GET' });
-      setGraphData(response);
-      console.log("Graph data fetched:", response);
+      const data = await response.json();
+      console.log("Graph data fetched:", data);
+      setGraphData(data);
     } catch (err) {
       console.error("Error fetching graph data:", err);
       setError(err.message || "Failed to load graph data");
