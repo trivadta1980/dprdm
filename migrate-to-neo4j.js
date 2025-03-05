@@ -136,11 +136,14 @@ async function migrateRelationship(relationship) {
       where: eq(relationshipValues.relationshipId, relationship.id)
     });
     
+    // Convert relationship type to a valid Neo4j identifier by replacing hyphens with underscores
+    const safeRelType = relationship.relationshipType.toUpperCase().replace(/-/g, '_');
+    
     for (const relValue of relValues) {
       await session.run(`
         MATCH (source:DataItem {id: $sourceId, dataSetId: $sourceDataSetId})
         MATCH (target:DataItem {id: $targetId, dataSetId: $targetDataSetId})
-        MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {relationshipId: $relationshipId}]->(target)
+        MERGE (source)-[r:${safeRelType} {relationshipId: $relationshipId, originalType: $originalType}]->(target)
         SET r += $metadata
         RETURN r
       `, {
@@ -149,6 +152,7 @@ async function migrateRelationship(relationship) {
         sourceDataSetId: relationship.sourceDataSetId.toString(),
         targetDataSetId: relationship.targetDataSetId.toString(),
         relationshipId: relationship.id.toString(),
+        originalType: relationship.relationshipType,
         metadata: {
           createdAt: relValue.createdAt.toISOString(),
           updatedAt: relValue.updatedAt.toISOString()
