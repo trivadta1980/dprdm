@@ -1,0 +1,65 @@
+Database connection established successfully
+Starting data migration to Neo4j...
+Clearing existing Neo4j data...
+Migrating reference data sets...
+Migrating data set: SFDC Countries (ID: 5)
+Migrating data set: Customer Gender (ID: 3)
+Migrating data set: States (ID: 4)
+Migrating data set: Enterprise Countries (ID: 1)
+Migrating data set: Enterprise Cities (ID: 6)
+Migrating data set: Enterprise Products (ID: 2)
+Migrating data set: SFDC Cities (ID: 7)
+Migrating data set: SFDC Genders (ID: 8)
+Migrating relationships...
+Migrating relationship: Enterprise Countries -> States (ID: 1)
+Error during migration: Neo4jError: Invalid input '-': expected a parameter, '&', '*', ':', 'WHERE', ']', '{' or '|' (line 4, column 33 (offset: 187))
+"        MERGE (source)-[r:PARENT-CHILD {relationshipId: $relationshipId}]->(target)"
+                                 ^
+
+    at captureStacktrace (/home/runner/workspace/node_modules/neo4j-driver-core/lib/result.js:624:17)
+    at new Result (/home/runner/workspace/node_modules/neo4j-driver-core/lib/result.js:112:23)
+    at Session._run (/home/runner/workspace/node_modules/neo4j-driver-core/lib/session.js:224:16)
+    at Session.run (/home/runner/workspace/node_modules/neo4j-driver-core/lib/session.js:188:27)
+    at migrateRelationship (file:///home/runner/workspace/migrate-to-neo4j.js:140:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async migrateData (file:///home/runner/workspace/migrate-to-neo4j.js:44:7) {
+  constructor: [Function: Neo4jError] { isRetriable: [Function (anonymous)] },
+  gqlStatus: '42001',
+  gqlStatusDescription: 'error: syntax error or access rule violation - invalid syntax',
+  diagnosticRecord: {
+    OPERATION: '',
+    OPERATION_CODE: '0',
+    CURRENT_SCHEMA: '/',
+    _classification: 'CLIENT_ERROR',
+    _position: { offset: [Integer], column: [Integer], line: [Integer] }
+  },
+  classification: 'CLIENT_ERROR',
+  rawClassification: 'CLIENT_ERROR',
+  code: 'Neo.ClientError.Statement.SyntaxError',
+  retriable: false,
+  [cause]: GQLError: 42I06: Invalid input '-', expected: a parameter, '&', '*', ':', 'WHERE', ']', '{' or '|'.
+      at new GQLError (/home/runner/workspace/node_modules/neo4j-driver-core/lib/error.js:117:24)
+      at newGQLError (/home/runner/workspace/node_modules/neo4j-driver-core/lib/error.js:261:12)
+      at ResponseHandler._handleErrorCause (/home/runner/workspace/node_modules/neo4j-driver-bolt-connection/lib/bolt/response-handler.js:199:57)
+      at ResponseHandler._handleErrorPayload (/home/runner/workspace/node_modules/neo4j-driver-bolt-connection/lib/bolt/response-handler.js:193:50)
+      at ResponseHandler.handleResponse (/home/runner/workspace/node_modules/neo4j-driver-bolt-connection/lib/bolt/response-handler.js:116:49)
+      at dechunker.onmessage (/home/runner/workspace/node_modules/neo4j-driver-bolt-connection/lib/bolt/create.js:74:33)
+      at Dechunker._onHeader (/home/runner/workspace/node_modules/neo4j-driver-bolt-connection/lib/channel/chunking.js:196:18)
+      at Dechunker.AWAITING_CHUNK (/home/runner/workspace/node_modules/neo4j-driver-bolt-connection/lib/channel/chunking.js:149:25)
+      at Dechunker.write (/home/runner/workspace/node_modules/neo4j-driver-bolt-connection/lib/channel/chunking.js:206:32)
+      at channel.onmessage (/home/runner/workspace/node_modules/neo4j-driver-bolt-connection/lib/bolt/create.js:70:63) {
+    constructor: [Function: GQLError],
+    cause: undefined,
+    gqlStatus: '42I06',
+    gqlStatusDescription: "error: syntax error or access rule violation - invalid input. Invalid input '-', expected: a parameter, '&', '*', ':', 'WHERE', ']', '{' or '|'.",
+    diagnosticRecord: {
+      OPERATION: '',
+      OPERATION_CODE: '0',
+      CURRENT_SCHEMA: '/',
+      _classification: 'CLIENT_ERROR',
+      _position: [Object]
+    },
+    classification: 'CLIENT_ERROR',
+    rawClassification: 'CLIENT_ERROR'
+  }
+}
