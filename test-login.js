@@ -39,7 +39,7 @@ async function testLogin() {
     console.log(`User found: ${user.username} (ID: ${user.id})`);
     
     // Check if account is active
-    if (!user.isActive) {
+    if (!user.is_active) {
       console.log('Account is inactive.');
       return;
     }

@@ -21,7 +21,7 @@ async function checkUsers() {
     
     // Check users table
     console.log('\nChecking users table:');
-    const usersResult = await pool.query('SELECT id, username, email, "roleId", "isActive" FROM users');
+    const usersResult = await pool.query('SELECT id, username, email, role_id, is_active FROM users');
     
     if (usersResult.rows.length === 0) {
       console.log('No users found in the database.');
@@ -39,8 +39,8 @@ async function checkUsers() {
         id: admin.id,
         username: admin.username,
         email: admin.email,
-        roleId: admin.roleId,
-        isActive: admin.isActive,
+        roleId: admin.role_id,
+        isActive: admin.is_active,
         hasPassword: !!admin.password,
         resetToken: admin.reset_token || null,
         requirePasswordChange: admin.require_password_change
