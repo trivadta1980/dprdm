@@ -317,6 +317,66 @@ app.post("/api/reference-types", async (req, res) => {
       });
 
       const dataSet = await storage.getReferenceDataSet(dataSetId);
+
+// Neo4j graph visualization routes
+router.get('/api/graph/visualization', async (req, res) => {
+  try {
+    if (!isNeo4jAvailable()) {
+      return res.status(503).json({ error: "Neo4j database not available" });
+    }
+    
+    // Query to get nodes and relationships
+    const records = await runQuery(`
+      MATCH (n)
+      OPTIONAL MATCH (n)-[r]->(m)
+      RETURN n, r, m
+    `);
+    
+    const nodes = [];
+    const links = [];
+    const nodeMap = new Map();
+    
+    // Process nodes and relationships
+    records.forEach(record => {
+      const source = record.get('n');
+      const relationship = record.get('r');
+      const target = record.get('m');
+      
+      if (source && !nodeMap.has(source.identity.toString())) {
+        nodeMap.set(source.identity.toString(), nodes.length);
+        nodes.push({
+          id: source.identity.toString(),
+          label: source.labels[0],
+          properties: source.properties
+        });
+      }
+      
+      if (target && !nodeMap.has(target.identity.toString())) {
+        nodeMap.set(target.identity.toString(), nodes.length);
+        nodes.push({
+          id: target.identity.toString(),
+          label: target.labels[0],
+          properties: target.properties
+        });
+      }
+      
+      if (relationship) {
+        links.push({
+          source: source.identity.toString(),
+          target: target.identity.toString(),
+          type: relationship.type,
+          properties: relationship.properties
+        });
+      }
+    });
+    
+    res.json({ nodes, links });
+  } catch (error) {
+    console.error('Error fetching graph data:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
       if (!dataSet) {
         console.log('POST /api/reference-data/:id/bulk-upload - Dataset not found'); //Added logging
         return res.status(404).json({ error: "Reference Data Set not found" });
