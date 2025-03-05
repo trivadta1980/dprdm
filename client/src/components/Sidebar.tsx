@@ -25,11 +25,7 @@ const mainMenuItems = [
     href: "/crosswalks",
     icon: GitCompare,
   },
-  {
-    title: "Graph Visualization",
-    href: "/graph-visualization",
-    icon: Network,
-  }
+  
 ];
 
 // ... other code ...
@@ -56,14 +52,7 @@ const mainMenuItems = [
                     asChild
                   >
                     <Link to="/graph-visualization">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-4 w-4">
-                        <path d="M3 3v18h18"></path>
-                        <circle cx="7" cy="17" r="1"></circle>
-                        <circle cx="12" cy="12" r="1"></circle>
-                        <circle cx="17" cy="7" r="1"></circle>
-                        <line x1="7" y1="17" x2="12" y2="12"></line>
-                        <line x1="12" y1="12" x2="17" y2="7"></line>
-                      </svg>
+                      <Network className="mr-2 h-4 w-4" />
                       Graph Visualization
                     </Link>
                   </Button>
@@ -78,10 +67,6 @@ const mainMenuItems = [
               <MenuItem icon={<FiMap />} as={Link} to="/crosswalks">
                 Crosswalks
               </MenuItem>
-              <MenuItem icon={<Network />} as={Link} to="/graph-visualization">
-                Graph Visualization
-              </MenuItem>
-              <MenuItem icon={<Network />} as={Link} to="/graph-visualization"> {/* Changed icon here */}
-                Graph Visualization
-              </MenuItem>
+              {/*Removed Duplicate Graph Visualization Entries */}
+
 // ... rest of the sidebar code ...
