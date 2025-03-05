@@ -24,11 +24,6 @@ export default function GraphVisualizationPage() {
   // Extract unique node types for filtering
   const nodeTypes = [...new Set((graphData.nodes || []).map(node => node.label))];
 
-  // Load graph data when component mounts
-  useEffect(() => {
-    fetchGraphData();
-  }, [fetchGraphData]);
-
   // Fetch graph data from API
   const fetchGraphData = useCallback(async () => {
     setLoading(true);
@@ -81,6 +76,11 @@ export default function GraphVisualizationPage() {
   const handleFilterChange = useCallback(value => {
     setFilterType(value);
   }, []);
+
+  // Load graph data when component mounts
+  useEffect(() => {
+    fetchGraphData();
+  }, [fetchGraphData]);
 
   // Custom node renderer
   const nodeCanvasObject = useCallback((node, ctx, globalScale) => {
