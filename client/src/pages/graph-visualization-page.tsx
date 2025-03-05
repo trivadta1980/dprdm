@@ -22,7 +22,7 @@ export default function GraphVisualizationPage() {
   const graphRef = useRef(null);
   
   // Extract unique node types for filtering
-  const nodeTypes = [...new Set(graphData.nodes.map(node => node.label))];
+  const nodeTypes = [...new Set((graphData.nodes || []).map(node => node.label))];
   
   // Fetch graph data from API
   const fetchGraphData = async () => {
@@ -47,11 +47,18 @@ export default function GraphVisualizationPage() {
   const filteredData = useCallback(() => {
     if (filterType === 'all') return graphData;
     
-    const filteredNodes = graphData.nodes.filter(node => node.label === filterType);
+    const nodes = graphData.nodes || [];
+    const links = graphData.links || [];
+    
+    const filteredNodes = nodes.filter(node => node.label === filterType);
     const nodeIds = new Set(filteredNodes.map(node => node.id));
     
-    const filteredLinks = graphData.links.filter(
-      link => nodeIds.has(link.source.id || link.source) && nodeIds.has(link.target.id || link.target)
+    const filteredLinks = links.filter(
+      link => {
+        const sourceId = link.source?.id || link.source;
+        const targetId = link.target?.id || link.target;
+        return nodeIds.has(sourceId) && nodeIds.has(targetId);
+      }
     );
     
     return { nodes: filteredNodes, links: filteredLinks };
