@@ -1,8 +1,15 @@
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Spinner, Alert, AlertIcon, Box, Heading, Text, Select, Badge, Flex, Button, Tooltip } from "@chakra-ui/react";
-import ForceGraph2D from 'react-force-graph-2d';
-import axios from 'axios';
+import { useEffect, useRef, useState, useCallback } from "react";
+import ForceGraph2D from "react-force-graph";
+import { MainLayout } from "@/components/main-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, RefreshCw, ZoomIn } from "lucide-react";
+import { apiRequest } from "@/lib/api";
 
 export default function GraphVisualizationPage() {
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
@@ -14,16 +21,19 @@ export default function GraphVisualizationPage() {
   
   const graphRef = useRef(null);
   
+  // Extract unique node types for filtering
+  const nodeTypes = [...new Set(graphData.nodes.map(node => node.label))];
+  
   // Fetch graph data from API
   const fetchGraphData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get('/api/graph/visualization');
-      setGraphData(response.data);
+      const response = await apiRequest("GET", "/api/graph/visualization");
+      setGraphData(response);
     } catch (err) {
       console.error('Error fetching graph data:', err);
-      setError(err.response?.data?.error || 'Failed to fetch graph data');
+      setError(err.message || 'Failed to fetch graph data');
     } finally {
       setLoading(false);
     }
@@ -50,198 +60,195 @@ export default function GraphVisualizationPage() {
   // Handle node click to show details
   const handleNodeClick = useCallback(node => {
     setSelectedNodeId(node.id);
-    setSelectedNodeInfo({
-      id: node.id,
-      label: node.label,
-      properties: node.properties
-    });
-    
-    // Also focus on the node
-    if (graphRef.current) {
-      graphRef.current.centerAt(node.x, node.y, 1000);
-      graphRef.current.zoom(2, 1000);
-    }
+    setSelectedNodeInfo(node);
   }, []);
   
-  // Center view on graph
-  const handleResetView = useCallback(() => {
-    if (graphRef.current) {
-      graphRef.current.zoomToFit(1000, 50);
-    }
-    setSelectedNodeId(null);
-    setSelectedNodeInfo(null);
-  }, []);
-  
-  // Node label configuration
+  // Custom node rendering
   const nodeCanvasObject = useCallback((node, ctx, globalScale) => {
-    const label = node.label || 'Unknown';
-    const fontSize = node.val ? 16 / globalScale : 12 / globalScale;
-    ctx.font = `${fontSize}px Sans-Serif`;
-    ctx.fillStyle = node.color || 'rgba(0, 0, 0, 0.7)';
+    const label = node.label || '';
+    const fontSize = 12/globalScale;
+    const size = node.val || 10;
     
     ctx.beginPath();
-    ctx.arc(node.x, node.y, node.val || 5, 0, 2 * Math.PI, false);
+    ctx.arc(node.x, node.y, size/globalScale, 0, 2 * Math.PI, false);
+    ctx.fillStyle = node.color || '#1f77b4';
     ctx.fill();
     
-    // Draw highlighted ring for selected node
-    if (node.id === selectedNodeId) {
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, (node.val || 5) + 2, 0, 2 * Math.PI, false);
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = '#FF5733';
-      ctx.stroke();
-    }
-    
-    // Only show labels if we're zoomed in enough
     if (globalScale >= 0.8) {
-      const nameProperty = node.properties?.name || node.id.substring(0, 8);
-      const textWidth = ctx.measureText(nameProperty).width;
-      const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.5);
-      
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-      ctx.fillRect(
-        node.x - bckgDimensions[0] / 2,
-        node.y + node.val + 2,
-        bckgDimensions[0],
-        bckgDimensions[1]
-      );
-      
+      ctx.font = `${fontSize}px Sans-Serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#000';
-      ctx.fillText(
-        nameProperty,
-        node.x,
-        node.y + node.val + 2 + bckgDimensions[1] / 2
-      );
+      ctx.fillStyle = 'black';
+      ctx.fillText(node.properties?.name || node.id, node.x, node.y + size/globalScale + fontSize);
     }
-  }, [selectedNodeId]);
+  }, []);
   
-  if (loading) {
+  // Reset graph view
+  const handleResetView = useCallback(() => {
+    if (graphRef.current) {
+      graphRef.current.zoomToFit(400);
+    }
+  }, []);
+  
+  // Handle filter change
+  const handleFilterChange = (value) => {
+    setFilterType(value);
+  };
+  
+  if (loading && !graphData.nodes.length) {
     return (
-      <Box p={6} textAlign="center">
-        <Spinner size="xl" />
-        <Text mt={4}>Loading graph data...</Text>
-      </Box>
+      <MainLayout>
+        <div className="flex h-full items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Loading graph data...</span>
+        </div>
+      </MainLayout>
     );
   }
   
-  if (error) {
+  if (error && !graphData.nodes.length) {
     return (
-      <Box p={6}>
-        <Alert status="error">
-          <AlertIcon />
-          {error}
-        </Alert>
-        <Text mt={4}>
-          Make sure Neo4j is configured correctly and the database is accessible.
-        </Text>
-      </Box>
+      <MainLayout>
+        <div className="flex h-full items-center justify-center flex-col">
+          <div className="text-destructive mb-2">Error loading graph data</div>
+          <div className="text-sm text-muted-foreground">{error}</div>
+          <Button onClick={fetchGraphData} className="mt-4">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      </MainLayout>
     );
   }
-  
-  // Get unique node types for filter dropdown
-  const nodeTypes = [...new Set(graphData.nodes.map(node => node.label))];
   
   return (
-    <Box p={6}>
-      <Heading as="h1" size="xl" mb={4}>
-        Graph Visualization
-      </Heading>
-      
-      <Flex mb={4} alignItems="center" flexWrap="wrap">
-        <Box mr={4} mb={2}>
-          <Text fontWeight="bold" mb={1}>Filter by Type:</Text>
-          <Select 
-            value={filterType} 
-            onChange={(e) => setFilterType(e.target.value)}
-            width="200px"
-          >
-            <option value="all">All Types</option>
-            {nodeTypes.map(type => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </Select>
-        </Box>
-        
-        <Box flex="1" mb={2}>
-          <Text fontWeight="bold" mb={1}>Legend:</Text>
-          <Flex flexWrap="wrap">
-            <Badge colorScheme="blue" mr={2} mb={1}>DataSet</Badge>
-            <Badge colorScheme="green" mr={2} mb={1}>DataItem</Badge>
-            <Badge colorScheme="yellow" mr={2} mb={1}>RelationshipType</Badge>
-            <Badge colorScheme="red" mr={2} mb={1}>CrosswalkMapping</Badge>
-          </Flex>
-        </Box>
-        
-        <Button 
-          onClick={handleResetView} 
-          colorScheme="teal" 
-          mb={2}
-        >
-          Reset View
-        </Button>
-        
-        <Button 
-          onClick={fetchGraphData} 
-          colorScheme="blue" 
-          ml={2} 
-          mb={2}
-        >
-          Refresh Data
-        </Button>
-      </Flex>
-      
-      <Flex>
-        <Box 
-          width="70%" 
-          height="700px" 
-          border="1px solid #e2e8f0" 
-          borderRadius="md" 
-          overflow="hidden"
-        >
-          <ForceGraph2D
-            ref={graphRef}
-            graphData={filteredData()}
-            nodeCanvasObject={nodeCanvasObject}
-            nodeLabel={node => `${node.label}: ${node.properties?.name || node.id}`}
-            linkLabel={link => link.type}
-            linkDirectionalArrowLength={3.5}
-            linkDirectionalArrowRelPos={1}
-            linkCurvature={0.25}
-            cooldownTicks={100}
-            onNodeClick={handleNodeClick}
-            onEngineStop={() => graphRef.current && graphRef.current.zoomToFit(400)}
-          />
-        </Box>
-        
-        <Box width="30%" pl={4}>
-          {selectedNodeInfo ? (
-            <Box p={4} borderWidth="1px" borderRadius="lg">
-              <Heading size="md" mb={2}>
-                {selectedNodeInfo.label} Details
-              </Heading>
+    <MainLayout>
+      <div className="container mx-auto p-4 space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Data Graph Visualization</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
+              <div className="lg:col-span-3">
+                <div className="flex flex-wrap items-center gap-4 mb-4">
+                  <div>
+                    <span className="text-sm font-medium mr-2">Filter by Type:</span>
+                    <Select value={filterType} onValueChange={handleFilterChange}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        {nodeTypes.map(type => (
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={handleResetView}>
+                      <ZoomIn className="h-4 w-4 mr-2" />
+                      Reset View
+                    </Button>
+                    <Button variant="outline" onClick={fetchGraphData}>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Refresh Data
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="mb-2">
+                  <span className="text-sm font-medium mr-2">Legend:</span>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    <Badge variant="outline" className="bg-blue-100">DataSet</Badge>
+                    <Badge variant="outline" className="bg-green-100">DataItem</Badge>
+                    <Badge variant="outline" className="bg-yellow-100">RelationshipType</Badge>
+                    <Badge variant="outline" className="bg-red-100">CrosswalkMapping</Badge>
+                  </div>
+                </div>
+                
+                <div className="border rounded-md h-[500px] overflow-hidden bg-muted/10">
+                  {graphData.nodes.length > 0 ? (
+                    <ForceGraph2D
+                      ref={graphRef}
+                      graphData={filteredData()}
+                      nodeCanvasObject={nodeCanvasObject}
+                      nodeLabel={node => `${node.label}: ${node.properties?.name || node.id}`}
+                      linkLabel={link => link.type}
+                      linkDirectionalArrowLength={3.5}
+                      linkDirectionalArrowRelPos={1}
+                      linkWidth={1}
+                      onNodeClick={handleNodeClick}
+                      cooldownTicks={100}
+                      onEngineStop={() => handleResetView()}
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-muted-foreground">
+                      No graph data available. Try refreshing or check your Neo4j connection.
+                    </div>
+                  )}
+                </div>
+              </div>
               
-              <Text fontWeight="bold" mt={2}>ID: {selectedNodeInfo.id}</Text>
-              
-              {selectedNodeInfo.properties && (
-                <Box mt={3}>
-                  <Text fontWeight="bold" mb={2}>Properties:</Text>
-                  {Object.entries(selectedNodeInfo.properties).map(([key, value]) => (
-                    <Text key={key} fontSize="sm">
-                      <strong>{key}:</strong> {String(value)}
-                    </Text>
-                  ))}
-                </Box>
-              )}
-            </Box>
-          ) : (
-            <Box p={4} borderWidth="1px" borderRadius="lg" bg="gray.50">
-              <Text>Click on a node to see details</Text>
-            </Box>
-          )}
-        </Box>
-      </Flex>
-    </Box>
+              <div>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Node Details</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedNodeInfo ? (
+                      <div className="space-y-4">
+                        <div>
+                          <h4 className="font-medium">{selectedNodeInfo.label}</h4>
+                          <p className="text-sm text-muted-foreground">ID: {selectedNodeInfo.id}</p>
+                        </div>
+                        
+                        <Separator />
+                        
+                        <div>
+                          <h4 className="font-medium mb-2">Properties</h4>
+                          {selectedNodeInfo.properties ? (
+                            <div className="space-y-2">
+                              {Object.entries(selectedNodeInfo.properties).map(([key, value]) => (
+                                <div key={key} className="grid grid-cols-2 gap-1">
+                                  <span className="text-sm font-medium">{key}:</span>
+                                  <span className="text-sm truncate">{String(value)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">No properties</p>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="py-8 text-center text-muted-foreground text-sm">
+                        Click on a node to view details
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                <div className="mt-4">
+                  <h3 className="font-medium mb-2">Statistics</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-muted rounded-md p-3">
+                      <div className="text-sm text-muted-foreground">Nodes</div>
+                      <div className="text-2xl font-bold">{graphData.nodes.length}</div>
+                    </div>
+                    <div className="bg-muted rounded-md p-3">
+                      <div className="text-sm text-muted-foreground">Links</div>
+                      <div className="text-2xl font-bold">{graphData.links.length}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </MainLayout>
   );
 }
