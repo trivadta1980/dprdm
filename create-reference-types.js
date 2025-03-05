@@ -29,7 +29,9 @@ async function login() {
     // Extract the set-cookie header
     const cookies = response.headers.get('set-cookie');
     if (cookies) {
-      cookie = cookies;
+      // Extract just the session cookie part
+      const sessionCookie = cookies.split(';')[0];
+      cookie = sessionCookie;
       console.log('Login successful, session cookie obtained');
       fs.writeFileSync('cookies.txt', cookie);
       return await response.json();
@@ -52,12 +54,20 @@ async function createReferenceType(typeData) {
     }
     
     // Use the correct API URL
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+    
+    // Only add cookie if it exists and is valid
+    if (cookie && typeof cookie === 'string' && cookie.trim() !== '') {
+      // Extract just the session cookie value without attributes
+      const sessionCookie = cookie.split(';')[0];
+      headers['Cookie'] = sessionCookie;
+    }
+    
     const response = await fetch('http://0.0.0.0:5000/api/reference-types', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': cookie
-      },
+      headers,
       body: JSON.stringify(typeData)
     });
 
