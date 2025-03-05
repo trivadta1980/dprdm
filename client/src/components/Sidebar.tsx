@@ -55,7 +55,7 @@ const mainMenuItems = [
                     className="w-full justify-start"
                     asChild
                   >
-                    <Link to="/graph">
+                    <Link to="/graph-visualization">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-4 w-4">
                         <path d="M3 3v18h18"></path>
                         <circle cx="7" cy="17" r="1"></circle>
@@ -77,6 +77,9 @@ const mainMenuItems = [
               </MenuItem>
               <MenuItem icon={<FiMap />} as={Link} to="/crosswalks">
                 Crosswalks
+              </MenuItem>
+              <MenuItem icon={<Network />} as={Link} to="/graph-visualization">
+                Graph Visualization
               </MenuItem>
               <MenuItem icon={<Network />} as={Link} to="/graph-visualization"> {/* Changed icon here */}
                 Graph Visualization
