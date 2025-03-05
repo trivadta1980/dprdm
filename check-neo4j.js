@@ -1,7 +1,8 @@
 
 // Script to verify the Neo4j connection
-const neo4j = require('neo4j-driver');
-require('dotenv').config();
+import neo4j from 'neo4j-driver';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 async function checkNeo4jConnection() {
   if (!process.env.NEO4J_URI || !process.env.NEO4J_USERNAME || !process.env.NEO4J_PASSWORD) {

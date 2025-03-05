@@ -1,10 +1,11 @@
 
 // Script to migrate existing PostgreSQL data to Neo4j
-require('dotenv').config();
-const { db } = require('./server/db');
-const neo4j = require('neo4j-driver');
-const { referenceDataSets, relationships, crosswalkMappings } = require('./shared/schema');
-const { eq } = require('drizzle-orm');
+import * as dotenv from 'dotenv';
+dotenv.config();
+import { db } from './server/db.js';
+import neo4j from 'neo4j-driver';
+import { referenceDataSets, relationships, crosswalkMappings } from './shared/schema.js';
+import { eq } from 'drizzle-orm';
 
 // Create Neo4j driver
 const driver = neo4j.driver(
@@ -42,7 +43,7 @@ async function migrateData() {
     console.log("Migrating crosswalk mappings...");
     const crosswalks = await db.select().from(crosswalkMappings);
     for (const crosswalk of crosswalks) {
-      console.log(`Migrating crosswalk: ${crosswalk.name} (ID: ${crosswalk.id})`);
+      console.log(`Migrating crosswalk: ${crosswalk.id})`);
       await migrateCrosswalk(crosswalk);
     }
     
@@ -106,11 +107,6 @@ async function migrateRelationship(relationship) {
   // Implementation using similar logic as GraphDataService
   const session = driver.session();
   try {
-    // Fetch relationship values
-    const relValues = await db.query.relationshipValues.findMany({
-      where: eq(schema.relationshipValues.relationshipId, relationship.id)
-    });
-    
     // Create relationship type
     await session.run(`
       MERGE (rel:RelationshipType {id: $id, name: $name})
@@ -131,6 +127,10 @@ async function migrateRelationship(relationship) {
     });
     
     // Create actual relationships between items
+    const relValues = await db.query.relationshipValues.findMany({
+      where: eq(relationshipValues.relationshipId, relationship.id)
+    });
+    
     for (const relValue of relValues) {
       await session.run(`
         MATCH (source:DataItem {id: $sourceId, dataSetId: $sourceDataSetId})
@@ -144,7 +144,10 @@ async function migrateRelationship(relationship) {
         sourceDataSetId: relationship.sourceDataSetId.toString(),
         targetDataSetId: relationship.targetDataSetId.toString(),
         relationshipId: relationship.id.toString(),
-        metadata: relValue.metadata || {},
+        metadata: {
+          createdAt: relValue.createdAt.toISOString(),
+          updatedAt: relValue.updatedAt.toISOString()
+        }
       });
     }
   } finally {
