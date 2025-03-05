@@ -1,7 +1,12 @@
 
-const fs = require('fs');
-const path = require('path');
-const { faker } = require('@faker-js/faker');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { faker } from '@faker-js/faker';
+
+// Get current file path in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Configuration
 const OUTPUT_DIR = './generated_data';
