@@ -29,8 +29,8 @@ async function login() {
     // Extract the set-cookie header
     const cookies = response.headers.get('set-cookie');
     if (cookies) {
-      // Extract just the session cookie part
-      const sessionCookie = cookies.split(';')[0];
+      // Extract just the session cookie part - format should be "connect.sid=s%3A..."
+      const sessionCookie = cookies.split(';')[0].trim();
       cookie = sessionCookie;
       console.log('Login successful, session cookie obtained');
       fs.writeFileSync('cookies.txt', cookie);
@@ -60,9 +60,11 @@ async function createReferenceType(typeData) {
     
     // Only add cookie if it exists and is valid
     if (cookie && typeof cookie === 'string' && cookie.trim() !== '') {
-      // Extract just the session cookie value without attributes
-      const sessionCookie = cookie.split(';')[0];
-      headers['Cookie'] = sessionCookie;
+      // Make sure the cookie doesn't have any invalid characters
+      const sanitizedCookie = cookie.replace(/[^\x20-\x7E]/g, '').trim();
+      if (sanitizedCookie) {
+        headers['Cookie'] = sanitizedCookie;
+      }
     }
     
     const response = await fetch('http://0.0.0.0:5000/api/reference-types', {
