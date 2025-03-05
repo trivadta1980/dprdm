@@ -24,12 +24,17 @@ export default function GraphVisualizationPage() {
   // Extract unique node types for filtering
   const nodeTypes = [...new Set((graphData.nodes || []).map(node => node.label))];
 
+  // Load graph data when component mounts
+  useEffect(() => {
+    fetchGraphData();
+  }, [fetchGraphData]);
+
   // Fetch graph data from API
   const fetchGraphData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiRequest('/api/graph/visualization');
+      const response = await apiRequest('/api/graph/visualization', { method: 'GET' });
       setGraphData(response);
       console.log("Graph data fetched:", response);
     } catch (err) {
@@ -75,6 +80,29 @@ export default function GraphVisualizationPage() {
   // Handle filter change
   const handleFilterChange = useCallback(value => {
     setFilterType(value);
+  }, []);
+
+  // Custom node rendering function
+  const nodeCanvasObject = useCallback((node, ctx, globalScale) => {
+    const label = node.label || 'Node';
+    const fontSize = 16/globalScale;
+    const size = node.val || 8;
+    
+    // Draw node circle
+    ctx.beginPath();
+    ctx.fillStyle = node.color || '#1D4ED8';
+    ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    // Draw node label
+    if (globalScale >= 0.4) {
+      const nodeLabel = node.properties?.name || label;
+      ctx.font = `${fontSize}px Sans-Serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'black';
+      ctx.fillText(nodeLabel, node.x, node.y + size + fontSize);
+    }
   }, []);
 
   // Custom node renderer
