@@ -1,16 +1,62 @@
 
 // Script to create reference data types using the API
 import fetch from 'node-fetch';
+import fs from 'fs';
+
+// Get auth cookie
+let cookie = '';
+
+async function login() {
+  try {
+    console.log('Attempting to login...');
+    
+    const response = await fetch('http://0.0.0.0:5000/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        username: 'jitender.nankani@gmail.com',
+        password: 'Password123'
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Login failed: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    // Extract the set-cookie header
+    const cookies = response.headers.get('set-cookie');
+    if (cookies) {
+      cookie = cookies;
+      console.log('Login successful, session cookie obtained');
+      fs.writeFileSync('cookies.txt', cookie);
+      return await response.json();
+    } else {
+      throw new Error('No cookies returned from login');
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
+  }
+}
 
 async function createReferenceType(typeData) {
   try {
     console.log(`Creating reference type: ${typeData.name}`);
     
+    // Read cookie from file (in case we're running the script multiple times)
+    if (!cookie && fs.existsSync('cookies.txt')) {
+      cookie = fs.readFileSync('cookies.txt', 'utf8');
+    }
+    
     // Use the correct API URL
     const response = await fetch('http://0.0.0.0:5000/api/reference-types', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Cookie': cookie
       },
       body: JSON.stringify(typeData)
     });
@@ -65,6 +111,13 @@ const referenceTypes = [
 
 async function main() {
   console.log("Starting to create reference data types");
+  
+  // Login first to get authentication
+  try {
+    await login();
+  } catch (error) {
+    console.error('Authentication failed, will try to use existing cookie if available');
+  }
   
   // Create each type sequentially
   for (const typeData of referenceTypes) {
