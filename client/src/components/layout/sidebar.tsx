@@ -86,7 +86,7 @@ export function Sidebar({ className }: SidebarProps) {
     },
     {
       title: "Graph Visualization",
-      href: "/graph",
+      href: "/graph-visualization",
       icon: Share2,
       requiresPermission: true,
     },
