@@ -978,6 +978,90 @@ app.get('/api/crosswalks/debug', async (req, res) => {
     });
   });
 
+  // Graph visualization endpoint
+  app.get('/api/graph/visualization', async (req, res) => {
+    console.log('GET /api/graph/visualization - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/graph/visualization - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      if (!isNeo4jAvailable()) {
+        console.log('GET /api/graph/visualization - Neo4j not available');
+        return res.status(503).json({ error: "Neo4j database not available" });
+      }
+      
+      // Query to get nodes and relationships
+      const records = await runQuery(`
+        MATCH (n)
+        OPTIONAL MATCH (n)-[r]->(m)
+        RETURN n, r, m
+      `);
+      
+      const nodes = [];
+      const links = [];
+      const nodeMap = new Map();
+      
+      // Process nodes and relationships
+      records.forEach(record => {
+        const source = record.get('n');
+        const relationship = record.get('r');
+        const target = record.get('m');
+        
+        if (source && !nodeMap.has(source.identity.toString())) {
+          nodeMap.set(source.identity.toString(), nodes.length);
+          nodes.push({
+            id: source.identity.toString(),
+            label: source.labels[0],
+            properties: source.properties,
+            // Set different node size based on type
+            val: source.labels[0] === 'DataSet' ? 20 : 10,
+            // Different colors for different node types
+            color: getNodeColor(source.labels[0])
+          });
+        }
+        
+        if (target && !nodeMap.has(target.identity.toString())) {
+          nodeMap.set(target.identity.toString(), nodes.length);
+          nodes.push({
+            id: target.identity.toString(),
+            label: target.labels[0],
+            properties: target.properties,
+            val: target.labels[0] === 'DataSet' ? 20 : 10,
+            color: getNodeColor(target.labels[0])
+          });
+        }
+        
+        if (relationship) {
+          links.push({
+            source: source.identity.toString(),
+            target: target.identity.toString(),
+            type: relationship.type,
+            properties: relationship.properties
+          });
+        }
+      });
+      
+      console.log('GET /api/graph/visualization - Data fetched successfully, nodes:', nodes.length, 'links:', links.length);
+      res.json({ nodes, links });
+    } catch (error) {
+      console.error('GET /api/graph/visualization - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  // Helper function to assign colors based on node type
+  function getNodeColor(label) {
+    const colorMap = {
+      'DataSet': '#4285F4',       // Blue
+      'DataItem': '#34A853',      // Green
+      'RelationshipType': '#FBBC05', // Yellow/Orange
+      'CrosswalkMapping': '#EA4335' // Red
+    };
+    return colorMap[label] || '#9334E6'; // Default purple
+  }
+
   const httpServer = createServer(app);
   return httpServer;
 }

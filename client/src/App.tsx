@@ -1,7 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { lazy, Suspense } from "react";
-import { Route, Router } from "wouter";
+import { Route, Router } from "wouter"; // Assuming wouter is used
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -24,6 +24,8 @@ const CrosswalkPage = lazy(() => import("@/pages/crosswalk-page"));
 const ChangePasswordPage = lazy(() => import("@/pages/change-password"));
 const ApiTestPage = lazy(() => import("@/pages/api-test-page"));
 const ResetPasswordPage = lazy(() => import("@/pages/reset-password-page"));
+const GraphVisualizationPage = lazy(() => import("@/pages/graph-visualization-page")); // Added GraphVisualizationPage
+
 
 export default function App() {
   return (
@@ -100,6 +102,7 @@ export default function App() {
                 </ProtectedRoute>
               </Route>
               <Route path="/debug" component={DebugPanel} />
+              <Route path="/graph-visualization" component={GraphVisualizationPage} /> {/* Added route for graph visualization */}
             </Router>
           </Suspense>
           <Toaster />
