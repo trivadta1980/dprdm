@@ -1,6 +1,8 @@
 // Load environment variables first
 import * as dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+console.log('Environment variables loaded. Current working directory:', process.cwd());
 
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
