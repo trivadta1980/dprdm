@@ -72,7 +72,7 @@ export default function ReferenceTypesPage() {
             continue;
           }
           const schemas = await res.json();
-          console.log(`Retrieved ${schemas.length} schemas for type ${type.id}`);
+          console.log(`Retrieved ${schemas.length} schemas for type ${type.id}:`, schemas);
           schemasMap[type.id] = schemas;
         } catch (error) {
           console.error(`Error fetching schemas for type ${type.id}:`, error);
@@ -91,7 +91,7 @@ export default function ReferenceTypesPage() {
       // First check if we already have schemas in schemasMap
       const typeSchemas = schemasMap[editingType.id] || [];
       console.log('Current schemas in type from schemasMap:', typeSchemas);
-      
+
       // Fallback to manually fetching if needed
       if (typeSchemas.length === 0 && !schemasMapLoading) {
         console.log(`No schemas in map for type ${editingType.id}, fetching directly`);
@@ -422,22 +422,22 @@ export default function ReferenceTypesPage() {
                           </div>
                         ) : (
                           <div className="flex flex-wrap gap-1">
-                          {typeSchemas.map((schema, index) => (
-                            <div key={index} className="space-y-1">
-                              <Badge variant="secondary" className="mr-1">
-                                {schema.name}: {schema.dataType}
+                            {typeSchemas.map((schema, index) => (
+                              <div key={index} className="space-y-1">
+                                <Badge variant="secondary" className="mr-1">
+                                  {schema.name}: {schema.dataType}
+                                </Badge>
+                                {schema.description && (
+                                  <p className="text-xs text-muted-foreground">{schema.description}</p>
+                                )}
+                              </div>
+                            ))}
+                            {typeSchemas.length > 0 && (
+                              <Badge variant="outline">
+                                Total: {typeSchemas.length}
                               </Badge>
-                              {schema.description && (
-                                <p className="text-xs text-muted-foreground">{schema.description}</p>
-                              )}
-                            </div>
-                          ))}
-                          {typeSchemas.length > 0 && (
-                            <Badge variant="outline">
-                              Total: {typeSchemas.length}
-                            </Badge>
-                          )}
-                        </div>
+                            )}
+                          </div>
                         )}
                       </TableCell>
                       <TableCell>
