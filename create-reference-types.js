@@ -1,6 +1,6 @@
 
 // Script to create reference data types using the API
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
 async function createReferenceType(typeData) {
   try {
