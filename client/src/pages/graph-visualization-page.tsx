@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState, useCallback } from "react";
 import ForceGraph2D from "react-force-graph-2d";
 import { MainLayout } from "@/components/layout/main-layout";
@@ -24,69 +25,44 @@ export default function GraphVisualizationPage() {
   const nodeTypes = [...new Set((graphData.nodes || []).map(node => node.label))];
 
   // Fetch graph data from API
-  const fetchGraphData = async () => {
+  const fetchGraphData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      const response = await apiRequest("GET", "/api/graph/visualization");
+      const response = await apiRequest('/api/graph/visualization');
       setGraphData(response);
+      console.log("Graph data fetched:", response);
     } catch (err) {
-      console.error('Error fetching graph data:', err);
-      setError(err.message || 'Failed to fetch graph data');
+      console.error("Error fetching graph data:", err);
+      setError(err.message || "Failed to load graph data");
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchGraphData();
   }, []);
 
-  // Filter nodes based on selected type
+  // Filter graph data based on selected type
   const filteredData = useCallback(() => {
-    if (filterType === 'all') return graphData;
+    if (filterType === 'all') {
+      return graphData;
+    }
 
-    const nodes = graphData.nodes || [];
-    const links = graphData.links || [];
-
-    const filteredNodes = nodes.filter(node => node.label === filterType);
+    const filteredNodes = (graphData.nodes || []).filter(node => node.label === filterType);
     const nodeIds = new Set(filteredNodes.map(node => node.id));
-
-    const filteredLinks = links.filter(
-      link => {
-        const sourceId = link.source?.id || link.source;
-        const targetId = link.target?.id || link.target;
-        return nodeIds.has(sourceId) && nodeIds.has(targetId);
-      }
+    
+    const filteredLinks = (graphData.links || []).filter(
+      link => nodeIds.has(link.source.id || link.source) && nodeIds.has(link.target.id || link.target)
     );
 
-    return { nodes: filteredNodes, links: filteredLinks };
+    return {
+      nodes: filteredNodes,
+      links: filteredLinks
+    };
   }, [graphData, filterType]);
 
-  // Handle node click to show details
+  // Handle node click
   const handleNodeClick = useCallback(node => {
     setSelectedNodeId(node.id);
     setSelectedNodeInfo(node);
-  }, []);
-
-  // Custom node rendering
-  const nodeCanvasObject = useCallback((node, ctx, globalScale) => {
-    const label = node.label || '';
-    const fontSize = 12/globalScale;
-    const size = node.val || 10;
-
-    ctx.beginPath();
-    ctx.arc(node.x, node.y, size/globalScale, 0, 2 * Math.PI, false);
-    ctx.fillStyle = node.color || '#1f77b4';
-    ctx.fill();
-
-    if (globalScale >= 0.8) {
-      ctx.font = `${fontSize}px Sans-Serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = 'black';
-      ctx.fillText(node.properties?.name || node.id, node.x, node.y + size/globalScale + fontSize);
-    }
   }, []);
 
   // Reset graph view
@@ -97,35 +73,65 @@ export default function GraphVisualizationPage() {
   }, []);
 
   // Handle filter change
-  const handleFilterChange = (value) => {
+  const handleFilterChange = useCallback(value => {
     setFilterType(value);
-  };
+  }, []);
 
-  if (loading && !graphData.nodes?.length) {
-    return (
-      <MainLayout>
-        <div className="flex h-full items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2">Loading graph data...</span>
-        </div>
-      </MainLayout>
-    );
-  }
+  // Custom node renderer
+  const nodeCanvasObject = useCallback((node, ctx, globalScale) => {
+    const label = node.properties?.name || node.label;
+    const fontSize = 12/globalScale;
+    const nodeSize = node.val || 10;
+    
+    // Draw node circle
+    ctx.beginPath();
+    ctx.fillStyle = node.color || '#4285F4';
+    ctx.arc(node.x, node.y, nodeSize / globalScale, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    // Draw node border, highlight if selected
+    ctx.strokeStyle = node.id === selectedNodeId ? '#FF5722' : '#FFFFFF';
+    ctx.lineWidth = node.id === selectedNodeId ? 2 / globalScale : 1 / globalScale;
+    ctx.stroke();
+    
+    // Draw node label if scale is appropriate
+    if (globalScale > 0.5) {
+      ctx.font = `${fontSize}px Sans-Serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#FFFFFF';
+      
+      // Draw label background
+      const textWidth = ctx.measureText(label).width;
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(
+        node.x - textWidth/2 - 2,
+        node.y + nodeSize/globalScale + 2,
+        textWidth + 4,
+        fontSize + 2
+      );
+      
+      // Draw text
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText(
+        label,
+        node.x,
+        node.y + nodeSize/globalScale + fontSize/2 + 2
+      );
+    }
+  }, [selectedNodeId]);
 
-  if (error && !graphData.nodes?.length) {
-    return (
-      <MainLayout>
-        <div className="flex h-full items-center justify-center flex-col">
-          <div className="text-destructive mb-2">Error loading graph data</div>
-          <div className="text-sm text-muted-foreground">{error}</div>
-          <Button onClick={fetchGraphData} className="mt-4">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Retry
-          </Button>
-        </div>
-      </MainLayout>
-    );
-  }
+  // Initialize
+  useEffect(() => {
+    fetchGraphData();
+  }, [fetchGraphData]);
+
+  // Reset view when graph data or filter changes
+  useEffect(() => {
+    if (!loading && graphRef.current) {
+      setTimeout(() => handleResetView(), 300);
+    }
+  }, [loading, handleResetView, filterType]);
 
   return (
     <MainLayout>
@@ -152,31 +158,41 @@ export default function GraphVisualizationPage() {
                       </SelectContent>
                     </Select>
                   </div>
-
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={handleResetView}>
-                      <ZoomIn className="h-4 w-4 mr-2" />
-                      Reset View
-                    </Button>
-                    <Button variant="outline" onClick={fetchGraphData}>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={fetchGraphData}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
                       <RefreshCw className="h-4 w-4 mr-2" />
-                      Refresh Data
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="mb-2">
-                  <span className="text-sm font-medium mr-2">Legend:</span>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    <Badge variant="outline" className="bg-blue-100">DataSet</Badge>
-                    <Badge variant="outline" className="bg-green-100">DataItem</Badge>
-                    <Badge variant="outline" className="bg-yellow-100">RelationshipType</Badge>
-                    <Badge variant="outline" className="bg-red-100">CrosswalkMapping</Badge>
-                  </div>
+                    )}
+                    Refresh
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleResetView}
+                    disabled={loading || graphData.nodes?.length === 0}
+                  >
+                    <ZoomIn className="h-4 w-4 mr-2" />
+                    Fit View
+                  </Button>
                 </div>
 
                 <div className="border rounded-md h-[500px] overflow-hidden bg-muted/10">
-                  {graphData.nodes?.length > 0 ? (
+                  {loading ? (
+                    <div className="flex h-full items-center justify-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      <span className="ml-2 text-muted-foreground">Loading graph data...</span>
+                    </div>
+                  ) : error ? (
+                    <div className="flex h-full items-center justify-center text-destructive">
+                      <p>Error: {error}</p>
+                    </div>
+                  ) : graphData.nodes?.length > 0 ? (
                     <ForceGraph2D
                       ref={graphRef}
                       graphData={filteredData()}
@@ -197,46 +213,29 @@ export default function GraphVisualizationPage() {
                   )}
                 </div>
               </div>
-
-              <div>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Node Details</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {selectedNodeInfo ? (
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="font-medium">{selectedNodeInfo.label}</h4>
-                          <p className="text-sm text-muted-foreground">ID: {selectedNodeInfo.id}</p>
-                        </div>
-
-                        <Separator />
-
-                        <div>
-                          <h4 className="font-medium mb-2">Properties</h4>
-                          {selectedNodeInfo.properties ? (
-                            <div className="space-y-2">
-                              {Object.entries(selectedNodeInfo.properties).map(([key, value]) => (
-                                <div key={key} className="grid grid-cols-2 gap-1">
-                                  <span className="text-sm font-medium">{key}:</span>
-                                  <span className="text-sm truncate">{String(value)}</span>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-sm text-muted-foreground">No properties</p>
-                          )}
-                        </div>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium mb-2">Selected Node</h3>
+                  {selectedNodeInfo ? (
+                    <div className="bg-muted rounded-md p-3 text-sm space-y-2">
+                      <div>
+                        <Badge>{selectedNodeInfo.label}</Badge>
                       </div>
-                    ) : (
-                      <div className="py-8 text-center text-muted-foreground text-sm">
-                        Click on a node to view details
+                      <div>
+                        <span className="text-muted-foreground">ID:</span> {selectedNodeInfo.id}
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-
+                      {selectedNodeInfo.properties && Object.entries(selectedNodeInfo.properties).map(([key, value]) => (
+                        <div key={key}>
+                          <span className="text-muted-foreground">{key}:</span> {String(value)}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-muted rounded-md p-3 text-sm text-muted-foreground">
+                      Click on a node to see details
+                    </div>
+                  )}
+                </div>
                 <div className="mt-4">
                   <h3 className="font-medium mb-2">Statistics</h3>
                   <div className="flex gap-2">
@@ -247,6 +246,27 @@ export default function GraphVisualizationPage() {
                     <div className="bg-muted rounded-md p-3">
                       <div className="text-sm text-muted-foreground">Links</div>
                       <div className="text-2xl font-bold">{graphData.links?.length || 0}</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <h3 className="font-medium mb-2">Legend</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 mr-2 rounded-full bg-[#4285F4]"></div>
+                      <span>Data Set</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 mr-2 rounded-full bg-[#34A853]"></div>
+                      <span>Data Item</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 mr-2 rounded-full bg-[#FBBC05]"></div>
+                      <span>Relationship</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 mr-2 rounded-full bg-[#EA4335]"></div>
+                      <span>Crosswalk Mapping</span>
                     </div>
                   </div>
                 </div>
