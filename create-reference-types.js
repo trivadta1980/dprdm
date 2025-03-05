@@ -16,10 +16,11 @@ async function login() {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        username: 'jitender.nankani@gmail.com',
-        password: 'Password123'
+        username: 'admin',
+        password: 'Admin123!'
       })
     });
+
 
     if (!response.ok) {
       const errorText = await response.text();
