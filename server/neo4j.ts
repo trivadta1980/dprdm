@@ -6,6 +6,9 @@ if (!process.env.NEO4J_URI || !process.env.NEO4J_USERNAME || !process.env.NEO4J_
   console.warn(
     "Neo4j connection credentials not found. Graph database features will be disabled."
   );
+  console.log("NEO4J_URI:", process.env.NEO4J_URI ? "Found" : "Not found");
+  console.log("NEO4J_USERNAME:", process.env.NEO4J_USERNAME ? "Found" : "Not found");
+  console.log("NEO4J_PASSWORD:", process.env.NEO4J_PASSWORD ? "Found" : "Not found (or empty)");
 }
 
 // Create a driver instance
@@ -13,11 +16,12 @@ let driver: neo4j.Driver | null = null;
 
 try {
   if (process.env.NEO4J_URI && process.env.NEO4J_USERNAME && process.env.NEO4J_PASSWORD) {
+    console.log("Attempting to connect to Neo4j with URI:", process.env.NEO4J_URI);
     driver = neo4j.driver(
       process.env.NEO4J_URI,
       neo4j.auth.basic(process.env.NEO4J_USERNAME, process.env.NEO4J_PASSWORD)
     );
-    console.log("Neo4j connection established");
+    console.log("Neo4j connection established successfully");
   }
 } catch (error) {
   console.error("Error connecting to Neo4j:", error);
