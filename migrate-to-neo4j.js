@@ -2,10 +2,15 @@
 // Script to migrate existing PostgreSQL data to Neo4j
 import * as dotenv from 'dotenv';
 dotenv.config();
-import { db } from './server/db.js';
 import neo4j from 'neo4j-driver';
-import { referenceDataSets, relationships, crosswalkMappings } from './shared/schema.js';
 import { eq } from 'drizzle-orm';
+
+// Import TypeScript modules directly (they'll be transpiled on the fly)
+import { db } from './server/db.ts';
+import * as schema from './shared/schema.ts';
+
+// Extract needed tables
+const { referenceDataSets, relationships, crosswalkMappings, relationshipValues } = schema;
 
 // Create Neo4j driver
 const driver = neo4j.driver(
