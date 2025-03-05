@@ -321,9 +321,20 @@ app.post("/api/reference-types", async (req, res) => {
 // Neo4j graph visualization routes
 router.get('/api/graph/visualization', async (req, res) => {
   try {
+    console.log("GET /api/graph/visualization - Checking if Neo4j is available");
+    
     if (!isNeo4jAvailable()) {
-      return res.status(503).json({ error: "Neo4j database not available" });
+      console.log("GET /api/graph/visualization - Neo4j not available");
+      console.log("NEO4J_URI:", process.env.NEO4J_URI ? "Found" : "Not found");
+      console.log("NEO4J_USERNAME:", process.env.NEO4J_USERNAME ? "Found" : "Not found");
+      console.log("NEO4J_PASSWORD:", process.env.NEO4J_PASSWORD ? "Found (but redacted)" : "Not found");
+      return res.status(503).json({ 
+        error: "Neo4j database not available",
+        reason: "Neo4j connection has not been established. Check server logs for details."
+      });
     }
+    
+    console.log("GET /api/graph/visualization - Neo4j is available, executing query");
     
     // Query to get nodes and relationships
     const records = await runQuery(`
