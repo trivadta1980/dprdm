@@ -385,11 +385,11 @@ app.get('/api/graph/visualization', async (req, res) => {
     });
     
     res.json({ nodes, links });
-  } catch (error) {
+  /* } catch (error) {
     console.error('Error fetching graph data:', error);
     res.status(500).json({ error: error.message });
   }
-});
+}); */
 
       if (!dataSet) {
         console.log('POST /api/reference-data/:id/bulk-upload - Dataset not found'); //Added logging
