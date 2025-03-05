@@ -1,0 +1,89 @@
+Starting to create reference data types
+Attempting to login...
+Login error: Error: Login failed: 401 Unauthorized - Unauthorized
+    at login (file:///home/runner/workspace/create-reference-types.js:26:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async main (file:///home/runner/workspace/create-reference-types.js:117:5)
+Authentication failed, will try to use existing cookie if available
+Creating reference type: Manufacturer
+Error creating reference type: TypeError [ERR_INVALID_CHAR]: Invalid character in header content ["Cookie"]
+    at file:///home/runner/workspace/node_modules/node-fetch/src/headers.js:101:6
+    at Array.map (<anonymous>)
+    at new Headers (file:///home/runner/workspace/node_modules/node-fetch/src/headers.js:99:12)
+    at new Request (file:///home/runner/workspace/node_modules/node-fetch/src/request.js:88:19)
+    at file:///home/runner/workspace/node_modules/node-fetch/src/index.js:51:19
+    at new Promise (<anonymous>)
+    at fetch (file:///home/runner/workspace/node_modules/node-fetch/src/index.js:49:9)
+    at createReferenceType (file:///home/runner/workspace/create-reference-types.js:55:28)
+    at main (file:///home/runner/workspace/create-reference-types.js:125:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: 'ERR_INVALID_CHAR'
+}
+Failed to create Manufacturer: TypeError [ERR_INVALID_CHAR]: Invalid character in header content ["Cookie"]
+    at file:///home/runner/workspace/node_modules/node-fetch/src/headers.js:101:6
+    at Array.map (<anonymous>)
+    at new Headers (file:///home/runner/workspace/node_modules/node-fetch/src/headers.js:99:12)
+    at new Request (file:///home/runner/workspace/node_modules/node-fetch/src/request.js:88:19)
+    at file:///home/runner/workspace/node_modules/node-fetch/src/index.js:51:19
+    at new Promise (<anonymous>)
+    at fetch (file:///home/runner/workspace/node_modules/node-fetch/src/index.js:49:9)
+    at createReferenceType (file:///home/runner/workspace/create-reference-types.js:55:28)
+    at main (file:///home/runner/workspace/create-reference-types.js:125:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: 'ERR_INVALID_CHAR'
+}
+Creating reference type: Distributor
+Error creating reference type: TypeError [ERR_INVALID_CHAR]: Invalid character in header content ["Cookie"]
+    at file:///home/runner/workspace/node_modules/node-fetch/src/headers.js:101:6
+    at Array.map (<anonymous>)
+    at new Headers (file:///home/runner/workspace/node_modules/node-fetch/src/headers.js:99:12)
+    at new Request (file:///home/runner/workspace/node_modules/node-fetch/src/request.js:88:19)
+    at file:///home/runner/workspace/node_modules/node-fetch/src/index.js:51:19
+    at new Promise (<anonymous>)
+    at fetch (file:///home/runner/workspace/node_modules/node-fetch/src/index.js:49:9)
+    at createReferenceType (file:///home/runner/workspace/create-reference-types.js:55:28)
+    at main (file:///home/runner/workspace/create-reference-types.js:125:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: 'ERR_INVALID_CHAR'
+}
+Failed to create Distributor: TypeError [ERR_INVALID_CHAR]: Invalid character in header content ["Cookie"]
+    at file:///home/runner/workspace/node_modules/node-fetch/src/headers.js:101:6
+    at Array.map (<anonymous>)
+    at new Headers (file:///home/runner/workspace/node_modules/node-fetch/src/headers.js:99:12)
+    at new Request (file:///home/runner/workspace/node_modules/node-fetch/src/request.js:88:19)
+    at file:///home/runner/workspace/node_modules/node-fetch/src/index.js:51:19
+    at new Promise (<anonymous>)
+    at fetch (file:///home/runner/workspace/node_modules/node-fetch/src/index.js:49:9)
+    at createReferenceType (file:///home/runner/workspace/create-reference-types.js:55:28)
+    at main (file:///home/runner/workspace/create-reference-types.js:125:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: 'ERR_INVALID_CHAR'
+}
+Creating reference type: Site
+Error creating reference type: TypeError [ERR_INVALID_CHAR]: Invalid character in header content ["Cookie"]
+    at file:///home/runner/workspace/node_modules/node-fetch/src/headers.js:101:6
+    at Array.map (<anonymous>)
+    at new Headers (file:///home/runner/workspace/node_modules/node-fetch/src/headers.js:99:12)
+    at new Request (file:///home/runner/workspace/node_modules/node-fetch/src/request.js:88:19)
+    at file:///home/runner/workspace/node_modules/node-fetch/src/index.js:51:19
+    at new Promise (<anonymous>)
+    at fetch (file:///home/runner/workspace/node_modules/node-fetch/src/index.js:49:9)
+    at createReferenceType (file:///home/runner/workspace/create-reference-types.js:55:28)
+    at main (file:///home/runner/workspace/create-reference-types.js:125:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: 'ERR_INVALID_CHAR'
+}
+Failed to create Site: TypeError [ERR_INVALID_CHAR]: Invalid character in header content ["Cookie"]
+    at file:///home/runner/workspace/node_modules/node-fetch/src/headers.js:101:6
+    at Array.map (<anonymous>)
+    at new Headers (file:///home/runner/workspace/node_modules/node-fetch/src/headers.js:99:12)
+    at new Request (file:///home/runner/workspace/node_modules/node-fetch/src/request.js:88:19)
+    at file:///home/runner/workspace/node_modules/node-fetch/src/index.js:51:19
+    at new Promise (<anonymous>)
+    at fetch (file:///home/runner/workspace/node_modules/node-fetch/src/index.js:49:9)
+    at createReferenceType (file:///home/runner/workspace/create-reference-types.js:55:28)
+    at main (file:///home/runner/workspace/create-reference-types.js:125:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: 'ERR_INVALID_CHAR'
+}
+Finished creating reference data types
