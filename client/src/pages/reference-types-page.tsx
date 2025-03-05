@@ -56,29 +56,16 @@ export default function ReferenceTypesPage() {
   });
 
   // Finally, get schemas for all reference types
-  const { data: schemasMap = {}, isLoading: schemasMapLoading } = useQuery<{ [key: number]: ReferenceDataTypeSchema[] }>({
-    queryKey: ["reference-types-schemas-map"],
+  const { data: schemasMap = {} } = useQuery<{ [key: number]: ReferenceDataTypeSchema[] }>({
+    queryKey: ["/api/reference-types/schemas"],
     queryFn: async () => {
       if (!referenceTypes?.length) return {};
 
-      console.log('Fetching schemas for all reference types');
       const schemasMap: { [key: number]: ReferenceDataTypeSchema[] } = {};
       for (const type of referenceTypes) {
-        try {
-          console.log(`Fetching schemas for type ID: ${type.id}`);
-          const res = await apiRequest("GET", `/api/reference-types/${type.id}/schemas`);
-          if (!res.ok) {
-            console.error(`Failed to fetch schemas for type ${type.id}: ${res.status} ${res.statusText}`);
-            continue;
-          }
-          const schemas = await res.json();
-          console.log(`Retrieved ${schemas.length} schemas for type ${type.id}:`, schemas);
-          schemasMap[type.id] = schemas;
-        } catch (error) {
-          console.error(`Error fetching schemas for type ${type.id}:`, error);
-        }
+        const res = await apiRequest("GET", `/api/reference-types/${type.id}/schemas`);
+        schemasMap[type.id] = await res.json();
       }
-      console.log('Final schemas map:', schemasMap);
       return schemasMap;
     },
     enabled: !!referenceTypes?.length,
@@ -88,35 +75,8 @@ export default function ReferenceTypesPage() {
   useEffect(() => {
     if (editingType) {
       console.log('Editing type:', editingType);
-      // First check if we already have schemas in schemasMap
+      console.log('Current schemas in type:', schemasMap[editingType.id]);
       const typeSchemas = schemasMap[editingType.id] || [];
-      console.log('Current schemas in type from schemasMap:', typeSchemas);
-
-      // Fallback to manually fetching if needed
-      if (typeSchemas.length === 0 && !schemasMapLoading) {
-        console.log(`No schemas in map for type ${editingType.id}, fetching directly`);
-        const fetchSchemas = async () => {
-          try {
-            const res = await apiRequest("GET", `/api/reference-types/${editingType.id}/schemas`);
-            if (res.ok) {
-              const schemas = await res.json();
-              console.log(`Directly fetched ${schemas.length} schemas for type ${editingType.id}:`, schemas);
-              // Update the form with these schemas
-              if (schemas.length > 0) {
-                form.setValue("schemas", schemas.map(s => ({
-                  name: s.name,
-                  dataType: s.dataType,
-                  description: s.description || ""
-                })));
-                return;
-              }
-            }
-          } catch (error) {
-            console.error(`Error directly fetching schemas for type ${editingType.id}:`, error);
-          }
-        };
-        fetchSchemas();
-      }
 
       form.reset({
         name: editingType.name,
@@ -415,30 +375,23 @@ export default function ReferenceTypesPage() {
                       <TableCell>{type.name}</TableCell>
                       <TableCell>{type.description}</TableCell>
                       <TableCell>
-                        {schemasMapLoading ? (
-                          <div className="flex items-center">
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            <span>Loading schemas...</span>
-                          </div>
-                        ) : (
-                          <div className="flex flex-wrap gap-1">
-                            {typeSchemas.map((schema, index) => (
-                              <div key={index} className="space-y-1">
-                                <Badge variant="secondary" className="mr-1">
-                                  {schema.name}: {schema.dataType}
-                                </Badge>
-                                {schema.description && (
-                                  <p className="text-xs text-muted-foreground">{schema.description}</p>
-                                )}
-                              </div>
-                            ))}
-                            {typeSchemas.length > 0 && (
-                              <Badge variant="outline">
-                                Total: {typeSchemas.length}
+                        <div className="flex flex-wrap gap-1">
+                          {typeSchemas.map((schema, index) => (
+                            <div key={index} className="space-y-1">
+                              <Badge variant="secondary" className="mr-1">
+                                {schema.name}: {schema.dataType}
                               </Badge>
-                            )}
-                          </div>
-                        )}
+                              {schema.description && (
+                                <p className="text-xs text-muted-foreground">{schema.description}</p>
+                              )}
+                            </div>
+                          ))}
+                          {typeSchemas.length > 0 && (
+                            <Badge variant="outline">
+                              Total: {typeSchemas.length}
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         {new Date(type.createdAt).toLocaleDateString()}
