@@ -318,8 +318,10 @@ app.post("/api/reference-types", async (req, res) => {
 
       const dataSet = await storage.getReferenceDataSet(dataSetId);
 
-// Neo4j graph visualization routes
-router.get('/api/graph/visualization', async (req, res) => {
+// Neo4j graph visualization routes - commenting out this duplicate router handler
+// This was causing issues because 'router' is not defined here
+/* 
+app.get('/api/graph/visualization', async (req, res) => {
   try {
     console.log("GET /api/graph/visualization - Checking if Neo4j is available");
     
@@ -342,6 +344,7 @@ router.get('/api/graph/visualization', async (req, res) => {
       OPTIONAL MATCH (n)-[r]->(m)
       RETURN n, r, m
     `);
+*/
     
     const nodes = [];
     const links = [];
@@ -1002,6 +1005,9 @@ app.get('/api/crosswalks/debug', async (req, res) => {
         console.log('GET /api/graph/visualization - Neo4j not available');
         return res.status(503).json({ error: "Neo4j database not available" });
       }
+      
+      // Import the runQuery function from neo4j module
+      const { runQuery } = await import('./neo4j');
       
       // Query to get nodes and relationships
       const records = await runQuery(`
