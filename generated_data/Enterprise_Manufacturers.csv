@@ -1,0 +1,1001 @@
+CMO_ID,Name,Sponsor_ID,GMP Status
+CMO00001,Integrated BioPharm Ltd.,SP5814,Pending
+CMO00002,BioTech Solutions Innovations,SP5753,Provisional
+CMO00003,Global BioPharm Inc.,SP7098,Approved
+CMO00004,Advanced Therapeutics Partners,SP4422,Expired
+CMO00005,NextGen BioPharm Partners,SP5322,Revoked
+CMO00006,Premier Therapeutics International,SP5985,Under Evaluation
+CMO00007,BioTech Biologics Group,SP3268,Compliant
+CMO00008,Integrated Biologics Corp,SP4817,Under Evaluation
+CMO00009,Global Manufacturing Systems,SP3128,Revoked
+CMO00010,Precision Manufacturing Systems,SP8596,Pending
+CMO00011,Premier Biologics International,SP2659,Approved
+CMO00012,Universal Solutions Innovations,SP5598,Provisional
+CMO00013,Global Sciences International,SP7083,Revoked
+CMO00014,Alliance Laboratories Group,SP7959,Compliant
+CMO00015,Alliance Biologics Group,SP1770,Pending
+CMO00016,Advanced Laboratories Corp,SP5803,Approved
+CMO00017,Summit Research Ltd.,SP7394,Under Evaluation
+CMO00018,BioTech Sciences Systems,SP8463,Revoked
+CMO00019,Summit MedTech Group,SP7691,Expired
+CMO00020,Premier Therapeutics Inc.,SP3047,Certified
+CMO00021,Integrated Therapeutics Innovations,SP2313,Compliant
+CMO00022,Integrated Research Technologies,SP2675,Revoked
+CMO00023,Global Laboratories Ltd.,SP8967,Compliant
+CMO00024,Premier Manufacturing Corp,SP5384,In Review
+CMO00025,Advanced MedTech Ltd.,SP1084,Expired
+CMO00026,BioTech MedTech Innovations,SP7537,Pending
+CMO00027,NextGen Sciences Systems,SP8663,Approved
+CMO00028,BioTech Therapeutics Group,SP3512,Expired
+CMO00029,Global Therapeutics Group,SP4069,Expired
+CMO00030,Alliance Research Partners,SP0795,Approved
+CMO00031,Precision MedTech Corp,SP0998,Provisional
+CMO00032,Integrated Laboratories International,SP6457,In Review
+CMO00033,Summit Therapeutics Solutions,SP8799,Certified
+CMO00034,NextGen Solutions Systems,SP8725,Approved
+CMO00035,Advanced Research Innovations,SP5186,Certified
+CMO00036,Alliance Laboratories Corp,SP9029,In Review
+CMO00037,Precision Solutions Solutions,SP2973,Conditional
+CMO00038,Global Research International,SP5405,Certified
+CMO00039,NextGen Laboratories Innovations,SP0215,Conditional
+CMO00040,Alliance Laboratories Corp,SP9923,Revoked
+CMO00041,Advanced Research International,SP7582,Pending
+CMO00042,NextGen Solutions Innovations,SP0320,Pending
+CMO00043,Premier Pharma Corp,SP8185,Pending
+CMO00044,NextGen Laboratories Partners,SP0830,Provisional
+CMO00045,NextGen Pharma Corp,SP8692,Compliant
+CMO00046,Alliance BioPharm Corp,SP4380,Revoked
+CMO00047,Advanced Laboratories Systems,SP9975,Under Evaluation
+CMO00048,NextGen Solutions Solutions,SP8466,Conditional
+CMO00049,Advanced Manufacturing Corp,SP0514,Approved
+CMO00050,NextGen Biologics Inc.,SP9615,In Review
+CMO00051,Alliance Research Group,SP7631,Revoked
+CMO00052,Summit Therapeutics Inc.,SP9185,Under Evaluation
+CMO00053,BioTech Research Technologies,SP1709,Pending
+CMO00054,Advanced Solutions Group,SP0908,Conditional
+CMO00055,Integrated Biologics Group,SP9101,Revoked
+CMO00056,BioTech Manufacturing Group,SP0876,Compliant
+CMO00057,Advanced BioPharm Group,SP6108,Compliant
+CMO00058,Integrated BioPharm Technologies,SP9799,Compliant
+CMO00059,Premier Sciences Innovations,SP2292,Certified
+CMO00060,Global Solutions Inc.,SP3573,Pending
+CMO00061,Advanced Pharma Systems,SP8563,Compliant
+CMO00062,BioTech Solutions Corp,SP1965,Revoked
+CMO00063,BioTech BioPharm Partners,SP0100,Expired
+CMO00064,BioTech Research Partners,SP8211,Provisional
+CMO00065,Universal Therapeutics Technologies,SP1780,Conditional
+CMO00066,Precision Research Systems,SP3012,Conditional
+CMO00067,BioTech Laboratories Corp,SP6377,Certified
+CMO00068,Advanced Sciences Innovations,SP8737,Under Evaluation
+CMO00069,Global Sciences Technologies,SP0100,Approved
+CMO00070,Premier Research Solutions,SP0576,Approved
+CMO00071,Alliance BioPharm Ltd.,SP7642,Revoked
+CMO00072,NextGen Laboratories Innovations,SP6572,Expired
+CMO00073,Global Pharma Innovations,SP1049,Provisional
+CMO00074,Global Solutions Innovations,SP6203,Conditional
+CMO00075,Alliance Manufacturing Partners,SP4470,Conditional
+CMO00076,Summit Therapeutics Innovations,SP5834,Expired
+CMO00077,Universal Manufacturing Systems,SP5431,Under Evaluation
+CMO00078,Integrated Sciences Group,SP3859,Approved
+CMO00079,NextGen Pharma Technologies,SP5833,Revoked
+CMO00080,NextGen Manufacturing Solutions,SP2786,Pending
+CMO00081,Premier Pharma International,SP9252,Under Evaluation
+CMO00082,Alliance Therapeutics Solutions,SP4823,In Review
+CMO00083,Precision Laboratories Ltd.,SP1281,Conditional
+CMO00084,Advanced BioPharm Technologies,SP8321,Pending
+CMO00085,Advanced BioPharm Innovations,SP9441,Certified
+CMO00086,Summit Research Solutions,SP6504,Certified
+CMO00087,Universal Therapeutics Technologies,SP2874,Pending
+CMO00088,Precision Pharma Solutions,SP3946,In Review
+CMO00089,NextGen Sciences Group,SP0265,Compliant
+CMO00090,Advanced Research Corp,SP2410,Compliant
+CMO00091,Summit Solutions Group,SP0618,Under Evaluation
+CMO00092,Premier Therapeutics International,SP7597,Provisional
+CMO00093,Premier Sciences Technologies,SP5297,Pending
+CMO00094,Precision BioPharm Group,SP4786,In Review
+CMO00095,Global Sciences Corp,SP7889,In Review
+CMO00096,Summit Research Technologies,SP4535,Compliant
+CMO00097,Integrated Laboratories Technologies,SP5491,Revoked
+CMO00098,BioTech Solutions International,SP6335,Under Evaluation
+CMO00099,NextGen Research Solutions,SP2334,Under Evaluation
+CMO00100,Integrated Pharma Inc.,SP1229,Provisional
+CMO00101,BioTech Research Inc.,SP0506,Expired
+CMO00102,Alliance Biologics Innovations,SP5932,Revoked
+CMO00103,Global MedTech International,SP3468,Approved
+CMO00104,Precision Research Ltd.,SP4139,Approved
+CMO00105,Advanced Therapeutics Innovations,SP8503,Approved
+CMO00106,Precision Pharma Inc.,SP6700,Revoked
+CMO00107,Advanced BioPharm Systems,SP8198,Expired
+CMO00108,Alliance Research International,SP0623,Pending
+CMO00109,Premier Manufacturing Innovations,SP6808,Provisional
+CMO00110,Global BioPharm International,SP6471,Pending
+CMO00111,Universal Research Systems,SP8954,Compliant
+CMO00112,NextGen Solutions Systems,SP8793,Under Evaluation
+CMO00113,Advanced Pharma Corp,SP1362,Expired
+CMO00114,Advanced Sciences Innovations,SP0139,Expired
+CMO00115,Premier Laboratories Technologies,SP0164,In Review
+CMO00116,Premier Laboratories Group,SP7357,Pending
+CMO00117,Universal MedTech Technologies,SP3374,Conditional
+CMO00118,Integrated Pharma Solutions,SP9037,Expired
+CMO00119,Precision Research Inc.,SP7347,Under Evaluation
+CMO00120,BioTech Biologics Systems,SP0749,Revoked
+CMO00121,Alliance Solutions Solutions,SP9870,Provisional
+CMO00122,BioTech Research Solutions,SP5751,Pending
+CMO00123,Alliance Laboratories Innovations,SP1090,Under Evaluation
+CMO00124,Premier Manufacturing Solutions,SP5738,Expired
+CMO00125,Alliance Laboratories Partners,SP3143,Compliant
+CMO00126,Integrated BioPharm Corp,SP1029,Conditional
+CMO00127,BioTech Solutions Systems,SP1114,Under Evaluation
+CMO00128,NextGen Solutions Corp,SP2125,Expired
+CMO00129,Premier MedTech Innovations,SP5582,Compliant
+CMO00130,Alliance Therapeutics Ltd.,SP4089,Expired
+CMO00131,Advanced Manufacturing Corp,SP6131,Expired
+CMO00132,Premier Laboratories Systems,SP5795,Conditional
+CMO00133,Universal Research Innovations,SP3712,Expired
+CMO00134,Alliance Laboratories Innovations,SP9642,Revoked
+CMO00135,BioTech BioPharm Partners,SP8825,Approved
+CMO00136,Universal Sciences Corp,SP0498,Expired
+CMO00137,Universal MedTech Systems,SP2914,Provisional
+CMO00138,Alliance Manufacturing Group,SP7671,Compliant
+CMO00139,Summit BioPharm Technologies,SP6211,Revoked
+CMO00140,NextGen BioPharm Technologies,SP9491,Approved
+CMO00141,Advanced Pharma Ltd.,SP9921,Conditional
+CMO00142,Universal Therapeutics Technologies,SP2153,Conditional
+CMO00143,Universal Laboratories Group,SP9838,In Review
+CMO00144,Universal Manufacturing Solutions,SP0090,Conditional
+CMO00145,Advanced Sciences Corp,SP6365,Under Evaluation
+CMO00146,Precision Research Innovations,SP0707,Provisional
+CMO00147,Summit Laboratories Solutions,SP6066,Conditional
+CMO00148,Summit BioPharm Group,SP7854,Approved
+CMO00149,Alliance Solutions Group,SP5529,Compliant
+CMO00150,BioTech Laboratories Solutions,SP0905,Provisional
+CMO00151,Alliance MedTech International,SP7897,Pending
+CMO00152,Integrated Research Technologies,SP2828,Provisional
+CMO00153,Alliance BioPharm Partners,SP5195,Certified
+CMO00154,BioTech Manufacturing Ltd.,SP7427,Certified
+CMO00155,Advanced Solutions Inc.,SP6148,Approved
+CMO00156,Global Biologics Solutions,SP5405,Conditional
+CMO00157,Precision Sciences Systems,SP2202,Provisional
+CMO00158,Alliance Manufacturing Technologies,SP5701,Pending
+CMO00159,Precision BioPharm Partners,SP0425,Under Evaluation
+CMO00160,Global Laboratories Systems,SP4944,Conditional
+CMO00161,Summit Laboratories Partners,SP5625,Compliant
+CMO00162,BioTech MedTech Systems,SP4824,Compliant
+CMO00163,NextGen MedTech Innovations,SP0504,Expired
+CMO00164,Summit Therapeutics Inc.,SP6531,In Review
+CMO00165,NextGen Sciences Solutions,SP4812,In Review
+CMO00166,Universal Biologics Solutions,SP0063,Conditional
+CMO00167,Precision Laboratories Partners,SP7702,Compliant
+CMO00168,Precision Pharma Ltd.,SP7196,Pending
+CMO00169,Precision Therapeutics Corp,SP1059,Revoked
+CMO00170,Integrated Solutions Technologies,SP6147,Approved
+CMO00171,Precision BioPharm Innovations,SP7089,Expired
+CMO00172,Premier Research Systems,SP8862,Pending
+CMO00173,Premier MedTech Ltd.,SP5643,Expired
+CMO00174,Alliance BioPharm International,SP1618,Certified
+CMO00175,Global BioPharm Technologies,SP8748,Expired
+CMO00176,Universal Sciences International,SP8476,Approved
+CMO00177,Global BioPharm Systems,SP1062,Certified
+CMO00178,Alliance MedTech Solutions,SP6995,Under Evaluation
+CMO00179,Summit Therapeutics Partners,SP0360,Approved
+CMO00180,Summit Solutions Solutions,SP7782,Expired
+CMO00181,Universal Solutions Solutions,SP6637,Revoked
+CMO00182,Alliance Laboratories International,SP1986,Expired
+CMO00183,NextGen BioPharm Systems,SP3867,Conditional
+CMO00184,Precision Manufacturing Technologies,SP4748,In Review
+CMO00185,Global Solutions Corp,SP1407,Approved
+CMO00186,BioTech Manufacturing Systems,SP1466,Conditional
+CMO00187,Advanced Laboratories Systems,SP7857,Expired
+CMO00188,Premier Biologics Corp,SP6406,Certified
+CMO00189,Premier Pharma Innovations,SP4832,Pending
+CMO00190,NextGen Pharma Technologies,SP2014,Under Evaluation
+CMO00191,Universal Laboratories Group,SP7362,Certified
+CMO00192,Global Laboratories Partners,SP4925,Conditional
+CMO00193,Precision Therapeutics Inc.,SP9720,Under Evaluation
+CMO00194,Advanced Research Solutions,SP3464,Approved
+CMO00195,Alliance Pharma Solutions,SP3695,Conditional
+CMO00196,Advanced Sciences Corp,SP8983,Certified
+CMO00197,BioTech Therapeutics Group,SP8251,Expired
+CMO00198,BioTech Research Systems,SP7186,Under Evaluation
+CMO00199,Premier Biologics Systems,SP0246,Revoked
+CMO00200,Global Pharma International,SP0970,Compliant
+CMO00201,Universal Research Corp,SP3168,Expired
+CMO00202,Premier BioPharm Solutions,SP8470,Certified
+CMO00203,Advanced BioPharm Systems,SP0198,Expired
+CMO00204,Precision Solutions Partners,SP5209,Conditional
+CMO00205,Advanced Therapeutics Innovations,SP4105,Compliant
+CMO00206,Global Sciences Technologies,SP8262,Conditional
+CMO00207,Integrated BioPharm Corp,SP9498,Under Evaluation
+CMO00208,Advanced BioPharm Solutions,SP6862,Conditional
+CMO00209,Summit MedTech Technologies,SP5847,Revoked
+CMO00210,Global Sciences Systems,SP3827,In Review
+CMO00211,Advanced Laboratories Inc.,SP7804,Expired
+CMO00212,Precision Sciences Systems,SP7416,Under Evaluation
+CMO00213,Universal Solutions Ltd.,SP1207,In Review
+CMO00214,Integrated BioPharm Group,SP0639,Under Evaluation
+CMO00215,NextGen Manufacturing Ltd.,SP6433,Revoked
+CMO00216,Premier Pharma Corp,SP2504,Pending
+CMO00217,Integrated Laboratories Inc.,SP6696,Pending
+CMO00218,Global Research International,SP2584,Provisional
+CMO00219,Advanced BioPharm International,SP2768,In Review
+CMO00220,Precision Research International,SP4175,Provisional
+CMO00221,Integrated Therapeutics Partners,SP2582,Revoked
+CMO00222,Global Biologics Innovations,SP7653,Certified
+CMO00223,Precision Therapeutics Solutions,SP8910,Revoked
+CMO00224,Summit Research Partners,SP5363,Conditional
+CMO00225,Summit Sciences Partners,SP5973,Conditional
+CMO00226,NextGen Research Inc.,SP9460,In Review
+CMO00227,NextGen Pharma International,SP9800,Revoked
+CMO00228,Precision Therapeutics International,SP8901,Certified
+CMO00229,Global Sciences International,SP9880,Compliant
+CMO00230,Summit Biologics Partners,SP3529,In Review
+CMO00231,Universal Therapeutics International,SP6995,Expired
+CMO00232,Precision Pharma International,SP2814,Conditional
+CMO00233,NextGen Solutions Innovations,SP7625,Expired
+CMO00234,Summit Biologics Solutions,SP9115,Provisional
+CMO00235,NextGen Research International,SP8800,In Review
+CMO00236,Summit Pharma Partners,SP5066,Provisional
+CMO00237,Premier BioPharm Technologies,SP0417,In Review
+CMO00238,NextGen Solutions Corp,SP7796,Conditional
+CMO00239,Universal Solutions Group,SP4820,Pending
+CMO00240,Precision MedTech Corp,SP4130,Pending
+CMO00241,Integrated Research Group,SP6323,Pending
+CMO00242,BioTech Research Partners,SP6013,Certified
+CMO00243,Integrated Manufacturing Technologies,SP0504,Conditional
+CMO00244,NextGen Research Corp,SP0904,In Review
+CMO00245,BioTech MedTech Partners,SP4578,Compliant
+CMO00246,Universal Research Innovations,SP0099,Pending
+CMO00247,Advanced Manufacturing Innovations,SP5679,Conditional
+CMO00248,Global Pharma Systems,SP9705,Pending
+CMO00249,Integrated Pharma Partners,SP2319,Approved
+CMO00250,BioTech Biologics Corp,SP1658,Provisional
+CMO00251,Advanced Therapeutics Technologies,SP2714,Expired
+CMO00252,Universal Therapeutics Ltd.,SP4041,Approved
+CMO00253,Premier Pharma Ltd.,SP1111,Certified
+CMO00254,Integrated Pharma Group,SP0929,Conditional
+CMO00255,Premier Solutions Ltd.,SP3897,Certified
+CMO00256,Alliance BioPharm Corp,SP6015,In Review
+CMO00257,Integrated Solutions Solutions,SP0618,Provisional
+CMO00258,Summit Biologics Solutions,SP1719,Pending
+CMO00259,Integrated Manufacturing Group,SP2573,Approved
+CMO00260,Global Sciences Group,SP6358,In Review
+CMO00261,Summit Therapeutics Innovations,SP6053,Certified
+CMO00262,Summit Solutions Systems,SP6367,Under Evaluation
+CMO00263,NextGen Solutions Group,SP2621,Certified
+CMO00264,Premier Pharma Partners,SP8614,In Review
+CMO00265,Global Laboratories Corp,SP3194,In Review
+CMO00266,Alliance Biologics Technologies,SP5464,Provisional
+CMO00267,Alliance BioPharm Systems,SP5905,Under Evaluation
+CMO00268,Summit Solutions Technologies,SP7107,Under Evaluation
+CMO00269,Summit Therapeutics Corp,SP2294,Provisional
+CMO00270,Global MedTech Solutions,SP4845,Pending
+CMO00271,BioTech Laboratories Solutions,SP8030,Provisional
+CMO00272,Universal Sciences Group,SP0404,Conditional
+CMO00273,Global Research Innovations,SP2166,Compliant
+CMO00274,Integrated Solutions Innovations,SP8054,Pending
+CMO00275,Global Therapeutics Ltd.,SP5766,Certified
+CMO00276,Summit MedTech International,SP3732,Compliant
+CMO00277,Integrated BioPharm Solutions,SP2888,Expired
+CMO00278,Summit Solutions Innovations,SP5967,Conditional
+CMO00279,BioTech MedTech Technologies,SP1959,Revoked
+CMO00280,NextGen Biologics Ltd.,SP1739,Approved
+CMO00281,Global Research Innovations,SP6270,In Review
+CMO00282,BioTech Biologics Partners,SP5053,Expired
+CMO00283,NextGen BioPharm Technologies,SP8378,In Review
+CMO00284,Universal Laboratories International,SP5771,In Review
+CMO00285,NextGen Biologics Partners,SP7949,Approved
+CMO00286,NextGen Biologics Ltd.,SP3332,Conditional
+CMO00287,Summit Manufacturing Solutions,SP6111,Under Evaluation
+CMO00288,Integrated Laboratories Systems,SP8412,Expired
+CMO00289,Integrated MedTech Systems,SP8630,Provisional
+CMO00290,Summit Research Solutions,SP3820,Expired
+CMO00291,Universal Therapeutics International,SP7129,Pending
+CMO00292,Integrated Manufacturing Partners,SP2522,Provisional
+CMO00293,BioTech Laboratories Partners,SP6601,Expired
+CMO00294,Alliance Therapeutics Corp,SP1366,Conditional
+CMO00295,Universal Solutions Group,SP7309,Expired
+CMO00296,Advanced Therapeutics Inc.,SP7385,Approved
+CMO00297,Premier Biologics Systems,SP1433,Certified
+CMO00298,Summit Biologics Group,SP0998,Expired
+CMO00299,NextGen Manufacturing Ltd.,SP0033,Expired
+CMO00300,BioTech Research Technologies,SP9134,In Review
+CMO00301,Integrated Manufacturing Corp,SP8817,Revoked
+CMO00302,BioTech Solutions Partners,SP1124,In Review
+CMO00303,Advanced Research Ltd.,SP2674,Pending
+CMO00304,Global Research International,SP0977,Expired
+CMO00305,Summit BioPharm Ltd.,SP4364,Expired
+CMO00306,Advanced Laboratories Innovations,SP5513,Under Evaluation
+CMO00307,Alliance Biologics Partners,SP3554,Under Evaluation
+CMO00308,Integrated Pharma Innovations,SP9503,Under Evaluation
+CMO00309,Universal Biologics Systems,SP0585,Revoked
+CMO00310,Integrated MedTech Ltd.,SP9728,Certified
+CMO00311,BioTech Therapeutics International,SP2532,Provisional
+CMO00312,Integrated MedTech Group,SP1128,Provisional
+CMO00313,Alliance BioPharm Systems,SP9115,Compliant
+CMO00314,Global BioPharm Solutions,SP8502,Revoked
+CMO00315,BioTech BioPharm Solutions,SP9282,Approved
+CMO00316,Alliance BioPharm Group,SP0377,Certified
+CMO00317,Advanced Pharma Systems,SP9933,In Review
+CMO00318,Integrated Sciences Solutions,SP1731,Revoked
+CMO00319,Global Pharma International,SP2001,Expired
+CMO00320,Universal Laboratories Corp,SP0374,Compliant
+CMO00321,Integrated Therapeutics Inc.,SP2768,Expired
+CMO00322,Integrated Solutions Inc.,SP4482,In Review
+CMO00323,BioTech Manufacturing Partners,SP9961,Compliant
+CMO00324,Precision Manufacturing Technologies,SP7287,Approved
+CMO00325,Precision Research Technologies,SP5971,Compliant
+CMO00326,Advanced Laboratories Group,SP8184,Under Evaluation
+CMO00327,Precision BioPharm Systems,SP5857,Expired
+CMO00328,Summit Laboratories Ltd.,SP9163,Conditional
+CMO00329,Alliance Solutions Technologies,SP8162,Revoked
+CMO00330,Premier Sciences Innovations,SP5349,In Review
+CMO00331,Precision Biologics Technologies,SP9787,Revoked
+CMO00332,Premier Sciences Solutions,SP7123,Expired
+CMO00333,Universal Sciences Group,SP3559,Revoked
+CMO00334,Summit BioPharm Ltd.,SP4074,Pending
+CMO00335,Alliance Biologics Ltd.,SP9285,Provisional
+CMO00336,BioTech Manufacturing International,SP2559,Revoked
+CMO00337,Alliance Therapeutics Partners,SP3662,Approved
+CMO00338,Summit MedTech Group,SP2787,Pending
+CMO00339,Premier Research Innovations,SP7793,Certified
+CMO00340,Advanced Biologics Inc.,SP0166,Compliant
+CMO00341,Premier Biologics Partners,SP0279,In Review
+CMO00342,Integrated MedTech Innovations,SP1401,Under Evaluation
+CMO00343,Precision Laboratories Partners,SP4175,Provisional
+CMO00344,Advanced Research Solutions,SP5055,Under Evaluation
+CMO00345,BioTech Therapeutics Group,SP7523,Compliant
+CMO00346,Global Manufacturing Group,SP2772,In Review
+CMO00347,Premier Pharma Inc.,SP9251,Provisional
+CMO00348,Universal Research Systems,SP9369,Certified
+CMO00349,Global Biologics Innovations,SP4301,Under Evaluation
+CMO00350,Integrated Biologics Ltd.,SP1158,Revoked
+CMO00351,Summit Research Corp,SP7142,Revoked
+CMO00352,NextGen Pharma Corp,SP4911,Pending
+CMO00353,Premier MedTech Partners,SP4712,Provisional
+CMO00354,Summit Laboratories Corp,SP4014,In Review
+CMO00355,Summit Biologics Group,SP3631,Provisional
+CMO00356,Universal MedTech Inc.,SP7554,Expired
+CMO00357,Universal Laboratories Solutions,SP8419,Compliant
+CMO00358,Global Sciences Partners,SP1861,Pending
+CMO00359,BioTech BioPharm International,SP6572,Revoked
+CMO00360,BioTech Manufacturing Group,SP4632,Expired
+CMO00361,Global Therapeutics Group,SP8246,Expired
+CMO00362,NextGen Pharma Corp,SP5359,Revoked
+CMO00363,Integrated Therapeutics Inc.,SP4480,Provisional
+CMO00364,NextGen Solutions Innovations,SP2552,Expired
+CMO00365,Global MedTech Technologies,SP2000,Approved
+CMO00366,Premier Sciences Systems,SP2332,Expired
+CMO00367,Summit Pharma Innovations,SP6021,Conditional
+CMO00368,Integrated Manufacturing Innovations,SP8133,In Review
+CMO00369,Global Manufacturing Technologies,SP2276,In Review
+CMO00370,Summit Therapeutics Systems,SP2315,Certified
+CMO00371,BioTech Therapeutics Ltd.,SP1838,Compliant
+CMO00372,Global Sciences Solutions,SP5239,Conditional
+CMO00373,NextGen Therapeutics Solutions,SP3746,Compliant
+CMO00374,BioTech Pharma Solutions,SP3166,Revoked
+CMO00375,Precision Solutions Group,SP3770,Approved
+CMO00376,Universal Manufacturing Inc.,SP4204,Certified
+CMO00377,Global Biologics Solutions,SP3374,Conditional
+CMO00378,Advanced BioPharm Corp,SP1616,Provisional
+CMO00379,BioTech Manufacturing International,SP2944,Certified
+CMO00380,Advanced Sciences Inc.,SP5551,Conditional
+CMO00381,NextGen Biologics Solutions,SP9458,Expired
+CMO00382,Global MedTech Innovations,SP2465,Approved
+CMO00383,Advanced BioPharm Partners,SP0928,Expired
+CMO00384,Summit Sciences Ltd.,SP3515,Conditional
+CMO00385,Summit Therapeutics Innovations,SP1305,Under Evaluation
+CMO00386,Universal BioPharm Corp,SP9894,In Review
+CMO00387,Summit Biologics Corp,SP5783,Expired
+CMO00388,BioTech Manufacturing Corp,SP0310,Provisional
+CMO00389,Precision Manufacturing Innovations,SP9740,Expired
+CMO00390,Summit Manufacturing Technologies,SP9539,Provisional
+CMO00391,Advanced Laboratories Partners,SP2082,Provisional
+CMO00392,Universal Sciences Corp,SP8372,Under Evaluation
+CMO00393,Summit Manufacturing Group,SP6431,Compliant
+CMO00394,Advanced Biologics Systems,SP8302,In Review
+CMO00395,Universal Sciences Solutions,SP6415,Certified
+CMO00396,Summit Laboratories Solutions,SP2739,Expired
+CMO00397,Global Solutions Inc.,SP2205,Conditional
+CMO00398,Alliance Manufacturing Systems,SP7263,Provisional
+CMO00399,Advanced Biologics Solutions,SP4181,Revoked
+CMO00400,Premier Laboratories Solutions,SP3644,Under Evaluation
+CMO00401,Integrated MedTech Corp,SP9955,Certified
+CMO00402,Precision Biologics Ltd.,SP6249,Expired
+CMO00403,Integrated MedTech Partners,SP3096,Pending
+CMO00404,NextGen Laboratories International,SP4350,Pending
+CMO00405,Alliance BioPharm International,SP4227,Under Evaluation
+CMO00406,Universal Biologics Systems,SP6932,Approved
+CMO00407,NextGen Laboratories Group,SP3245,Under Evaluation
+CMO00408,Summit Biologics Corp,SP9468,Revoked
+CMO00409,Alliance Pharma International,SP4854,Certified
+CMO00410,Universal Research International,SP8992,Conditional
+CMO00411,Premier MedTech Inc.,SP9451,Compliant
+CMO00412,Premier Biologics Technologies,SP8106,Certified
+CMO00413,NextGen Manufacturing Partners,SP8714,Certified
+CMO00414,Summit Biologics Corp,SP2497,Approved
+CMO00415,NextGen Sciences Solutions,SP6421,Conditional
+CMO00416,Universal BioPharm Innovations,SP5993,Compliant
+CMO00417,Summit Solutions International,SP6477,Approved
+CMO00418,Precision Laboratories International,SP1511,Expired
+CMO00419,Premier Therapeutics Inc.,SP1292,Pending
+CMO00420,BioTech Solutions Innovations,SP9328,In Review
+CMO00421,NextGen Sciences Systems,SP5677,Provisional
+CMO00422,Global MedTech Technologies,SP9210,Compliant
+CMO00423,BioTech Sciences Inc.,SP2078,In Review
+CMO00424,NextGen BioPharm Partners,SP5673,Revoked
+CMO00425,Premier Solutions Ltd.,SP0529,Provisional
+CMO00426,Precision Pharma Corp,SP1921,Compliant
+CMO00427,NextGen MedTech Ltd.,SP6240,Conditional
+CMO00428,BioTech MedTech Ltd.,SP1043,Under Evaluation
+CMO00429,BioTech Laboratories Group,SP8719,Provisional
+CMO00430,Summit Solutions Corp,SP3746,Conditional
+CMO00431,Premier BioPharm Solutions,SP7812,Approved
+CMO00432,Alliance MedTech International,SP6281,Expired
+CMO00433,Alliance Biologics Technologies,SP3799,In Review
+CMO00434,Premier Biologics Partners,SP2676,Revoked
+CMO00435,Precision MedTech Innovations,SP6919,Certified
+CMO00436,NextGen Therapeutics Technologies,SP0013,Conditional
+CMO00437,NextGen BioPharm Ltd.,SP5234,Under Evaluation
+CMO00438,NextGen BioPharm Corp,SP8271,Pending
+CMO00439,Alliance Manufacturing Partners,SP0553,Provisional
+CMO00440,Global BioPharm International,SP4050,In Review
+CMO00441,Advanced Manufacturing Inc.,SP4167,In Review
+CMO00442,Summit Laboratories Ltd.,SP7739,Under Evaluation
+CMO00443,Premier MedTech Innovations,SP9654,Revoked
+CMO00444,Premier Therapeutics Group,SP7787,Conditional
+CMO00445,Universal Research International,SP3633,Expired
+CMO00446,Integrated Pharma Inc.,SP9719,Revoked
+CMO00447,BioTech Pharma Solutions,SP9455,Conditional
+CMO00448,Integrated Research Systems,SP3603,Revoked
+CMO00449,NextGen Laboratories Corp,SP3612,Approved
+CMO00450,NextGen Laboratories Inc.,SP8680,Revoked
+CMO00451,Advanced Solutions Solutions,SP3319,Approved
+CMO00452,Precision Therapeutics Innovations,SP3131,Provisional
+CMO00453,Integrated Manufacturing Systems,SP9122,In Review
+CMO00454,Advanced Therapeutics Corp,SP9388,In Review
+CMO00455,Premier MedTech Technologies,SP0076,Approved
+CMO00456,Global Laboratories Solutions,SP9693,Approved
+CMO00457,Summit Solutions Inc.,SP6707,Under Evaluation
+CMO00458,Advanced Biologics Group,SP4789,Pending
+CMO00459,NextGen Pharma Solutions,SP7742,Under Evaluation
+CMO00460,Alliance Research Partners,SP7315,In Review
+CMO00461,BioTech Therapeutics Group,SP0738,Expired
+CMO00462,Precision BioPharm Ltd.,SP6628,Revoked
+CMO00463,Premier Laboratories Innovations,SP3470,Approved
+CMO00464,Integrated Manufacturing Corp,SP4458,Approved
+CMO00465,Integrated Pharma Group,SP4594,Compliant
+CMO00466,Alliance Therapeutics Technologies,SP7456,Revoked
+CMO00467,Precision Therapeutics Inc.,SP1395,Approved
+CMO00468,NextGen Pharma Ltd.,SP3991,Pending
+CMO00469,BioTech Solutions Group,SP7022,Under Evaluation
+CMO00470,Precision Sciences Solutions,SP6157,Approved
+CMO00471,BioTech Solutions Ltd.,SP9483,Conditional
+CMO00472,Alliance Solutions Solutions,SP4851,In Review
+CMO00473,Global BioPharm Corp,SP3897,Approved
+CMO00474,Integrated Solutions Technologies,SP6081,Conditional
+CMO00475,NextGen MedTech Solutions,SP4453,Revoked
+CMO00476,Premier BioPharm Systems,SP7392,Revoked
+CMO00477,BioTech Therapeutics Inc.,SP3059,Pending
+CMO00478,Integrated BioPharm Solutions,SP3429,Revoked
+CMO00479,Summit BioPharm Innovations,SP5719,Certified
+CMO00480,Alliance Manufacturing Ltd.,SP6623,Certified
+CMO00481,Premier BioPharm Solutions,SP1520,Under Evaluation
+CMO00482,Universal Sciences Inc.,SP1655,Certified
+CMO00483,BioTech MedTech International,SP2189,Approved
+CMO00484,Alliance Manufacturing Partners,SP0101,Compliant
+CMO00485,Integrated Sciences Solutions,SP4971,Pending
+CMO00486,Universal Solutions Group,SP0753,Compliant
+CMO00487,Summit MedTech Ltd.,SP0864,Revoked
+CMO00488,Integrated Pharma Partners,SP2880,Compliant
+CMO00489,Global BioPharm Group,SP2590,Certified
+CMO00490,BioTech Research Corp,SP4364,Compliant
+CMO00491,Advanced Manufacturing International,SP8099,Conditional
+CMO00492,Universal Pharma Technologies,SP2035,Certified
+CMO00493,BioTech MedTech International,SP3380,Approved
+CMO00494,Alliance Solutions Group,SP4346,Compliant
+CMO00495,Precision Laboratories Systems,SP0616,Revoked
+CMO00496,Universal Pharma Ltd.,SP7936,Compliant
+CMO00497,BioTech Sciences International,SP6828,Compliant
+CMO00498,Summit Biologics Corp,SP9372,Pending
+CMO00499,Global Sciences Partners,SP6656,In Review
+CMO00500,Premier Sciences Innovations,SP2954,Approved
+CMO00501,Advanced MedTech Innovations,SP2269,Pending
+CMO00502,BioTech Sciences Systems,SP5361,Revoked
+CMO00503,Summit Sciences Innovations,SP1685,Conditional
+CMO00504,Universal Laboratories Solutions,SP7902,Revoked
+CMO00505,Precision Therapeutics International,SP6189,Revoked
+CMO00506,Universal Manufacturing Inc.,SP4124,Under Evaluation
+CMO00507,Summit Pharma Innovations,SP6118,Revoked
+CMO00508,Premier Laboratories Solutions,SP7808,Under Evaluation
+CMO00509,Precision Laboratories Technologies,SP7820,Certified
+CMO00510,Premier Laboratories Systems,SP9707,Revoked
+CMO00511,Integrated Solutions Ltd.,SP7505,Compliant
+CMO00512,BioTech BioPharm Corp,SP5975,Provisional
+CMO00513,Advanced Laboratories Corp,SP9564,Expired
+CMO00514,Global Therapeutics Systems,SP4107,Certified
+CMO00515,Integrated Pharma Corp,SP8862,Certified
+CMO00516,Precision Pharma Partners,SP4240,Revoked
+CMO00517,NextGen Pharma Solutions,SP6641,Expired
+CMO00518,Universal MedTech Solutions,SP6288,Conditional
+CMO00519,Summit Laboratories Partners,SP3749,Conditional
+CMO00520,Precision MedTech Systems,SP0528,Provisional
+CMO00521,Integrated Solutions Technologies,SP4152,Conditional
+CMO00522,Integrated Pharma Partners,SP7361,Compliant
+CMO00523,Integrated Laboratories Ltd.,SP7037,Conditional
+CMO00524,Precision Laboratories Innovations,SP0912,Conditional
+CMO00525,Global Biologics Group,SP6235,Under Evaluation
+CMO00526,Alliance Therapeutics Group,SP3488,Approved
+CMO00527,Advanced Biologics Solutions,SP0914,Provisional
+CMO00528,Alliance Research International,SP0258,Revoked
+CMO00529,Global Sciences Solutions,SP9816,Under Evaluation
+CMO00530,Alliance Pharma Ltd.,SP4746,Under Evaluation
+CMO00531,Summit Sciences International,SP0027,Conditional
+CMO00532,Advanced Laboratories Group,SP6565,Compliant
+CMO00533,NextGen Biologics Technologies,SP6108,Expired
+CMO00534,BioTech Therapeutics Innovations,SP8360,Compliant
+CMO00535,Advanced Laboratories International,SP1039,In Review
+CMO00536,Alliance Research Systems,SP9526,Expired
+CMO00537,Integrated Research Solutions,SP0507,In Review
+CMO00538,Premier Biologics Innovations,SP1783,Approved
+CMO00539,Alliance Solutions Innovations,SP2466,Approved
+CMO00540,Alliance Sciences Group,SP2762,Approved
+CMO00541,Global Biologics International,SP8616,Approved
+CMO00542,NextGen MedTech Corp,SP4824,Revoked
+CMO00543,Alliance Biologics Partners,SP6670,Revoked
+CMO00544,Advanced MedTech International,SP0207,Under Evaluation
+CMO00545,Summit MedTech Inc.,SP8354,Conditional
+CMO00546,Global MedTech Group,SP8811,Under Evaluation
+CMO00547,Precision Sciences Inc.,SP8247,Provisional
+CMO00548,Universal Manufacturing Partners,SP3615,Expired
+CMO00549,Premier MedTech Ltd.,SP6465,Provisional
+CMO00550,Precision Sciences Technologies,SP7076,Revoked
+CMO00551,Global Pharma Corp,SP8868,Expired
+CMO00552,Precision Biologics Technologies,SP1695,Pending
+CMO00553,Premier BioPharm Systems,SP1033,Provisional
+CMO00554,Summit Therapeutics Ltd.,SP5097,Compliant
+CMO00555,Advanced Pharma Group,SP2350,In Review
+CMO00556,Summit Biologics Systems,SP5475,Revoked
+CMO00557,Universal BioPharm Corp,SP7507,Revoked
+CMO00558,Universal Pharma Solutions,SP1408,Under Evaluation
+CMO00559,Global BioPharm Group,SP0542,Approved
+CMO00560,Summit Laboratories Corp,SP0374,Under Evaluation
+CMO00561,Global Therapeutics Ltd.,SP9048,Pending
+CMO00562,Precision Research Group,SP9771,Under Evaluation
+CMO00563,Alliance Manufacturing Solutions,SP7159,Provisional
+CMO00564,Global Manufacturing International,SP9091,Compliant
+CMO00565,Alliance Sciences Solutions,SP6083,Under Evaluation
+CMO00566,Universal Laboratories Ltd.,SP1228,Pending
+CMO00567,Advanced MedTech Systems,SP0631,Certified
+CMO00568,Global Therapeutics Technologies,SP2041,Provisional
+CMO00569,Premier BioPharm Solutions,SP2794,Revoked
+CMO00570,Universal Therapeutics Systems,SP9413,Approved
+CMO00571,Global Research Ltd.,SP3153,Certified
+CMO00572,Summit BioPharm Corp,SP6638,Expired
+CMO00573,Precision Pharma Systems,SP7972,Provisional
+CMO00574,Alliance Manufacturing Systems,SP6035,Pending
+CMO00575,Advanced Research Systems,SP8793,Under Evaluation
+CMO00576,BioTech BioPharm Solutions,SP8544,Provisional
+CMO00577,NextGen Laboratories Ltd.,SP2774,Approved
+CMO00578,Alliance MedTech Corp,SP9449,Provisional
+CMO00579,Summit Solutions Inc.,SP5180,Provisional
+CMO00580,Advanced Research Technologies,SP8160,Conditional
+CMO00581,Premier Therapeutics Innovations,SP8247,Certified
+CMO00582,Advanced MedTech Corp,SP1076,Pending
+CMO00583,Summit BioPharm Corp,SP2839,Pending
+CMO00584,Premier Research Corp,SP6966,Revoked
+CMO00585,NextGen Therapeutics Technologies,SP4626,Pending
+CMO00586,Premier Solutions Technologies,SP7867,Revoked
+CMO00587,Advanced Research International,SP8569,Approved
+CMO00588,Global BioPharm International,SP3633,Revoked
+CMO00589,BioTech Sciences Ltd.,SP6861,Certified
+CMO00590,NextGen Sciences Innovations,SP8196,Pending
+CMO00591,Premier Pharma Ltd.,SP4799,Provisional
+CMO00592,Summit Biologics Group,SP6780,Compliant
+CMO00593,Premier MedTech Systems,SP1147,Certified
+CMO00594,Global Pharma Inc.,SP7768,In Review
+CMO00595,Advanced BioPharm Group,SP5264,Certified
+CMO00596,Summit Manufacturing Technologies,SP7742,Pending
+CMO00597,NextGen BioPharm Partners,SP4713,Compliant
+CMO00598,NextGen MedTech Solutions,SP4386,Approved
+CMO00599,Integrated Solutions Partners,SP7446,Approved
+CMO00600,NextGen Laboratories Solutions,SP6002,Under Evaluation
+CMO00601,Alliance Solutions Solutions,SP4770,Provisional
+CMO00602,BioTech Manufacturing Partners,SP3617,Compliant
+CMO00603,Summit Laboratories Inc.,SP2856,Pending
+CMO00604,Summit Pharma Solutions,SP8962,Conditional
+CMO00605,BioTech Manufacturing Technologies,SP9620,In Review
+CMO00606,Summit Manufacturing Solutions,SP5079,Compliant
+CMO00607,NextGen Therapeutics Solutions,SP0610,Approved
+CMO00608,Advanced Manufacturing Corp,SP8881,Compliant
+CMO00609,BioTech BioPharm Inc.,SP3707,Revoked
+CMO00610,Alliance Manufacturing Systems,SP4929,Conditional
+CMO00611,BioTech BioPharm Partners,SP8119,Compliant
+CMO00612,Summit Laboratories Inc.,SP3883,Compliant
+CMO00613,Premier Pharma Solutions,SP9071,Provisional
+CMO00614,NextGen Laboratories Partners,SP4714,Under Evaluation
+CMO00615,Universal Laboratories Solutions,SP5334,In Review
+CMO00616,Integrated Manufacturing Inc.,SP5714,Conditional
+CMO00617,Advanced Biologics Technologies,SP2639,Approved
+CMO00618,NextGen Therapeutics Technologies,SP2597,Revoked
+CMO00619,Universal Research Inc.,SP9917,Approved
+CMO00620,Precision Biologics Inc.,SP1512,Expired
+CMO00621,Precision Therapeutics Group,SP4345,Pending
+CMO00622,NextGen Therapeutics Innovations,SP7597,Under Evaluation
+CMO00623,Universal Laboratories Solutions,SP6820,Conditional
+CMO00624,Premier Therapeutics Solutions,SP8733,Certified
+CMO00625,Premier BioPharm Systems,SP5248,Certified
+CMO00626,Precision Sciences Systems,SP6580,Revoked
+CMO00627,Global BioPharm Solutions,SP7497,Pending
+CMO00628,NextGen Laboratories Innovations,SP6057,Conditional
+CMO00629,Integrated Pharma Ltd.,SP0538,Conditional
+CMO00630,Summit Sciences Solutions,SP4090,Compliant
+CMO00631,Advanced BioPharm Solutions,SP0848,Provisional
+CMO00632,Universal Pharma Partners,SP3322,Revoked
+CMO00633,BioTech BioPharm Group,SP7320,Compliant
+CMO00634,Precision Biologics Inc.,SP1117,Provisional
+CMO00635,BioTech Manufacturing Solutions,SP5071,Certified
+CMO00636,Advanced MedTech Technologies,SP0799,Revoked
+CMO00637,Advanced Manufacturing Group,SP0351,Provisional
+CMO00638,Global Sciences Technologies,SP9166,Provisional
+CMO00639,Advanced Laboratories Partners,SP5121,Approved
+CMO00640,Global BioPharm Innovations,SP0134,Approved
+CMO00641,NextGen Manufacturing Systems,SP6401,Provisional
+CMO00642,Integrated Therapeutics Innovations,SP3511,Under Evaluation
+CMO00643,Global Sciences Innovations,SP9384,In Review
+CMO00644,Premier Pharma Innovations,SP0415,Compliant
+CMO00645,Premier Solutions Corp,SP4836,Revoked
+CMO00646,Precision Biologics Group,SP8693,Revoked
+CMO00647,Precision MedTech Technologies,SP9820,In Review
+CMO00648,Premier BioPharm Corp,SP5586,Certified
+CMO00649,Summit BioPharm Partners,SP7861,Approved
+CMO00650,BioTech MedTech Corp,SP0372,Provisional
+CMO00651,Integrated Manufacturing Solutions,SP7263,Revoked
+CMO00652,BioTech BioPharm Corp,SP0361,Certified
+CMO00653,Premier Biologics Inc.,SP0386,Expired
+CMO00654,Alliance Research Ltd.,SP8435,Under Evaluation
+CMO00655,NextGen Pharma Group,SP5393,Under Evaluation
+CMO00656,Global Pharma Systems,SP9572,Under Evaluation
+CMO00657,Precision Sciences Systems,SP1226,Conditional
+CMO00658,NextGen Manufacturing International,SP3736,Compliant
+CMO00659,NextGen Pharma Partners,SP3466,In Review
+CMO00660,Universal Research Systems,SP2624,Conditional
+CMO00661,Premier BioPharm International,SP9361,Conditional
+CMO00662,Summit Sciences Corp,SP3087,Compliant
+CMO00663,Precision Biologics Innovations,SP2847,Under Evaluation
+CMO00664,Summit MedTech Corp,SP9533,Certified
+CMO00665,Precision Sciences International,SP7331,Pending
+CMO00666,Premier MedTech Partners,SP1145,Certified
+CMO00667,Integrated Laboratories Systems,SP7105,Expired
+CMO00668,Summit Therapeutics Corp,SP1447,Compliant
+CMO00669,Integrated Therapeutics Solutions,SP6297,Certified
+CMO00670,Advanced Manufacturing Group,SP5857,Conditional
+CMO00671,Alliance Biologics Inc.,SP5541,Certified
+CMO00672,NextGen Therapeutics Innovations,SP9807,Certified
+CMO00673,Universal Research International,SP3773,Under Evaluation
+CMO00674,Global Manufacturing Technologies,SP8120,In Review
+CMO00675,Universal Sciences Inc.,SP9203,Provisional
+CMO00676,Premier Research Partners,SP6109,Certified
+CMO00677,NextGen Research Innovations,SP7755,Certified
+CMO00678,Alliance Sciences Group,SP1877,Certified
+CMO00679,Precision Pharma Technologies,SP4199,Expired
+CMO00680,NextGen BioPharm International,SP6930,Expired
+CMO00681,Integrated Laboratories Ltd.,SP9285,Certified
+CMO00682,NextGen Pharma Corp,SP1657,Revoked
+CMO00683,NextGen BioPharm Systems,SP8925,In Review
+CMO00684,NextGen Sciences Solutions,SP9310,Provisional
+CMO00685,BioTech Manufacturing International,SP5553,Provisional
+CMO00686,Alliance Therapeutics Group,SP1485,Certified
+CMO00687,Alliance Research Ltd.,SP5553,Revoked
+CMO00688,Alliance Biologics Solutions,SP4223,Certified
+CMO00689,Alliance Laboratories Systems,SP6263,In Review
+CMO00690,BioTech Manufacturing Solutions,SP2882,Compliant
+CMO00691,Summit Manufacturing Corp,SP5283,Certified
+CMO00692,Precision MedTech Corp,SP3896,Pending
+CMO00693,Alliance Research Partners,SP2952,Pending
+CMO00694,Summit Biologics Systems,SP1232,Under Evaluation
+CMO00695,Alliance Therapeutics Innovations,SP0452,Certified
+CMO00696,BioTech Solutions Systems,SP5002,Under Evaluation
+CMO00697,Integrated Laboratories Inc.,SP1104,Conditional
+CMO00698,Integrated Biologics Technologies,SP5910,Conditional
+CMO00699,Universal MedTech International,SP9003,Revoked
+CMO00700,NextGen MedTech International,SP6901,Revoked
+CMO00701,Alliance Manufacturing Technologies,SP4170,Certified
+CMO00702,Universal Manufacturing Technologies,SP6920,Under Evaluation
+CMO00703,Summit Research Inc.,SP7587,Pending
+CMO00704,Universal Sciences Technologies,SP7163,Certified
+CMO00705,Alliance Sciences Partners,SP8149,Certified
+CMO00706,Global Biologics Corp,SP3635,Expired
+CMO00707,Precision Manufacturing Group,SP9275,Pending
+CMO00708,Summit Pharma Group,SP0056,Under Evaluation
+CMO00709,Universal Manufacturing Inc.,SP7486,Approved
+CMO00710,NextGen Biologics Innovations,SP1316,Provisional
+CMO00711,Universal MedTech Ltd.,SP7643,Conditional
+CMO00712,Advanced Therapeutics Technologies,SP8383,Approved
+CMO00713,Global Therapeutics Ltd.,SP8151,Pending
+CMO00714,Advanced Pharma International,SP7140,Pending
+CMO00715,BioTech Sciences Systems,SP2179,Provisional
+CMO00716,Universal Manufacturing Group,SP2635,Provisional
+CMO00717,Precision Pharma Systems,SP2330,Under Evaluation
+CMO00718,Summit Manufacturing International,SP9045,Revoked
+CMO00719,Summit BioPharm Systems,SP5428,Compliant
+CMO00720,NextGen Therapeutics Solutions,SP0511,Approved
+CMO00721,BioTech Biologics Ltd.,SP0102,Approved
+CMO00722,Universal MedTech Inc.,SP8553,Approved
+CMO00723,Integrated Laboratories Ltd.,SP8381,Compliant
+CMO00724,NextGen Laboratories Inc.,SP1008,Conditional
+CMO00725,Global Therapeutics Innovations,SP5358,Conditional
+CMO00726,NextGen Pharma Inc.,SP7018,Pending
+CMO00727,Premier BioPharm Systems,SP8717,Approved
+CMO00728,Summit Pharma Solutions,SP4548,Approved
+CMO00729,Premier Pharma Ltd.,SP3038,Pending
+CMO00730,Advanced Sciences Corp,SP4675,Compliant
+CMO00731,Summit BioPharm Group,SP4523,In Review
+CMO00732,Global Therapeutics Ltd.,SP8894,Provisional
+CMO00733,Summit Pharma Technologies,SP0331,Expired
+CMO00734,Premier Biologics Innovations,SP3575,Provisional
+CMO00735,Global Research Innovations,SP8903,Conditional
+CMO00736,Alliance Sciences Solutions,SP4300,Expired
+CMO00737,Global Laboratories Innovations,SP4014,Revoked
+CMO00738,Precision Biologics Inc.,SP2852,Pending
+CMO00739,BioTech Biologics Ltd.,SP4472,Compliant
+CMO00740,Precision Pharma Group,SP6386,Compliant
+CMO00741,NextGen BioPharm Corp,SP2301,Conditional
+CMO00742,Precision Therapeutics Partners,SP7615,Conditional
+CMO00743,Global Biologics Technologies,SP9327,Approved
+CMO00744,Precision BioPharm Inc.,SP7012,Compliant
+CMO00745,Advanced MedTech Corp,SP2998,Revoked
+CMO00746,BioTech Sciences International,SP9825,Compliant
+CMO00747,Advanced Research Ltd.,SP6246,Compliant
+CMO00748,Summit Manufacturing Solutions,SP2163,Conditional
+CMO00749,Integrated Laboratories International,SP1580,Pending
+CMO00750,Summit Manufacturing Systems,SP2281,Pending
+CMO00751,Global Sciences International,SP4331,Provisional
+CMO00752,Alliance Pharma Innovations,SP8910,Compliant
+CMO00753,BioTech Solutions Innovations,SP6505,Expired
+CMO00754,NextGen MedTech Partners,SP7299,Provisional
+CMO00755,Universal Solutions Solutions,SP6400,Revoked
+CMO00756,Summit Therapeutics Inc.,SP9598,Certified
+CMO00757,Alliance BioPharm Innovations,SP7428,Certified
+CMO00758,Alliance Research Partners,SP3802,Approved
+CMO00759,Integrated Biologics Group,SP3271,Pending
+CMO00760,Advanced Biologics Technologies,SP2032,In Review
+CMO00761,Precision BioPharm Corp,SP2056,Provisional
+CMO00762,Summit Pharma International,SP1242,Certified
+CMO00763,Advanced Therapeutics Systems,SP7351,Expired
+CMO00764,Advanced Sciences Group,SP2500,Under Evaluation
+CMO00765,Premier Sciences Group,SP2576,Provisional
+CMO00766,Global Pharma Group,SP5777,Certified
+CMO00767,NextGen Research Partners,SP2929,Expired
+CMO00768,Global Biologics International,SP9178,Certified
+CMO00769,Advanced Pharma Solutions,SP3355,Certified
+CMO00770,Global Laboratories Solutions,SP4805,Compliant
+CMO00771,NextGen Sciences Ltd.,SP1186,Compliant
+CMO00772,Integrated Manufacturing Technologies,SP2990,Pending
+CMO00773,Global Pharma Inc.,SP4164,Revoked
+CMO00774,Precision Manufacturing Ltd.,SP6584,Provisional
+CMO00775,NextGen Manufacturing Innovations,SP2267,Revoked
+CMO00776,Global Laboratories Technologies,SP6224,Expired
+CMO00777,Summit Therapeutics Technologies,SP2069,Conditional
+CMO00778,Universal Therapeutics Group,SP2208,Pending
+CMO00779,Global Pharma Systems,SP6487,Under Evaluation
+CMO00780,Integrated Pharma Group,SP3124,In Review
+CMO00781,Alliance Manufacturing Technologies,SP4776,Pending
+CMO00782,Integrated Solutions Group,SP0189,Expired
+CMO00783,Precision Manufacturing Solutions,SP3508,In Review
+CMO00784,Global Solutions Inc.,SP5761,Revoked
+CMO00785,Premier Manufacturing Technologies,SP4187,Pending
+CMO00786,Advanced Biologics Technologies,SP7176,Expired
+CMO00787,NextGen Pharma Systems,SP1406,In Review
+CMO00788,Advanced BioPharm Group,SP4349,Pending
+CMO00789,Advanced Pharma Ltd.,SP1855,Revoked
+CMO00790,Precision BioPharm Partners,SP2584,Pending
+CMO00791,Advanced Biologics Inc.,SP3613,Under Evaluation
+CMO00792,Premier BioPharm Partners,SP8497,Expired
+CMO00793,Alliance Research Inc.,SP6099,Certified
+CMO00794,Integrated Laboratories International,SP1733,Under Evaluation
+CMO00795,Global Biologics Systems,SP8955,Approved
+CMO00796,Advanced MedTech International,SP6299,Provisional
+CMO00797,NextGen Therapeutics Technologies,SP3698,Expired
+CMO00798,Premier Biologics Solutions,SP6122,Expired
+CMO00799,Universal Biologics Corp,SP5185,Provisional
+CMO00800,Advanced Therapeutics International,SP0367,Expired
+CMO00801,Precision Manufacturing Inc.,SP8280,Conditional
+CMO00802,Universal Solutions Ltd.,SP6573,Conditional
+CMO00803,BioTech Sciences Ltd.,SP6512,Pending
+CMO00804,Alliance Laboratories Solutions,SP0025,Under Evaluation
+CMO00805,Alliance Laboratories Systems,SP8386,Conditional
+CMO00806,Advanced Laboratories Systems,SP6271,Certified
+CMO00807,Precision Solutions Systems,SP4964,Compliant
+CMO00808,BioTech MedTech Innovations,SP5166,Expired
+CMO00809,Universal Solutions Inc.,SP9910,Conditional
+CMO00810,Universal Biologics Innovations,SP4810,Pending
+CMO00811,Integrated Biologics Group,SP2848,Conditional
+CMO00812,Global Sciences Systems,SP1323,Certified
+CMO00813,Global Solutions International,SP0299,Conditional
+CMO00814,Integrated Laboratories Corp,SP7212,Revoked
+CMO00815,Precision Biologics Corp,SP3742,Provisional
+CMO00816,Premier Pharma Partners,SP9075,Approved
+CMO00817,Integrated Laboratories Systems,SP1073,Revoked
+CMO00818,Alliance Biologics International,SP8880,Conditional
+CMO00819,Alliance Manufacturing International,SP9855,In Review
+CMO00820,Universal Pharma Partners,SP7697,Pending
+CMO00821,Alliance Manufacturing Corp,SP2549,Pending
+CMO00822,Universal Therapeutics Innovations,SP5205,In Review
+CMO00823,Precision Research Partners,SP4633,Expired
+CMO00824,Precision Biologics Ltd.,SP8563,Conditional
+CMO00825,Universal Laboratories Ltd.,SP0928,Certified
+CMO00826,Advanced Research Systems,SP3524,Conditional
+CMO00827,NextGen Biologics International,SP8736,In Review
+CMO00828,Integrated Laboratories Systems,SP0284,Expired
+CMO00829,Global BioPharm Inc.,SP3578,Under Evaluation
+CMO00830,Universal Laboratories Group,SP4891,Provisional
+CMO00831,BioTech Sciences Ltd.,SP3086,Conditional
+CMO00832,NextGen Research Group,SP1365,Under Evaluation
+CMO00833,Integrated Pharma Technologies,SP1653,Expired
+CMO00834,Universal Research Systems,SP3414,Provisional
+CMO00835,Premier Pharma Group,SP4410,In Review
+CMO00836,NextGen BioPharm Ltd.,SP3370,Expired
+CMO00837,Integrated Solutions Inc.,SP5605,Revoked
+CMO00838,Summit MedTech Inc.,SP4383,Compliant
+CMO00839,Global Solutions Innovations,SP9657,Expired
+CMO00840,Integrated Pharma Ltd.,SP3535,Under Evaluation
+CMO00841,Integrated Pharma Ltd.,SP0947,Provisional
+CMO00842,Summit Biologics Solutions,SP7136,Conditional
+CMO00843,Universal Therapeutics Ltd.,SP7976,Conditional
+CMO00844,Alliance Solutions International,SP6570,Certified
+CMO00845,NextGen Laboratories Inc.,SP6012,Expired
+CMO00846,Summit Sciences Ltd.,SP6269,Under Evaluation
+CMO00847,Integrated Manufacturing Systems,SP3476,Pending
+CMO00848,Global BioPharm Systems,SP2209,Certified
+CMO00849,Summit Laboratories International,SP5991,Expired
+CMO00850,NextGen Research Inc.,SP0118,Under Evaluation
+CMO00851,Universal Laboratories Technologies,SP5244,Expired
+CMO00852,Integrated Biologics Partners,SP0246,In Review
+CMO00853,BioTech BioPharm Ltd.,SP7483,Provisional
+CMO00854,Integrated Laboratories Systems,SP6575,Compliant
+CMO00855,Integrated Pharma Corp,SP1107,Expired
+CMO00856,Precision Manufacturing Inc.,SP2050,Pending
+CMO00857,BioTech Sciences Inc.,SP8226,Revoked
+CMO00858,BioTech Manufacturing Ltd.,SP1082,Pending
+CMO00859,Integrated Pharma Technologies,SP8134,Approved
+CMO00860,BioTech Pharma Partners,SP4062,Pending
+CMO00861,Premier MedTech Group,SP3408,In Review
+CMO00862,Advanced Biologics Group,SP5464,Pending
+CMO00863,Summit MedTech Technologies,SP5618,Compliant
+CMO00864,Global Laboratories Ltd.,SP2788,Under Evaluation
+CMO00865,Alliance Therapeutics Solutions,SP0672,Approved
+CMO00866,BioTech Sciences Inc.,SP7484,Approved
+CMO00867,Integrated Solutions Ltd.,SP9774,Revoked
+CMO00868,Integrated Manufacturing Solutions,SP5591,Expired
+CMO00869,Global Pharma Ltd.,SP1184,Pending
+CMO00870,Advanced Biologics Innovations,SP3180,Expired
+CMO00871,Advanced Solutions Technologies,SP2660,In Review
+CMO00872,NextGen Biologics Solutions,SP3012,Compliant
+CMO00873,Alliance Pharma Systems,SP1888,Revoked
+CMO00874,Premier Biologics Corp,SP8628,Revoked
+CMO00875,NextGen Biologics Corp,SP3209,Compliant
+CMO00876,Universal Therapeutics Corp,SP2517,Approved
+CMO00877,Integrated Research Ltd.,SP7735,Compliant
+CMO00878,Premier Research Technologies,SP5035,Compliant
+CMO00879,Universal Manufacturing International,SP6913,Conditional
+CMO00880,Universal Laboratories Ltd.,SP2556,Revoked
+CMO00881,Premier Therapeutics Systems,SP8802,Provisional
+CMO00882,Integrated Pharma Ltd.,SP0998,Conditional
+CMO00883,NextGen Laboratories Corp,SP2764,Conditional
+CMO00884,NextGen Manufacturing Group,SP5795,Approved
+CMO00885,Universal Therapeutics Ltd.,SP4230,Revoked
+CMO00886,Alliance Biologics Systems,SP6280,Pending
+CMO00887,Premier Pharma Solutions,SP0695,Certified
+CMO00888,Global Solutions Systems,SP3889,Approved
+CMO00889,Global Laboratories Innovations,SP9599,Provisional
+CMO00890,Summit Pharma Innovations,SP8773,Revoked
+CMO00891,Integrated Pharma Innovations,SP6467,Conditional
+CMO00892,Global Sciences Ltd.,SP5123,Conditional
+CMO00893,Alliance Biologics Technologies,SP5777,Revoked
+CMO00894,Advanced MedTech Innovations,SP4561,Approved
+CMO00895,Alliance Research Systems,SP3493,Compliant
+CMO00896,Global Therapeutics Solutions,SP0561,Certified
+CMO00897,Universal Laboratories Technologies,SP8575,Conditional
+CMO00898,Advanced Sciences Solutions,SP2135,Revoked
+CMO00899,Universal Manufacturing Partners,SP3210,Provisional
+CMO00900,Global Biologics Corp,SP9522,In Review
+CMO00901,Precision Therapeutics Systems,SP5083,Expired
+CMO00902,Precision Pharma Inc.,SP0912,Approved
+CMO00903,NextGen Therapeutics Inc.,SP4465,Compliant
+CMO00904,NextGen Biologics Systems,SP4035,Compliant
+CMO00905,Integrated BioPharm Innovations,SP3667,Compliant
+CMO00906,BioTech Laboratories International,SP0864,Approved
+CMO00907,Universal Therapeutics Group,SP8571,Provisional
+CMO00908,NextGen Manufacturing Solutions,SP7147,Revoked
+CMO00909,Integrated Solutions Corp,SP5021,Expired
+CMO00910,Premier Research International,SP9537,Pending
+CMO00911,Advanced Manufacturing Corp,SP6958,In Review
+CMO00912,Advanced MedTech Innovations,SP0617,Approved
+CMO00913,Premier Therapeutics International,SP0743,Expired
+CMO00914,NextGen BioPharm Innovations,SP5029,Compliant
+CMO00915,Global Manufacturing Solutions,SP2690,Revoked
+CMO00916,Precision Pharma Ltd.,SP8475,In Review
+CMO00917,NextGen Biologics Ltd.,SP4076,Certified
+CMO00918,NextGen MedTech Solutions,SP2022,In Review
+CMO00919,Global Biologics International,SP4244,Approved
+CMO00920,NextGen BioPharm Innovations,SP5539,Pending
+CMO00921,Premier Manufacturing Ltd.,SP6969,Certified
+CMO00922,Alliance Biologics Corp,SP8544,Expired
+CMO00923,Advanced Biologics Technologies,SP3606,Certified
+CMO00924,Global Manufacturing International,SP6904,Under Evaluation
+CMO00925,Premier Research Technologies,SP5381,Expired
+CMO00926,Universal Solutions Technologies,SP6212,Approved
+CMO00927,Universal Research Group,SP3936,Provisional
+CMO00928,Advanced Research Systems,SP3666,Expired
+CMO00929,Precision MedTech Ltd.,SP9174,Provisional
+CMO00930,Integrated Pharma Technologies,SP9017,Under Evaluation
+CMO00931,Advanced Biologics Ltd.,SP9148,Expired
+CMO00932,Summit Biologics Group,SP3586,Under Evaluation
+CMO00933,Precision Manufacturing Corp,SP0768,Expired
+CMO00934,Integrated BioPharm Solutions,SP7648,In Review
+CMO00935,Precision Therapeutics Systems,SP9424,In Review
+CMO00936,Alliance Biologics Technologies,SP7674,In Review
+CMO00937,Alliance MedTech Group,SP7329,Compliant
+CMO00938,Summit Laboratories Group,SP5914,Revoked
+CMO00939,Advanced Manufacturing Innovations,SP1310,Pending
+CMO00940,Universal Sciences Corp,SP7137,Pending
+CMO00941,BioTech Sciences Solutions,SP2847,Certified
+CMO00942,NextGen Solutions Systems,SP0276,Pending
+CMO00943,Advanced Manufacturing Innovations,SP3819,Provisional
+CMO00944,Precision Biologics Systems,SP6756,Pending
+CMO00945,NextGen Pharma Inc.,SP7380,Expired
+CMO00946,Precision Biologics Inc.,SP5798,Under Evaluation
+CMO00947,Precision Sciences Ltd.,SP9086,Pending
+CMO00948,NextGen Sciences Partners,SP9588,Conditional
+CMO00949,Global BioPharm Inc.,SP0535,Revoked
+CMO00950,Precision Pharma International,SP3012,Compliant
+CMO00951,Integrated Solutions Corp,SP2817,In Review
+CMO00952,Global BioPharm Corp,SP9610,Conditional
+CMO00953,Alliance Research Partners,SP6525,Provisional
+CMO00954,BioTech MedTech Systems,SP0712,Under Evaluation
+CMO00955,Premier Biologics International,SP2562,In Review
+CMO00956,Precision Manufacturing Partners,SP4115,Compliant
+CMO00957,Premier MedTech Innovations,SP6889,Expired
+CMO00958,BioTech Research Inc.,SP8270,Pending
+CMO00959,Premier Biologics Group,SP5931,Approved
+CMO00960,Summit BioPharm Group,SP2563,Pending
+CMO00961,Global Pharma Systems,SP3008,Expired
+CMO00962,Precision Therapeutics Systems,SP5766,In Review
+CMO00963,BioTech Solutions Systems,SP3423,Pending
+CMO00964,Alliance Research Innovations,SP0737,Conditional
+CMO00965,Advanced Therapeutics Group,SP2675,Pending
+CMO00966,Premier Therapeutics Technologies,SP3634,In Review
+CMO00967,Alliance MedTech Technologies,SP4635,Expired
+CMO00968,BioTech Manufacturing Inc.,SP0462,Pending
+CMO00969,Integrated Research Inc.,SP7221,Certified
+CMO00970,Premier Research Ltd.,SP9366,Expired
+CMO00971,NextGen Biologics Partners,SP8256,In Review
+CMO00972,Summit Solutions Ltd.,SP3844,Under Evaluation
+CMO00973,BioTech Biologics Systems,SP1653,Revoked
+CMO00974,Integrated Biologics Group,SP5413,Under Evaluation
+CMO00975,BioTech Solutions Ltd.,SP4792,Under Evaluation
+CMO00976,Precision BioPharm Innovations,SP8285,Under Evaluation
+CMO00977,NextGen Manufacturing Group,SP7128,Pending
+CMO00978,Premier Sciences International,SP5196,Conditional
+CMO00979,BioTech Laboratories International,SP6168,Provisional
+CMO00980,NextGen MedTech Technologies,SP4263,Conditional
+CMO00981,NextGen Biologics Technologies,SP6486,Approved
+CMO00982,Global Pharma Corp,SP1133,Conditional
+CMO00983,Integrated Laboratories Inc.,SP4242,Approved
+CMO00984,Precision Research Solutions,SP4219,Approved
+CMO00985,Universal Pharma Innovations,SP1997,Revoked
+CMO00986,Precision Manufacturing Group,SP1352,In Review
+CMO00987,BioTech Research Ltd.,SP8697,Certified
+CMO00988,Summit Laboratories Solutions,SP9463,Certified
+CMO00989,Universal Biologics Systems,SP2893,Conditional
+CMO00990,Precision Biologics Innovations,SP0318,Conditional
+CMO00991,Summit MedTech Group,SP6919,Pending
+CMO00992,Advanced Laboratories Group,SP4514,Provisional
+CMO00993,Precision Sciences Systems,SP5567,Pending
+CMO00994,Precision Biologics Technologies,SP7382,In Review
+CMO00995,Summit Sciences Innovations,SP3480,Approved
+CMO00996,Summit Sciences Technologies,SP3170,In Review
+CMO00997,Global Research Partners,SP8514,Under Evaluation
+CMO00998,BioTech Laboratories International,SP3151,Approved
+CMO00999,Universal Research Corp,SP0931,In Review
+CMO01000,Summit Manufacturing Partners,SP9213,In Review

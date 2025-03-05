@@ -1,0 +1,1001 @@
+Site_ID,Name,Region,GDP/GMP Compliance
+SITE00001,Main Manufacturing Location,South America,GMP Pending
+SITE00002,Key Manufacturing Location,South America,Dual Certified
+SITE00003,Flagship Manufacturing Campus,Western Europe,Fully Certified
+SITE00004,Key Testing Hub,East Asia,GMP Pending
+SITE00005,Central Processing Complex,Central America,Dual Certified
+SITE00006,Strategic Processing Location,Central America,GMP Pending
+SITE00007,Regional Distribution Center,Middle East,Certified with Exceptions
+SITE00008,Primary Processing Plant,Oceania,GMP Pending
+SITE00009,Central Development Unit,Caribbean,Under Review
+SITE00010,Core Development Hub,Central America,GMP Pending
+SITE00011,Principal Packaging Center,Eastern Europe,GMP Certified
+SITE00012,Central Manufacturing Hub,South Asia,Fully Certified
+SITE00013,Main Packaging Site,Oceania,GMP Certified
+SITE00014,Strategic Testing Site,South America,Dual Certified
+SITE00015,Principal Packaging Complex,Central Asia,GDP Pending
+SITE00016,Core Testing Complex,Central Asia,Certified with Exceptions
+SITE00017,Advanced Manufacturing Hub,Middle East,GDP Compliant
+SITE00018,Key Clinical Complex,Caribbean,GMP Certified
+SITE00019,Core Processing Site,Western Europe,Under Review
+SITE00020,Regional Processing Facility,Southern Europe,GDP Pending
+SITE00021,Main Distribution Facility,Western Europe,GDP Compliant
+SITE00022,Principal Distribution Location,Western Europe,Dual Certified
+SITE00023,Primary Research Site,Central Asia,Dual Certified
+SITE00024,Advanced Clinical Location,South Asia,Dual Certified
+SITE00025,Primary Testing Center,Northern Europe,GDP Compliant
+SITE00026,Regional Distribution Unit,Western Europe,Certified with Exceptions
+SITE00027,Primary Clinical Unit,North Africa,Under Review
+SITE00028,Core Clinical Site,Western Europe,Conditionally Approved
+SITE00029,Main Development Unit,Central Asia,Fully Certified
+SITE00030,Strategic Storage Laboratory,North America,GDP Compliant
+SITE00031,Key Manufacturing Campus,Southern Europe,GMP Certified
+SITE00032,Principal Testing Facility,Central America,Under Review
+SITE00033,Key Processing Plant,Southern Europe,Dual Certified
+SITE00034,Regional Packaging Facility,Eastern Europe,GDP Compliant
+SITE00035,Core Testing Complex,Western Europe,Dual Certified
+SITE00036,Advanced Research Laboratory,North Africa,Under Review
+SITE00037,Principal Development Center,Oceania,Under Review
+SITE00038,Strategic Testing Complex,Middle East,Fully Certified
+SITE00039,Key Development Laboratory,Sub-Saharan Africa,Certified with Exceptions
+SITE00040,Principal Processing Complex,Southern Europe,Certified with Exceptions
+SITE00041,Key Processing Campus,Caribbean,GMP Pending
+SITE00042,Core Processing Facility,South America,Dual Certified
+SITE00043,Flagship Distribution Laboratory,North Africa,GMP/GDP Compliant
+SITE00044,Flagship Packaging Site,Western Europe,Certified with Exceptions
+SITE00045,Core Manufacturing Campus,North America,Fully Certified
+SITE00046,Central Manufacturing Unit,South Asia,Conditionally Approved
+SITE00047,Core Manufacturing Hub,Caribbean,Conditionally Approved
+SITE00048,Main Testing Laboratory,Eastern Europe,GMP/GDP Compliant
+SITE00049,Central Manufacturing Laboratory,Oceania,GMP/GDP Compliant
+SITE00050,Flagship Distribution Campus,Western Europe,GMP Certified
+SITE00051,Principal Research Location,Northern Europe,GMP Certified
+SITE00052,Flagship Testing Complex,North Africa,GDP Compliant
+SITE00053,Strategic Manufacturing Campus,Western Europe,Under Review
+SITE00054,Key Clinical Hub,Southeast Asia,Dual Certified
+SITE00055,Central Development Hub,South Asia,GDP Pending
+SITE00056,Regional Production Plant,Central America,GDP Compliant
+SITE00057,Core Storage Facility,Southeast Asia,Conditionally Approved
+SITE00058,Flagship Distribution Facility,Central Asia,Conditionally Approved
+SITE00059,Regional Manufacturing Plant,North America,GDP Compliant
+SITE00060,Flagship Development Hub,Middle East,GMP Pending
+SITE00061,Strategic Clinical Campus,Sub-Saharan Africa,Dual Certified
+SITE00062,Main Production Facility,Western Europe,Dual Certified
+SITE00063,Key Storage Campus,Sub-Saharan Africa,Dual Certified
+SITE00064,Flagship Packaging Site,Caribbean,Conditionally Approved
+SITE00065,Flagship Production Complex,Oceania,GDP Pending
+SITE00066,Flagship Manufacturing Hub,Central America,Certified with Exceptions
+SITE00067,Strategic Distribution Location,Middle East,GDP Compliant
+SITE00068,Key Storage Hub,North Africa,Under Review
+SITE00069,Principal Production Campus,Caribbean,Under Review
+SITE00070,Flagship Storage Plant,South Asia,Conditionally Approved
+SITE00071,Main Development Campus,Southeast Asia,Certified with Exceptions
+SITE00072,Flagship Distribution Campus,Caribbean,Certified with Exceptions
+SITE00073,Advanced Clinical Location,South America,GDP Compliant
+SITE00074,Main Research Center,South Asia,GDP Compliant
+SITE00075,Central Clinical Unit,Southeast Asia,GDP Pending
+SITE00076,Primary Research Facility,South Asia,GMP Pending
+SITE00077,Strategic Distribution Site,Southeast Asia,GMP Certified
+SITE00078,Core Processing Location,South Asia,Fully Certified
+SITE00079,Core Storage Facility,Southern Europe,Fully Certified
+SITE00080,Principal Development Campus,Middle East,GDP Compliant
+SITE00081,Main Development Unit,Southeast Asia,GMP Pending
+SITE00082,Primary Storage Hub,Caribbean,GMP Pending
+SITE00083,Flagship Manufacturing Facility,Oceania,Dual Certified
+SITE00084,Primary Storage Campus,Sub-Saharan Africa,Certified with Exceptions
+SITE00085,Regional Distribution Hub,Middle East,GDP Pending
+SITE00086,Advanced Packaging Complex,Oceania,Under Review
+SITE00087,Flagship Distribution Campus,Western Europe,GMP Certified
+SITE00088,Regional Processing Hub,Southeast Asia,Fully Certified
+SITE00089,Key Manufacturing Campus,Western Europe,GDP Compliant
+SITE00090,Regional Testing Unit,East Asia,GMP Certified
+SITE00091,Advanced Production Center,Middle East,Dual Certified
+SITE00092,Strategic Processing Unit,Oceania,GDP Pending
+SITE00093,Key Packaging Laboratory,Oceania,GDP Compliant
+SITE00094,Core Development Location,Caribbean,GMP/GDP Compliant
+SITE00095,Main Production Facility,South Asia,Dual Certified
+SITE00096,Regional Production Unit,Caribbean,GMP/GDP Compliant
+SITE00097,Flagship Manufacturing Hub,South Asia,Certified with Exceptions
+SITE00098,Core Storage Facility,Central Asia,Certified with Exceptions
+SITE00099,Core Processing Hub,Central Asia,Fully Certified
+SITE00100,Key Distribution Campus,North Africa,GDP Compliant
+SITE00101,Primary Distribution Plant,Eastern Europe,GDP Pending
+SITE00102,Primary Development Hub,Eastern Europe,Certified with Exceptions
+SITE00103,Core Testing Plant,Western Europe,GMP Certified
+SITE00104,Main Packaging Facility,Central Asia,GMP/GDP Compliant
+SITE00105,Primary Packaging Plant,Middle East,Dual Certified
+SITE00106,Flagship Processing Hub,Eastern Europe,GDP Compliant
+SITE00107,Primary Research Site,Central Asia,Dual Certified
+SITE00108,Flagship Packaging Hub,Western Europe,GDP Pending
+SITE00109,Main Processing Laboratory,Sub-Saharan Africa,GMP Pending
+SITE00110,Key Clinical Complex,Northern Europe,Certified with Exceptions
+SITE00111,Advanced Packaging Campus,East Asia,Certified with Exceptions
+SITE00112,Flagship Manufacturing Hub,Northern Europe,Dual Certified
+SITE00113,Strategic Development Hub,Central America,GMP/GDP Compliant
+SITE00114,Flagship Storage Laboratory,Central America,GMP Certified
+SITE00115,Core Development Hub,Middle East,Dual Certified
+SITE00116,Advanced Distribution Laboratory,East Asia,GMP/GDP Compliant
+SITE00117,Principal Development Facility,Central Asia,GMP Certified
+SITE00118,Advanced Production Plant,Middle East,GMP/GDP Compliant
+SITE00119,Core Development Campus,Eastern Europe,GDP Pending
+SITE00120,Flagship Distribution Location,North America,GDP Pending
+SITE00121,Regional Distribution Laboratory,Oceania,Under Review
+SITE00122,Central Packaging Site,South America,Fully Certified
+SITE00123,Core Production Plant,Caribbean,GMP Certified
+SITE00124,Regional Processing Facility,Middle East,Fully Certified
+SITE00125,Core Testing Unit,Oceania,GDP Pending
+SITE00126,Regional Distribution Complex,Central America,GMP/GDP Compliant
+SITE00127,Main Processing Laboratory,North Africa,GDP Pending
+SITE00128,Key Development Campus,Northern Europe,Fully Certified
+SITE00129,Strategic Testing Laboratory,Northern Europe,GDP Compliant
+SITE00130,Principal Packaging Campus,East Asia,GMP Pending
+SITE00131,Core Processing Hub,South Asia,Dual Certified
+SITE00132,Principal Production Location,Oceania,GMP Pending
+SITE00133,Advanced Clinical Laboratory,Sub-Saharan Africa,GMP/GDP Compliant
+SITE00134,Central Processing Unit,Oceania,GMP Certified
+SITE00135,Core Clinical Laboratory,East Asia,GMP Certified
+SITE00136,Flagship Research Complex,Oceania,GDP Compliant
+SITE00137,Regional Production Unit,East Asia,GMP Certified
+SITE00138,Key Processing Unit,South America,Conditionally Approved
+SITE00139,Main Development Location,South Asia,GMP Certified
+SITE00140,Flagship Processing Hub,Western Europe,Conditionally Approved
+SITE00141,Principal Distribution Center,North Africa,Under Review
+SITE00142,Regional Research Complex,East Asia,GDP Pending
+SITE00143,Principal Distribution Center,Middle East,Certified with Exceptions
+SITE00144,Primary Storage Center,Middle East,Dual Certified
+SITE00145,Primary Development Center,South Asia,GMP/GDP Compliant
+SITE00146,Key Development Location,East Asia,Conditionally Approved
+SITE00147,Principal Development Unit,Eastern Europe,Fully Certified
+SITE00148,Main Storage Location,Caribbean,GDP Compliant
+SITE00149,Main Clinical Laboratory,Southern Europe,GDP Compliant
+SITE00150,Central Testing Location,North Africa,Under Review
+SITE00151,Strategic Production Unit,Northern Europe,GMP Pending
+SITE00152,Advanced Testing Site,Oceania,Dual Certified
+SITE00153,Key Clinical Plant,Central America,Certified with Exceptions
+SITE00154,Core Processing Location,Middle East,Conditionally Approved
+SITE00155,Principal Distribution Campus,Oceania,Certified with Exceptions
+SITE00156,Main Storage Plant,Eastern Europe,Certified with Exceptions
+SITE00157,Principal Processing Site,Southeast Asia,GMP Certified
+SITE00158,Core Development Center,Southern Europe,GMP Pending
+SITE00159,Principal Development Plant,North Africa,Certified with Exceptions
+SITE00160,Strategic Testing Campus,Eastern Europe,GMP Certified
+SITE00161,Primary Research Unit,South Asia,GMP Pending
+SITE00162,Flagship Development Unit,Southern Europe,Dual Certified
+SITE00163,Key Packaging Facility,South Asia,Certified with Exceptions
+SITE00164,Central Storage Plant,Middle East,Certified with Exceptions
+SITE00165,Advanced Storage Plant,Western Europe,Dual Certified
+SITE00166,Strategic Development Location,South Asia,GMP Pending
+SITE00167,Key Packaging Plant,Northern Europe,GMP Certified
+SITE00168,Advanced Processing Plant,Middle East,GMP Certified
+SITE00169,Primary Testing Complex,South Asia,GMP Certified
+SITE00170,Key Production Unit,Oceania,GMP/GDP Compliant
+SITE00171,Flagship Distribution Center,Middle East,Fully Certified
+SITE00172,Strategic Storage Hub,North Africa,GMP Certified
+SITE00173,Core Manufacturing Campus,Oceania,Dual Certified
+SITE00174,Regional Development Location,Western Europe,Under Review
+SITE00175,Central Distribution Campus,Middle East,GMP Pending
+SITE00176,Advanced Development Site,Southeast Asia,Under Review
+SITE00177,Main Processing Location,Southern Europe,Under Review
+SITE00178,Central Manufacturing Facility,Sub-Saharan Africa,GDP Compliant
+SITE00179,Key Research Plant,Western Europe,GDP Pending
+SITE00180,Regional Research Campus,South America,GDP Pending
+SITE00181,Flagship Distribution Campus,Oceania,GMP/GDP Compliant
+SITE00182,Core Manufacturing Site,Northern Europe,GMP Certified
+SITE00183,Advanced Processing Center,North Africa,Dual Certified
+SITE00184,Flagship Storage Plant,Oceania,Dual Certified
+SITE00185,Strategic Distribution Plant,South Asia,GDP Compliant
+SITE00186,Flagship Storage Laboratory,South America,Dual Certified
+SITE00187,Main Testing Center,Sub-Saharan Africa,Under Review
+SITE00188,Regional Research Unit,East Asia,GDP Compliant
+SITE00189,Principal Testing Location,Oceania,Certified with Exceptions
+SITE00190,Flagship Distribution Location,Oceania,Fully Certified
+SITE00191,Advanced Storage Location,Eastern Europe,GMP Certified
+SITE00192,Flagship Manufacturing Laboratory,Caribbean,Conditionally Approved
+SITE00193,Strategic Production Center,Sub-Saharan Africa,GDP Compliant
+SITE00194,Regional Research Site,Eastern Europe,GDP Compliant
+SITE00195,Advanced Manufacturing Unit,Sub-Saharan Africa,GDP Compliant
+SITE00196,Strategic Testing Laboratory,Western Europe,Conditionally Approved
+SITE00197,Flagship Storage Complex,Sub-Saharan Africa,Fully Certified
+SITE00198,Primary Testing Campus,Northern Europe,GMP Pending
+SITE00199,Key Packaging Center,Western Europe,Conditionally Approved
+SITE00200,Advanced Research Plant,Sub-Saharan Africa,GMP Pending
+SITE00201,Advanced Manufacturing Laboratory,South Asia,GDP Pending
+SITE00202,Core Storage Center,Caribbean,GMP Pending
+SITE00203,Strategic Research Site,Eastern Europe,Conditionally Approved
+SITE00204,Strategic Packaging Hub,Sub-Saharan Africa,GMP Pending
+SITE00205,Key Clinical Center,Caribbean,Dual Certified
+SITE00206,Regional Production Unit,Southern Europe,GDP Compliant
+SITE00207,Core Processing Unit,Middle East,GDP Compliant
+SITE00208,Regional Manufacturing Plant,Central America,GMP/GDP Compliant
+SITE00209,Flagship Distribution Campus,Southeast Asia,GMP/GDP Compliant
+SITE00210,Flagship Clinical Campus,South Asia,GDP Pending
+SITE00211,Key Manufacturing Facility,South America,Under Review
+SITE00212,Primary Production Complex,Middle East,Under Review
+SITE00213,Regional Research Complex,North America,GMP Certified
+SITE00214,Main Research Location,Middle East,GMP Pending
+SITE00215,Advanced Packaging Plant,Caribbean,Fully Certified
+SITE00216,Primary Manufacturing Plant,South Asia,GMP Certified
+SITE00217,Regional Distribution Campus,Caribbean,GDP Pending
+SITE00218,Principal Production Facility,Eastern Europe,GMP Pending
+SITE00219,Key Distribution Location,Southeast Asia,Conditionally Approved
+SITE00220,Core Clinical Hub,Sub-Saharan Africa,Fully Certified
+SITE00221,Strategic Manufacturing Unit,Central Asia,GMP Pending
+SITE00222,Regional Processing Campus,Southeast Asia,Dual Certified
+SITE00223,Central Packaging Complex,Southeast Asia,Conditionally Approved
+SITE00224,Core Storage Plant,Southern Europe,Under Review
+SITE00225,Main Packaging Complex,Caribbean,GDP Compliant
+SITE00226,Core Clinical Complex,Sub-Saharan Africa,GMP Pending
+SITE00227,Principal Production Facility,Central Asia,GMP Certified
+SITE00228,Central Production Campus,Southeast Asia,Certified with Exceptions
+SITE00229,Regional Development Location,Caribbean,GDP Compliant
+SITE00230,Core Production Facility,Central America,GDP Compliant
+SITE00231,Primary Research Unit,Sub-Saharan Africa,GDP Compliant
+SITE00232,Core Packaging Facility,Caribbean,GMP Pending
+SITE00233,Main Development Center,Central America,GMP Certified
+SITE00234,Central Development Site,Sub-Saharan Africa,Certified with Exceptions
+SITE00235,Core Development Facility,Oceania,Certified with Exceptions
+SITE00236,Flagship Storage Laboratory,Eastern Europe,Under Review
+SITE00237,Regional Production Site,Middle East,Under Review
+SITE00238,Key Distribution Hub,South America,GMP/GDP Compliant
+SITE00239,Principal Processing Location,Eastern Europe,Fully Certified
+SITE00240,Central Development Complex,North America,GDP Pending
+SITE00241,Strategic Processing Facility,Western Europe,Certified with Exceptions
+SITE00242,Primary Testing Hub,Central Asia,Under Review
+SITE00243,Main Clinical Unit,Western Europe,Under Review
+SITE00244,Primary Clinical Laboratory,Southeast Asia,GDP Compliant
+SITE00245,Core Processing Unit,Caribbean,Certified with Exceptions
+SITE00246,Key Development Hub,South Asia,GDP Pending
+SITE00247,Central Processing Laboratory,Central America,Conditionally Approved
+SITE00248,Principal Testing Complex,North America,GMP Pending
+SITE00249,Core Processing Campus,East Asia,GMP Certified
+SITE00250,Main Manufacturing Complex,Northern Europe,Fully Certified
+SITE00251,Core Production Campus,South Asia,GDP Compliant
+SITE00252,Central Processing Center,Middle East,Fully Certified
+SITE00253,Primary Research Campus,Central Asia,GDP Pending
+SITE00254,Central Testing Unit,North Africa,Fully Certified
+SITE00255,Central Packaging Center,Southeast Asia,GMP Pending
+SITE00256,Flagship Manufacturing Laboratory,Central Asia,GMP Certified
+SITE00257,Advanced Research Location,Western Europe,Under Review
+SITE00258,Main Storage Complex,South America,Dual Certified
+SITE00259,Flagship Research Campus,South Asia,GMP/GDP Compliant
+SITE00260,Principal Testing Laboratory,Central America,Under Review
+SITE00261,Main Production Facility,Central America,Under Review
+SITE00262,Primary Packaging Location,Central Asia,GDP Pending
+SITE00263,Principal Distribution Laboratory,Eastern Europe,Certified with Exceptions
+SITE00264,Regional Packaging Unit,Sub-Saharan Africa,GMP/GDP Compliant
+SITE00265,Core Development Facility,Southeast Asia,Under Review
+SITE00266,Strategic Packaging Facility,East Asia,Certified with Exceptions
+SITE00267,Principal Processing Location,Southeast Asia,Dual Certified
+SITE00268,Advanced Manufacturing Plant,South Asia,GMP Certified
+SITE00269,Key Testing Campus,Caribbean,GMP Certified
+SITE00270,Main Clinical Unit,Oceania,Under Review
+SITE00271,Primary Research Site,Sub-Saharan Africa,GMP Certified
+SITE00272,Primary Testing Campus,Central America,Dual Certified
+SITE00273,Flagship Processing Center,Caribbean,Conditionally Approved
+SITE00274,Strategic Distribution Campus,North America,GDP Compliant
+SITE00275,Main Processing Site,East Asia,Fully Certified
+SITE00276,Principal Development Facility,Middle East,GMP Certified
+SITE00277,Strategic Distribution Hub,Eastern Europe,GMP Pending
+SITE00278,Advanced Development Plant,North America,GDP Compliant
+SITE00279,Primary Testing Hub,South Asia,GDP Compliant
+SITE00280,Key Packaging Location,North America,Under Review
+SITE00281,Regional Clinical Laboratory,North America,Dual Certified
+SITE00282,Primary Processing Center,Central Asia,GDP Compliant
+SITE00283,Central Production Laboratory,Northern Europe,GDP Pending
+SITE00284,Core Packaging Campus,North America,GDP Compliant
+SITE00285,Principal Clinical Location,Southeast Asia,Conditionally Approved
+SITE00286,Principal Processing Complex,Middle East,Conditionally Approved
+SITE00287,Regional Manufacturing Center,South America,GMP/GDP Compliant
+SITE00288,Central Production Campus,Central America,Certified with Exceptions
+SITE00289,Advanced Production Campus,Central America,GMP/GDP Compliant
+SITE00290,Key Processing Plant,Central America,GMP/GDP Compliant
+SITE00291,Core Packaging Site,Southern Europe,Fully Certified
+SITE00292,Flagship Development Site,Western Europe,GDP Compliant
+SITE00293,Core Distribution Campus,North Africa,GDP Pending
+SITE00294,Flagship Testing Laboratory,South Asia,Fully Certified
+SITE00295,Primary Processing Facility,North America,Dual Certified
+SITE00296,Principal Storage Center,Oceania,Fully Certified
+SITE00297,Key Packaging Hub,Middle East,GDP Pending
+SITE00298,Regional Storage Plant,Caribbean,Under Review
+SITE00299,Strategic Research Location,Southern Europe,GMP Pending
+SITE00300,Advanced Storage Complex,Central Asia,GMP Certified
+SITE00301,Regional Research Center,North America,Certified with Exceptions
+SITE00302,Strategic Testing Hub,Eastern Europe,GMP Pending
+SITE00303,Flagship Packaging Unit,Oceania,GMP/GDP Compliant
+SITE00304,Primary Processing Site,Southern Europe,Dual Certified
+SITE00305,Advanced Packaging Complex,Western Europe,Fully Certified
+SITE00306,Central Testing Unit,East Asia,GDP Pending
+SITE00307,Flagship Clinical Complex,South Asia,GMP Pending
+SITE00308,Strategic Production Location,North America,Fully Certified
+SITE00309,Central Research Plant,Central America,Fully Certified
+SITE00310,Regional Testing Center,Central America,Conditionally Approved
+SITE00311,Flagship Development Site,Oceania,Certified with Exceptions
+SITE00312,Advanced Testing Site,South Asia,GMP Certified
+SITE00313,Strategic Testing Laboratory,Middle East,GDP Pending
+SITE00314,Key Production Center,Southern Europe,Certified with Exceptions
+SITE00315,Core Research Campus,North America,GDP Compliant
+SITE00316,Primary Processing Facility,South America,Conditionally Approved
+SITE00317,Principal Production Facility,Central Asia,GMP Certified
+SITE00318,Key Development Hub,South America,Fully Certified
+SITE00319,Regional Research Laboratory,Western Europe,Conditionally Approved
+SITE00320,Regional Testing Unit,Central America,GMP Certified
+SITE00321,Advanced Distribution Facility,South Asia,GMP Pending
+SITE00322,Core Processing Unit,North Africa,GMP/GDP Compliant
+SITE00323,Primary Storage Complex,Southern Europe,GMP Pending
+SITE00324,Strategic Development Complex,Northern Europe,GMP Certified
+SITE00325,Central Development Center,South Asia,Under Review
+SITE00326,Core Research Campus,Middle East,Dual Certified
+SITE00327,Central Packaging Complex,Northern Europe,GDP Compliant
+SITE00328,Key Processing Location,Northern Europe,GMP Pending
+SITE00329,Key Production Hub,Central Asia,GMP Pending
+SITE00330,Flagship Distribution Center,Central Asia,Certified with Exceptions
+SITE00331,Advanced Production Complex,North Africa,Certified with Exceptions
+SITE00332,Key Storage Hub,East Asia,Dual Certified
+SITE00333,Flagship Production Unit,Oceania,GMP/GDP Compliant
+SITE00334,Principal Development Location,Central America,Conditionally Approved
+SITE00335,Flagship Clinical Unit,Southeast Asia,GMP/GDP Compliant
+SITE00336,Core Storage Site,North Africa,Fully Certified
+SITE00337,Principal Clinical Hub,Southeast Asia,Under Review
+SITE00338,Regional Testing Location,Caribbean,GMP Certified
+SITE00339,Primary Processing Site,Central America,GDP Pending
+SITE00340,Key Production Location,North America,GMP Certified
+SITE00341,Principal Research Unit,Northern Europe,Dual Certified
+SITE00342,Principal Distribution Unit,Eastern Europe,Dual Certified
+SITE00343,Regional Research Facility,Northern Europe,GMP Pending
+SITE00344,Primary Distribution Location,North America,Fully Certified
+SITE00345,Core Development Laboratory,South America,Dual Certified
+SITE00346,Core Manufacturing Complex,Oceania,Certified with Exceptions
+SITE00347,Principal Testing Plant,Central Asia,Under Review
+SITE00348,Regional Development Laboratory,South America,Certified with Exceptions
+SITE00349,Advanced Manufacturing Laboratory,Southeast Asia,GMP Pending
+SITE00350,Main Research Location,North Africa,Certified with Exceptions
+SITE00351,Key Packaging Complex,South Asia,GMP Pending
+SITE00352,Main Research Unit,Central America,Conditionally Approved
+SITE00353,Strategic Production Complex,Western Europe,GMP Certified
+SITE00354,Main Clinical Location,Eastern Europe,GMP/GDP Compliant
+SITE00355,Flagship Distribution Unit,South America,GMP/GDP Compliant
+SITE00356,Advanced Processing Facility,Central America,GDP Compliant
+SITE00357,Central Manufacturing Facility,Central Asia,GMP Certified
+SITE00358,Primary Storage Facility,South Asia,GMP/GDP Compliant
+SITE00359,Principal Processing Unit,Central Asia,Conditionally Approved
+SITE00360,Flagship Clinical Campus,Oceania,GMP Pending
+SITE00361,Strategic Manufacturing Plant,Central Asia,Conditionally Approved
+SITE00362,Main Packaging Hub,Sub-Saharan Africa,Dual Certified
+SITE00363,Flagship Processing Location,Eastern Europe,GMP Certified
+SITE00364,Key Development Plant,Sub-Saharan Africa,GMP/GDP Compliant
+SITE00365,Strategic Manufacturing Facility,Central Asia,GMP Certified
+SITE00366,Regional Clinical Campus,Northern Europe,GMP Pending
+SITE00367,Regional Manufacturing Campus,Middle East,Fully Certified
+SITE00368,Primary Storage Complex,North Africa,GDP Pending
+SITE00369,Flagship Testing Site,Southeast Asia,GMP/GDP Compliant
+SITE00370,Core Clinical Hub,Oceania,GMP Pending
+SITE00371,Strategic Processing Hub,North America,Dual Certified
+SITE00372,Strategic Clinical Unit,Sub-Saharan Africa,Under Review
+SITE00373,Key Manufacturing Site,East Asia,Conditionally Approved
+SITE00374,Key Distribution Facility,Central America,Under Review
+SITE00375,Regional Production Laboratory,Middle East,Certified with Exceptions
+SITE00376,Advanced Development Hub,North America,Certified with Exceptions
+SITE00377,Main Manufacturing Hub,North Africa,GMP Certified
+SITE00378,Principal Distribution Location,Caribbean,Dual Certified
+SITE00379,Strategic Distribution Site,Northern Europe,Dual Certified
+SITE00380,Primary Development Unit,Oceania,GMP Certified
+SITE00381,Strategic Production Site,Eastern Europe,Under Review
+SITE00382,Advanced Research Facility,Eastern Europe,Fully Certified
+SITE00383,Primary Clinical Campus,Caribbean,GMP/GDP Compliant
+SITE00384,Advanced Development Hub,Southern Europe,Certified with Exceptions
+SITE00385,Primary Manufacturing Campus,Western Europe,Certified with Exceptions
+SITE00386,Strategic Packaging Plant,Western Europe,GDP Pending
+SITE00387,Main Clinical Unit,Sub-Saharan Africa,Fully Certified
+SITE00388,Regional Development Complex,Sub-Saharan Africa,GMP Certified
+SITE00389,Advanced Distribution Plant,Caribbean,GMP/GDP Compliant
+SITE00390,Central Production Center,East Asia,GMP Certified
+SITE00391,Flagship Clinical Facility,Northern Europe,Under Review
+SITE00392,Primary Distribution Campus,Sub-Saharan Africa,GMP Certified
+SITE00393,Strategic Development Center,Sub-Saharan Africa,Certified with Exceptions
+SITE00394,Main Packaging Campus,Oceania,Certified with Exceptions
+SITE00395,Regional Distribution Complex,Western Europe,Conditionally Approved
+SITE00396,Key Distribution Center,Central Asia,Certified with Exceptions
+SITE00397,Advanced Clinical Hub,Northern Europe,Fully Certified
+SITE00398,Main Manufacturing Campus,Caribbean,GMP/GDP Compliant
+SITE00399,Flagship Production Laboratory,East Asia,Certified with Exceptions
+SITE00400,Primary Manufacturing Location,Middle East,GDP Pending
+SITE00401,Strategic Development Location,Southeast Asia,GDP Pending
+SITE00402,Main Processing Plant,Caribbean,GMP Pending
+SITE00403,Flagship Clinical Location,Northern Europe,GMP Pending
+SITE00404,Regional Packaging Hub,Oceania,GMP/GDP Compliant
+SITE00405,Key Processing Site,Sub-Saharan Africa,GDP Pending
+SITE00406,Flagship Manufacturing Center,South America,Certified with Exceptions
+SITE00407,Strategic Testing Laboratory,East Asia,GDP Pending
+SITE00408,Main Research Plant,Oceania,GMP/GDP Compliant
+SITE00409,Key Distribution Plant,North Africa,Certified with Exceptions
+SITE00410,Flagship Distribution Location,North America,Under Review
+SITE00411,Flagship Clinical Plant,Eastern Europe,Certified with Exceptions
+SITE00412,Advanced Storage Site,Central America,GDP Compliant
+SITE00413,Principal Testing Facility,Western Europe,GDP Compliant
+SITE00414,Main Production Complex,South America,Dual Certified
+SITE00415,Primary Testing Facility,Western Europe,Dual Certified
+SITE00416,Regional Distribution Hub,Central Asia,GMP Pending
+SITE00417,Main Production Facility,North Africa,GMP Pending
+SITE00418,Principal Development Laboratory,Oceania,GMP/GDP Compliant
+SITE00419,Strategic Manufacturing Center,Central America,Certified with Exceptions
+SITE00420,Key Manufacturing Hub,Eastern Europe,Fully Certified
+SITE00421,Main Distribution Center,Central Asia,GMP Pending
+SITE00422,Key Packaging Site,Sub-Saharan Africa,GDP Pending
+SITE00423,Main Development Campus,Central America,GMP Certified
+SITE00424,Primary Manufacturing Center,Caribbean,Under Review
+SITE00425,Regional Clinical Center,Middle East,Under Review
+SITE00426,Key Research Plant,North America,Under Review
+SITE00427,Primary Testing Location,Eastern Europe,Fully Certified
+SITE00428,Key Processing Facility,Central Asia,Fully Certified
+SITE00429,Regional Production Unit,Central America,GMP/GDP Compliant
+SITE00430,Regional Manufacturing Site,South Asia,GDP Compliant
+SITE00431,Main Development Hub,North America,Fully Certified
+SITE00432,Core Development Campus,South America,Dual Certified
+SITE00433,Strategic Manufacturing Complex,North Africa,GMP Pending
+SITE00434,Regional Development Facility,South America,GDP Pending
+SITE00435,Strategic Manufacturing Unit,Central America,Under Review
+SITE00436,Principal Storage Facility,North America,GDP Compliant
+SITE00437,Primary Distribution Plant,South America,GDP Pending
+SITE00438,Primary Distribution Location,North America,GDP Compliant
+SITE00439,Advanced Clinical Plant,North Africa,GDP Compliant
+SITE00440,Advanced Distribution Campus,North Africa,Under Review
+SITE00441,Core Storage Plant,South America,GDP Pending
+SITE00442,Core Manufacturing Laboratory,Oceania,GMP Pending
+SITE00443,Core Development Campus,Northern Europe,Fully Certified
+SITE00444,Central Research Site,Eastern Europe,GMP Certified
+SITE00445,Principal Processing Center,South Asia,Fully Certified
+SITE00446,Core Production Campus,South Asia,Certified with Exceptions
+SITE00447,Core Processing Unit,Northern Europe,GMP Pending
+SITE00448,Key Research Center,Oceania,Fully Certified
+SITE00449,Key Distribution Facility,Western Europe,Dual Certified
+SITE00450,Principal Clinical Hub,Southeast Asia,Fully Certified
+SITE00451,Strategic Storage Site,East Asia,GMP Pending
+SITE00452,Key Manufacturing Hub,East Asia,GMP/GDP Compliant
+SITE00453,Regional Manufacturing Laboratory,Northern Europe,GMP Certified
+SITE00454,Principal Clinical Center,East Asia,GDP Compliant
+SITE00455,Principal Development Laboratory,South America,Conditionally Approved
+SITE00456,Main Processing Complex,North America,Fully Certified
+SITE00457,Strategic Storage Location,South Asia,GMP/GDP Compliant
+SITE00458,Principal Clinical Location,South America,GDP Compliant
+SITE00459,Principal Testing Location,Middle East,Certified with Exceptions
+SITE00460,Strategic Manufacturing Campus,North Africa,GDP Compliant
+SITE00461,Principal Research Complex,Central America,Dual Certified
+SITE00462,Core Storage Hub,Central Asia,Certified with Exceptions
+SITE00463,Core Manufacturing Facility,Southeast Asia,GMP/GDP Compliant
+SITE00464,Principal Production Plant,East Asia,Fully Certified
+SITE00465,Flagship Storage Center,Middle East,GMP Certified
+SITE00466,Primary Processing Location,South America,Fully Certified
+SITE00467,Regional Storage Campus,Central Asia,Fully Certified
+SITE00468,Core Development Campus,Southeast Asia,Conditionally Approved
+SITE00469,Principal Development Campus,Oceania,GMP Certified
+SITE00470,Strategic Distribution Hub,North Africa,GMP/GDP Compliant
+SITE00471,Regional Packaging Hub,South America,GDP Compliant
+SITE00472,Flagship Testing Hub,Southern Europe,Dual Certified
+SITE00473,Central Testing Laboratory,Southern Europe,GDP Compliant
+SITE00474,Core Production Location,Southern Europe,GDP Compliant
+SITE00475,Primary Packaging Hub,South America,Conditionally Approved
+SITE00476,Primary Manufacturing Complex,Sub-Saharan Africa,GMP Certified
+SITE00477,Principal Research Complex,Oceania,GMP Pending
+SITE00478,Central Distribution Campus,Middle East,Under Review
+SITE00479,Primary Development Plant,Eastern Europe,Certified with Exceptions
+SITE00480,Key Production Site,North America,Conditionally Approved
+SITE00481,Regional Testing Hub,South Asia,Under Review
+SITE00482,Strategic Processing Complex,Central Asia,GMP/GDP Compliant
+SITE00483,Key Research Facility,East Asia,GMP/GDP Compliant
+SITE00484,Main Processing Laboratory,South Asia,GMP Certified
+SITE00485,Flagship Packaging Center,Western Europe,Certified with Exceptions
+SITE00486,Strategic Production Plant,Sub-Saharan Africa,GDP Compliant
+SITE00487,Principal Distribution Center,Eastern Europe,GMP/GDP Compliant
+SITE00488,Regional Production Laboratory,Eastern Europe,GDP Compliant
+SITE00489,Flagship Production Laboratory,Southern Europe,Fully Certified
+SITE00490,Principal Testing Center,North America,Conditionally Approved
+SITE00491,Advanced Clinical Facility,Sub-Saharan Africa,GMP/GDP Compliant
+SITE00492,Advanced Production Plant,Central Asia,GDP Compliant
+SITE00493,Key Clinical Center,Central America,Under Review
+SITE00494,Principal Processing Unit,Southern Europe,GMP Certified
+SITE00495,Core Packaging Unit,South America,GMP Pending
+SITE00496,Key Processing Site,Central America,Certified with Exceptions
+SITE00497,Central Storage Facility,Eastern Europe,Certified with Exceptions
+SITE00498,Key Production Site,Eastern Europe,Dual Certified
+SITE00499,Strategic Processing Plant,Northern Europe,GDP Compliant
+SITE00500,Key Production Center,South America,GMP Pending
+SITE00501,Central Packaging Center,Southeast Asia,GMP/GDP Compliant
+SITE00502,Principal Production Complex,Central Asia,Under Review
+SITE00503,Principal Testing Laboratory,Sub-Saharan Africa,GDP Pending
+SITE00504,Advanced Processing Site,Southeast Asia,GDP Compliant
+SITE00505,Central Production Site,Southeast Asia,GMP Pending
+SITE00506,Flagship Testing Location,Southeast Asia,Conditionally Approved
+SITE00507,Flagship Production Campus,Central Asia,GDP Compliant
+SITE00508,Central Development Unit,Middle East,Under Review
+SITE00509,Flagship Packaging Center,Central America,GMP/GDP Compliant
+SITE00510,Flagship Storage Campus,Sub-Saharan Africa,GMP Certified
+SITE00511,Primary Clinical Site,Central Asia,GMP Certified
+SITE00512,Central Development Campus,East Asia,Dual Certified
+SITE00513,Flagship Testing Unit,South America,Certified with Exceptions
+SITE00514,Core Manufacturing Site,East Asia,Fully Certified
+SITE00515,Strategic Storage Laboratory,Western Europe,GMP Certified
+SITE00516,Main Testing Complex,South America,GMP Certified
+SITE00517,Key Processing Hub,South America,Under Review
+SITE00518,Core Production Campus,Central America,GDP Compliant
+SITE00519,Main Production Campus,Sub-Saharan Africa,Fully Certified
+SITE00520,Flagship Packaging Campus,Eastern Europe,Under Review
+SITE00521,Core Processing Location,South America,GDP Pending
+SITE00522,Core Clinical Hub,South America,GDP Pending
+SITE00523,Main Development Complex,North America,Certified with Exceptions
+SITE00524,Strategic Distribution Campus,North Africa,GDP Pending
+SITE00525,Advanced Distribution Facility,North America,Conditionally Approved
+SITE00526,Regional Processing Plant,Central America,Under Review
+SITE00527,Primary Clinical Laboratory,Western Europe,Fully Certified
+SITE00528,Main Production Location,Central America,Under Review
+SITE00529,Flagship Research Campus,East Asia,Conditionally Approved
+SITE00530,Primary Storage Plant,Sub-Saharan Africa,Conditionally Approved
+SITE00531,Main Distribution Hub,Central America,Certified with Exceptions
+SITE00532,Principal Production Hub,Central America,GDP Pending
+SITE00533,Regional Storage Campus,Central America,GMP Certified
+SITE00534,Principal Clinical Unit,Central Asia,Conditionally Approved
+SITE00535,Central Manufacturing Plant,Central Asia,GDP Pending
+SITE00536,Key Production Laboratory,East Asia,GMP Pending
+SITE00537,Flagship Testing Location,Southern Europe,GDP Compliant
+SITE00538,Key Packaging Complex,North America,Fully Certified
+SITE00539,Primary Development Campus,Caribbean,Conditionally Approved
+SITE00540,Core Storage Campus,North America,GMP Pending
+SITE00541,Regional Testing Hub,Northern Europe,Fully Certified
+SITE00542,Core Manufacturing Unit,Central Asia,Certified with Exceptions
+SITE00543,Strategic Storage Campus,South Asia,GMP Pending
+SITE00544,Primary Processing Campus,Northern Europe,Conditionally Approved
+SITE00545,Core Processing Laboratory,Sub-Saharan Africa,GMP Pending
+SITE00546,Core Storage Complex,South Asia,Dual Certified
+SITE00547,Core Development Center,North America,Dual Certified
+SITE00548,Principal Production Hub,Central America,Conditionally Approved
+SITE00549,Regional Testing Complex,North America,Dual Certified
+SITE00550,Core Development Location,Eastern Europe,Under Review
+SITE00551,Primary Processing Hub,Northern Europe,Fully Certified
+SITE00552,Principal Manufacturing Facility,Central America,GMP Pending
+SITE00553,Key Storage Center,Middle East,GMP/GDP Compliant
+SITE00554,Principal Storage Unit,Sub-Saharan Africa,Certified with Exceptions
+SITE00555,Advanced Research Laboratory,Eastern Europe,Dual Certified
+SITE00556,Advanced Storage Hub,Western Europe,GDP Compliant
+SITE00557,Principal Storage Complex,Western Europe,Conditionally Approved
+SITE00558,Main Testing Campus,North Africa,Dual Certified
+SITE00559,Primary Distribution Facility,Caribbean,Dual Certified
+SITE00560,Flagship Packaging Center,Central America,GMP Certified
+SITE00561,Advanced Production Hub,Southern Europe,GMP Certified
+SITE00562,Principal Testing Unit,North America,GDP Pending
+SITE00563,Regional Storage Facility,South Asia,Under Review
+SITE00564,Flagship Research Campus,Southern Europe,Conditionally Approved
+SITE00565,Flagship Testing Complex,Southeast Asia,GMP/GDP Compliant
+SITE00566,Main Distribution Complex,Southeast Asia,GMP Certified
+SITE00567,Regional Development Plant,Southern Europe,Conditionally Approved
+SITE00568,Main Production Facility,South Asia,GDP Compliant
+SITE00569,Primary Clinical Laboratory,East Asia,GDP Compliant
+SITE00570,Strategic Packaging Facility,Southern Europe,GMP Pending
+SITE00571,Regional Testing Plant,Caribbean,Dual Certified
+SITE00572,Principal Storage Campus,North Africa,GDP Compliant
+SITE00573,Main Distribution Unit,North America,Conditionally Approved
+SITE00574,Regional Processing Campus,Eastern Europe,GDP Pending
+SITE00575,Primary Processing Location,Central Asia,GMP/GDP Compliant
+SITE00576,Main Storage Location,Sub-Saharan Africa,GDP Pending
+SITE00577,Strategic Packaging Location,Southern Europe,GMP Certified
+SITE00578,Strategic Clinical Unit,Western Europe,Fully Certified
+SITE00579,Central Development Campus,North America,Fully Certified
+SITE00580,Core Production Laboratory,South America,Conditionally Approved
+SITE00581,Strategic Packaging Hub,Oceania,Certified with Exceptions
+SITE00582,Main Processing Unit,North Africa,Fully Certified
+SITE00583,Key Clinical Unit,Eastern Europe,Certified with Exceptions
+SITE00584,Primary Development Hub,North America,Under Review
+SITE00585,Key Processing Center,Southern Europe,Dual Certified
+SITE00586,Primary Research Unit,Southeast Asia,Conditionally Approved
+SITE00587,Primary Development Unit,North America,Conditionally Approved
+SITE00588,Main Production Campus,Central America,GDP Pending
+SITE00589,Central Clinical Center,Middle East,GDP Pending
+SITE00590,Core Testing Complex,Southeast Asia,Fully Certified
+SITE00591,Principal Manufacturing Site,Oceania,GDP Compliant
+SITE00592,Advanced Storage Unit,North America,GDP Pending
+SITE00593,Primary Storage Unit,Middle East,GDP Compliant
+SITE00594,Regional Distribution Campus,Southeast Asia,GMP Certified
+SITE00595,Advanced Packaging Center,Central America,Conditionally Approved
+SITE00596,Central Clinical Site,Southeast Asia,Certified with Exceptions
+SITE00597,Advanced Production Hub,Northern Europe,GMP Certified
+SITE00598,Strategic Research Laboratory,Caribbean,GDP Compliant
+SITE00599,Central Testing Unit,Central America,Under Review
+SITE00600,Core Clinical Plant,Sub-Saharan Africa,Certified with Exceptions
+SITE00601,Strategic Production Complex,Eastern Europe,Fully Certified
+SITE00602,Principal Packaging Plant,Northern Europe,Dual Certified
+SITE00603,Principal Clinical Hub,Caribbean,GDP Pending
+SITE00604,Principal Manufacturing Campus,Caribbean,Under Review
+SITE00605,Advanced Clinical Center,Oceania,Conditionally Approved
+SITE00606,Core Development Site,Western Europe,Dual Certified
+SITE00607,Advanced Testing Plant,Central America,Conditionally Approved
+SITE00608,Flagship Clinical Site,Western Europe,GDP Compliant
+SITE00609,Principal Manufacturing Laboratory,Sub-Saharan Africa,GMP/GDP Compliant
+SITE00610,Regional Processing Facility,Central America,GMP/GDP Compliant
+SITE00611,Flagship Storage Facility,Southeast Asia,GMP Pending
+SITE00612,Primary Clinical Plant,North America,Under Review
+SITE00613,Primary Processing Site,South Asia,GMP/GDP Compliant
+SITE00614,Main Processing Unit,East Asia,GMP Certified
+SITE00615,Primary Packaging Unit,Caribbean,Fully Certified
+SITE00616,Central Distribution Site,Western Europe,GMP Pending
+SITE00617,Strategic Manufacturing Unit,Western Europe,GDP Pending
+SITE00618,Regional Research Hub,East Asia,GMP/GDP Compliant
+SITE00619,Key Research Hub,Western Europe,Dual Certified
+SITE00620,Central Production Hub,Caribbean,Certified with Exceptions
+SITE00621,Key Testing Center,Central Asia,Conditionally Approved
+SITE00622,Regional Manufacturing Unit,South Asia,GMP Certified
+SITE00623,Regional Research Complex,Northern Europe,Fully Certified
+SITE00624,Strategic Packaging Campus,Southeast Asia,GDP Pending
+SITE00625,Core Development Campus,North America,Dual Certified
+SITE00626,Advanced Packaging Location,Oceania,Certified with Exceptions
+SITE00627,Regional Packaging Center,Southeast Asia,GDP Pending
+SITE00628,Core Packaging Plant,Southern Europe,GMP Certified
+SITE00629,Primary Research Complex,Western Europe,Conditionally Approved
+SITE00630,Key Research Hub,Western Europe,Certified with Exceptions
+SITE00631,Key Processing Hub,Oceania,Under Review
+SITE00632,Strategic Clinical Site,Northern Europe,Fully Certified
+SITE00633,Flagship Processing Plant,Middle East,GMP Certified
+SITE00634,Strategic Manufacturing Unit,Western Europe,Fully Certified
+SITE00635,Flagship Manufacturing Complex,Eastern Europe,GMP Pending
+SITE00636,Main Distribution Plant,Central Asia,Certified with Exceptions
+SITE00637,Flagship Processing Plant,Oceania,GMP Certified
+SITE00638,Main Production Plant,East Asia,Dual Certified
+SITE00639,Central Packaging Center,Western Europe,GMP/GDP Compliant
+SITE00640,Advanced Storage Unit,North Africa,GMP/GDP Compliant
+SITE00641,Core Storage Laboratory,Western Europe,GDP Compliant
+SITE00642,Core Development Site,North America,GMP Pending
+SITE00643,Regional Distribution Complex,Northern Europe,GDP Pending
+SITE00644,Regional Manufacturing Facility,East Asia,GMP Pending
+SITE00645,Flagship Storage Complex,North America,Certified with Exceptions
+SITE00646,Flagship Distribution Location,Oceania,Certified with Exceptions
+SITE00647,Flagship Production Location,Middle East,GMP Certified
+SITE00648,Strategic Research Hub,Middle East,GMP Certified
+SITE00649,Central Distribution Center,Central Asia,GMP Certified
+SITE00650,Regional Packaging Location,Middle East,GDP Pending
+SITE00651,Flagship Development Hub,Western Europe,Under Review
+SITE00652,Core Manufacturing Location,Eastern Europe,Dual Certified
+SITE00653,Core Research Hub,North America,GMP Pending
+SITE00654,Regional Clinical Facility,Western Europe,Fully Certified
+SITE00655,Core Manufacturing Plant,Middle East,Certified with Exceptions
+SITE00656,Key Manufacturing Hub,South America,Under Review
+SITE00657,Regional Processing Location,Western Europe,GMP/GDP Compliant
+SITE00658,Principal Development Laboratory,Central Asia,Dual Certified
+SITE00659,Core Development Complex,Sub-Saharan Africa,Conditionally Approved
+SITE00660,Key Distribution Center,East Asia,Certified with Exceptions
+SITE00661,Central Development Unit,Northern Europe,GDP Compliant
+SITE00662,Key Distribution Location,Southeast Asia,GMP/GDP Compliant
+SITE00663,Advanced Processing Site,Western Europe,GMP Pending
+SITE00664,Key Clinical Complex,Sub-Saharan Africa,GMP Certified
+SITE00665,Principal Packaging Hub,Central Asia,Conditionally Approved
+SITE00666,Flagship Manufacturing Site,Eastern Europe,Fully Certified
+SITE00667,Advanced Clinical Unit,Middle East,Dual Certified
+SITE00668,Core Packaging Laboratory,North America,GMP Pending
+SITE00669,Core Packaging Center,South America,GMP Certified
+SITE00670,Advanced Packaging Hub,North America,GMP Certified
+SITE00671,Primary Testing Location,North Africa,Dual Certified
+SITE00672,Key Packaging Campus,East Asia,Dual Certified
+SITE00673,Strategic Production Complex,Northern Europe,GDP Compliant
+SITE00674,Strategic Clinical Complex,Eastern Europe,GMP/GDP Compliant
+SITE00675,Flagship Manufacturing Laboratory,Southeast Asia,GMP Pending
+SITE00676,Principal Research Site,Central Asia,Certified with Exceptions
+SITE00677,Central Packaging Campus,Western Europe,Fully Certified
+SITE00678,Main Packaging Plant,Southeast Asia,GDP Pending
+SITE00679,Central Distribution Complex,Southern Europe,Certified with Exceptions
+SITE00680,Advanced Testing Location,Eastern Europe,Fully Certified
+SITE00681,Principal Processing Plant,North Africa,GMP/GDP Compliant
+SITE00682,Central Packaging Facility,Northern Europe,GDP Compliant
+SITE00683,Main Production Location,Central America,Fully Certified
+SITE00684,Central Storage Complex,Central America,Fully Certified
+SITE00685,Principal Packaging Facility,Oceania,Dual Certified
+SITE00686,Strategic Manufacturing Location,North Africa,Under Review
+SITE00687,Main Testing Unit,Middle East,GMP/GDP Compliant
+SITE00688,Advanced Development Campus,Eastern Europe,GMP Pending
+SITE00689,Principal Manufacturing Hub,Southern Europe,Conditionally Approved
+SITE00690,Strategic Storage Plant,Southeast Asia,Dual Certified
+SITE00691,Principal Production Facility,North Africa,Fully Certified
+SITE00692,Flagship Distribution Complex,South Asia,Under Review
+SITE00693,Main Packaging Complex,Sub-Saharan Africa,GMP Certified
+SITE00694,Central Production Facility,Southeast Asia,GDP Pending
+SITE00695,Central Manufacturing Site,Central Asia,GDP Compliant
+SITE00696,Advanced Development Center,Southern Europe,Fully Certified
+SITE00697,Flagship Development Location,South Asia,GDP Pending
+SITE00698,Flagship Testing Complex,Sub-Saharan Africa,Certified with Exceptions
+SITE00699,Core Testing Hub,Southern Europe,Conditionally Approved
+SITE00700,Key Development Complex,South America,GMP Pending
+SITE00701,Strategic Distribution Plant,Central Asia,Dual Certified
+SITE00702,Primary Production Plant,Middle East,Conditionally Approved
+SITE00703,Central Clinical Complex,Oceania,GDP Pending
+SITE00704,Regional Testing Plant,Caribbean,GMP/GDP Compliant
+SITE00705,Advanced Distribution Site,Sub-Saharan Africa,Dual Certified
+SITE00706,Flagship Distribution Plant,Central America,Certified with Exceptions
+SITE00707,Key Research Unit,Oceania,GDP Pending
+SITE00708,Advanced Clinical Laboratory,Northern Europe,Fully Certified
+SITE00709,Flagship Clinical Campus,Southern Europe,Dual Certified
+SITE00710,Strategic Processing Plant,South America,GDP Compliant
+SITE00711,Regional Research Center,North America,Under Review
+SITE00712,Advanced Packaging Location,Eastern Europe,GMP Pending
+SITE00713,Flagship Research Facility,Northern Europe,Dual Certified
+SITE00714,Central Clinical Complex,Western Europe,Dual Certified
+SITE00715,Key Storage Facility,Southern Europe,Fully Certified
+SITE00716,Key Development Facility,North America,GMP/GDP Compliant
+SITE00717,Main Production Laboratory,East Asia,GMP Certified
+SITE00718,Main Research Site,Western Europe,Dual Certified
+SITE00719,Principal Testing Facility,Middle East,Dual Certified
+SITE00720,Flagship Development Location,Northern Europe,Dual Certified
+SITE00721,Central Storage Location,Eastern Europe,GMP Certified
+SITE00722,Flagship Storage Facility,Sub-Saharan Africa,GDP Pending
+SITE00723,Key Packaging Hub,North Africa,Under Review
+SITE00724,Core Research Unit,Central Asia,Fully Certified
+SITE00725,Flagship Storage Location,North America,Conditionally Approved
+SITE00726,Advanced Distribution Complex,North Africa,Dual Certified
+SITE00727,Principal Testing Facility,Eastern Europe,Conditionally Approved
+SITE00728,Flagship Clinical Complex,Central America,Under Review
+SITE00729,Central Manufacturing Unit,Central Asia,Dual Certified
+SITE00730,Main Storage Site,South Asia,GMP/GDP Compliant
+SITE00731,Strategic Storage Center,Southern Europe,GDP Compliant
+SITE00732,Advanced Packaging Campus,Caribbean,Fully Certified
+SITE00733,Advanced Production Site,Middle East,GMP Certified
+SITE00734,Central Clinical Site,Caribbean,GDP Pending
+SITE00735,Key Clinical Campus,Central America,GDP Pending
+SITE00736,Central Manufacturing Laboratory,Oceania,Under Review
+SITE00737,Advanced Testing Complex,Western Europe,Dual Certified
+SITE00738,Advanced Development Complex,Central Asia,Under Review
+SITE00739,Core Development Unit,Central Asia,Certified with Exceptions
+SITE00740,Flagship Storage Campus,Central America,Fully Certified
+SITE00741,Advanced Testing Location,Middle East,GDP Pending
+SITE00742,Key Research Site,Middle East,GDP Pending
+SITE00743,Principal Development Laboratory,Middle East,Fully Certified
+SITE00744,Core Packaging Unit,Northern Europe,Certified with Exceptions
+SITE00745,Flagship Development Center,Western Europe,GDP Compliant
+SITE00746,Key Development Complex,Caribbean,GDP Compliant
+SITE00747,Regional Clinical Center,East Asia,Under Review
+SITE00748,Key Testing Unit,South Asia,Under Review
+SITE00749,Core Packaging Location,Sub-Saharan Africa,GMP/GDP Compliant
+SITE00750,Key Packaging Center,Western Europe,GMP Certified
+SITE00751,Principal Clinical Facility,North America,GDP Pending
+SITE00752,Strategic Development Hub,Caribbean,Certified with Exceptions
+SITE00753,Core Packaging Complex,South Asia,GDP Pending
+SITE00754,Principal Testing Unit,Western Europe,GMP/GDP Compliant
+SITE00755,Key Testing Center,Western Europe,GDP Compliant
+SITE00756,Core Packaging Center,Eastern Europe,GDP Compliant
+SITE00757,Central Clinical Site,Southern Europe,GMP Pending
+SITE00758,Regional Clinical Plant,Northern Europe,Dual Certified
+SITE00759,Flagship Clinical Hub,Southeast Asia,Conditionally Approved
+SITE00760,Regional Clinical Location,South America,Under Review
+SITE00761,Principal Storage Center,Oceania,Under Review
+SITE00762,Main Development Unit,Central America,GDP Compliant
+SITE00763,Core Clinical Complex,Oceania,GMP Certified
+SITE00764,Core Research Laboratory,Oceania,GMP Pending
+SITE00765,Main Research Hub,South America,GMP Certified
+SITE00766,Principal Clinical Unit,Sub-Saharan Africa,Conditionally Approved
+SITE00767,Core Production Plant,Eastern Europe,GMP Pending
+SITE00768,Primary Production Plant,Middle East,GMP Certified
+SITE00769,Strategic Manufacturing Center,North Africa,Conditionally Approved
+SITE00770,Central Testing Laboratory,North America,Under Review
+SITE00771,Flagship Research Center,Caribbean,Conditionally Approved
+SITE00772,Advanced Distribution Facility,Oceania,Fully Certified
+SITE00773,Core Packaging Location,South Asia,GMP/GDP Compliant
+SITE00774,Primary Production Center,Middle East,Dual Certified
+SITE00775,Strategic Packaging Site,South America,Certified with Exceptions
+SITE00776,Flagship Distribution Site,Southeast Asia,GMP/GDP Compliant
+SITE00777,Central Distribution Unit,Northern Europe,Dual Certified
+SITE00778,Main Distribution Center,Western Europe,GDP Pending
+SITE00779,Core Development Campus,Southeast Asia,GMP Pending
+SITE00780,Advanced Manufacturing Complex,Sub-Saharan Africa,GMP Certified
+SITE00781,Regional Storage Site,Sub-Saharan Africa,GMP/GDP Compliant
+SITE00782,Regional Development Unit,South Asia,Under Review
+SITE00783,Core Research Location,Northern Europe,GMP Pending
+SITE00784,Regional Storage Center,Oceania,GMP Pending
+SITE00785,Main Distribution Unit,East Asia,Conditionally Approved
+SITE00786,Strategic Development Unit,Eastern Europe,Under Review
+SITE00787,Central Storage Hub,North America,Under Review
+SITE00788,Regional Development Plant,Oceania,GDP Pending
+SITE00789,Main Packaging Plant,Southeast Asia,GDP Compliant
+SITE00790,Main Clinical Plant,Middle East,GMP Pending
+SITE00791,Strategic Packaging Complex,North Africa,Under Review
+SITE00792,Core Packaging Hub,South America,Certified with Exceptions
+SITE00793,Advanced Testing Hub,Southern Europe,GMP Certified
+SITE00794,Key Distribution Site,Sub-Saharan Africa,Under Review
+SITE00795,Advanced Research Location,Sub-Saharan Africa,Fully Certified
+SITE00796,Central Research Facility,Northern Europe,Conditionally Approved
+SITE00797,Central Research Complex,Oceania,GMP Certified
+SITE00798,Flagship Manufacturing Site,Oceania,GMP Pending
+SITE00799,Key Storage Location,Oceania,Under Review
+SITE00800,Regional Distribution Laboratory,South Asia,GMP Pending
+SITE00801,Key Production Center,Caribbean,GMP Pending
+SITE00802,Regional Research Campus,South Asia,GDP Pending
+SITE00803,Principal Development Location,Northern Europe,Conditionally Approved
+SITE00804,Advanced Manufacturing Location,North America,Dual Certified
+SITE00805,Primary Processing Center,North America,Fully Certified
+SITE00806,Advanced Packaging Location,East Asia,GDP Pending
+SITE00807,Key Packaging Campus,North Africa,Fully Certified
+SITE00808,Central Production Campus,Northern Europe,Dual Certified
+SITE00809,Advanced Testing Site,South America,GMP Pending
+SITE00810,Main Storage Laboratory,Middle East,GMP Pending
+SITE00811,Core Packaging Plant,North America,GMP Certified
+SITE00812,Flagship Storage Location,Caribbean,Under Review
+SITE00813,Key Packaging Site,Southern Europe,Fully Certified
+SITE00814,Strategic Processing Hub,Eastern Europe,Fully Certified
+SITE00815,Core Research Unit,Eastern Europe,Dual Certified
+SITE00816,Main Packaging Hub,Southern Europe,Dual Certified
+SITE00817,Core Development Center,South America,Dual Certified
+SITE00818,Advanced Development Laboratory,Central America,Fully Certified
+SITE00819,Flagship Development Campus,South America,Fully Certified
+SITE00820,Primary Development Laboratory,Central Asia,GMP Pending
+SITE00821,Advanced Storage Unit,Middle East,Fully Certified
+SITE00822,Main Production Center,Eastern Europe,Conditionally Approved
+SITE00823,Main Clinical Site,Southern Europe,GDP Pending
+SITE00824,Strategic Distribution Plant,Central America,Fully Certified
+SITE00825,Advanced Production Unit,North America,GDP Compliant
+SITE00826,Strategic Processing Complex,Caribbean,GDP Pending
+SITE00827,Key Clinical Unit,North Africa,GMP/GDP Compliant
+SITE00828,Strategic Storage Center,Caribbean,Dual Certified
+SITE00829,Core Production Laboratory,Caribbean,Under Review
+SITE00830,Key Processing Plant,Northern Europe,Dual Certified
+SITE00831,Regional Processing Facility,East Asia,Fully Certified
+SITE00832,Strategic Distribution Hub,South America,Under Review
+SITE00833,Core Clinical Location,North America,GMP Certified
+SITE00834,Central Testing Plant,Southern Europe,GMP/GDP Compliant
+SITE00835,Flagship Storage Facility,Central America,GMP/GDP Compliant
+SITE00836,Core Storage Plant,Central America,GDP Pending
+SITE00837,Advanced Processing Hub,Southeast Asia,GMP Pending
+SITE00838,Core Processing Unit,Southern Europe,GDP Compliant
+SITE00839,Regional Processing Site,South America,GDP Compliant
+SITE00840,Regional Clinical Unit,Middle East,GDP Compliant
+SITE00841,Advanced Packaging Center,Eastern Europe,Under Review
+SITE00842,Strategic Testing Hub,Caribbean,GDP Compliant
+SITE00843,Flagship Research Location,Eastern Europe,GMP Certified
+SITE00844,Primary Storage Complex,East Asia,GDP Compliant
+SITE00845,Strategic Storage Center,Caribbean,Dual Certified
+SITE00846,Principal Packaging Facility,North Africa,GDP Pending
+SITE00847,Primary Development Location,Northern Europe,GDP Compliant
+SITE00848,Main Research Complex,Central Asia,Under Review
+SITE00849,Regional Production Unit,Central Asia,Under Review
+SITE00850,Advanced Clinical Campus,North Africa,Dual Certified
+SITE00851,Central Research Plant,North America,GDP Pending
+SITE00852,Principal Production Unit,North Africa,Dual Certified
+SITE00853,Key Production Laboratory,Northern Europe,GDP Compliant
+SITE00854,Principal Clinical Plant,East Asia,Dual Certified
+SITE00855,Key Development Location,Caribbean,Fully Certified
+SITE00856,Advanced Testing Center,North America,GDP Pending
+SITE00857,Central Development Facility,Southeast Asia,GDP Pending
+SITE00858,Primary Storage Site,Western Europe,Fully Certified
+SITE00859,Regional Packaging Unit,Oceania,Certified with Exceptions
+SITE00860,Advanced Processing Complex,Central Asia,Fully Certified
+SITE00861,Principal Development Laboratory,North America,Fully Certified
+SITE00862,Key Storage Facility,North Africa,GMP Certified
+SITE00863,Core Processing Unit,Western Europe,GMP Pending
+SITE00864,Principal Storage Laboratory,Southeast Asia,GMP Pending
+SITE00865,Core Distribution Campus,Western Europe,Conditionally Approved
+SITE00866,Key Packaging Unit,North Africa,Dual Certified
+SITE00867,Key Research Laboratory,Caribbean,Under Review
+SITE00868,Regional Storage Laboratory,Sub-Saharan Africa,GMP/GDP Compliant
+SITE00869,Central Packaging Unit,Sub-Saharan Africa,Conditionally Approved
+SITE00870,Regional Manufacturing Facility,Southern Europe,GMP Certified
+SITE00871,Advanced Clinical Hub,Southern Europe,GDP Compliant
+SITE00872,Regional Production Site,Caribbean,GDP Pending
+SITE00873,Core Distribution Campus,Northern Europe,Conditionally Approved
+SITE00874,Primary Development Location,Western Europe,GDP Compliant
+SITE00875,Strategic Production Facility,Southern Europe,GDP Pending
+SITE00876,Key Manufacturing Plant,North America,Dual Certified
+SITE00877,Principal Development Hub,Southern Europe,GDP Pending
+SITE00878,Principal Packaging Unit,Central America,GMP Certified
+SITE00879,Advanced Distribution Site,Northern Europe,GMP Pending
+SITE00880,Principal Testing Laboratory,Sub-Saharan Africa,GMP Pending
+SITE00881,Advanced Processing Complex,Southeast Asia,Fully Certified
+SITE00882,Advanced Distribution Complex,Northern Europe,GMP/GDP Compliant
+SITE00883,Central Production Facility,Central Asia,Dual Certified
+SITE00884,Flagship Production Unit,Caribbean,GDP Pending
+SITE00885,Regional Testing Location,Middle East,Fully Certified
+SITE00886,Flagship Production Campus,Southern Europe,Certified with Exceptions
+SITE00887,Main Manufacturing Unit,Eastern Europe,GMP Certified
+SITE00888,Advanced Testing Site,Central America,GDP Pending
+SITE00889,Principal Production Center,North Africa,GDP Compliant
+SITE00890,Core Manufacturing Campus,Central Asia,GDP Pending
+SITE00891,Principal Storage Unit,South Asia,GMP Pending
+SITE00892,Central Packaging Plant,South America,Conditionally Approved
+SITE00893,Key Packaging Campus,Middle East,GDP Compliant
+SITE00894,Main Development Location,East Asia,Under Review
+SITE00895,Strategic Packaging Center,Western Europe,GMP Certified
+SITE00896,Main Manufacturing Site,Central America,Conditionally Approved
+SITE00897,Flagship Development Site,South America,GMP Certified
+SITE00898,Principal Research Hub,Middle East,GMP Pending
+SITE00899,Central Testing Laboratory,Oceania,GMP Certified
+SITE00900,Key Manufacturing Site,South America,Under Review
+SITE00901,Primary Distribution Complex,Eastern Europe,GMP Pending
+SITE00902,Regional Development Site,Sub-Saharan Africa,GDP Compliant
+SITE00903,Flagship Production Complex,Sub-Saharan Africa,Certified with Exceptions
+SITE00904,Core Distribution Campus,Eastern Europe,GMP Pending
+SITE00905,Primary Manufacturing Facility,Caribbean,GMP/GDP Compliant
+SITE00906,Main Distribution Campus,Southern Europe,Dual Certified
+SITE00907,Core Storage Center,Sub-Saharan Africa,Certified with Exceptions
+SITE00908,Key Manufacturing Center,North Africa,GMP Certified
+SITE00909,Central Research Plant,Western Europe,Under Review
+SITE00910,Flagship Testing Center,North America,Conditionally Approved
+SITE00911,Principal Research Plant,North America,GDP Pending
+SITE00912,Primary Distribution Facility,Middle East,Dual Certified
+SITE00913,Central Testing Laboratory,Central America,GDP Pending
+SITE00914,Strategic Clinical Unit,Central America,GMP/GDP Compliant
+SITE00915,Advanced Packaging Unit,North America,Under Review
+SITE00916,Main Storage Site,Northern Europe,Fully Certified
+SITE00917,Primary Packaging Campus,Central Asia,Certified with Exceptions
+SITE00918,Flagship Manufacturing Unit,Southeast Asia,GMP Pending
+SITE00919,Central Processing Hub,Central America,GMP Pending
+SITE00920,Regional Storage Hub,Central Asia,Certified with Exceptions
+SITE00921,Main Production Location,Western Europe,Conditionally Approved
+SITE00922,Strategic Research Campus,North Africa,GMP Pending
+SITE00923,Principal Processing Site,Southeast Asia,GMP Pending
+SITE00924,Principal Production Location,Northern Europe,GDP Pending
+SITE00925,Primary Storage Plant,Northern Europe,Under Review
+SITE00926,Key Clinical Complex,North America,Conditionally Approved
+SITE00927,Central Distribution Campus,Sub-Saharan Africa,GDP Compliant
+SITE00928,Central Processing Hub,North America,GMP Pending
+SITE00929,Core Manufacturing Complex,Eastern Europe,GMP/GDP Compliant
+SITE00930,Flagship Storage Complex,Middle East,GMP Pending
+SITE00931,Regional Testing Facility,Western Europe,GDP Pending
+SITE00932,Regional Packaging Complex,Oceania,GDP Compliant
+SITE00933,Strategic Testing Site,Middle East,Under Review
+SITE00934,Advanced Storage Location,Southeast Asia,GDP Pending
+SITE00935,Core Manufacturing Plant,Southern Europe,GMP Certified
+SITE00936,Regional Clinical Facility,South America,GMP Pending
+SITE00937,Regional Testing Location,Southeast Asia,GMP/GDP Compliant
+SITE00938,Principal Research Site,North America,GMP/GDP Compliant
+SITE00939,Central Production Location,East Asia,GDP Compliant
+SITE00940,Flagship Distribution Facility,Oceania,GDP Pending
+SITE00941,Primary Development Location,Oceania,GMP Certified
+SITE00942,Central Processing Complex,Sub-Saharan Africa,GDP Compliant
+SITE00943,Main Processing Location,Eastern Europe,Fully Certified
+SITE00944,Key Development Plant,Central America,Certified with Exceptions
+SITE00945,Principal Research Complex,Eastern Europe,Certified with Exceptions
+SITE00946,Central Storage Laboratory,Northern Europe,GMP Pending
+SITE00947,Flagship Clinical Unit,Oceania,Under Review
+SITE00948,Main Manufacturing Location,Middle East,Fully Certified
+SITE00949,Primary Development Complex,Western Europe,GMP/GDP Compliant
+SITE00950,Advanced Clinical Hub,Middle East,GMP/GDP Compliant
+SITE00951,Advanced Development Center,Oceania,GDP Pending
+SITE00952,Core Distribution Laboratory,Oceania,Under Review
+SITE00953,Strategic Production Hub,Southern Europe,Dual Certified
+SITE00954,Principal Manufacturing Facility,Southern Europe,Fully Certified
+SITE00955,Strategic Testing Plant,South America,Fully Certified
+SITE00956,Principal Distribution Complex,Central America,Dual Certified
+SITE00957,Strategic Clinical Facility,South Asia,GMP Certified
+SITE00958,Main Processing Campus,Central Asia,Conditionally Approved
+SITE00959,Strategic Processing Hub,Oceania,Conditionally Approved
+SITE00960,Key Packaging Center,Southern Europe,GMP Certified
+SITE00961,Key Testing Location,Middle East,Fully Certified
+SITE00962,Key Distribution Site,Middle East,GDP Pending
+SITE00963,Strategic Research Unit,Southeast Asia,GMP/GDP Compliant
+SITE00964,Flagship Packaging Campus,Sub-Saharan Africa,Fully Certified
+SITE00965,Key Processing Plant,Caribbean,GDP Compliant
+SITE00966,Key Testing Campus,North Africa,Fully Certified
+SITE00967,Key Clinical Campus,South Asia,Fully Certified
+SITE00968,Advanced Clinical Center,Oceania,GMP Certified
+SITE00969,Strategic Research Facility,North Africa,Under Review
+SITE00970,Principal Testing Laboratory,East Asia,Dual Certified
+SITE00971,Key Research Center,Central America,GMP/GDP Compliant
+SITE00972,Regional Distribution Laboratory,East Asia,GDP Pending
+SITE00973,Regional Production Facility,North America,GMP Certified
+SITE00974,Primary Manufacturing Unit,Eastern Europe,Conditionally Approved
+SITE00975,Primary Clinical Hub,Caribbean,Dual Certified
+SITE00976,Main Clinical Hub,Sub-Saharan Africa,Dual Certified
+SITE00977,Principal Production Unit,Eastern Europe,Dual Certified
+SITE00978,Core Development Facility,North Africa,Fully Certified
+SITE00979,Key Packaging Site,Central Asia,GDP Pending
+SITE00980,Flagship Production Unit,Central Asia,GMP/GDP Compliant
+SITE00981,Principal Manufacturing Hub,Sub-Saharan Africa,GMP/GDP Compliant
+SITE00982,Flagship Processing Plant,North Africa,GMP Certified
+SITE00983,Central Production Facility,East Asia,GDP Compliant
+SITE00984,Regional Distribution Site,Southern Europe,Certified with Exceptions
+SITE00985,Key Clinical Facility,Southern Europe,Conditionally Approved
+SITE00986,Strategic Processing Complex,Middle East,GMP Certified
+SITE00987,Primary Processing Center,North America,GDP Compliant
+SITE00988,Main Manufacturing Complex,Central Asia,Dual Certified
+SITE00989,Central Packaging Location,Oceania,GMP/GDP Compliant
+SITE00990,Central Storage Center,Eastern Europe,Under Review
+SITE00991,Core Distribution Laboratory,Caribbean,GMP/GDP Compliant
+SITE00992,Main Storage Complex,North Africa,GDP Compliant
+SITE00993,Main Testing Center,South America,GDP Pending
+SITE00994,Key Research Laboratory,North Africa,GDP Compliant
+SITE00995,Core Clinical Hub,North Africa,GDP Pending
+SITE00996,Principal Storage Complex,Southern Europe,GDP Pending
+SITE00997,Core Production Complex,Caribbean,Dual Certified
+SITE00998,Key Clinical Campus,Eastern Europe,Certified with Exceptions
+SITE00999,Key Packaging Location,Middle East,Conditionally Approved
+SITE01000,Main Clinical Campus,Caribbean,Conditionally Approved
