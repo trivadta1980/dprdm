@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { db } from './db';
+import { closeDriver, isNeo4jAvailable } from './neo4j';
 
 const app = express();
 app.use(express.json());
@@ -58,14 +60,14 @@ app.use((req, res, next) => {
 
   // Try to serve the app on port 5000, with fallbacks
   const tryPorts = [5000, 5001, 5002, 5003];
-  
+
   const startServer = (portIndex = 0) => {
     if (portIndex >= tryPorts.length) {
       console.error("Could not find an available port");
       process.exit(1);
       return;
     }
-    
+
     const PORT = tryPorts[portIndex];
     server.listen(PORT, "0.0.0.0")
       .on("error", (err) => {
@@ -81,6 +83,24 @@ app.use((req, res, next) => {
         log(`serving on port ${PORT}`);
       });
   };
-  
+
   startServer();
 })();
+
+// Add server shutdown logic for cleanup
+const cleanup = async () => {
+  console.log('Shutting down gracefully...');
+
+  // Close Neo4j connection if available
+  if (isNeo4jAvailable()) {
+    await closeDriver();
+  }
+
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
+};
+
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);

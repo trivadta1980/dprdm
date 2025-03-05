@@ -9,6 +9,9 @@ import { insertCrosswalkMappingSchema } from "@shared/schema";
 import { sql } from "drizzle-orm";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
+import { db } from './db';
+import { isNeo4jAvailable } from './neo4j';
+import GraphDataService from './services/graphDataService';
 
 const scryptAsync = promisify(scrypt);
 
@@ -96,7 +99,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const success = await storage.deleteUser(userId);
-      
+
       if (success) {
         console.log('DELETE /api/users/:id - User deleted successfully'); // Added logging
         res.sendStatus(200);
@@ -240,6 +243,15 @@ app.post("/api/reference-types", async (req, res) => {
     try {
       const dataSet = await storage.createReferenceDataSet(req.body);
       console.log('POST /api/reference-data - Data set created successfully'); //Added logging
+      // Sync with Neo4j if available
+      if (GraphDataService.isAvailable()) {
+        try {
+          await GraphDataService.syncReferenceDataSet(dataSet.id);
+        } catch (graphError) {
+          console.error('Error syncing to graph database:', graphError);
+          // Continue with the response even if graph sync fails
+        }
+      }
       res.status(201).json(dataSet);
     } catch (error) {
       console.error('POST /api/reference-data - Error creating reference data set:', error); //Added logging
@@ -382,6 +394,15 @@ app.post("/api/reference-types", async (req, res) => {
         req.body
       );
       console.log('PATCH /api/reference-data/:id - Data set updated successfully'); //Added logging
+      // Sync with Neo4j if available
+      if (GraphDataService.isAvailable()) {
+        try {
+          await GraphDataService.syncReferenceDataSet(dataSet.id);
+        } catch (graphError) {
+          console.error('Error syncing to graph database:', graphError);
+          // Continue with the response even if graph sync fails
+        }
+      }
       res.json(dataSet);
     } catch (error) {
       console.error('PATCH /api/reference-data/:id - Error updating reference data set:', error); //Added logging
@@ -463,6 +484,15 @@ app.post("/api/reference-types", async (req, res) => {
 
       const relationship = await storage.createRelationship(result.data);
       console.log('POST /api/relationships - Relationship created successfully');
+      // Sync with Neo4j if available
+      if (GraphDataService.isAvailable()) {
+        try {
+          await GraphDataService.syncRelationship(relationship.id);
+        } catch (graphError) {
+          console.error('Error syncing relationship to graph database:', graphError);
+          // Continue with the response even if graph sync fails
+        }
+      }
       res.status(201).json(relationship);
     } catch (error) {
       console.error('POST /api/relationships - Error:', error);
@@ -482,6 +512,15 @@ app.post("/api/reference-types", async (req, res) => {
         req.body
       );
       console.log('PATCH /api/relationships/:id - Relationship updated successfully');
+      // Sync with Neo4j if available
+      if (GraphDataService.isAvailable()) {
+        try {
+          await GraphDataService.syncRelationship(relationship.id);
+        } catch (graphError) {
+          console.error('Error syncing relationship to graph database:', graphError);
+          // Continue with the response even if graph sync fails
+        }
+      }
       res.json(relationship);
     } catch (error) {
       console.error('PATCH /api/relationships/:id - Error:', error);
@@ -577,34 +616,6 @@ app.post("/api/reference-types", async (req, res) => {
       }
       const targets = await storage.getAvailableTargets(Number(req.params.id), sourceId);
       console.log('GET /api/relationships/:id/values/available-targets - Targets fetched successfully');
-
-// Debug endpoint to get raw crosswalk data
-app.get('/api/crosswalks/debug', async (req, res) => {
-  try {
-    console.log('GET /api/crosswalks/debug - Request received');
-    
-    // Get all crosswalks with their raw data
-    const crosswalks = await db.query.crosswalkMappings.findMany({
-      columns: {
-        id: true,
-        name: true,
-        description: true,
-        mappingData: true,
-        sourceSystemId: true,
-        targetSystemId: true,
-        createdAt: true,
-        updatedAt: true
-      }
-    });
-    
-    console.log('GET /api/crosswalks/debug - Raw data fetched successfully');
-    return res.json(crosswalks);
-  } catch (error) {
-    console.error('GET /api/crosswalks/debug - Error:', error);
-    return res.status(500).json({ error: 'Failed to fetch crosswalk debug data' });
-  }
-});
-
       res.json(targets);
     } catch (error) {
       console.error('GET /api/relationships/:id/values/available-targets - Error:', error);
@@ -637,13 +648,13 @@ app.get('/api/crosswalks/debug', async (req, res) => {
     }
     try {
       const id = Number(req.params.id);
-      
+
       // Validate that the ID is a valid number
       if (isNaN(id)) {
         console.log('GET /api/crosswalks/:id - Invalid ID parameter:', req.params.id);
         return res.status(400).json({ error: "Invalid crosswalk ID - must be a number" });
       }
-      
+
       const mapping = await storage.getCrosswalkMapping(id);
       if (mapping) {
         console.log('GET /api/crosswalks/:id - Mapping found');
@@ -657,7 +668,7 @@ app.get('/api/crosswalks/debug', async (req, res) => {
       res.status(500).json({ error: String(error) });
     }
   });
-  
+
   // Add new route for downloading crosswalk template
   app.get("/api/crosswalks/:id/template", async (req, res) => {
     console.log('GET /api/crosswalks/:id/template - Request received');
@@ -668,25 +679,25 @@ app.get('/api/crosswalks/debug', async (req, res) => {
     try {
       const crosswalkId = Number(req.params.id);
       console.log('GET /api/crosswalks/:id/template - Crosswalk ID:', crosswalkId);
-      
+
       const crosswalk = await storage.getCrosswalkMapping(crosswalkId);
-      
+
       if (!crosswalk) {
         console.log('GET /api/crosswalks/:id/template - Crosswalk not found');
         return res.status(404).json({ error: "Crosswalk mapping not found" });
       }
-      
+
       console.log('GET /api/crosswalks/:id/template - Crosswalk found:', {
         id: crosswalk.id,
         name: crosswalk.name,
         sourceSystemId: crosswalk.sourceSystemId,
         targetSystemId: crosswalk.targetSystemId
       });
-      
+
       // Get source and target data sets
       const sourceDataSet = await storage.getReferenceDataSet(crosswalk.sourceSystemId);
       const targetDataSet = await storage.getReferenceDataSet(crosswalk.targetSystemId);
-      
+
       if (!sourceDataSet || !targetDataSet) {
         console.log('GET /api/crosswalks/:id/template - Source or target dataset not found:', {
           sourceFound: !!sourceDataSet,
@@ -696,25 +707,25 @@ app.get('/api/crosswalks/debug', async (req, res) => {
         });
         return res.status(404).json({ error: "Source or target data set not found" });
       }
-      
+
       // Get schemas for source and target
       const sourceSchemas = await storage.getReferenceDataTypeSchemas(sourceDataSet.typeId);
       const targetSchemas = await storage.getReferenceDataTypeSchemas(targetDataSet.typeId);
-      
+
       if (!sourceSchemas.length || !targetSchemas.length) {
         console.log('GET /api/crosswalks/:id/template - Schemas not found');
         return res.status(404).json({ error: "Source or target schemas not found" });
       }
-      
+
       // Create CSV header with source and target column names
       const sourcePrimaryColumn = sourceSchemas[0].name;
       const targetPrimaryColumn = targetSchemas[0].name;
       const headers = `Source_${sourcePrimaryColumn},Target_${targetPrimaryColumn}`;
-      
+
       // Set response headers for CSV download
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename=${crosswalk.name}_template.csv`);
-      
+
       // Send as CSV file with just the headers
       res.send(headers);
       console.log('GET /api/crosswalks/:id/template - Template generated successfully');
@@ -739,6 +750,15 @@ app.get('/api/crosswalks/debug', async (req, res) => {
 
       const mapping = await storage.createCrosswalkMapping(result.data);
       console.log('POST /api/crosswalks - Mapping created successfully');
+      // Sync with Neo4j if available
+      if (GraphDataService.isAvailable()) {
+        try {
+          await GraphDataService.syncCrosswalk(mapping.id);
+        } catch (graphError) {
+          console.error('Error syncing crosswalk to graph database:', graphError);
+          // Continue with the response even if graph sync fails
+        }
+      }
       res.status(201).json(mapping);
     } catch (error) {
       console.error('POST /api/crosswalks - Error:', error);
@@ -758,6 +778,15 @@ app.get('/api/crosswalks/debug', async (req, res) => {
         req.body
       );
       console.log('PATCH /api/crosswalks/:id - Mapping updated successfully');
+      // Sync with Neo4j if available
+      if (GraphDataService.isAvailable()) {
+        try {
+          await GraphDataService.syncCrosswalk(mapping.id);
+        } catch (graphError) {
+          console.error('Error syncing crosswalk to graph database:', graphError);
+          // Continue with the response even if graph sync fails
+        }
+      }
       res.json(mapping);
     } catch (error) {
       console.error('PATCH /api/crosswalks/:id - Error:', error);
@@ -842,15 +871,15 @@ app.get('/api/crosswalks/debug', async (req, res) => {
       console.log('GET /api/crosswalks/debug - Unauthorized access');
       return res.sendStatus(401);
     }
-    
+
     // Get all crosswalks with their raw data
     const crosswalks = await storage.getAllCrosswalkMappings();
-    
+
     // Add more detailed logging for debugging
     console.log('GET /api/crosswalks/debug - Raw data fetched successfully, count:', crosswalks.length);
     if (crosswalks.length > 0) {
       console.log('GET /api/crosswalks/debug - First record sample:', JSON.stringify(crosswalks[0]));
-      
+
       // Add a specific mapping data example for debugging
       if (crosswalks[0].mappingData) {
         console.log('GET /api/crosswalks/debug - First record mapping data:', 
@@ -859,7 +888,7 @@ app.get('/api/crosswalks/debug', async (req, res) => {
     } else {
       console.log('GET /api/crosswalks/debug - No records found');
     }
-    
+
     return res.json(crosswalks || []);
   } catch (error) {
     console.error('GET /api/crosswalks/debug - Error:', error);
@@ -867,6 +896,27 @@ app.get('/api/crosswalks/debug', async (req, res) => {
   }
 });
 
+
+  // System status endpoint
+  app.get('/api/status', (req, res) => {
+    res.json({
+      status: 'operational',
+      timestamp: new Date().toISOString(),
+      graphDbAvailable: isNeo4jAvailable(),
+    });
+  });
+
+  // Graph database info endpoint
+  app.get('/api/graph-status', (req, res) => {
+    res.json({
+      available: GraphDataService.isAvailable(),
+      services: {
+        referenceData: true,
+        relationships: true,
+        crosswalks: true
+      }
+    });
+  });
 
   const httpServer = createServer(app);
   return httpServer;
