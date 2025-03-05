@@ -39,9 +39,10 @@ async function testLogin() {
     console.log(`User found: ${user.username} (ID: ${user.id})`);
     
     // Check if account is active
+    console.log(`Account active status: ${user.is_active}`);
     if (!user.is_active) {
-      console.log('Account is inactive.');
-      return;
+      console.log('Account is inactive - but continuing with password check anyway for testing purposes.');
+      // Continue with testing instead of returning
     }
     
     // Verify password
