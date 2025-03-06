@@ -212,6 +212,8 @@ export default function ReferenceTypesListPage() {
   // Create new reference type
   const handleCreateType = async () => {
     try {
+      console.log("Creating reference type with data:", newTypeData);
+      
       // Validate input
       if (!newTypeData.name.trim()) {
         toast({
@@ -231,21 +233,32 @@ export default function ReferenceTypesListPage() {
         return;
       }
 
+      const requestData = {
+        name: newTypeData.name,
+        description: newTypeData.description,
+        schemas: newTypeData.schemas
+      };
+      
+      console.log("Sending API request with data:", requestData);
+      
       const response = await fetch('/api/reference-types', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name: newTypeData.name,
-          description: newTypeData.description,
-          schemas: newTypeData.schemas
-        }),
+        body: JSON.stringify(requestData),
       });
 
+      console.log("API response status:", response.status);
+      
       if (!response.ok) {
-        throw new Error(`Failed to create reference type: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error("Error response from API:", errorText);
+        throw new Error(`Failed to create reference type: ${response.statusText}. ${errorText}`);
       }
+
+      const responseData = await response.json();
+      console.log("Successfully created reference type:", responseData);
 
       toast({
         title: "Success",
@@ -260,13 +273,16 @@ export default function ReferenceTypesListPage() {
       });
       setIsAddDialogOpen(false);
 
-      // Refresh data
-      fetchData();
+      // Refresh data with a slight delay to ensure the server has time to process
+      setTimeout(() => {
+        console.log("Refreshing data after successful creation");
+        fetchData();
+      }, 500);
     } catch (error) {
       console.error("Error creating reference type:", error);
       toast({
         title: "Error",
-        description: "Failed to create reference type",
+        description: `Failed to create reference type: ${error.message || "Unknown error"}`,
         variant: "destructive",
       });
     }
