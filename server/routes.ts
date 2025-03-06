@@ -443,29 +443,40 @@ app.get('/api/graph/visualization', async (req, res) => {
           const validRecord: Record<string, any> = {};
           for (const schemaName of schemaNames) {
             if (record[schemaName] === undefined) {
-              throw new Error(`Missing required field: ${schemaName}`);
+              console.error(`Missing required field: ${schemaName} in record:`, record);
+              // Skip this record instead of throwing an error
+              continue; 
             }
             // Make sure to store data with exact schema names
             validRecord[schemaName] = record[schemaName];
           }
-          records.push(validRecord);
+          // Only add valid records
+          if (Object.keys(validRecord).length === schemaNames.length) {
+            records.push(validRecord);
+          }
         }
       });
 
-      await new Promise((resolve, reject) => {
-        parser.on('error', (error) => {
-          console.error('POST /api/reference-data/:id/bulk-upload - CSV parsing error:', error); //Added logging
-          reject(error);
+      try {
+        await new Promise((resolve, reject) => {
+          parser.on('error', (error) => {
+            console.error('POST /api/reference-data/:id/bulk-upload - CSV parsing error:', error);
+            reject(error);
+          });
+          parser.on('end', () => {
+            console.log('POST /api/reference-data/:id/bulk-upload - CSV parsing complete. Records found:', records.length);
+            resolve(null);
+          });
+          parser.write(file.buffer);
+          parser.end();
         });
-        parser.on('end', () => {
-          console.log('POST /api/reference-data/:id/bulk-upload - CSV parsing complete. Records found:', records.length); //Added logging
-          resolve(null);
-        });
-        parser.write(file.buffer);
-        parser.end();
-      });
 
-      console.log('POST /api/reference-data/:id/bulk-upload - Updating dataset with records:', records);
+        // Make sure we have records to process
+        if (records.length === 0) {
+          throw new Error('No valid records found in the CSV file');
+        }
+
+        console.log('POST /api/reference-data/:id/bulk-upload - Updating dataset with records count:', records.length);
 
       // Update data set with new instances
       const updatedDataSet = await storage.updateReferenceDataSet(dataSetId, {
