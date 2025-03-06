@@ -31,6 +31,11 @@ export default function ReferenceDataCreatePage() {
   const [_, setLocation] = useLocation();
   const [selectedTypeId, setSelectedTypeId] = useState<number | undefined>(undefined);
   const [selectedTypeName, setSelectedTypeName] = useState<string | undefined>(undefined);
+  const [debugInfo, setDebugInfo] = useState({
+    request: null,
+    response: null,
+    error: null
+  });
 
   const form = useForm<InsertReferenceDataSet>({
     resolver: zodResolver(insertReferenceDataSetSchema),
@@ -48,29 +53,75 @@ export default function ReferenceDataCreatePage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: InsertReferenceDataSet) => {
-      // Validate typeId is a number
-      if (!data.typeId || isNaN(Number(data.typeId))) {
-        throw new Error("Type ID must be a valid number");
-      }
+    mutationFn: async (payload: InsertReferenceDataSet) => {
+      console.log("Creating reference data set with payload:", payload);
+      setDebugInfo(prev => ({ ...prev, request: payload }));
 
-      // Ensure typeId is a number before sending
-      const sanitizedData = {
-        ...data,
-        typeId: Number(data.typeId)
-      };
-
-      console.log("Creating reference data set with payload:", sanitizedData);
       try {
-        const res = await apiRequest("POST", "/api/reference-data", sanitizedData);
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error("Error response from server:", errorText);
-          throw new Error(`Server error: ${res.status} ${res.statusText}. ${errorText}`);
+        const response = await fetch("/api/reference-data", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        // Store response status and headers in debug info
+        const responseInfo = {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries())
+        };
+
+        if (!response.ok) {
+          // Check if the response is HTML (which would cause the "unexpected token <" error)
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("text/html")) {
+            const htmlContent = await response.text();
+            console.error("Server returned HTML instead of JSON:", htmlContent.substring(0, 200));
+            setDebugInfo(prev => ({ 
+              ...prev, 
+              response: responseInfo,
+              error: {
+                message: "Received HTML instead of JSON",
+                content: htmlContent.substring(0, 500)
+              }
+            }));
+            throw new Error(`Server error: Received HTML instead of JSON. Status: ${response.status}`);
+          }
+
+          // Regular error handling
+          const errorText = await response.text();
+          console.error("Error response:", errorText);
+          setDebugInfo(prev => ({ 
+            ...prev, 
+            response: responseInfo,
+            error: {
+              message: `Failed to create reference data set: ${response.statusText}`,
+              content: errorText
+            }
+          }));
+          throw new Error(`Failed to create reference data set: ${response.statusText}. ${errorText}`);
         }
-        return res.json();
+
+        const responseData = await response.json();
+        setDebugInfo(prev => ({ 
+          ...prev, 
+          response: { ...responseInfo, data: responseData },
+          error: null
+        }));
+        return responseData;
       } catch (error) {
-        console.error("Exception during reference data set creation:", error);
+        console.error("Create mutation error:", error);
+        if (!debugInfo.error) {
+          setDebugInfo(prev => ({ 
+            ...prev, 
+            error: {
+              message: error.message || "Unknown error",
+              stack: error.stack
+            }
+          }));
+        }
         throw error;
       }
     },
@@ -239,8 +290,81 @@ export default function ReferenceDataCreatePage() {
                 </Button>
               </form>
             </Form>
-          </CardContent>
-        </Card>
+
+        {/* Debug Panel */}
+        <div className="mt-12 border rounded-md">
+          <div className="p-4 bg-gray-100 border-b font-medium flex justify-between items-center">
+            <span>Debug Panel</span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setDebugInfo({ request: null, response: null, error: null })}
+            >
+              Clear
+            </Button>
+          </div>
+          <div className="p-4 max-h-[500px] overflow-auto">
+            <div className="space-y-4">
+              {debugInfo.request && (
+                <div>
+                  <h3 className="font-medium text-blue-600 mb-2">API Request:</h3>
+                  <pre className="bg-gray-50 p-3 rounded-md text-xs overflow-auto">
+                    {JSON.stringify(debugInfo.request, null, 2)}
+                  </pre>
+                </div>
+              )}
+
+              {debugInfo.response && (
+                <div>
+                  <h3 className="font-medium text-green-600 mb-2">API Response:</h3>
+                  <div className="bg-gray-50 p-3 rounded-md mb-2 text-xs">
+                    <p><strong>Status:</strong> {debugInfo.response.status} {debugInfo.response.statusText}</p>
+                    <details>
+                      <summary className="cursor-pointer">Response Headers</summary>
+                      <pre className="mt-2">
+                        {JSON.stringify(debugInfo.response.headers, null, 2)}
+                      </pre>
+                    </details>
+                  </div>
+                  {debugInfo.response.data && (
+                    <pre className="bg-gray-50 p-3 rounded-md text-xs overflow-auto">
+                      {JSON.stringify(debugInfo.response.data, null, 2)}
+                    </pre>
+                  )}
+                </div>
+              )}
+
+              {debugInfo.error && (
+                <div>
+                  <h3 className="font-medium text-red-600 mb-2">Error:</h3>
+                  <div className="bg-red-50 p-3 rounded-md text-xs">
+                    <p className="font-bold">{debugInfo.error.message}</p>
+                    {debugInfo.error.content && (
+                      <details>
+                        <summary className="cursor-pointer mt-2">Error Content</summary>
+                        <pre className="mt-2 overflow-auto">
+                          {debugInfo.error.content}
+                        </pre>
+                      </details>
+                    )}
+                    {debugInfo.error.stack && (
+                      <details>
+                        <summary className="cursor-pointer mt-2">Stack Trace</summary>
+                        <pre className="mt-2 overflow-auto">
+                          {debugInfo.error.stack}
+                        </pre>
+                      </details>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {!debugInfo.request && !debugInfo.response && !debugInfo.error && (
+                <p className="text-gray-500 text-center py-4">No debugging information available yet. Submit the form to see request and response details.</p>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </MainLayout>
   );
