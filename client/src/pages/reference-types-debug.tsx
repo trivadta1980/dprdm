@@ -18,7 +18,7 @@ export default function ReferenceTypesDebugPage() {
 
   // Then, get schemas for all reference types
   const { data: schemasMap = {}, isLoading: schemasLoading, error: schemasError } = useQuery<{ [key: number]: ReferenceDataTypeSchema[] }>({
-    queryKey: ["/api/reference-types/schemas"],
+    queryKey: ["/api/reference-types", "schemas"],
     queryFn: async () => {
       if (!referenceTypes?.length) return {};
 
@@ -52,6 +52,21 @@ export default function ReferenceTypesDebugPage() {
       <MainLayout>
         <div className="flex items-center justify-center min-h-[200px]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </MainLayout>
+    );
+  }
+  
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="max-w-6xl mx-auto space-y-6 p-4">
+          <Alert variant="destructive">
+            <AlertTitle>Error loading reference types or schemas</AlertTitle>
+            <AlertDescription>
+              {error instanceof Error ? error.message : "Unknown error occurred"}
+            </AlertDescription>
+          </Alert>
         </div>
       </MainLayout>
     );
@@ -151,6 +166,11 @@ export default function ReferenceTypesDebugPage() {
                           
                           <div className="mt-4 p-4 bg-muted rounded-md">
                             <h3 className="font-medium mb-2">Raw Schema Data</h3>
+                            <div className="mb-2">
+                              <Badge variant={schemas.length > 0 ? "success" : "destructive"}>
+                                {schemas.length > 0 ? "Schemas Found" : "No Schemas Loaded"}
+                              </Badge>
+                            </div>
                             <pre className="overflow-auto p-2 bg-background rounded-md text-sm">
                               {JSON.stringify(schemas, null, 2)}
                             </pre>
