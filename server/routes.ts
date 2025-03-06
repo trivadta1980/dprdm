@@ -158,7 +158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-app.post("/api/reference-types", async (req, res) => {
+  app.post("/api/reference-types", async (req, res) => {
     console.log('POST /api/reference-types - Request received'); //Added logging
     if (!req.isAuthenticated()) {
         console.log('POST /api/reference-types - Unauthorized access'); //Added logging
@@ -345,78 +345,77 @@ app.post("/api/reference-types", async (req, res) => {
 
       const dataSet = await storage.getReferenceDataSet(dataSetId);
 
-// Neo4j graph visualization routes - commenting out this duplicate router handler
-// This was causing issues because 'router' is not defined here
-/* 
-app.get('/api/graph/visualization', async (req, res) => {
-  try {
-    console.log("GET /api/graph/visualization - Checking if Neo4j is available");
-    
-    if (!isNeo4jAvailable()) {
-      console.log("GET /api/graph/visualization - Neo4j not available");
-      console.log("NEO4J_URI:", process.env.NEO4J_URI ? "Found" : "Not found");
-      console.log("NEO4J_USERNAME:", process.env.NEO4J_USERNAME ? "Found" : "Not found");
-      console.log("NEO4J_PASSWORD:", process.env.NEO4J_PASSWORD ? "Found (but redacted)" : "Not found");
-      return res.status(503).json({ 
-        error: "Neo4j database not available",
-        reason: "Neo4j connection has not been established. Check server logs for details."
+      // Neo4j graph visualization routes - commenting out this duplicate router handler
+      // This was causing issues because 'router' is not defined here
+      /* 
+      app.get('/api/graph/visualization', async (req, res) => {
+        try {
+          console.log("GET /api/graph/visualization - Checking if Neo4j is available");
+          
+          if (!isNeo4jAvailable()) {
+            console.log("GET /api/graph/visualization - Neo4j not available");
+            console.log("NEO4J_URI:", process.env.NEO4J_URI ? "Found" : "Not found");
+            console.log("NEO4J_USERNAME:", process.env.NEO4J_USERNAME ? "Found" : "Not found");
+            console.log("NEO4J_PASSWORD:", process.env.NEO4J_PASSWORD ? "Found (but redacted)" : "Not found");
+            return res.status(503).json({ 
+              error: "Neo4j database not available",
+              reason: "Neo4j connection has not been established. Check server logs for details."
+            });
+          }
+          
+          console.log("GET /api/graph/visualization - Neo4j is available, executing query");
+          
+          // Query to get nodes and relationships
+          const records = await runQuery(`
+            MATCH (n)
+            OPTIONAL MATCH (n)-[r]->(m)
+            RETURN n, r, m
+          `);
+      */
+      const nodes = [];
+      const links = [];
+      const nodeMap = new Map();
+      
+      // Process nodes and relationships
+      records.forEach(record => {
+        const source = record.get('n');
+        const relationship = record.get('r');
+        const target = record.get('m');
+        
+        if (source && !nodeMap.has(source.identity.toString())) {
+          nodeMap.set(source.identity.toString(), nodes.length);
+          nodes.push({
+            id: source.identity.toString(),
+            label: source.labels[0],
+            properties: source.properties
+          });
+        }
+        
+        if (target && !nodeMap.has(target.identity.toString())) {
+          nodeMap.set(target.identity.toString(), nodes.length);
+          nodes.push({
+            id: target.identity.toString(),
+            label: target.labels[0],
+            properties: target.properties
+          });
+        }
+        
+        if (relationship) {
+          links.push({
+            source: source.identity.toString(),
+            target: target.identity.toString(),
+            type: relationship.type,
+            properties: relationship.properties
+          });
+        }
       });
-    }
-    
-    console.log("GET /api/graph/visualization - Neo4j is available, executing query");
-    
-    // Query to get nodes and relationships
-    const records = await runQuery(`
-      MATCH (n)
-      OPTIONAL MATCH (n)-[r]->(m)
-      RETURN n, r, m
-    `);
-*/
-    
-    const nodes = [];
-    const links = [];
-    const nodeMap = new Map();
-    
-    // Process nodes and relationships
-    records.forEach(record => {
-      const source = record.get('n');
-      const relationship = record.get('r');
-      const target = record.get('m');
       
-      if (source && !nodeMap.has(source.identity.toString())) {
-        nodeMap.set(source.identity.toString(), nodes.length);
-        nodes.push({
-          id: source.identity.toString(),
-          label: source.labels[0],
-          properties: source.properties
-        });
+      res.json({ nodes, links });
+      /* } catch (error) {
+        console.error('Error fetching graph data:', error);
+        res.status(500).json({ error: error.message });
       }
-      
-      if (target && !nodeMap.has(target.identity.toString())) {
-        nodeMap.set(target.identity.toString(), nodes.length);
-        nodes.push({
-          id: target.identity.toString(),
-          label: target.labels[0],
-          properties: target.properties
-        });
-      }
-      
-      if (relationship) {
-        links.push({
-          source: source.identity.toString(),
-          target: target.identity.toString(),
-          type: relationship.type,
-          properties: relationship.properties
-        });
-      }
-    });
-    
-    res.json({ nodes, links });
-  /* } catch (error) {
-    console.error('Error fetching graph data:', error);
-    res.status(500).json({ error: error.message });
-  }
-}); */
+    }); */
 
       if (!dataSet) {
         console.log('POST /api/reference-data/:id/bulk-upload - Dataset not found'); //Added logging
@@ -477,7 +476,7 @@ app.get('/api/graph/visualization', async (req, res) => {
         }
 
         console.log('POST /api/reference-data/:id/bulk-upload - Updating dataset with records count:', records.length);
-        
+
         // Update data set with new instances
         const updatedDataSet = await storage.updateReferenceDataSet(dataSetId, {
           data: records.reduce((acc, record, index) => {
@@ -486,12 +485,16 @@ app.get('/api/graph/visualization', async (req, res) => {
           }, {} as Record<string, any>)
         });
 
-        console.log('POST /api/reference-data/:id/bulk-upload - Upload complete. Dataset updated with data:', updatedDataSet.data); //Added logging
+        console.log('POST /api/reference-data/:id/bulk-upload - Upload complete. Dataset updated with data:', updatedDataSet.data);
         res.json(updatedDataSet);
       } catch (error) {
-        console.error('POST /api/reference-data/:id/bulk-upload - Error processing bulk upload:', error); //Added logging
+        console.error('POST /api/reference-data/:id/bulk-upload - Error processing bulk upload:', error);
         res.status(500).json({ error: String(error) });
       }
+    } catch (error) {
+      console.error('POST /api/reference-data/:id/bulk-upload - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
   });
 
   app.patch("/api/reference-data/:id", async (req, res) => {
@@ -975,38 +978,38 @@ app.get('/api/graph/visualization', async (req, res) => {
     }
   });
 
-// Debug endpoint to get raw crosswalk data
-app.get('/api/crosswalks/debug', async (req, res) => {
-  try {
-    console.log('GET /api/crosswalks/debug - Request received');
-    if (!req.isAuthenticated()) {
-      console.log('GET /api/crosswalks/debug - Unauthorized access');
-      return res.sendStatus(401);
-    }
-
-    // Get all crosswalks with their raw data
-    const crosswalks = await storage.getAllCrosswalkMappings();
-
-    // Add more detailed logging for debugging
-    console.log('GET /api/crosswalks/debug - Raw data fetched successfully, count:', crosswalks.length);
-    if (crosswalks.length > 0) {
-      console.log('GET /api/crosswalks/debug - First record sample:', JSON.stringify(crosswalks[0]));
-
-      // Add a specific mapping data example for debugging
-      if (crosswalks[0].mappingData) {
-        console.log('GET /api/crosswalks/debug - First record mapping data:', 
-                   JSON.stringify(crosswalks[0].mappingData));
+  // Debug endpoint to get raw crosswalk data
+  app.get('/api/crosswalks/debug', async (req, res) => {
+    try {
+      console.log('GET /api/crosswalks/debug - Request received');
+      if (!req.isAuthenticated()) {
+        console.log('GET /api/crosswalks/debug - Unauthorized access');
+        return res.sendStatus(401);
       }
-    } else {
-      console.log('GET /api/crosswalks/debug - No records found');
-    }
 
-    return res.json(crosswalks || []);
-  } catch (error) {
-    console.error('GET /api/crosswalks/debug - Error:', error);
-    return res.status(500).json({ error: String(error) });
-  }
-});
+      // Get all crosswalks with their raw data
+      const crosswalks = await storage.getAllCrosswalkMappings();
+
+      // Add more detailed logging for debugging
+      console.log('GET /api/crosswalks/debug - Raw data fetched successfully, count:', crosswalks.length);
+      if (crosswalks.length > 0) {
+        console.log('GET /api/crosswalks/debug - First record sample:', JSON.stringify(crosswalks[0]));
+
+        // Add a specific mapping data example for debugging
+        if (crosswalks[0].mappingData) {
+          console.log('GET /api/crosswalks/debug - First record mapping data:', 
+                     JSON.stringify(crosswalks[0].mappingData));
+        }
+      } else {
+        console.log('GET /api/crosswalks/debug - No records found');
+      }
+
+      return res.json(crosswalks || []);
+    } catch (error) {
+      console.error('GET /api/crosswalks/debug - Error:', error);
+      return res.status(500).json({ error: String(error) });
+    }
+  });
 
 
   // System status endpoint
