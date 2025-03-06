@@ -480,13 +480,13 @@ app.get('/api/graph/visualization', async (req, res) => {
         
         // Update data set with new instances
         const updatedDataSet = await storage.updateReferenceDataSet(dataSetId, {
-        data: records.reduce((acc, record, index) => {
-          acc[`instance_${index + 1}`] = record;
-          return acc;
-        }, {} as Record<string, any>)
-      });
+          data: records.reduce((acc, record, index) => {
+            acc[`instance_${index + 1}`] = record;
+            return acc;
+          }, {} as Record<string, any>)
+        });
 
-      console.log('POST /api/reference-data/:id/bulk-upload - Upload complete. Dataset updated with data:', updatedDataSet.data); //Added logging
+        console.log('POST /api/reference-data/:id/bulk-upload - Upload complete. Dataset updated with data:', updatedDataSet.data); //Added logging
         res.json(updatedDataSet);
       } catch (error) {
         console.error('POST /api/reference-data/:id/bulk-upload - Error processing bulk upload:', error); //Added logging
