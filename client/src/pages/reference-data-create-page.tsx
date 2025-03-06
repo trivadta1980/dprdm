@@ -24,10 +24,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertReferenceDataSetSchema } from "@shared/schema";
 import { useLocation } from "wouter";
 import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
 
 export default function ReferenceDataCreatePage() {
   const { toast } = useToast();
   const [_, setLocation] = useLocation();
+  const [selectedTypeId, setSelectedTypeId] = useState<number | undefined>(undefined);
+  const [selectedTypeName, setSelectedTypeName] = useState<string | undefined>(undefined);
 
   const form = useForm<InsertReferenceDataSet>({
     resolver: zodResolver(insertReferenceDataSetSchema),
@@ -50,7 +53,7 @@ export default function ReferenceDataCreatePage() {
       if (!data.typeId || isNaN(Number(data.typeId))) {
         throw new Error("Type ID must be a valid number");
       }
-      
+
       // Ensure typeId is a number before sending
       const sanitizedData = {
         ...data,
@@ -90,26 +93,32 @@ export default function ReferenceDataCreatePage() {
     },
   });
 
-  function onSubmit(data: InsertReferenceDataSet) {
-    // Ensure typeId is a number with validation
+  const onSubmit = (data: InsertReferenceDataSet) => {
+    console.log("Form submitted:", data);
+
+    // Validate and convert typeId
     const typeId = Number(data.typeId);
 
     if (isNaN(typeId)) {
+      console.error("Invalid typeId:", data.typeId);
       toast({
         title: "Validation Error",
-        description: "Type ID must be a valid number",
+        description: "Invalid reference type selected",
         variant: "destructive",
       });
       return;
     }
 
+    console.log("TypeId value:", typeId, "Type:", typeof typeId);
+
     const payload = {
       ...data,
       typeId: typeId,
-      data: {},
+      data: {} // Ensure data field is initialized
     };
 
     console.log("Submitting form with data:", payload);
+    console.log("TypeId type:", typeof payload.typeId);
     createMutation.mutate(payload);
   }
 
@@ -139,6 +148,13 @@ export default function ReferenceDataCreatePage() {
         <Card>
           <CardHeader>
             <CardTitle>Create Reference Data Set</CardTitle>
+            {selectedTypeId && (
+              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                <h3 className="text-sm font-medium text-blue-800">Debug Info:</h3>
+                <p className="text-sm">Selected Type ID: <span className="font-mono bg-blue-100 px-1 rounded">{selectedTypeId}</span> (Type: {typeof selectedTypeId})</p>
+                <p className="text-sm">Selected Type Name: <span className="font-mono bg-blue-100 px-1 rounded">{selectedTypeName}</span></p>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -181,7 +197,15 @@ export default function ReferenceDataCreatePage() {
                     <FormItem>
                       <FormLabel>Reference Data Type</FormLabel>
                       <Select
-                        onValueChange={(value) => field.onChange(Number(value))}
+                        onValueChange={(value) => {
+                          const numValue = Number(value);
+                          console.log("Selected type ID:", numValue, "Type:", typeof numValue);
+                          field.onChange(numValue);
+                          setSelectedTypeId(numValue);
+                          // Find the selected type name for display
+                          const selectedType = types.find(type => type.id === numValue);
+                          setSelectedTypeName(selectedType?.name);
+                        }}
                         defaultValue={field.value?.toString()}
                         required
                       >
