@@ -1,7 +1,12 @@
 
-const fs = require('fs');
-const path = require('path');
-const { createObjectCsvWriter } = require('csv-writer');
+import fs from 'fs';
+import path from 'path';
+import { createObjectCsvWriter } from 'csv-writer';
+import { fileURLToPath } from 'url';
+
+// Get current directory in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function generatePharmaMakers(count = 1000) {
   console.log(`Generating ${count} pharmaceutical manufacturers...`);
