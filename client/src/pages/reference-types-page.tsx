@@ -63,17 +63,28 @@ export default function ReferenceTypesPage() {
     queryFn: async () => {
       if (!referenceTypes?.length) return {};
 
+      console.log("Starting to fetch schemas for all reference types");
       const schemasMap: { [key: number]: ReferenceDataTypeSchema[] } = {};
       for (const type of referenceTypes) {
         try {
+          console.log(`Fetching schemas for type ${type.id}: ${type.name}`);
           const res = await apiRequest("GET", `/api/reference-types/${type.id}/schemas`);
+          
+          if (!res.ok) {
+            console.error(`Error status from API for type ${type.id}: ${res.status} ${res.statusText}`);
+            throw new Error(`API returned status ${res.status}`);
+          }
+          
           const data = await res.json();
+          console.log(`Received schemas for type ${type.id}:`, data);
+          console.log(`Schema count for type ${type.id}: ${data.length}`);
           schemasMap[type.id] = data;
         } catch (error) {
           console.error(`Error fetching schemas for type ${type.id}:`, error);
           schemasMap[type.id] = [];
         }
       }
+      console.log("Completed fetching all schemas, final map:", schemasMap);
       return schemasMap;
     },
     enabled: !!referenceTypes?.length,
@@ -406,16 +417,23 @@ export default function ReferenceTypesPage() {
                       <TableCell>{type.description}</TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {typeSchemas.map((schema, index) => (
-                            <div key={index} className="space-y-1">
-                              <Badge variant="secondary" className="mr-1">
-                                {schema.name}: {schema.dataType}
-                              </Badge>
-                              {schema.description && (
-                                <p className="text-xs text-muted-foreground">{schema.description}</p>
-                              )}
-                            </div>
-                          ))}
+                          {console.log(`Rendering schemas for type ${type.id}:`, typeSchemas)}
+                          {typeSchemas.length === 0 ? (
+                            <Badge variant="outline" className="bg-yellow-100">
+                              No schemas found
+                            </Badge>
+                          ) : (
+                            typeSchemas.map((schema, index) => (
+                              <div key={index} className="space-y-1">
+                                <Badge variant="secondary" className="mr-1">
+                                  {schema.name}: {schema.dataType}
+                                </Badge>
+                                {schema.description && (
+                                  <p className="text-xs text-muted-foreground">{schema.description}</p>
+                                )}
+                              </div>
+                            ))
+                          )}
                           {typeSchemas.length > 0 && (
                             <Badge variant="outline">
                               Total: {typeSchemas.length}

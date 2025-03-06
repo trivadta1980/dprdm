@@ -28,17 +28,26 @@ export default function ReferenceTypesDebugPage() {
           console.log(`Fetching schemas for type ${type.id}: ${type.name}`);
           const res = await apiRequest("GET", `/api/reference-types/${type.id}/schemas`);
           if (!res.ok) {
-            console.error(`Error fetching schemas for type ${type.id}: ${res.statusText}`);
+            console.error(`Error fetching schemas for type ${type.id}: ${res.status} ${res.statusText}`);
             throw new Error(`Failed to fetch schemas: ${res.statusText}`);
           }
           const data = await res.json();
           console.log(`Received schemas for type ${type.id}:`, data);
-          schemasMap[type.id] = data;
+          console.log(`Schema count for type ${type.id}: ${data.length}`);
+          
+          // Add additional check to ensure data is an array
+          if (!Array.isArray(data)) {
+            console.error(`Unexpected data format for type ${type.id} - not an array:`, data);
+            schemasMap[type.id] = [];
+          } else {
+            schemasMap[type.id] = data;
+          }
         } catch (error) {
           console.error(`Error fetching schemas for type ${type.id}:`, error);
           schemasMap[type.id] = [];
         }
       }
+      console.log("Final schemas map after fetching all:", schemasMap);
       return schemasMap;
     },
     enabled: !!referenceTypes?.length,
