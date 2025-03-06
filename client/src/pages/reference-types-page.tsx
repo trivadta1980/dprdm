@@ -19,7 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, Plus, Pencil, X } from "lucide-react";
+import { Loader2, Plus, Pencil, X, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { ReferenceDataType, InsertReferenceDataType, ReferenceDataTypeSchema } from "@shared/schema";
@@ -27,11 +27,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertReferenceDataTypeSchema } from "@shared/schema";
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 
 export default function ReferenceTypesPage() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingType, setEditingType] = useState<ReferenceDataType | null>(null);
 
@@ -241,14 +243,13 @@ export default function ReferenceTypesPage() {
                 Debug Schemas
               </Button>
               <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={handleCreateNew}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Type
-                </Button>
-              </DialogTrigger>
-            </div>
-              <DialogContent className="max-w-2xl">
+                <DialogTrigger asChild>
+                  <Button onClick={handleCreateNew}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Type
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>
                     {editingType ? "Edit Reference Data Type" : "Create New Reference Data Type"}
