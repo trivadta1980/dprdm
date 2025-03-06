@@ -4,7 +4,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, Database, ArrowLeft, Plus, X } from "lucide-react";
+import { Loader2, Database, ArrowLeft, Plus, X, Edit, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,20 @@ export default function ReferenceTypesListPage() {
     description: string;
     schemas: SchemaInput[];
   }>({
+    name: "",
+    description: "",
+    schemas: [{ name: "", dataType: "string" }]
+  });
+  
+  // Edit type dialog state
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editTypeData, setEditTypeData] = useState<{
+    id: number;
+    name: string;
+    description: string;
+    schemas: SchemaInput[];
+  }>({
+    id: 0,
     name: "",
     description: "",
     schemas: [{ name: "", dataType: "string" }]
@@ -136,6 +150,141 @@ export default function ReferenceTypesListPage() {
     }
   };
 
+  // Handle opening edit dialog
+  const handleEditType = async (typeId: number) => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch the specific reference type data
+      const typeResponse = await fetch(`/api/reference-types/${typeId}`);
+      if (!typeResponse.ok) {
+        throw new Error(`Failed to fetch reference type: ${typeResponse.statusText}`);
+      }
+      const typeData = await typeResponse.json();
+      
+      // Fetch the schemas for this type
+      const schemasResponse = await fetch(`/api/reference-types/${typeId}/schemas`);
+      if (!schemasResponse.ok) {
+        throw new Error(`Failed to fetch schemas: ${schemasResponse.statusText}`);
+      }
+      const schemas = await schemasResponse.json();
+      
+      // Set the edit form data
+      setEditTypeData({
+        id: typeId,
+        name: typeData.name,
+        description: typeData.description || "",
+        schemas: schemas.map((schema: ReferenceDataTypeSchema) => ({
+          name: schema.name,
+          dataType: schema.dataType
+        }))
+      });
+      
+      setIsEditDialogOpen(true);
+    } catch (error) {
+      console.error("Error fetching type for edit:", error);
+      toast({
+        title: "Error",
+        description: `Failed to load reference type data: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Handle saving edited reference type
+  const handleSaveEdit = async () => {
+    try {
+      console.log("Updating reference type with data:", editTypeData);
+      
+      // Validate input
+      if (!editTypeData.name.trim()) {
+        toast({
+          title: "Validation Error",
+          description: "Name is required",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (editTypeData.schemas.length === 0 || !editTypeData.schemas.every(s => s.name.trim())) {
+        toast({
+          title: "Validation Error",
+          description: "All schemas must have names",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const requestData = {
+        name: editTypeData.name,
+        description: editTypeData.description,
+        schemas: editTypeData.schemas
+      };
+      
+      console.log("Sending API request to update type:", requestData);
+      
+      const response = await fetch(`/api/reference-types/${editTypeData.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      console.log("API response status:", response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response from API:", errorText);
+        throw new Error(`Failed to update reference type: ${response.statusText}. ${errorText}`);
+      }
+
+      const responseData = await response.json();
+      console.log("Successfully updated reference type:", responseData);
+
+      toast({
+        title: "Success",
+        description: "Reference type updated successfully",
+      });
+
+      // Close dialog
+      setIsEditDialogOpen(false);
+
+      // Refresh data with a slight delay to ensure the server has time to process
+      setTimeout(() => {
+        console.log("Refreshing data after successful update");
+        fetchData();
+      }, 500);
+    } catch (error) {
+      console.error("Error updating reference type:", error);
+      toast({
+        title: "Error",
+        description: `Failed to update reference type: ${error.message || "Unknown error"}`,
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Handle add schema field to edit type
+  const handleAddSchemaFieldEdit = () => {
+    setEditTypeData({
+      ...editTypeData,
+      schemas: [...editTypeData.schemas, { name: "", dataType: "string" }]
+    });
+  };
+
+  // Handle remove schema field from edit type
+  const handleRemoveSchemaFieldEdit = (index: number) => {
+    const updatedSchemas = [...editTypeData.schemas];
+    updatedSchemas.splice(index, 1);
+    setEditTypeData({
+      ...editTypeData,
+      schemas: updatedSchemas
+    });
+  };
+  
   // Define the fetchData function
   const fetchData = async () => {
       try {
@@ -242,6 +391,7 @@ export default function ReferenceTypesListPage() {
                   <TableHead>Description</TableHead>
                   <TableHead>Schema Count</TableHead>
                   <TableHead>Schema Details</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -273,6 +423,16 @@ export default function ReferenceTypesListPage() {
                             ))
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleEditType(type.id)}
+                          title="Edit Reference Type"
+                        >
+                          <Edit className="h-4 w-4 text-blue-600" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   );
@@ -376,6 +536,106 @@ export default function ReferenceTypesListPage() {
             </Button>
             <Button onClick={handleCreateType}>
               Create Type
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Type Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Reference Data Type</DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-name" className="text-right">
+                Name *
+              </Label>
+              <Input
+                id="edit-name"
+                value={editTypeData.name}
+                onChange={(e) => setEditTypeData({...editTypeData, name: e.target.value})}
+                className="col-span-3"
+                placeholder="Enter type name"
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-description" className="text-right">
+                Description
+              </Label>
+              <Textarea
+                id="edit-description"
+                value={editTypeData.description}
+                onChange={(e) => setEditTypeData({...editTypeData, description: e.target.value})}
+                className="col-span-3"
+                placeholder="Enter description"
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 gap-4">
+              <Label className="text-right pt-2">
+                Schemas *
+              </Label>
+              <div className="col-span-3 space-y-2">
+                {editTypeData.schemas.map((schema, index) => (
+                  <div key={index} className="flex gap-2 items-center">
+                    <Input
+                      value={schema.name}
+                      onChange={(e) => {
+                        const updatedSchemas = [...editTypeData.schemas];
+                        updatedSchemas[index].name = e.target.value;
+                        setEditTypeData({...editTypeData, schemas: updatedSchemas});
+                      }}
+                      placeholder="Schema name"
+                      className="flex-1"
+                    />
+                    <select
+                      value={schema.dataType}
+                      onChange={(e) => {
+                        const updatedSchemas = [...editTypeData.schemas];
+                        updatedSchemas[index].dataType = e.target.value;
+                        setEditTypeData({...editTypeData, schemas: updatedSchemas});
+                      }}
+                      className="p-2 border rounded-md"
+                    >
+                      <option value="string">string</option>
+                      <option value="number">number</option>
+                      <option value="boolean">boolean</option>
+                      <option value="date">date</option>
+                    </select>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => handleRemoveSchemaFieldEdit(index)}
+                      disabled={editTypeData.schemas.length === 1}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleAddSchemaFieldEdit}
+                  className="mt-2"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Schema Field
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit}>
+              <Save className="h-4 w-4 mr-2" />
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
