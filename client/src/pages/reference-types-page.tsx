@@ -63,8 +63,14 @@ export default function ReferenceTypesPage() {
 
       const schemasMap: { [key: number]: ReferenceDataTypeSchema[] } = {};
       for (const type of referenceTypes) {
-        const res = await apiRequest("GET", `/api/reference-types/${type.id}/schemas`);
-        schemasMap[type.id] = await res.json();
+        try {
+          const res = await apiRequest("GET", `/api/reference-types/${type.id}/schemas`);
+          const data = await res.json();
+          schemasMap[type.id] = data;
+        } catch (error) {
+          console.error(`Error fetching schemas for type ${type.id}:`, error);
+          schemasMap[type.id] = [];
+        }
       }
       return schemasMap;
     },
@@ -75,21 +81,27 @@ export default function ReferenceTypesPage() {
   useEffect(() => {
     if (editingType) {
       console.log('Editing type:', editingType);
-      console.log('Current schemas in type:', schemasMap[editingType.id]);
-      const typeSchemas = schemasMap[editingType.id] || [];
+      
+      // Wait for schemas to load
+      if (editingType.id && schemasMap[editingType.id]) {
+        console.log('Current schemas in type:', schemasMap[editingType.id]);
+        const typeSchemas = schemasMap[editingType.id] || [];
 
-      form.reset({
-        name: editingType.name,
-        description: editingType.description || "",
-        schemas: typeSchemas.length > 0
-          ? typeSchemas.map(schema => ({
-            name: schema.name,
-            dataType: schema.dataType,
-            description: schema.description || ""
-          }))
-          : [{ name: "", dataType: "", description: "" }],
-      });
-      console.log('Form reset with schemas:', form.getValues('schemas'));
+        form.reset({
+          name: editingType.name,
+          description: editingType.description || "",
+          schemas: typeSchemas.length > 0
+            ? typeSchemas.map(schema => ({
+              name: schema.name,
+              dataType: schema.dataType,
+              description: schema.description || ""
+            }))
+            : [{ name: "", dataType: "", description: "" }],
+        });
+        console.log('Form reset with schemas:', form.getValues('schemas'));
+      } else {
+        console.log('Schemas not yet loaded for editing type');
+      }
     }
   }, [editingType, schemasMap, form]);
 
@@ -97,6 +109,10 @@ export default function ReferenceTypesPage() {
     mutationFn: async (data: InsertReferenceDataType) => {
       console.log("Creating with data:", data);
       const res = await apiRequest("POST", "/api/reference-types", data);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to create Reference Data Type");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -110,6 +126,7 @@ export default function ReferenceTypesPage() {
       });
     },
     onError: (error: Error) => {
+      console.error("Create mutation error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to create Reference Data Type.",
@@ -122,6 +139,10 @@ export default function ReferenceTypesPage() {
     mutationFn: async ({ id, data }: { id: number; data: InsertReferenceDataType }) => {
       console.log("Updating with data:", data);
       const res = await apiRequest("PATCH", `/api/reference-types/${id}`, data);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to update Reference Data Type");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -136,6 +157,7 @@ export default function ReferenceTypesPage() {
       });
     },
     onError: (error: Error) => {
+      console.error("Update mutation error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to update Reference Data Type.",
