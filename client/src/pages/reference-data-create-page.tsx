@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,7 +51,7 @@ export default function ReferenceDataCreatePage() {
         ...data,
         typeId: Number(data.typeId)
       };
-      
+
       console.log("Creating reference data set with payload:", sanitizedData);
       try {
         const res = await apiRequest("POST", "/api/reference-data", sanitizedData);
@@ -87,13 +86,24 @@ export default function ReferenceDataCreatePage() {
   });
 
   function onSubmit(data: InsertReferenceDataSet) {
-    // Ensure typeId is a number
+    // Ensure typeId is a number with validation
+    const typeId = Number(data.typeId);
+
+    if (isNaN(typeId)) {
+      toast({
+        title: "Validation Error",
+        description: "Type ID must be a valid number",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const payload = {
       ...data,
-      typeId: Number(data.typeId), // Force conversion to number
+      typeId: typeId,
       data: {},
     };
-    
+
     console.log("Submitting form with data:", payload);
     createMutation.mutate(payload);
   }
