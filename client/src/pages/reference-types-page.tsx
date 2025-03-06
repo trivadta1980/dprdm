@@ -184,8 +184,9 @@ export default function ReferenceTypesListPage() {
       } finally {
         setIsLoading(false);
       }
-    }
+    };
 
+  useEffect(() => {
     fetchData();
   }, [toast]);
 
