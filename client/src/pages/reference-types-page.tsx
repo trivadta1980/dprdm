@@ -235,13 +235,19 @@ export default function ReferenceTypesPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Reference Data Types</CardTitle>
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <div className="flex space-x-2">
+              <Button variant="outline" onClick={() => setLocation("/reference-types-debug")}>
+                <Database className="h-4 w-4 mr-2" />
+                Debug Schemas
+              </Button>
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button onClick={handleCreateNew}>
                   <Plus className="h-4 w-4 mr-2" />
                   New Type
                 </Button>
               </DialogTrigger>
+            </div>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>

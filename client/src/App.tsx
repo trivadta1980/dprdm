@@ -7,6 +7,8 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import ProtectedRoute from "@/lib/protected-route";
 import DebugPanel from '@/pages/debug-panel';
+import ReferenceTypesDebugPage from "./pages/reference-types-debug"; // Added import
+
 
 // Lazy load pages
 const HomePage = lazy(() => import("@/pages/home-page"));
@@ -54,6 +56,11 @@ export default function App() {
               <Route path="/reference-types">
                 <ProtectedRoute>
                   <ReferenceTypesPage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/reference-types-debug"> {/* Added route for debug page */}
+                <ProtectedRoute>
+                  <ReferenceTypesDebugPage />
                 </ProtectedRoute>
               </Route>
               <Route path="/reference-data/create">
