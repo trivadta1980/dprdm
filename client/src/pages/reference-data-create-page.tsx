@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,33 +75,26 @@ export default function ReferenceDataCreatePage() {
         };
 
         if (!response.ok) {
-          // Check if the response is HTML (which would cause the "unexpected token <" error)
-          const contentType = response.headers.get("content-type");
-          if (contentType && contentType.includes("text/html")) {
-            const htmlContent = await response.text();
-            console.error("Server returned HTML instead of JSON:", htmlContent.substring(0, 200));
-            setDebugInfo(prev => ({ 
-              ...prev, 
-              response: responseInfo,
-              error: {
-                message: "Received HTML instead of JSON",
-                content: htmlContent.substring(0, 500)
-              }
-            }));
-            throw new Error(`Server error: Received HTML instead of JSON. Status: ${response.status}`);
-          }
-
-          // Regular error handling
           const errorText = await response.text();
-          console.error("Error response:", errorText);
+          console.error("Error response from server:", errorText);
+          
+          // Try to parse if it's JSON
+          let errorData;
+          try {
+            errorData = JSON.parse(errorText);
+          } catch (e) {
+            errorData = errorText;
+          }
+          
           setDebugInfo(prev => ({ 
             ...prev, 
-            response: responseInfo,
+            response: { ...responseInfo, error: errorData },
             error: {
-              message: `Failed to create reference data set: ${response.statusText}`,
-              content: errorText
+              message: `API Error: ${response.status} ${response.statusText}`,
+              details: errorData
             }
           }));
+          
           throw new Error(`Failed to create reference data set: ${response.statusText}. ${errorText}`);
         }
 
@@ -149,7 +143,6 @@ export default function ReferenceDataCreatePage() {
 
     // Validate and convert typeId
     const typeId = Number(data.typeId);
-
     if (isNaN(typeId)) {
       console.error("Invalid typeId:", data.typeId);
       toast({
@@ -198,18 +191,12 @@ export default function ReferenceDataCreatePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Create Reference Data Set</CardTitle>
-            {selectedTypeId && (
-              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
-                <h3 className="text-sm font-medium text-blue-800">Debug Info:</h3>
-                <p className="text-sm">Selected Type ID: <span className="font-mono bg-blue-100 px-1 rounded">{selectedTypeId}</span> (Type: {typeof selectedTypeId})</p>
-                <p className="text-sm">Selected Type Name: <span className="font-mono bg-blue-100 px-1 rounded">{selectedTypeName}</span></p>
-              </div>
-            )}
+            <CardTitle>Create New Reference Data Set</CardTitle>
           </CardHeader>
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {/* Name field */}
                 <FormField
                   control={form.control}
                   name="name"
@@ -217,13 +204,14 @@ export default function ReferenceDataCreatePage() {
                     <FormItem>
                       <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter name" {...field} />
+                        <Input placeholder="Enter reference data set name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
+                {/* Description field */}
                 <FormField
                   control={form.control}
                   name="description"
@@ -241,6 +229,7 @@ export default function ReferenceDataCreatePage() {
                   )}
                 />
 
+                {/* Type field */}
                 <FormField
                   control={form.control}
                   name="typeId"
@@ -249,13 +238,11 @@ export default function ReferenceDataCreatePage() {
                       <FormLabel>Reference Data Type</FormLabel>
                       <Select
                         onValueChange={(value) => {
+                          console.log("Selected type ID:", value, "Type:", typeof value);
                           const numValue = Number(value);
-                          console.log("Selected type ID:", numValue, "Type:", typeof numValue);
                           field.onChange(numValue);
                           setSelectedTypeId(numValue);
-                          // Find the selected type name for display
-                          const selectedType = types.find(type => type.id === numValue);
-                          setSelectedTypeName(selectedType?.name);
+                          setSelectedTypeName(types.find(t => t.id === numValue)?.name);
                         }}
                         defaultValue={field.value?.toString()}
                         required
@@ -278,6 +265,12 @@ export default function ReferenceDataCreatePage() {
                   )}
                 />
 
+                {selectedTypeId && (
+                  <div className="p-3 bg-blue-50 rounded-md text-sm">
+                    Selected Reference Type: <strong>{selectedTypeName}</strong> (ID: {selectedTypeId})
+                  </div>
+                )}
+
                 <Button
                   type="submit"
                   className="w-full"
@@ -290,6 +283,8 @@ export default function ReferenceDataCreatePage() {
                 </Button>
               </form>
             </Form>
+          </CardContent>
+        </Card>
 
         {/* Debug Panel */}
         <div className="mt-12 border rounded-md">
@@ -305,6 +300,19 @@ export default function ReferenceDataCreatePage() {
           </div>
           <div className="p-4 max-h-[500px] overflow-auto">
             <div className="space-y-4">
+              {selectedTypeId && (
+                <div>
+                  <h3 className="font-medium text-green-600 mb-2">Selected Type:</h3>
+                  <pre className="bg-gray-50 p-3 rounded-md text-xs overflow-auto">
+                    {JSON.stringify({ 
+                      id: selectedTypeId, 
+                      name: selectedTypeName,
+                      type: typeof selectedTypeId 
+                    }, null, 2)}
+                  </pre>
+                </div>
+              )}
+              
               {debugInfo.request && (
                 <div>
                   <h3 className="font-medium text-blue-600 mb-2">API Request:</h3>
@@ -313,54 +321,23 @@ export default function ReferenceDataCreatePage() {
                   </pre>
                 </div>
               )}
-
+              
               {debugInfo.response && (
                 <div>
-                  <h3 className="font-medium text-green-600 mb-2">API Response:</h3>
-                  <div className="bg-gray-50 p-3 rounded-md mb-2 text-xs">
-                    <p><strong>Status:</strong> {debugInfo.response.status} {debugInfo.response.statusText}</p>
-                    <details>
-                      <summary className="cursor-pointer">Response Headers</summary>
-                      <pre className="mt-2">
-                        {JSON.stringify(debugInfo.response.headers, null, 2)}
-                      </pre>
-                    </details>
-                  </div>
-                  {debugInfo.response.data && (
-                    <pre className="bg-gray-50 p-3 rounded-md text-xs overflow-auto">
-                      {JSON.stringify(debugInfo.response.data, null, 2)}
-                    </pre>
-                  )}
+                  <h3 className="font-medium text-purple-600 mb-2">API Response:</h3>
+                  <pre className="bg-gray-50 p-3 rounded-md text-xs overflow-auto">
+                    {JSON.stringify(debugInfo.response, null, 2)}
+                  </pre>
                 </div>
               )}
-
+              
               {debugInfo.error && (
                 <div>
                   <h3 className="font-medium text-red-600 mb-2">Error:</h3>
-                  <div className="bg-red-50 p-3 rounded-md text-xs">
-                    <p className="font-bold">{debugInfo.error.message}</p>
-                    {debugInfo.error.content && (
-                      <details>
-                        <summary className="cursor-pointer mt-2">Error Content</summary>
-                        <pre className="mt-2 overflow-auto">
-                          {debugInfo.error.content}
-                        </pre>
-                      </details>
-                    )}
-                    {debugInfo.error.stack && (
-                      <details>
-                        <summary className="cursor-pointer mt-2">Stack Trace</summary>
-                        <pre className="mt-2 overflow-auto">
-                          {debugInfo.error.stack}
-                        </pre>
-                      </details>
-                    )}
-                  </div>
+                  <pre className="bg-gray-50 p-3 rounded-md text-xs overflow-auto">
+                    {JSON.stringify(debugInfo.error, null, 2)}
+                  </pre>
                 </div>
-              )}
-
-              {!debugInfo.request && !debugInfo.response && !debugInfo.error && (
-                <p className="text-gray-500 text-center py-4">No debugging information available yet. Submit the form to see request and response details.</p>
               )}
             </div>
           </div>
