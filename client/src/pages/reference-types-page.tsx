@@ -154,20 +154,33 @@ export default function ReferenceTypesListPage() {
   const handleEditType = async (typeId: number) => {
     try {
       setIsLoading(true);
+      console.log(`Fetching reference type data for editing, ID: ${typeId}`);
       
       // Fetch the specific reference type data
       const typeResponse = await fetch(`/api/reference-types/${typeId}`);
+      console.log(`Type response status: ${typeResponse.status}`);
+      
       if (!typeResponse.ok) {
+        const errorText = await typeResponse.text();
+        console.error(`Error response from type fetch API:`, errorText);
         throw new Error(`Failed to fetch reference type: ${typeResponse.statusText}`);
       }
+      
       const typeData = await typeResponse.json();
+      console.log(`Retrieved type data:`, typeData);
       
       // Fetch the schemas for this type
       const schemasResponse = await fetch(`/api/reference-types/${typeId}/schemas`);
+      console.log(`Schemas response status: ${schemasResponse.status}`);
+      
       if (!schemasResponse.ok) {
+        const errorText = await schemasResponse.text();
+        console.error(`Error response from schemas fetch API:`, errorText);
         throw new Error(`Failed to fetch schemas: ${schemasResponse.statusText}`);
       }
+      
       const schemas = await schemasResponse.json();
+      console.log(`Retrieved ${schemas.length} schemas for type ${typeId}:`, schemas);
       
       // Set the edit form data
       setEditTypeData({
@@ -178,6 +191,13 @@ export default function ReferenceTypesListPage() {
           name: schema.name,
           dataType: schema.dataType
         }))
+      });
+      
+      console.log("Opening edit dialog with data:", {
+        id: typeId,
+        name: typeData.name,
+        description: typeData.description,
+        schemasCount: schemas.length
       });
       
       setIsEditDialogOpen(true);

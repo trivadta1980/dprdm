@@ -130,6 +130,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: String(error) });
     }
   });
+  
+  // Add endpoint to get a single reference type by ID
+  app.get("/api/reference-types/:id", async (req, res) => {
+    console.log('GET /api/reference-types/:id - Request received for ID:', req.params.id); //Added logging
+    if (!req.isAuthenticated()) {
+        console.log('GET /api/reference-types/:id - Unauthorized access'); //Added logging
+        return res.sendStatus(401);
+    }
+
+    try {
+      const typeId = Number(req.params.id);
+      // Get the single type from the database
+      const types = await storage.getAllReferenceDataTypes();
+      const type = types.find(t => t.id === typeId);
+      
+      if (!type) {
+        console.log('GET /api/reference-types/:id - Type not found for ID:', typeId); //Added logging
+        return res.status(404).json({ error: "Reference data type not found" });
+      }
+      
+      console.log('GET /api/reference-types/:id - Type found:', type); //Added logging
+      res.json(type);
+    } catch (error) {
+      console.error('GET /api/reference-types/:id - Error fetching reference type:', error); //Added logging
+      res.status(500).json({ error: String(error) });
+    }
+  });
 
 app.post("/api/reference-types", async (req, res) => {
     console.log('POST /api/reference-types - Request received'); //Added logging
