@@ -47,9 +47,15 @@ export default function ReferenceDataCreatePage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertReferenceDataSet) => {
-      console.log("Creating reference data set with payload:", data);
+      // Ensure typeId is a number before sending
+      const sanitizedData = {
+        ...data,
+        typeId: Number(data.typeId)
+      };
+      
+      console.log("Creating reference data set with payload:", sanitizedData);
       try {
-        const res = await apiRequest("POST", "/api/reference-data", data);
+        const res = await apiRequest("POST", "/api/reference-data", sanitizedData);
         if (!res.ok) {
           const errorText = await res.text();
           console.error("Error response from server:", errorText);
@@ -84,7 +90,7 @@ export default function ReferenceDataCreatePage() {
     // Ensure typeId is a number
     const payload = {
       ...data,
-      typeId: typeof data.typeId === 'string' ? parseInt(data.typeId, 10) : data.typeId,
+      typeId: Number(data.typeId), // Force conversion to number
       data: {},
     };
     
