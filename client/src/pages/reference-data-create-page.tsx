@@ -46,6 +46,11 @@ export default function ReferenceDataCreatePage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertReferenceDataSet) => {
+      // Validate typeId is a number
+      if (!data.typeId || isNaN(Number(data.typeId))) {
+        throw new Error("Type ID must be a valid number");
+      }
+      
       // Ensure typeId is a number before sending
       const sanitizedData = {
         ...data,
@@ -176,8 +181,9 @@ export default function ReferenceDataCreatePage() {
                     <FormItem>
                       <FormLabel>Reference Data Type</FormLabel>
                       <Select
-                        onValueChange={field.onChange}
+                        onValueChange={(value) => field.onChange(Number(value))}
                         defaultValue={field.value?.toString()}
+                        required
                       >
                         <FormControl>
                           <SelectTrigger>
