@@ -136,9 +136,8 @@ export default function ReferenceTypesListPage() {
     }
   };
 
-  // Use fetch directly like in the test script
-  useEffect(() => {
-    async function fetchData() {
+  // Define the fetchData function
+  const fetchData = async () => {
       try {
         // Fetch reference types
         const typesResponse = await fetch('/api/reference-types');
