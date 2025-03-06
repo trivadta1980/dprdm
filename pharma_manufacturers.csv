@@ -1,0 +1,1001 @@
+CMO_ID,Name,Sponsor_ID,GMP Status
+CMO0001,Life Ltd,SP0338,Pending Renewal
+CMO0002,Pharma Pharmaceuticals,SP0371,Compliant
+CMO0003,GenLabs Biosciences,SP0458,Under Review
+CMO0004,Sci Sciences,SP0452,Under Review
+CMO0005,Sci Tech Pharmaceuticals,SP0219,Compliant
+CMO0006,Lab-Science SA,SP0458,Certified
+CMO0007,Vax Research Sciences,SP0288,Compliant
+CMO0008,Pro-Tech Ltd,SP0159,Certified
+CMO0009,Vax-Biotech Inc,SP0407,Under Review
+CMO0010,Medical Med Technologies,SP0127,Probation
+CMO0011,Sci Technologies,SP0324,Probation
+CMO0012,Sci Health Pharmaceuticals,SP0156,Under Review
+CMO0013,GenScience Ltd,SP0119,Under Review
+CMO0014,Tech Ltd,SP0176,Pending Renewal
+CMO0015,Chem Clinic Holdings,SP0186,Compliant
+CMO0016,Biotech Pro Pharmaceuticals,SP0363,Pending Renewal
+CMO0017,Gen-Research Corp,SP0305,Certified
+CMO0018,Pharma Co,SP0229,Probation
+CMO0019,Biotech Tech Sciences,SP0402,Compliant
+CMO0020,Research Gen Group,SP0140,Under Review
+CMO0021,Solutions Clinic Inc,SP0235,Compliant
+CMO0022,Biologics Nova Inc,SP0278,Probation
+CMO0023,Gen Pharmaceuticals,SP0009,Under Review
+CMO0024,Thera Biotech Sciences,SP0182,Certified
+CMO0025,GenBiologics Inc,SP0213,Probation
+CMO0026,Systems Clinic Holdings,SP0016,Under Review
+CMO0027,Lab Laboratories,SP0331,Certified
+CMO0028,Nova Inc,SP0154,Certified
+CMO0029,NovaTech AG,SP0345,Probation
+CMO0030,Tech Health Holdings,SP0332,Certified
+CMO0031,Medicines Thera Ltd,SP0132,Probation
+CMO0032,Life Tech Pharmaceuticals,SP0024,Under Review
+CMO0033,Science Lab GmbH,SP0302,Under Review
+CMO0034,Solutions Thera Therapeutics,SP0233,Certified
+CMO0035,Lab Holdings,SP0064,Under Review
+CMO0036,ProPharma Co,SP0466,Compliant
+CMO0037,NovaPharma SA,SP0121,Compliant
+CMO0038,TheraPharma Pharmaceuticals,SP0446,Under Review
+CMO0039,HealthBiologics Laboratories,SP0304,Compliant
+CMO0040,Health Science Holdings,SP0069,Compliant
+CMO0041,Vax Labs Therapeutics,SP0180,Probation
+CMO0042,Health Inc,SP0478,Pending Renewal
+CMO0043,Life Laboratories,SP0462,Pending Renewal
+CMO0044,Nova Health LLC,SP0368,Pending Renewal
+CMO0045,Cure SA,SP0205,Certified
+CMO0046,Therapeutics Bio GmbH,SP0481,Compliant
+CMO0047,Clinic-Medicines Holdings,SP0135,Under Review
+CMO0048,Biologics Gen Co,SP0240,Certified
+CMO0049,Bio Genetics LLC,SP0176,Pending Renewal
+CMO0050,Gen Pharma Pharmaceuticals,SP0279,Under Review
+CMO0051,Life Medicines Technologies,SP0254,Probation
+CMO0052,Pro Tech Sciences,SP0357,Under Review
+CMO0053,Nova Labs Technologies,SP0336,Probation
+CMO0054,Medical Sci Biosciences,SP0416,Certified
+CMO0055,Labs Gen Sciences,SP0271,Under Review
+CMO0056,Clinic Biotech Laboratories,SP0426,Compliant
+CMO0057,Bio Group,SP0055,Certified
+CMO0058,Therapeutics Pharma Biosciences,SP0170,Certified
+CMO0059,Vax AG,SP0305,Probation
+CMO0060,Health-Health Inc,SP0489,Pending Renewal
+CMO0061,NovaPharma Pharmaceuticals,SP0310,Probation
+CMO0062,Bio-Research Technologies,SP0251,Certified
+CMO0063,ProResearch Therapeutics,SP0180,Certified
+CMO0064,Nova Medical Ltd,SP0020,Certified
+CMO0065,Chem Thera Holdings,SP0002,Under Review
+CMO0066,Thera-Solutions Biosciences,SP0280,Under Review
+CMO0067,Vax-Genetics Laboratories,SP0196,Probation
+CMO0068,GenLabs Therapeutics,SP0311,Under Review
+CMO0069,Life-Medical Inc,SP0198,Pending Renewal
+CMO0070,Med Pharma LLC,SP0457,Certified
+CMO0071,Genetics Life Ltd,SP0256,Pending Renewal
+CMO0072,Thera Therapeutics,SP0322,Compliant
+CMO0073,Pro Co,SP0401,Probation
+CMO0074,Labs Clinic Laboratories,SP0446,Pending Renewal
+CMO0075,Labs Cure Group,SP0284,Certified
+CMO0076,Pharma Vax Co,SP0444,Probation
+CMO0077,Tech Nova Pharmaceuticals,SP0496,Pending Renewal
+CMO0078,Sci Science GmbH,SP0329,Pending Renewal
+CMO0079,ProChem Sciences,SP0287,Certified
+CMO0080,Nova-Research Technologies,SP0245,Compliant
+CMO0081,Tech Pharma GmbH,SP0175,Certified
+CMO0082,Lab Labs Ltd,SP0481,Compliant
+CMO0083,Cure Genetics Sciences,SP0249,Certified
+CMO0084,Cure Science Inc,SP0440,Probation
+CMO0085,NovaMedicines Laboratories,SP0126,Compliant
+CMO0086,Pro Labs Therapeutics,SP0344,Probation
+CMO0087,TheraMedical LLC,SP0062,Certified
+CMO0088,Tech-Solutions AG,SP0437,Compliant
+CMO0089,Life Holdings,SP0085,Pending Renewal
+CMO0090,Tech Clinic GmbH,SP0328,Compliant
+CMO0091,Lab Science Sciences,SP0291,Certified
+CMO0092,Vax-Genetics Group,SP0113,Pending Renewal
+CMO0093,Clinic SA,SP0328,Probation
+CMO0094,Bio LLC,SP0407,Probation
+CMO0095,Research Tech Sciences,SP0015,Pending Renewal
+CMO0096,TechGenetics LLC,SP0475,Probation
+CMO0097,Labs Med Inc,SP0339,Pending Renewal
+CMO0098,Science Life Technologies,SP0366,Compliant
+CMO0099,Health-Research Biosciences,SP0116,Probation
+CMO0100,Cure-Health Biosciences,SP0382,Certified
+CMO0101,Clinic Biotech Group,SP0043,Certified
+CMO0102,Life Labs Sciences,SP0263,Probation
+CMO0103,Clinic Biologics Inc,SP0011,Certified
+CMO0104,ClinicSolutions LLC,SP0225,Certified
+CMO0105,Biologics Life AG,SP0288,Under Review
+CMO0106,Vax Inc,SP0150,Under Review
+CMO0107,Life Genetics Ltd,SP0337,Certified
+CMO0108,Gen-Therapeutics Biosciences,SP0195,Under Review
+CMO0109,Tech Genetics Biosciences,SP0446,Certified
+CMO0110,Research Thera AG,SP0154,Under Review
+CMO0111,Cure-Science Laboratories,SP0251,Under Review
+CMO0112,Pro LLC,SP0090,Pending Renewal
+CMO0113,CureHealth LLC,SP0395,Probation
+CMO0114,Tech Health Therapeutics,SP0237,Under Review
+CMO0115,Vax Biologics AG,SP0169,Certified
+CMO0116,Vax Biologics Group,SP0443,Compliant
+CMO0117,TechBiotech Group,SP0425,Under Review
+CMO0118,MedSystems Holdings,SP0241,Compliant
+CMO0119,Thera-Labs GmbH,SP0003,Certified
+CMO0120,Health SA,SP0430,Compliant
+CMO0121,Pharma Labs AG,SP0128,Under Review
+CMO0122,Systems Pro Biosciences,SP0185,Under Review
+CMO0123,Med Laboratories,SP0152,Probation
+CMO0124,Tech-Solutions Co,SP0110,Pending Renewal
+CMO0125,Gen Biotech GmbH,SP0045,Compliant
+CMO0126,Gen GmbH,SP0378,Certified
+CMO0127,Chem Pharma AG,SP0068,Probation
+CMO0128,Pharma Laboratories,SP0250,Under Review
+CMO0129,Chem Sci Pharmaceuticals,SP0027,Certified
+CMO0130,Med-Health Pharmaceuticals,SP0412,Certified
+CMO0131,Nova Corp,SP0109,Probation
+CMO0132,Genetics Health Corp,SP0372,Pending Renewal
+CMO0133,Science Life Pharmaceuticals,SP0346,Pending Renewal
+CMO0134,Gen-Biologics Biosciences,SP0007,Probation
+CMO0135,Med Ltd,SP0316,Compliant
+CMO0136,TheraBiologics Pharmaceuticals,SP0292,Compliant
+CMO0137,Pharma Medical SA,SP0150,Certified
+CMO0138,CureTech Laboratories,SP0005,Probation
+CMO0139,Vax Laboratories,SP0084,Under Review
+CMO0140,TheraLabs Therapeutics,SP0215,Pending Renewal
+CMO0141,Pro GmbH,SP0248,Probation
+CMO0142,Biologics Thera Ltd,SP0073,Probation
+CMO0143,Biologics Vax Group,SP0049,Pending Renewal
+CMO0144,Pharma Pro Laboratories,SP0242,Pending Renewal
+CMO0145,Medicines Lab Ltd,SP0366,Compliant
+CMO0146,MedScience Therapeutics,SP0277,Under Review
+CMO0147,Sci Genetics Group,SP0073,Under Review
+CMO0148,Thera-Systems Group,SP0165,Certified
+CMO0149,Medicines Vax GmbH,SP0082,Certified
+CMO0150,ProPharma Holdings,SP0061,Pending Renewal
+CMO0151,Bio Holdings,SP0072,Under Review
+CMO0152,Tech-Therapeutics Biosciences,SP0451,Probation
+CMO0153,Biotech Life Corp,SP0480,Certified
+CMO0154,Pharma Genetics Laboratories,SP0245,Certified
+CMO0155,Systems Life Inc,SP0326,Compliant
+CMO0156,Gen-Biotech AG,SP0296,Certified
+CMO0157,Nova Labs Laboratories,SP0033,Certified
+CMO0158,Med Research GmbH,SP0089,Under Review
+CMO0159,ProScience Corp,SP0452,Certified
+CMO0160,Clinic Inc,SP0163,Under Review
+CMO0161,Tech Group,SP0359,Under Review
+CMO0162,Science Life Corp,SP0102,Pending Renewal
+CMO0163,Therapeutics Lab Laboratories,SP0056,Certified
+CMO0164,MedBiologics Sciences,SP0210,Pending Renewal
+CMO0165,Bio Pharma Pharmaceuticals,SP0497,Certified
+CMO0166,Lab-Labs AG,SP0402,Compliant
+CMO0167,TechHealth GmbH,SP0281,Probation
+CMO0168,Cure Co,SP0478,Certified
+CMO0169,Vax Genetics Group,SP0111,Certified
+CMO0170,Bio Chem Sciences,SP0286,Under Review
+CMO0171,Gen-Medical Sciences,SP0457,Pending Renewal
+CMO0172,Tech Therapeutics,SP0346,Probation
+CMO0173,LifeTherapeutics LLC,SP0155,Compliant
+CMO0174,Health Cure Technologies,SP0012,Probation
+CMO0175,Life-Medicines Ltd,SP0340,Under Review
+CMO0176,Life-Medical GmbH,SP0368,Probation
+CMO0177,Medicines Clinic AG,SP0073,Compliant
+CMO0178,Cure Pharmaceuticals,SP0222,Probation
+CMO0179,Health Health LLC,SP0229,Pending Renewal
+CMO0180,Sci GmbH,SP0203,Compliant
+CMO0181,Labs Thera AG,SP0330,Under Review
+CMO0182,LabScience Holdings,SP0360,Certified
+CMO0183,Therapeutics Cure Sciences,SP0046,Probation
+CMO0184,MedHealth Sciences,SP0400,Certified
+CMO0185,Thera-Pharma Therapeutics,SP0009,Pending Renewal
+CMO0186,Tech-Solutions Group,SP0365,Under Review
+CMO0187,ClinicResearch Corp,SP0188,Certified
+CMO0188,Health Biosciences,SP0198,Certified
+CMO0189,Clinic-Therapeutics Laboratories,SP0068,Certified
+CMO0190,Bio Biotech Technologies,SP0009,Certified
+CMO0191,TheraBiotech AG,SP0203,Probation
+CMO0192,TechBiotech Pharmaceuticals,SP0441,Compliant
+CMO0193,Lab-Pharma Group,SP0112,Certified
+CMO0194,Sci Laboratories,SP0342,Compliant
+CMO0195,Health Vax LLC,SP0435,Pending Renewal
+CMO0196,Pharma Technologies,SP0242,Compliant
+CMO0197,Gen Research Co,SP0360,Certified
+CMO0198,Cure-Tech Laboratories,SP0418,Pending Renewal
+CMO0199,Life Pharmaceuticals,SP0107,Certified
+CMO0200,GenBiologics SA,SP0452,Probation
+CMO0201,LifeLabs Group,SP0265,Under Review
+CMO0202,Clinic Pharmaceuticals,SP0108,Probation
+CMO0203,ClinicBiotech SA,SP0401,Probation
+CMO0204,Health Medicines Co,SP0274,Under Review
+CMO0205,Clinic-Tech Ltd,SP0413,Pending Renewal
+CMO0206,Bio-Therapeutics SA,SP0019,Probation
+CMO0207,Cure Science Group,SP0406,Under Review
+CMO0208,Sci-Labs Therapeutics,SP0388,Under Review
+CMO0209,Tech Systems GmbH,SP0257,Certified
+CMO0210,Biologics Med GmbH,SP0076,Certified
+CMO0211,Nova Medicines AG,SP0339,Certified
+CMO0212,Sci Systems AG,SP0116,Pending Renewal
+CMO0213,Gen Sciences,SP0174,Certified
+CMO0214,Lab Group,SP0407,Compliant
+CMO0215,Chem Thera Therapeutics,SP0316,Under Review
+CMO0216,Medicines Cure Technologies,SP0368,Under Review
+CMO0217,Systems Nova Laboratories,SP0069,Compliant
+CMO0218,Thera LLC,SP0238,Probation
+CMO0219,Life-Labs SA,SP0320,Compliant
+CMO0220,TechScience LLC,SP0347,Certified
+CMO0221,HealthHealth Therapeutics,SP0177,Probation
+CMO0222,Med-Health Corp,SP0418,Under Review
+CMO0223,Nova Biotech Sciences,SP0318,Compliant
+CMO0224,Thera Corp,SP0230,Compliant
+CMO0225,MedSolutions Technologies,SP0014,Under Review
+CMO0226,Medicines Clinic GmbH,SP0200,Certified
+CMO0227,Health Life Co,SP0487,Under Review
+CMO0228,Sci Genetics Pharmaceuticals,SP0255,Certified
+CMO0229,Pro Therapeutics Biosciences,SP0341,Certified
+CMO0230,Chem Cure SA,SP0119,Compliant
+CMO0231,Sci Co,SP0104,Compliant
+CMO0232,ProMedical Inc,SP0192,Probation
+CMO0233,Clinic-Pharma Co,SP0283,Probation
+CMO0234,ProLabs Technologies,SP0290,Certified
+CMO0235,CureHealth AG,SP0488,Probation
+CMO0236,Gen Holdings,SP0412,Under Review
+CMO0237,Med Health Holdings,SP0093,Under Review
+CMO0238,Cure Therapeutics SA,SP0104,Pending Renewal
+CMO0239,Labs Clinic SA,SP0021,Pending Renewal
+CMO0240,Chem Tech Biosciences,SP0216,Certified
+CMO0241,CureBiologics Biosciences,SP0071,Pending Renewal
+CMO0242,Thera-Systems Holdings,SP0329,Certified
+CMO0243,Life-Tech AG,SP0316,Probation
+CMO0244,Thera Tech Pharmaceuticals,SP0193,Probation
+CMO0245,Clinic Tech Sciences,SP0262,Pending Renewal
+CMO0246,TechScience Co,SP0322,Certified
+CMO0247,Sci-Labs Corp,SP0347,Probation
+CMO0248,Biologics Sci Therapeutics,SP0447,Compliant
+CMO0249,Vax-Medical Technologies,SP0366,Certified
+CMO0250,LifeMedical SA,SP0056,Certified
+CMO0251,Health Tech Therapeutics,SP0269,Certified
+CMO0252,Cure Science Biosciences,SP0067,Under Review
+CMO0253,CureHealth Sciences,SP0362,Certified
+CMO0254,PharmaHealth Inc,SP0434,Probation
+CMO0255,Cure-Pharma Corp,SP0138,Compliant
+CMO0256,Sci-Pharma GmbH,SP0421,Pending Renewal
+CMO0257,HealthTech LLC,SP0015,Under Review
+CMO0258,Vax Solutions SA,SP0045,Probation
+CMO0259,Medical Vax AG,SP0327,Compliant
+CMO0260,Cure Genetics Laboratories,SP0488,Certified
+CMO0261,Chem Bio AG,SP0401,Compliant
+CMO0262,Gen Laboratories,SP0297,Compliant
+CMO0263,Bio Medicines Sciences,SP0460,Compliant
+CMO0264,VaxTherapeutics Biosciences,SP0087,Under Review
+CMO0265,Medical Pro AG,SP0416,Pending Renewal
+CMO0266,Sci-Biologics Corp,SP0455,Compliant
+CMO0267,Cure Laboratories,SP0425,Certified
+CMO0268,HealthMedicines Sciences,SP0406,Under Review
+CMO0269,TechSolutions Sciences,SP0039,Compliant
+CMO0270,Clinic Biosciences,SP0063,Certified
+CMO0271,ClinicTherapeutics Laboratories,SP0048,Probation
+CMO0272,Clinic Corp,SP0344,Probation
+CMO0273,Tech-Labs SA,SP0381,Certified
+CMO0274,Thera-Medical Technologies,SP0128,Under Review
+CMO0275,Medicines Med Ltd,SP0294,Pending Renewal
+CMO0276,Pharma Labs Laboratories,SP0251,Pending Renewal
+CMO0277,Pharma-Science Holdings,SP0416,Certified
+CMO0278,BioPharma Group,SP0042,Probation
+CMO0279,Genetics Clinic Pharmaceuticals,SP0321,Compliant
+CMO0280,Nova-Science Group,SP0106,Pending Renewal
+CMO0281,Life Systems Laboratories,SP0003,Compliant
+CMO0282,Vax SA,SP0388,Compliant
+CMO0283,Thera Chem Inc,SP0349,Certified
+CMO0284,ClinicPharma Technologies,SP0245,Compliant
+CMO0285,Thera Research Laboratories,SP0447,Pending Renewal
+CMO0286,Gen-Therapeutics Laboratories,SP0049,Probation
+CMO0287,Health Cure Sciences,SP0352,Pending Renewal
+CMO0288,Bio-Chem Group,SP0401,Certified
+CMO0289,Gen AG,SP0216,Under Review
+CMO0290,Cure-Genetics Ltd,SP0171,Probation
+CMO0291,ProMedical Holdings,SP0071,Certified
+CMO0292,Biotech Vax GmbH,SP0116,Probation
+CMO0293,Nova Holdings,SP0433,Probation
+CMO0294,Medicines Health Group,SP0134,Certified
+CMO0295,Thera Tech GmbH,SP0150,Probation
+CMO0296,Cure-Biotech Holdings,SP0077,Compliant
+CMO0297,Clinic Health Sciences,SP0442,Compliant
+CMO0298,Pharma Corp,SP0173,Pending Renewal
+CMO0299,Vax-Tech Therapeutics,SP0098,Compliant
+CMO0300,Gen Tech Technologies,SP0006,Certified
+CMO0301,Vax Chem Corp,SP0316,Pending Renewal
+CMO0302,Biotech Gen Inc,SP0102,Pending Renewal
+CMO0303,Gen LLC,SP0456,Compliant
+CMO0304,Lab-Biotech Pharmaceuticals,SP0195,Under Review
+CMO0305,Pharma GmbH,SP0285,Under Review
+CMO0306,SciMedical AG,SP0178,Compliant
+CMO0307,Pro Systems Inc,SP0295,Compliant
+CMO0308,Vax Genetics Therapeutics,SP0199,Under Review
+CMO0309,Med-Health Holdings,SP0442,Under Review
+CMO0310,Genetics Med Ltd,SP0438,Compliant
+CMO0311,ClinicScience Corp,SP0187,Certified
+CMO0312,Bio-Tech Laboratories,SP0059,Compliant
+CMO0313,Thera Medicines Holdings,SP0013,Pending Renewal
+CMO0314,Pharma-Solutions Pharmaceuticals,SP0015,Certified
+CMO0315,Med Holdings,SP0136,Certified
+CMO0316,Bio-Labs AG,SP0216,Pending Renewal
+CMO0317,Gen Science Pharmaceuticals,SP0220,Probation
+CMO0318,TheraGenetics SA,SP0416,Certified
+CMO0319,HealthTech Inc,SP0482,Pending Renewal
+CMO0320,Thera Labs Pharmaceuticals,SP0368,Certified
+CMO0321,Cure-Solutions Biosciences,SP0166,Probation
+CMO0322,NovaMedical Group,SP0275,Pending Renewal
+CMO0323,Chem Thera SA,SP0493,Under Review
+CMO0324,ClinicResearch Technologies,SP0239,Under Review
+CMO0325,Pharma Systems Therapeutics,SP0347,Compliant
+CMO0326,Lab Ltd,SP0441,Under Review
+CMO0327,Life-Medicines Holdings,SP0373,Compliant
+CMO0328,Cure Therapeutics,SP0312,Certified
+CMO0329,BioGenetics Holdings,SP0280,Probation
+CMO0330,Thera Inc,SP0068,Certified
+CMO0331,Med Health Laboratories,SP0102,Pending Renewal
+CMO0332,Pharma Sci Sciences,SP0340,Pending Renewal
+CMO0333,TheraTech LLC,SP0492,Certified
+CMO0334,Cure Medicines SA,SP0179,Certified
+CMO0335,Thera Technologies,SP0473,Compliant
+CMO0336,TheraTherapeutics Pharmaceuticals,SP0137,Under Review
+CMO0337,Research Thera Inc,SP0406,Compliant
+CMO0338,Gen-Therapeutics Holdings,SP0065,Certified
+CMO0339,Gen Medicines Group,SP0104,Pending Renewal
+CMO0340,CureTech Co,SP0172,Certified
+CMO0341,TechMedicines Inc,SP0020,Certified
+CMO0342,Sci Genetics Inc,SP0114,Probation
+CMO0343,HealthResearch Laboratories,SP0450,Probation
+CMO0344,Life Chem Laboratories,SP0132,Compliant
+CMO0345,Genetics Cure Pharmaceuticals,SP0249,Compliant
+CMO0346,Sci-Medical Co,SP0208,Probation
+CMO0347,Pharma Health AG,SP0034,Certified
+CMO0348,Sci SA,SP0279,Compliant
+CMO0349,Therapeutics Lab Biosciences,SP0422,Pending Renewal
+CMO0350,Tech Cure Pharmaceuticals,SP0453,Pending Renewal
+CMO0351,Nova Biosciences,SP0438,Probation
+CMO0352,GenScience Inc,SP0391,Certified
+CMO0353,ClinicPharma LLC,SP0163,Probation
+CMO0354,Life-Science Biosciences,SP0134,Compliant
+CMO0355,Systems Tech Corp,SP0040,Under Review
+CMO0356,Vax Health LLC,SP0217,Under Review
+CMO0357,Research Pro Group,SP0244,Probation
+CMO0358,Nova Genetics Technologies,SP0051,Pending Renewal
+CMO0359,SciSystems Ltd,SP0293,Pending Renewal
+CMO0360,Life Solutions AG,SP0449,Compliant
+CMO0361,Chem Cure Holdings,SP0109,Compliant
+CMO0362,MedMedicines Pharmaceuticals,SP0034,Probation
+CMO0363,VaxLabs AG,SP0268,Certified
+CMO0364,VaxLabs Biosciences,SP0251,Pending Renewal
+CMO0365,Lab GmbH,SP0232,Pending Renewal
+CMO0366,TechSolutions SA,SP0306,Under Review
+CMO0367,Cure Solutions Group,SP0194,Pending Renewal
+CMO0368,Life-Biologics Holdings,SP0014,Compliant
+CMO0369,Vax Holdings,SP0182,Pending Renewal
+CMO0370,Research Lab Holdings,SP0309,Under Review
+CMO0371,Nova Science Group,SP0289,Compliant
+CMO0372,Clinic-Chem Pharmaceuticals,SP0428,Under Review
+CMO0373,Medicines Bio LLC,SP0350,Probation
+CMO0374,Thera-Medicines GmbH,SP0011,Probation
+CMO0375,Health Technologies,SP0291,Under Review
+CMO0376,Thera Laboratories,SP0225,Certified
+CMO0377,Life Corp,SP0318,Compliant
+CMO0378,TheraResearch Holdings,SP0299,Probation
+CMO0379,Solutions Nova Corp,SP0455,Compliant
+CMO0380,TheraBiologics Inc,SP0247,Pending Renewal
+CMO0381,Tech-Systems Therapeutics,SP0262,Probation
+CMO0382,Thera Biotech Holdings,SP0013,Pending Renewal
+CMO0383,TechMedicines Sciences,SP0388,Certified
+CMO0384,NovaHealth Ltd,SP0395,Under Review
+CMO0385,Medical Health GmbH,SP0110,Under Review
+CMO0386,ClinicMedicines Biosciences,SP0388,Compliant
+CMO0387,Clinic-Biotech Pharmaceuticals,SP0187,Certified
+CMO0388,GenTherapeutics Laboratories,SP0024,Pending Renewal
+CMO0389,Sci Science Therapeutics,SP0214,Pending Renewal
+CMO0390,VaxHealth Inc,SP0307,Under Review
+CMO0391,Cure Solutions Sciences,SP0356,Compliant
+CMO0392,Thera-Health Co,SP0085,Under Review
+CMO0393,Lab Science Corp,SP0462,Probation
+CMO0394,Vax Solutions Technologies,SP0207,Pending Renewal
+CMO0395,Clinic Research Co,SP0125,Probation
+CMO0396,Med Research Corp,SP0403,Under Review
+CMO0397,Thera Biologics Ltd,SP0481,Probation
+CMO0398,Sci Therapeutics,SP0126,Probation
+CMO0399,Solutions Med Pharmaceuticals,SP0081,Certified
+CMO0400,Sci Medicines Therapeutics,SP0057,Pending Renewal
+CMO0401,Sci-Biologics Inc,SP0049,Probation
+CMO0402,Clinic Systems Holdings,SP0188,Under Review
+CMO0403,Thera-Biologics Biosciences,SP0386,Probation
+CMO0404,Health-Tech GmbH,SP0144,Probation
+CMO0405,VaxSolutions Inc,SP0119,Pending Renewal
+CMO0406,Pharma Clinic Sciences,SP0091,Pending Renewal
+CMO0407,Life-Tech Laboratories,SP0346,Compliant
+CMO0408,Lab-Medicines Ltd,SP0177,Certified
+CMO0409,Chem Cure GmbH,SP0179,Compliant
+CMO0410,Sci-Biotech Biosciences,SP0466,Pending Renewal
+CMO0411,Sci Biologics Sciences,SP0376,Compliant
+CMO0412,TheraScience Ltd,SP0364,Certified
+CMO0413,Lab-Solutions Therapeutics,SP0114,Under Review
+CMO0414,Biologics Gen Technologies,SP0167,Probation
+CMO0415,Thera Genetics Ltd,SP0130,Compliant
+CMO0416,Cure AG,SP0110,Certified
+CMO0417,Lab-Labs Laboratories,SP0225,Certified
+CMO0418,Lab Pharma Corp,SP0267,Pending Renewal
+CMO0419,Science Tech Laboratories,SP0110,Probation
+CMO0420,LabTherapeutics Ltd,SP0482,Compliant
+CMO0421,ClinicBiotech Inc,SP0238,Pending Renewal
+CMO0422,TechResearch Inc,SP0371,Compliant
+CMO0423,Life Pharma Technologies,SP0261,Compliant
+CMO0424,Therapeutics Tech Laboratories,SP0426,Probation
+CMO0425,Bio-Solutions Sciences,SP0431,Probation
+CMO0426,Bio Tech GmbH,SP0250,Compliant
+CMO0427,ClinicBiologics LLC,SP0465,Probation
+CMO0428,HealthTech Sciences,SP0046,Under Review
+CMO0429,Research Life Therapeutics,SP0236,Probation
+CMO0430,Cure Medical Co,SP0044,Compliant
+CMO0431,Gen Medicines Laboratories,SP0145,Under Review
+CMO0432,Cure-Labs SA,SP0250,Certified
+CMO0433,LabBiologics Laboratories,SP0334,Pending Renewal
+CMO0434,Labs Gen Biosciences,SP0398,Compliant
+CMO0435,Gen-Research Laboratories,SP0270,Probation
+CMO0436,Health Labs Ltd,SP0287,Probation
+CMO0437,Pharma Sciences,SP0400,Under Review
+CMO0438,Medical Life Holdings,SP0301,Pending Renewal
+CMO0439,Solutions Cure Ltd,SP0444,Certified
+CMO0440,Biotech Pharma Ltd,SP0139,Pending Renewal
+CMO0441,Lab-Medicines Laboratories,SP0128,Compliant
+CMO0442,BioLabs LLC,SP0067,Under Review
+CMO0443,Medical Vax Technologies,SP0118,Compliant
+CMO0444,Nova-Health Group,SP0060,Certified
+CMO0445,Med Therapeutics,SP0080,Certified
+CMO0446,Bio Technologies,SP0234,Under Review
+CMO0447,TechBiologics Biosciences,SP0497,Compliant
+CMO0448,Life Biosciences,SP0332,Pending Renewal
+CMO0449,TechChem Pharmaceuticals,SP0030,Under Review
+CMO0450,Bio Biotech Biosciences,SP0140,Probation
+CMO0451,CureSolutions AG,SP0376,Probation
+CMO0452,Science Tech Biosciences,SP0267,Pending Renewal
+CMO0453,SciMedical Pharmaceuticals,SP0486,Pending Renewal
+CMO0454,VaxResearch GmbH,SP0188,Probation
+CMO0455,Biotech Life Therapeutics,SP0296,Certified
+CMO0456,MedGenetics GmbH,SP0146,Under Review
+CMO0457,Pro Medical Laboratories,SP0422,Compliant
+CMO0458,Thera-Genetics Pharmaceuticals,SP0414,Certified
+CMO0459,Health Co,SP0258,Probation
+CMO0460,VaxMedical Inc,SP0028,Probation
+CMO0461,Biologics Cure SA,SP0208,Under Review
+CMO0462,Life Biotech Sciences,SP0377,Compliant
+CMO0463,SciTherapeutics Co,SP0001,Certified
+CMO0464,Medicines Pharma Corp,SP0124,Certified
+CMO0465,GenGenetics Pharmaceuticals,SP0109,Probation
+CMO0466,Life Technologies,SP0074,Compliant
+CMO0467,Med-Science Ltd,SP0076,Under Review
+CMO0468,ClinicChem Pharmaceuticals,SP0331,Under Review
+CMO0469,PharmaSystems Laboratories,SP0101,Under Review
+CMO0470,Medicines Cure Biosciences,SP0083,Pending Renewal
+CMO0471,Clinic-Medicines GmbH,SP0169,Pending Renewal
+CMO0472,Pharma-Science Laboratories,SP0365,Certified
+CMO0473,Sci-Genetics GmbH,SP0088,Under Review
+CMO0474,Sci-Health Biosciences,SP0204,Pending Renewal
+CMO0475,Lab-Biologics Therapeutics,SP0294,Compliant
+CMO0476,Biotech Thera LLC,SP0086,Under Review
+CMO0477,Pharma-Chem SA,SP0230,Compliant
+CMO0478,Pharma Med Laboratories,SP0071,Probation
+CMO0479,Med Biologics Holdings,SP0207,Probation
+CMO0480,Life Group,SP0422,Under Review
+CMO0481,Pro Tech Pharmaceuticals,SP0008,Under Review
+CMO0482,Tech-Pharma Corp,SP0426,Under Review
+CMO0483,Bio-Science Ltd,SP0184,Probation
+CMO0484,Labs Thera Holdings,SP0199,Certified
+CMO0485,TechMedicines GmbH,SP0347,Under Review
+CMO0486,Therapeutics Gen Group,SP0010,Probation
+CMO0487,Tech Corp,SP0334,Certified
+CMO0488,Medicines Med LLC,SP0284,Compliant
+CMO0489,Medicines Cure LLC,SP0412,Certified
+CMO0490,Health Vax Sciences,SP0471,Pending Renewal
+CMO0491,Lab Labs Biosciences,SP0089,Under Review
+CMO0492,Nova-Health Technologies,SP0356,Under Review
+CMO0493,SciMedical SA,SP0464,Probation
+CMO0494,Gen Therapeutics,SP0179,Probation
+CMO0495,Pro-Biotech LLC,SP0386,Probation
+CMO0496,Gen Biosciences,SP0005,Compliant
+CMO0497,Med Corp,SP0076,Under Review
+CMO0498,Life Co,SP0491,Certified
+CMO0499,Tech-Chem Inc,SP0336,Compliant
+CMO0500,Clinic-Genetics Biosciences,SP0407,Compliant
+CMO0501,Tech Pharma Technologies,SP0199,Pending Renewal
+CMO0502,Thera Biosciences,SP0450,Compliant
+CMO0503,Biotech Gen GmbH,SP0452,Under Review
+CMO0504,Genetics Bio Pharmaceuticals,SP0415,Probation
+CMO0505,Lab-Labs Holdings,SP0456,Under Review
+CMO0506,MedTech Co,SP0156,Probation
+CMO0507,Sci-Medical Inc,SP0024,Probation
+CMO0508,Chem Gen SA,SP0394,Pending Renewal
+CMO0509,Pro Genetics SA,SP0223,Pending Renewal
+CMO0510,LifeBiologics Therapeutics,SP0396,Under Review
+CMO0511,HealthScience AG,SP0055,Pending Renewal
+CMO0512,Biotech Health Sciences,SP0449,Probation
+CMO0513,Cure Ltd,SP0408,Certified
+CMO0514,BioResearch Inc,SP0304,Under Review
+CMO0515,LifeTherapeutics Corp,SP0326,Pending Renewal
+CMO0516,MedBiotech AG,SP0452,Certified
+CMO0517,Pharma-Solutions Laboratories,SP0346,Certified
+CMO0518,Medical Tech Pharmaceuticals,SP0047,Under Review
+CMO0519,Med-Research Inc,SP0396,Pending Renewal
+CMO0520,Therapeutics Health Sciences,SP0239,Probation
+CMO0521,ClinicPharma Corp,SP0253,Pending Renewal
+CMO0522,Med Biosciences,SP0195,Certified
+CMO0523,Medicines Life Corp,SP0483,Under Review
+CMO0524,Clinic-Solutions Ltd,SP0311,Pending Renewal
+CMO0525,Medical Thera Biosciences,SP0409,Probation
+CMO0526,Genetics Thera Technologies,SP0448,Pending Renewal
+CMO0527,Bio GmbH,SP0106,Probation
+CMO0528,Lab Co,SP0365,Probation
+CMO0529,Clinic-Chem Therapeutics,SP0219,Certified
+CMO0530,Therapeutics Nova Corp,SP0302,Pending Renewal
+CMO0531,Med Chem Inc,SP0274,Certified
+CMO0532,VaxGenetics Pharmaceuticals,SP0229,Probation
+CMO0533,ProPharma Technologies,SP0390,Under Review
+CMO0534,Gen-Health Group,SP0104,Certified
+CMO0535,Sci-Chem Holdings,SP0117,Pending Renewal
+CMO0536,Vax Biosciences,SP0247,Under Review
+CMO0537,Med-Biologics Group,SP0121,Probation
+CMO0538,Bio Biologics Biosciences,SP0424,Pending Renewal
+CMO0539,Sci AG,SP0317,Compliant
+CMO0540,Bio Corp,SP0291,Certified
+CMO0541,Life AG,SP0032,Under Review
+CMO0542,TheraSolutions Ltd,SP0425,Probation
+CMO0543,Lab Chem GmbH,SP0362,Pending Renewal
+CMO0544,Cure-Therapeutics Sciences,SP0467,Compliant
+CMO0545,HealthGenetics Biosciences,SP0066,Certified
+CMO0546,Clinic-Medicines SA,SP0352,Probation
+CMO0547,Medical Nova Sciences,SP0131,Probation
+CMO0548,ProMedical Co,SP0159,Under Review
+CMO0549,LabBiotech SA,SP0439,Under Review
+CMO0550,LabMedical Corp,SP0226,Pending Renewal
+CMO0551,Tech-Biotech AG,SP0356,Probation
+CMO0552,Lab Technologies,SP0074,Under Review
+CMO0553,Pro Biologics Group,SP0360,Probation
+CMO0554,Health Sciences,SP0235,Compliant
+CMO0555,Clinic Therapeutics,SP0294,Compliant
+CMO0556,Vax-Medical Co,SP0470,Under Review
+CMO0557,Medical Thera Group,SP0144,Under Review
+CMO0558,Sci-Chem Technologies,SP0382,Under Review
+CMO0559,Bio-Biologics Corp,SP0150,Compliant
+CMO0560,Research Med Technologies,SP0444,Certified
+CMO0561,GenGenetics Laboratories,SP0361,Probation
+CMO0562,Labs Pro Sciences,SP0238,Certified
+CMO0563,Bio-Biologics Sciences,SP0114,Probation
+CMO0564,Cure Biotech Sciences,SP0072,Certified
+CMO0565,Med Pharmaceuticals,SP0089,Probation
+CMO0566,Clinic-Biologics Corp,SP0159,Probation
+CMO0567,Life Genetics Corp,SP0462,Under Review
+CMO0568,Nova Pharma AG,SP0253,Certified
+CMO0569,Clinic-Research Group,SP0464,Under Review
+CMO0570,Pro Research Ltd,SP0301,Under Review
+CMO0571,Pharma Systems GmbH,SP0371,Certified
+CMO0572,Vax-Biotech Holdings,SP0353,Under Review
+CMO0573,LifeSystems Laboratories,SP0209,Certified
+CMO0574,Med-Health Co,SP0150,Under Review
+CMO0575,Sci Pharmaceuticals,SP0158,Certified
+CMO0576,Systems Health Inc,SP0349,Pending Renewal
+CMO0577,GenBiologics Ltd,SP0005,Compliant
+CMO0578,Lab Medical Therapeutics,SP0106,Probation
+CMO0579,Sci Holdings,SP0421,Probation
+CMO0580,MedBiologics Ltd,SP0042,Under Review
+CMO0581,Med SA,SP0032,Probation
+CMO0582,Sci Biosciences,SP0116,Compliant
+CMO0583,BioBiotech Pharmaceuticals,SP0348,Under Review
+CMO0584,ClinicGenetics Corp,SP0102,Probation
+CMO0585,Pharma-Labs SA,SP0360,Under Review
+CMO0586,Cure Tech LLC,SP0151,Certified
+CMO0587,Gen Biologics Sciences,SP0374,Compliant
+CMO0588,Lab SA,SP0477,Compliant
+CMO0589,Cure-Biologics Pharmaceuticals,SP0263,Under Review
+CMO0590,LifeMedicines Holdings,SP0323,Pending Renewal
+CMO0591,Nova-Tech Technologies,SP0335,Under Review
+CMO0592,Bio SA,SP0352,Compliant
+CMO0593,Biotech Nova Ltd,SP0232,Compliant
+CMO0594,Medicines Clinic Ltd,SP0374,Compliant
+CMO0595,ClinicPharma SA,SP0351,Pending Renewal
+CMO0596,NovaChem Ltd,SP0363,Certified
+CMO0597,Sci-Medical Technologies,SP0007,Pending Renewal
+CMO0598,Cure Biologics Ltd,SP0218,Probation
+CMO0599,Med-Medicines GmbH,SP0315,Compliant
+CMO0600,Science Cure Pharmaceuticals,SP0227,Probation
+CMO0601,Med-Biotech Technologies,SP0479,Pending Renewal
+CMO0602,Tech AG,SP0291,Pending Renewal
+CMO0603,ProHealth Laboratories,SP0125,Certified
+CMO0604,Pro Ltd,SP0497,Compliant
+CMO0605,Tech Science Sciences,SP0379,Pending Renewal
+CMO0606,Systems Sci Corp,SP0064,Certified
+CMO0607,Cure Labs GmbH,SP0251,Compliant
+CMO0608,HealthHealth Corp,SP0261,Certified
+CMO0609,Thera-Science SA,SP0484,Probation
+CMO0610,Medical Med Pharmaceuticals,SP0391,Compliant
+CMO0611,Pro-Tech Pharmaceuticals,SP0259,Under Review
+CMO0612,Gen Labs Ltd,SP0187,Compliant
+CMO0613,Life-Pharma Laboratories,SP0362,Pending Renewal
+CMO0614,GenPharma Group,SP0367,Certified
+CMO0615,Labs Clinic Therapeutics,SP0077,Probation
+CMO0616,Med-Chem GmbH,SP0490,Certified
+CMO0617,LifeBiologics Inc,SP0185,Compliant
+CMO0618,Tech-Medical Co,SP0166,Compliant
+CMO0619,Thera Labs Sciences,SP0266,Pending Renewal
+CMO0620,Med-Pharma Sciences,SP0009,Under Review
+CMO0621,BioPharma Ltd,SP0097,Pending Renewal
+CMO0622,Tech Co,SP0170,Pending Renewal
+CMO0623,Chem Bio Laboratories,SP0203,Probation
+CMO0624,Systems Gen Co,SP0404,Under Review
+CMO0625,Sci Corp,SP0206,Compliant
+CMO0626,Tech Gen Holdings,SP0145,Certified
+CMO0627,Labs Life Technologies,SP0148,Pending Renewal
+CMO0628,Bio Medical Group,SP0487,Compliant
+CMO0629,Bio Co,SP0295,Probation
+CMO0630,Cure Holdings,SP0263,Probation
+CMO0631,Gen Corp,SP0452,Certified
+CMO0632,Nova-Genetics Corp,SP0200,Probation
+CMO0633,Thera Therapeutics Group,SP0248,Pending Renewal
+CMO0634,Tech Thera Laboratories,SP0481,Certified
+CMO0635,GenScience Laboratories,SP0327,Probation
+CMO0636,NovaTherapeutics Corp,SP0331,Probation
+CMO0637,Science Lab Pharmaceuticals,SP0440,Under Review
+CMO0638,Chem Bio Biosciences,SP0413,Compliant
+CMO0639,SciScience SA,SP0092,Certified
+CMO0640,Nova Medical Therapeutics,SP0184,Pending Renewal
+CMO0641,Clinic Systems Sciences,SP0227,Pending Renewal
+CMO0642,Therapeutics Tech Corp,SP0287,Certified
+CMO0643,Pharma Medicines Sciences,SP0092,Certified
+CMO0644,BioTherapeutics Inc,SP0077,Compliant
+CMO0645,Research Pro Biosciences,SP0147,Compliant
+CMO0646,Pro-Chem LLC,SP0247,Compliant
+CMO0647,Pharma-Pharma AG,SP0174,Pending Renewal
+CMO0648,TheraChem AG,SP0383,Under Review
+CMO0649,Genetics Lab Laboratories,SP0217,Pending Renewal
+CMO0650,Medical Sci Inc,SP0415,Under Review
+CMO0651,Clinic Labs Holdings,SP0225,Under Review
+CMO0652,BioLabs Technologies,SP0240,Certified
+CMO0653,Biotech Lab Pharmaceuticals,SP0267,Under Review
+CMO0654,Sci-Genetics Therapeutics,SP0135,Under Review
+CMO0655,LabBiotech Therapeutics,SP0061,Probation
+CMO0656,TechMedical SA,SP0259,Pending Renewal
+CMO0657,Cure Technologies,SP0024,Probation
+CMO0658,Vax Biologics Therapeutics,SP0363,Compliant
+CMO0659,Pro Biotech AG,SP0405,Compliant
+CMO0660,GenHealth Therapeutics,SP0019,Under Review
+CMO0661,NovaMedicines Inc,SP0222,Compliant
+CMO0662,Therapeutics Sci Laboratories,SP0063,Certified
+CMO0663,Life Biologics GmbH,SP0230,Under Review
+CMO0664,LabMedicines Inc,SP0268,Certified
+CMO0665,Pro Corp,SP0239,Under Review
+CMO0666,VaxMedical Technologies,SP0228,Probation
+CMO0667,Cure Pharma Corp,SP0188,Probation
+CMO0668,Pharma-Genetics Laboratories,SP0343,Pending Renewal
+CMO0669,Pro Genetics Therapeutics,SP0329,Certified
+CMO0670,MedSolutions Ltd,SP0404,Under Review
+CMO0671,Chem Bio Group,SP0144,Certified
+CMO0672,BioPharma Therapeutics,SP0200,Probation
+CMO0673,Medicines Sci SA,SP0205,Probation
+CMO0674,Pharma Nova Technologies,SP0413,Compliant
+CMO0675,GenChem AG,SP0019,Pending Renewal
+CMO0676,ClinicTech Sciences,SP0412,Certified
+CMO0677,Tech-Medicines Therapeutics,SP0348,Under Review
+CMO0678,Health Therapeutics Biosciences,SP0354,Pending Renewal
+CMO0679,Biologics Med Laboratories,SP0495,Pending Renewal
+CMO0680,Labs Sci Biosciences,SP0110,Under Review
+CMO0681,Thera Sciences,SP0448,Under Review
+CMO0682,Bio-Therapeutics Biosciences,SP0180,Probation
+CMO0683,Thera Labs Biosciences,SP0288,Compliant
+CMO0684,Bio-Science AG,SP0238,Probation
+CMO0685,Lab-Labs Technologies,SP0297,Certified
+CMO0686,MedSystems Therapeutics,SP0103,Compliant
+CMO0687,Medical Life SA,SP0201,Compliant
+CMO0688,TheraResearch Therapeutics,SP0012,Pending Renewal
+CMO0689,Lab Chem LLC,SP0451,Pending Renewal
+CMO0690,Pharma Medical Holdings,SP0104,Compliant
+CMO0691,HealthPharma Ltd,SP0281,Pending Renewal
+CMO0692,BioLabs Therapeutics,SP0269,Under Review
+CMO0693,Life-Chem SA,SP0227,Compliant
+CMO0694,Solutions Tech Group,SP0477,Certified
+CMO0695,Solutions Life Corp,SP0034,Pending Renewal
+CMO0696,Cure Biologics Sciences,SP0032,Compliant
+CMO0697,Pharma LLC,SP0031,Under Review
+CMO0698,Pharma-Medical Biosciences,SP0037,Pending Renewal
+CMO0699,Solutions Bio Biosciences,SP0432,Pending Renewal
+CMO0700,LifeMedicines Ltd,SP0259,Pending Renewal
+CMO0701,Nova Co,SP0068,Under Review
+CMO0702,Tech-Systems Corp,SP0225,Compliant
+CMO0703,Vax-Research Co,SP0367,Probation
+CMO0704,Genetics Vax Sciences,SP0204,Under Review
+CMO0705,TechBiotech Ltd,SP0339,Under Review
+CMO0706,Life-Biotech Group,SP0108,Certified
+CMO0707,Clinic-Therapeutics Sciences,SP0227,Certified
+CMO0708,Lab-Solutions GmbH,SP0252,Pending Renewal
+CMO0709,Nova-Medical Ltd,SP0231,Pending Renewal
+CMO0710,Labs Clinic Group,SP0189,Pending Renewal
+CMO0711,MedMedical Group,SP0075,Under Review
+CMO0712,SciMedicines Co,SP0175,Pending Renewal
+CMO0713,Biotech Health Therapeutics,SP0052,Compliant
+CMO0714,Pro-Biotech Therapeutics,SP0047,Certified
+CMO0715,Gen Biotech Laboratories,SP0386,Under Review
+CMO0716,Science Med Pharmaceuticals,SP0033,Compliant
+CMO0717,Bio Health Technologies,SP0408,Probation
+CMO0718,BioResearch Corp,SP0224,Compliant
+CMO0719,ProBiologics Technologies,SP0333,Certified
+CMO0720,Tech-Research Biosciences,SP0206,Pending Renewal
+CMO0721,Chem Vax Holdings,SP0394,Certified
+CMO0722,Research Gen Ltd,SP0106,Compliant
+CMO0723,Clinic-Labs Ltd,SP0168,Certified
+CMO0724,Chem Gen Laboratories,SP0028,Certified
+CMO0725,Life Pharma GmbH,SP0249,Under Review
+CMO0726,CureHealth Technologies,SP0331,Pending Renewal
+CMO0727,TechHealth Sciences,SP0145,Probation
+CMO0728,Med Inc,SP0395,Under Review
+CMO0729,Cure-Systems Group,SP0384,Pending Renewal
+CMO0730,Cure GmbH,SP0387,Certified
+CMO0731,Nova Chem Therapeutics,SP0048,Compliant
+CMO0732,Bio Tech SA,SP0345,Pending Renewal
+CMO0733,Clinic-Chem Corp,SP0206,Under Review
+CMO0734,Thera Ltd,SP0162,Certified
+CMO0735,Nova Therapeutics Biosciences,SP0167,Probation
+CMO0736,Biotech Health SA,SP0216,Pending Renewal
+CMO0737,Health-Health Biosciences,SP0100,Certified
+CMO0738,Chem Cure Laboratories,SP0093,Compliant
+CMO0739,LifeGenetics Laboratories,SP0360,Under Review
+CMO0740,LifeLabs Technologies,SP0262,Probation
+CMO0741,Life GmbH,SP0314,Pending Renewal
+CMO0742,SciGenetics LLC,SP0025,Under Review
+CMO0743,Vax-Biologics Holdings,SP0185,Compliant
+CMO0744,Biologics Pharma Holdings,SP0326,Pending Renewal
+CMO0745,PharmaResearch Sciences,SP0013,Certified
+CMO0746,Health Cure Pharmaceuticals,SP0451,Pending Renewal
+CMO0747,Life-Medicines Biosciences,SP0466,Certified
+CMO0748,Thera-Research LLC,SP0062,Compliant
+CMO0749,Chem Clinic GmbH,SP0398,Compliant
+CMO0750,Pharma-Research Laboratories,SP0071,Certified
+CMO0751,Health-Genetics Corp,SP0370,Compliant
+CMO0752,Health Pro Group,SP0361,Compliant
+CMO0753,Pro Chem GmbH,SP0395,Compliant
+CMO0754,Medicines Tech Laboratories,SP0153,Pending Renewal
+CMO0755,Gen Biologics Inc,SP0127,Pending Renewal
+CMO0756,TechResearch Sciences,SP0375,Pending Renewal
+CMO0757,Sci-Labs Pharmaceuticals,SP0126,Under Review
+CMO0758,Tech-Biologics LLC,SP0477,Pending Renewal
+CMO0759,Biologics Pharma Co,SP0018,Compliant
+CMO0760,Medicines Sci Laboratories,SP0156,Under Review
+CMO0761,LifeSolutions Biosciences,SP0291,Probation
+CMO0762,Tech-Health Laboratories,SP0227,Probation
+CMO0763,SciSystems Sciences,SP0318,Certified
+CMO0764,Sci Solutions Biosciences,SP0212,Compliant
+CMO0765,Clinic-Biologics Co,SP0328,Compliant
+CMO0766,BioLabs Ltd,SP0364,Certified
+CMO0767,Bio Therapeutics,SP0426,Under Review
+CMO0768,Medicines Thera Pharmaceuticals,SP0416,Probation
+CMO0769,Gen Research Therapeutics,SP0303,Probation
+CMO0770,Sci Genetics Holdings,SP0336,Under Review
+CMO0771,Gen-Therapeutics Corp,SP0484,Pending Renewal
+CMO0772,ProLabs LLC,SP0216,Certified
+CMO0773,Solutions Clinic Biosciences,SP0181,Compliant
+CMO0774,PharmaScience Holdings,SP0146,Certified
+CMO0775,Med Chem Holdings,SP0483,Under Review
+CMO0776,Gen-Biotech Technologies,SP0158,Certified
+CMO0777,Health-Tech Biosciences,SP0245,Pending Renewal
+CMO0778,Vax-Labs Biosciences,SP0362,Pending Renewal
+CMO0779,Sci Medicines Biosciences,SP0300,Pending Renewal
+CMO0780,BioResearch Sciences,SP0490,Pending Renewal
+CMO0781,Medicines Health Technologies,SP0123,Probation
+CMO0782,ProScience LLC,SP0291,Probation
+CMO0783,Bio-Health Corp,SP0332,Pending Renewal
+CMO0784,Solutions Life AG,SP0240,Probation
+CMO0785,Med-Medicines LLC,SP0287,Under Review
+CMO0786,NovaPharma Group,SP0080,Probation
+CMO0787,Pro Therapeutics,SP0125,Compliant
+CMO0788,Biotech Cure Holdings,SP0133,Certified
+CMO0789,Pharma-Medical AG,SP0345,Certified
+CMO0790,Med Biotech Biosciences,SP0057,Probation
+CMO0791,Biotech Pro Holdings,SP0464,Certified
+CMO0792,Nova Biologics Biosciences,SP0147,Probation
+CMO0793,Sci Therapeutics Corp,SP0003,Under Review
+CMO0794,Nova Pharmaceuticals,SP0044,Probation
+CMO0795,ClinicMedicines Laboratories,SP0040,Pending Renewal
+CMO0796,Vax Medical Corp,SP0440,Under Review
+CMO0797,HealthChem Technologies,SP0089,Certified
+CMO0798,Gen-Chem Laboratories,SP0303,Under Review
+CMO0799,Lab LLC,SP0468,Compliant
+CMO0800,Genetics Tech Inc,SP0234,Compliant
+CMO0801,Thera-Medicines Sciences,SP0430,Under Review
+CMO0802,TheraTherapeutics Co,SP0071,Compliant
+CMO0803,Biologics Sci Ltd,SP0475,Pending Renewal
+CMO0804,Pharma-Biologics Holdings,SP0029,Under Review
+CMO0805,NovaPharma Holdings,SP0376,Compliant
+CMO0806,Sci Medicines Group,SP0261,Certified
+CMO0807,TechResearch Laboratories,SP0278,Under Review
+CMO0808,Biologics Pro Pharmaceuticals,SP0385,Under Review
+CMO0809,Pharma Inc,SP0268,Certified
+CMO0810,Tech Health SA,SP0362,Under Review
+CMO0811,Health Genetics Sciences,SP0288,Compliant
+CMO0812,Med-Medical LLC,SP0033,Certified
+CMO0813,Cure-Research Ltd,SP0204,Probation
+CMO0814,Clinic-Medicines Sciences,SP0079,Compliant
+CMO0815,Tech Med AG,SP0176,Probation
+CMO0816,Research Life Technologies,SP0129,Compliant
+CMO0817,Health Systems Laboratories,SP0031,Probation
+CMO0818,Nova-Chem SA,SP0009,Certified
+CMO0819,LifeChem Biosciences,SP0335,Certified
+CMO0820,Health-Science Ltd,SP0249,Probation
+CMO0821,Science Pro Pharmaceuticals,SP0352,Under Review
+CMO0822,Health Labs Pharmaceuticals,SP0087,Compliant
+CMO0823,LabLabs GmbH,SP0460,Probation
+CMO0824,BioMedicines Therapeutics,SP0014,Pending Renewal
+CMO0825,Health Lab GmbH,SP0434,Under Review
+CMO0826,Clinic Laboratories,SP0405,Compliant
+CMO0827,Bio Biosciences,SP0234,Certified
+CMO0828,Gen Group,SP0212,Pending Renewal
+CMO0829,Gen-Research GmbH,SP0341,Pending Renewal
+CMO0830,Pro-Genetics Pharmaceuticals,SP0188,Compliant
+CMO0831,Tech Labs Technologies,SP0180,Compliant
+CMO0832,Research Life Inc,SP0301,Pending Renewal
+CMO0833,Cure-Health Co,SP0419,Certified
+CMO0834,HealthSolutions Sciences,SP0383,Certified
+CMO0835,Pharma SA,SP0252,Compliant
+CMO0836,Tech LLC,SP0377,Certified
+CMO0837,Cure-Tech Group,SP0344,Pending Renewal
+CMO0838,TheraTech Technologies,SP0082,Certified
+CMO0839,HealthSolutions Corp,SP0221,Probation
+CMO0840,BioSystems Sciences,SP0145,Pending Renewal
+CMO0841,Labs Cure Technologies,SP0419,Certified
+CMO0842,LabMedicines Laboratories,SP0054,Certified
+CMO0843,Lab Therapeutics,SP0347,Compliant
+CMO0844,TheraMedicines Laboratories,SP0231,Probation
+CMO0845,Tech Gen Inc,SP0226,Certified
+CMO0846,Vax Pharmaceuticals,SP0141,Certified
+CMO0847,Vax Sciences,SP0241,Certified
+CMO0848,PharmaTech LLC,SP0297,Compliant
+CMO0849,CureResearch GmbH,SP0175,Under Review
+CMO0850,HealthGenetics SA,SP0072,Compliant
+CMO0851,ProBiologics SA,SP0211,Compliant
+CMO0852,Clinic AG,SP0396,Certified
+CMO0853,Nova Medical Co,SP0371,Certified
+CMO0854,Med-Systems Therapeutics,SP0001,Certified
+CMO0855,Lab Biologics Holdings,SP0234,Probation
+CMO0856,Bio-Medicines Sciences,SP0024,Probation
+CMO0857,Lab Research Inc,SP0247,Under Review
+CMO0858,Health Nova Ltd,SP0396,Probation
+CMO0859,TheraSolutions Sciences,SP0047,Compliant
+CMO0860,Sci-Science LLC,SP0226,Probation
+CMO0861,SciScience Holdings,SP0189,Probation
+CMO0862,Life-Genetics Laboratories,SP0046,Under Review
+CMO0863,LifeGenetics AG,SP0148,Certified
+CMO0864,Med Medical SA,SP0140,Compliant
+CMO0865,Solutions Sci Ltd,SP0248,Certified
+CMO0866,Medical Nova SA,SP0221,Pending Renewal
+CMO0867,Cure Health Inc,SP0144,Compliant
+CMO0868,Health-Tech Technologies,SP0137,Probation
+CMO0869,Genetics Med Co,SP0344,Pending Renewal
+CMO0870,Health Gen Holdings,SP0124,Certified
+CMO0871,NovaGenetics Ltd,SP0347,Certified
+CMO0872,Pro Therapeutics Co,SP0354,Probation
+CMO0873,Systems Cure Co,SP0283,Probation
+CMO0874,Clinic-Systems AG,SP0111,Certified
+CMO0875,Clinic Holdings,SP0139,Probation
+CMO0876,Vax Biotech Laboratories,SP0214,Certified
+CMO0877,LabChem Corp,SP0416,Certified
+CMO0878,Gen Medicines SA,SP0384,Certified
+CMO0879,Clinic-Medical Co,SP0479,Pending Renewal
+CMO0880,Pharma Ltd,SP0386,Certified
+CMO0881,Clinic-Medicines Technologies,SP0176,Under Review
+CMO0882,Medicines Tech Therapeutics,SP0108,Compliant
+CMO0883,Sci-Biologics AG,SP0386,Compliant
+CMO0884,Solutions Pharma Therapeutics,SP0099,Certified
+CMO0885,BioSystems GmbH,SP0126,Certified
+CMO0886,LabHealth Sciences,SP0488,Pending Renewal
+CMO0887,Tech Labs SA,SP0441,Certified
+CMO0888,MedHealth Inc,SP0291,Under Review
+CMO0889,Science Med GmbH,SP0027,Probation
+CMO0890,Chem Thera Biosciences,SP0158,Under Review
+CMO0891,Therapeutics Nova Therapeutics,SP0205,Compliant
+CMO0892,Pharma Medicines Technologies,SP0269,Probation
+CMO0893,Systems Med Therapeutics,SP0221,Certified
+CMO0894,Thera-Research Co,SP0459,Certified
+CMO0895,Vax Ltd,SP0077,Probation
+CMO0896,Clinic-Biotech Ltd,SP0125,Certified
+CMO0897,VaxTherapeutics LLC,SP0173,Under Review
+CMO0898,Labs Health Pharmaceuticals,SP0314,Compliant
+CMO0899,NovaScience Laboratories,SP0122,Probation
+CMO0900,LabMedical Holdings,SP0335,Certified
+CMO0901,Tech-Therapeutics Therapeutics,SP0308,Pending Renewal
+CMO0902,Biotech Gen Group,SP0489,Compliant
+CMO0903,Health Sci Ltd,SP0344,Certified
+CMO0904,Pharma Holdings,SP0284,Compliant
+CMO0905,Vax-Research Technologies,SP0189,Certified
+CMO0906,Vax-Science SA,SP0399,Certified
+CMO0907,Cure-Solutions Therapeutics,SP0366,Under Review
+CMO0908,VaxMedical Pharmaceuticals,SP0421,Pending Renewal
+CMO0909,Clinic-Pharma Holdings,SP0353,Under Review
+CMO0910,Lab Inc,SP0156,Certified
+CMO0911,Pro Solutions LLC,SP0118,Pending Renewal
+CMO0912,Health-Science Biosciences,SP0266,Pending Renewal
+CMO0913,Cure Labs AG,SP0487,Pending Renewal
+CMO0914,Medicines Life Therapeutics,SP0347,Pending Renewal
+CMO0915,Pro Biotech Holdings,SP0003,Pending Renewal
+CMO0916,Pro-Chem Laboratories,SP0373,Probation
+CMO0917,Pharma Solutions SA,SP0085,Compliant
+CMO0918,HealthHealth Inc,SP0479,Probation
+CMO0919,Life Tech Technologies,SP0367,Compliant
+CMO0920,LabTech Corp,SP0214,Compliant
+CMO0921,Health Health Pharmaceuticals,SP0364,Pending Renewal
+CMO0922,Life-Medicines Technologies,SP0369,Under Review
+CMO0923,Research Nova Corp,SP0139,Probation
+CMO0924,LifeSystems Corp,SP0197,Certified
+CMO0925,Sci Biotech Co,SP0361,Probation
+CMO0926,Lab-Research Corp,SP0461,Pending Renewal
+CMO0927,GenMedicines Corp,SP0139,Pending Renewal
+CMO0928,Med-Therapeutics GmbH,SP0197,Pending Renewal
+CMO0929,Science Clinic SA,SP0340,Pending Renewal
+CMO0930,Bio Research LLC,SP0103,Certified
+CMO0931,Vax Technologies,SP0423,Under Review
+CMO0932,Pro-Medicines GmbH,SP0017,Pending Renewal
+CMO0933,Life-Research Pharmaceuticals,SP0253,Certified
+CMO0934,Genetics Sci LLC,SP0064,Compliant
+CMO0935,Pharma Biosciences,SP0331,Compliant
+CMO0936,Med Biologics Laboratories,SP0070,Certified
+CMO0937,BioBiologics Holdings,SP0322,Under Review
+CMO0938,Clinic Biologics Technologies,SP0104,Certified
+CMO0939,Pro SA,SP0191,Compliant
+CMO0940,ProHealth Biosciences,SP0259,Under Review
+CMO0941,Gen Labs Holdings,SP0408,Pending Renewal
+CMO0942,Pharma Health Pharmaceuticals,SP0281,Certified
+CMO0943,Therapeutics Bio Inc,SP0114,Compliant
+CMO0944,Tech-Chem Sciences,SP0061,Certified
+CMO0945,Life Inc,SP0111,Pending Renewal
+CMO0946,Lab-Science AG,SP0414,Probation
+CMO0947,BioPharma Pharmaceuticals,SP0165,Pending Renewal
+CMO0948,Therapeutics Cure Therapeutics,SP0304,Under Review
+CMO0949,Thera SA,SP0141,Compliant
+CMO0950,Research Pharma SA,SP0368,Probation
+CMO0951,Genetics Tech Biosciences,SP0306,Probation
+CMO0952,GenChem Sciences,SP0063,Under Review
+CMO0953,Health Group,SP0355,Certified
+CMO0954,Pro-Biotech Technologies,SP0285,Under Review
+CMO0955,Nova-Biotech Therapeutics,SP0142,Pending Renewal
+CMO0956,Bio Solutions Sciences,SP0225,Compliant
+CMO0957,Biologics Tech Therapeutics,SP0495,Pending Renewal
+CMO0958,Tech Clinic Corp,SP0026,Under Review
+CMO0959,Chem Nova Inc,SP0260,Under Review
+CMO0960,Health Pharma Laboratories,SP0492,Certified
+CMO0961,ProChem Pharmaceuticals,SP0086,Under Review
+CMO0962,Vax Systems Sciences,SP0300,Pending Renewal
+CMO0963,Vax-Solutions Co,SP0488,Compliant
+CMO0964,GenTherapeutics Inc,SP0285,Pending Renewal
+CMO0965,Science Nova Holdings,SP0496,Compliant
+CMO0966,Health Ltd,SP0001,Certified
+CMO0967,Pro Sciences,SP0166,Probation
+CMO0968,Therapeutics Clinic Co,SP0133,Probation
+CMO0969,Vax-Medical Sciences,SP0249,Probation
+CMO0970,NovaSystems AG,SP0156,Probation
+CMO0971,Cure Corp,SP0328,Certified
+CMO0972,Biotech Thera Inc,SP0059,Pending Renewal
+CMO0973,Solutions Nova Holdings,SP0446,Certified
+CMO0974,MedLabs Inc,SP0339,Pending Renewal
+CMO0975,CureSystems Sciences,SP0071,Under Review
+CMO0976,Pharma-Research Therapeutics,SP0047,Under Review
+CMO0977,Sci-Research Co,SP0055,Compliant
+CMO0978,Medicines Life GmbH,SP0148,Pending Renewal
+CMO0979,Pharma Life Laboratories,SP0095,Compliant
+CMO0980,Pharma-Research Holdings,SP0332,Compliant
+CMO0981,Health Sci Co,SP0394,Compliant
+CMO0982,LabSolutions SA,SP0203,Compliant
+CMO0983,Science Pharma LLC,SP0436,Pending Renewal
+CMO0984,Sci Inc,SP0164,Under Review
+CMO0985,Nova-Labs Ltd,SP0120,Probation
+CMO0986,Health-Labs LLC,SP0413,Under Review
+CMO0987,HealthHealth Co,SP0010,Probation
+CMO0988,Thera AG,SP0003,Compliant
+CMO0989,Pro Chem Group,SP0421,Probation
+CMO0990,Life Medicines Holdings,SP0416,Probation
+CMO0991,Med Tech Holdings,SP0082,Pending Renewal
+CMO0992,Health Biologics Inc,SP0348,Compliant
+CMO0993,Tech-Chem AG,SP0478,Certified
+CMO0994,Pharma Systems Technologies,SP0086,Pending Renewal
+CMO0995,Pro Group,SP0090,Pending Renewal
+CMO0996,TheraGenetics AG,SP0497,Probation
+CMO0997,TheraSolutions Technologies,SP0409,Probation
+CMO0998,Biologics Gen Therapeutics,SP0199,Probation
+CMO0999,Solutions Gen Group,SP0352,Compliant
+CMO1000,Pharma Medical Laboratories,SP0423,Pending Renewal
