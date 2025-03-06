@@ -250,13 +250,13 @@ export default function ReferenceTypesPage() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingType ? "Edit Reference Data Type" : "Create New Reference Data Type"}
-                  </DialogTitle>
-                </DialogHeader>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingType ? "Edit Reference Data Type" : "Create New Reference Data Type"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField
                       control={form.control}
                       name="name"
@@ -380,10 +380,11 @@ export default function ReferenceTypesPage() {
                       )}
                       {editingType ? "Update Reference Data Type" : "Create Reference Data Type"}
                     </Button>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            </div>
           </CardHeader>
           <CardContent>
             <Table>
