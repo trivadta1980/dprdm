@@ -4,7 +4,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, Database, ArrowLeft, Edit, Plus, Save, X, Trash2 } from "lucide-react";
+import { Loader2, Database, ArrowLeft, Edit, Plus, Save, X, Trash2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,7 @@ export default function ReferenceTypesListPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [referenceTypes, setReferenceTypes] = useState<ReferenceDataType[]>([]);
   const [schemasMap, setSchemasMap] = useState<{ [key: number]: ReferenceDataTypeSchema[] }>({});
   const [totalSchemas, setTotalSchemas] = useState(0);
@@ -58,57 +59,89 @@ export default function ReferenceTypesListPage() {
   // Fetch data function
   const fetchData = async () => {
     try {
+      console.log("Reference-types-list-page: Starting data fetch");
       setIsLoading(true);
+      
       // Fetch reference types
+      console.log("Reference-types-list-page: Fetching reference types");
       const typesResponse = await fetch('/api/reference-types');
       if (!typesResponse.ok) {
-        throw new Error(`Failed to fetch reference types: ${typesResponse.statusText}`);
+        throw new Error(`Failed to fetch reference types: ${typesResponse.status} ${typesResponse.statusText}`);
       }
+      
       const types = await typesResponse.json();
+      console.log("Reference-types-list-page: Received types data:", types);
       setReferenceTypes(types);
       
+      if (!Array.isArray(types) || types.length === 0) {
+        console.log("Reference-types-list-page: No types found or invalid format");
+        setSchemasMap({});
+        setTotalSchemas(0);
+        setIsLoading(false);
+        return;
+      }
+      
       // Fetch schemas for each type
+      console.log("Reference-types-list-page: Fetching schemas for each type");
       const schemasData: { [key: number]: ReferenceDataTypeSchema[] } = {};
       let schemaCount = 0;
       
       for (const type of types) {
         try {
+          console.log(`Reference-types-list-page: Fetching schemas for type ${type.id}: ${type.name}`);
           const schemaResponse = await fetch(`/api/reference-types/${type.id}/schemas`);
+          
           if (!schemaResponse.ok) {
-            throw new Error(`Failed to fetch schemas for type ${type.id}: ${schemaResponse.statusText}`);
+            console.error(`Error fetching schemas for type ${type.id}: ${schemaResponse.status} ${schemaResponse.statusText}`);
+            throw new Error(`Failed to fetch schemas: ${schemaResponse.statusText}`);
           }
+          
           const schemas = await schemaResponse.json();
-          schemasData[type.id] = schemas;
-          schemaCount += schemas.length;
-          console.log(`Fetched ${schemas.length} schemas for type ${type.name} (ID: ${type.id})`);
+          console.log(`Reference-types-list-page: Received ${schemas.length} schemas for type ${type.name} (ID: ${type.id})`, schemas);
+          
+          if (!Array.isArray(schemas)) {
+            console.error(`Unexpected schema data format for type ${type.id}:`, schemas);
+            schemasData[type.id] = [];
+          } else {
+            schemasData[type.id] = schemas;
+            schemaCount += schemas.length;
+          }
         } catch (error) {
           console.error(`Error fetching schemas for type ${type.id}:`, error);
           schemasData[type.id] = [];
-          toast({
-            title: "Error",
-            description: `Failed to fetch schemas for ${type.name}`,
-            variant: "destructive",
-          });
         }
       }
       
+      console.log("Reference-types-list-page: Setting schemas map:", schemasData);
+      console.log("Reference-types-list-page: Total schemas:", schemaCount);
       setSchemasMap(schemasData);
       setTotalSchemas(schemaCount);
+      
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Reference-types-list-page: Error fetching data:", error);
       toast({
         title: "Error",
         description: "Failed to fetch reference types",
         variant: "destructive",
       });
+      throw error; // Re-throw to be caught by the effect
     } finally {
       setIsLoading(false);
     }
   };
   
   useEffect(() => {
-    fetchData();
-  }, [toast]);
+    console.log("Reference-types-list-page: Component mounted, fetching data...");
+    fetchData().catch(error => {
+      console.error("Error in fetchData effect:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load data. Please try refreshing the page.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    });
+  }, []);
 
   // Start editing a type
   const handleEdit = (type: ReferenceDataType) => {
@@ -276,7 +309,45 @@ export default function ReferenceTypesListPage() {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-[200px]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">Loading reference types...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="max-w-6xl mx-auto space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Reference Data Types List</CardTitle>
+              <Button variant="outline" onClick={() => setLocation("/reference-types")}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Reference Types
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="p-6 text-center">
+                <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Error Loading Data</h3>
+                <p className="text-muted-foreground mb-4">{error}</p>
+                <Button onClick={() => {
+                  setError(null);
+                  setIsLoading(true);
+                  fetchData().catch(e => {
+                    setError(e.message || "Failed to load data");
+                    setIsLoading(false);
+                  });
+                }}>
+                  Try Again
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </MainLayout>
     );
