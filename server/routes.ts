@@ -487,11 +487,11 @@ app.get('/api/graph/visualization', async (req, res) => {
       });
 
       console.log('POST /api/reference-data/:id/bulk-upload - Upload complete. Dataset updated with data:', updatedDataSet.data); //Added logging
-      res.json(updatedDataSet);
-    } catch (error) {
-      console.error('POST /api/reference-data/:id/bulk-upload - Error processing bulk upload:', error); //Added logging
-      res.status(500).json({ error: String(error) });
-    }
+        res.json(updatedDataSet);
+      } catch (error) {
+        console.error('POST /api/reference-data/:id/bulk-upload - Error processing bulk upload:', error); //Added logging
+        res.status(500).json({ error: String(error) });
+      }
   });
 
   app.patch("/api/reference-data/:id", async (req, res) => {
