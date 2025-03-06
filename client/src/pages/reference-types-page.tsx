@@ -249,6 +249,10 @@ export default function ReferenceTypesPage() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Reference Data Types</CardTitle>
             <div className="flex space-x-2">
+              <Button variant="outline" onClick={() => setLocation("/reference-types-list")}>
+                <Database className="h-4 w-4 mr-2" />
+                View Types List
+              </Button>
               <Button variant="outline" onClick={() => setLocation("/reference-types-debug")}>
                 <Database className="h-4 w-4 mr-2" />
                 Debug Schemas

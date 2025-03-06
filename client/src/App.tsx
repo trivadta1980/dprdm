@@ -7,7 +7,8 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import ProtectedRoute from "@/lib/protected-route";
 import DebugPanel from '@/pages/debug-panel';
-import ReferenceTypesDebugPage from "./pages/reference-types-debug"; // Added import
+import ReferenceTypesDebugPage from "./pages/reference-types-debug";
+import ReferenceTypesListPage from "./pages/reference-types-list-page"; // Added import
 
 
 // Lazy load pages
@@ -56,6 +57,11 @@ export default function App() {
               <Route path="/reference-types">
                 <ProtectedRoute>
                   <ReferenceTypesPage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/reference-types-list"> {/* Added route for new Reference Types List page */}
+                <ProtectedRoute>
+                  <ReferenceTypesListPage />
                 </ProtectedRoute>
               </Route>
               <Route path="/reference-types-debug"> {/* Added route for debug page */}
