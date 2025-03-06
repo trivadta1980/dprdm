@@ -477,9 +477,9 @@ app.get('/api/graph/visualization', async (req, res) => {
         }
 
         console.log('POST /api/reference-data/:id/bulk-upload - Updating dataset with records count:', records.length);
-
-      // Update data set with new instances
-      const updatedDataSet = await storage.updateReferenceDataSet(dataSetId, {
+        
+        // Update data set with new instances
+        const updatedDataSet = await storage.updateReferenceDataSet(dataSetId, {
         data: records.reduce((acc, record, index) => {
           acc[`instance_${index + 1}`] = record;
           return acc;
