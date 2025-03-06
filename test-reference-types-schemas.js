@@ -59,76 +59,72 @@ async function testReferenceTypeSchemas() {
   });
   
   try {
-    // Get all reference types to find a valid ID
-    const typesResult = await pool.query('SELECT id, name FROM reference_data_types LIMIT 1');
+    // Get total schema count
+    const totalSchemasResult = await pool.query('SELECT COUNT(*) FROM reference_data_type_schemas');
+    const totalSchemas = parseInt(totalSchemasResult.rows[0].count, 10);
+    console.log(`Total schemas in database: ${totalSchemas}`);
     
-    if (typesResult.rows.length === 0) {
-      console.log('No reference types found in database. Creating a test reference type...');
+    // Get all reference types to test with
+    const typesResult = await pool.query('SELECT id, name FROM reference_data_types ORDER BY id');
+    console.log(`Found ${typesResult.rows.length} reference types in database`);
+    
+    let totalSchemasFetched = 0;
+    
+    // Test all reference types
+    for (const type of typesResult.rows) {
+      console.log(`\n------ Testing reference type: ${type.name} (ID: ${type.id}) ------`);
       
-      // Create a test reference type if none exists
-      const createTypeResponse = await fetch('http://0.0.0.0:5000/api/reference-types', {
-        method: 'POST',
+      // Check schemas directly in database
+      const dbSchemasResult = await pool.query(
+        'SELECT * FROM reference_data_type_schemas WHERE reference_data_type_id = $1', 
+        [type.id]
+      );
+      console.log(`Database has ${dbSchemasResult.rows.length} schemas for this type`);
+      
+      // Test the API endpoint
+      const response = await fetch(`http://0.0.0.0:5000/api/reference-types/${type.id}/schemas`, {
         headers: {
-          'Content-Type': 'application/json',
           'Cookie': cookies
-        },
-        body: JSON.stringify({
-          name: 'Test Type',
-          description: 'Created for testing',
-          schemas: [
-            { name: 'code', dataType: 'string', description: 'Test code' },
-            { name: 'name', dataType: 'string', description: 'Test name' }
-          ]
-        })
+        }
       });
       
-      if (!createTypeResponse.ok) {
-        console.error('Failed to create test reference type:', await createTypeResponse.text());
-        return;
-      }
+      console.log('API Response status:', response.status);
       
-      const createdType = await createTypeResponse.json();
-      console.log('Created test reference type:', createdType);
-      var typeId = createdType.id;
-      var typeName = createdType.name;
-    } else {
-      var typeId = typesResult.rows[0].id;
-      var typeName = typesResult.rows[0].name;
-    }
-    
-    console.log(`Testing endpoint for reference type: ${typeName} (ID: ${typeId})`);
-    
-    // Check schemas directly in database
-    const dbSchemasResult = await pool.query(
-      'SELECT * FROM reference_data_type_schemas WHERE reference_data_type_id = $1', 
-      [typeId]
-    );
-    console.log(`Found ${dbSchemasResult.rows.length} schemas in database for this type`);
-    
-    // Test the API endpoint
-    const response = await fetch(`http://0.0.0.0:5000/api/reference-types/${typeId}/schemas`, {
-      headers: {
-        'Cookie': cookies
-      }
-    });
-    
-    console.log('API Response status:', response.status);
-    
-    if (response.ok) {
-      const schemas = await response.json();
-      console.log(`API returned ${schemas.length} schemas`);
-      console.log('Schemas from API:', JSON.stringify(schemas, null, 2));
-      
-      // Compare with database results
-      if (schemas.length === dbSchemasResult.rows.length) {
-        console.log('✅ Success! API response matches database record count.');
+      if (response.ok) {
+        const schemas = await response.json();
+        console.log(`API returned ${schemas.length} schemas`);
+        totalSchemasFetched += schemas.length;
+        
+        // Compare with database results
+        if (schemas.length === dbSchemasResult.rows.length) {
+          console.log('✅ Success! API response matches database record count.');
+        } else {
+          console.log('❌ Error: API response count does not match database record count.');
+          console.log(`   API: ${schemas.length}, Database: ${dbSchemasResult.rows.length}`);
+        }
+        
+        // Show schema details
+        if (schemas.length > 0) {
+          console.log('Schema names:');
+          schemas.forEach(schema => {
+            console.log(`- ${schema.name} (${schema.dataType})`);
+          });
+        }
       } else {
-        console.log('❌ Error: API response count does not match database record count.');
-        console.log(`   API: ${schemas.length}, Database: ${dbSchemasResult.rows.length}`);
+        console.error('❌ API returned error:', response.status, await response.text());
       }
-    } else {
-      console.error('❌ API returned error:', response.status, await response.text());
     }
+    
+    console.log(`\n===== Summary =====`);
+    console.log(`Total schemas in database: ${totalSchemas}`);
+    console.log(`Total schemas fetched via API: ${totalSchemasFetched}`);
+    if (totalSchemas === totalSchemasFetched) {
+      console.log('✅ All schemas successfully retrieved via API');
+    } else {
+      console.log('❌ Missing schemas: API returned fewer schemas than exist in database');
+      console.log(`   Missing count: ${totalSchemas - totalSchemasFetched}`);
+    }
+    
   } catch (error) {
     console.error('Test error:', error);
   } finally {
