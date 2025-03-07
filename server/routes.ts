@@ -1271,3 +1271,241 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   return httpServer;
 }
+
+// Add CSV Mapping Configuration routes
+  app.get("/api/csv-mappings", async (req, res) => {
+    console.log('GET /api/csv-mappings - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/csv-mappings - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const configs = await storage.getAllCsvMappingConfigs();
+      console.log('GET /api/csv-mappings - Configs fetched successfully');
+      res.json(configs);
+    } catch (error) {
+      console.error('GET /api/csv-mappings - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.post("/api/csv-mappings", async (req, res) => {
+    console.log('POST /api/csv-mappings - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/csv-mappings - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const result = insertCsvMappingConfigSchema.safeParse(req.body);
+      if (!result.success) {
+        console.log('POST /api/csv-mappings - Invalid data:', result.error);
+        return res.status(400).json(result.error);
+      }
+
+      const config = await storage.createCsvMappingConfig(result.data);
+      console.log('POST /api/csv-mappings - Config created successfully');
+      res.status(201).json(config);
+    } catch (error) {
+      console.error('POST /api/csv-mappings - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.get("/api/csv-mappings/:id", async (req, res) => {
+    console.log('GET /api/csv-mappings/:id - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/csv-mappings/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const config = await storage.getCsvMappingConfig(Number(req.params.id));
+      if (config) {
+        console.log('GET /api/csv-mappings/:id - Config found');
+        res.json(config);
+      } else {
+        console.log('GET /api/csv-mappings/:id - Config not found');
+        res.sendStatus(404);
+      }
+    } catch (error) {
+      console.error('GET /api/csv-mappings/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.patch("/api/csv-mappings/:id", async (req, res) => {
+    console.log('PATCH /api/csv-mappings/:id - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('PATCH /api/csv-mappings/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const config = await storage.updateCsvMappingConfig(
+        Number(req.params.id),
+        req.body
+      );
+      console.log('PATCH /api/csv-mappings/:id - Config updated successfully');
+      res.json(config);
+    } catch (error) {
+      console.error('PATCH /api/csv-mappings/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.delete("/api/csv-mappings/:id", async (req, res) => {
+    console.log('DELETE /api/csv-mappings/:id - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('DELETE /api/csv-mappings/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const success = await storage.deleteCsvMappingConfig(Number(req.params.id));
+      if (success) {
+        console.log('DELETE /api/csv-mappings/:id - Config deleted successfully');
+        res.sendStatus(200);
+      } else {
+        console.log('DELETE /api/csv-mappings/:id - Config not found');
+        res.sendStatus(404);
+      }
+    } catch (error) {
+      console.error('DELETE /api/csv-mappings/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  // Field Mapping routes
+  app.get("/api/csv-mappings/:id/fields", async (req, res) => {
+    console.log('GET /api/csv-mappings/:id/fields - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/csv-mappings/:id/fields - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const mappings = await storage.getCsvFieldMappings(Number(req.params.id));
+      console.log('GET /api/csv-mappings/:id/fields - Mappings fetched successfully');
+      res.json(mappings);
+    } catch (error) {
+      console.error('GET /api/csv-mappings/:id/fields - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.post("/api/csv-mappings/:id/fields", async (req, res) => {
+    console.log('POST /api/csv-mappings/:id/fields - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/csv-mappings/:id/fields - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const result = insertCsvFieldMappingSchema.safeParse({
+        ...req.body,
+        configId: Number(req.params.id)
+      });
+
+      if (!result.success) {
+        console.log('POST /api/csv-mappings/:id/fields - Invalid data:', result.error);
+        return res.status(400).json(result.error);
+      }
+
+      const mapping = await storage.createCsvFieldMapping(result.data);
+      console.log('POST /api/csv-mappings/:id/fields - Mapping created successfully');
+      res.status(201).json(mapping);
+    } catch (error) {
+      console.error('POST /api/csv-mappings/:id/fields - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  // CSV Header Analysis endpoint
+  app.post("/api/csv-mappings/analyze", upload.single("file"), async (req, res) => {
+    console.log('POST /api/csv-mappings/analyze - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/csv-mappings/analyze - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      // Parse CSV to get headers
+      const parser = parse({
+        delimiter: ',',
+        from_line: 1,
+        to_line: 1
+      });
+
+      let headers: string[] = [];
+
+      await new Promise<void>((resolve, reject) => {
+        parser.on('readable', function() {
+          let record;
+          while ((record = parser.read()) !== null) {
+            headers = record;
+          }
+        });
+
+        parser.on('error', (error) => {
+          console.error('CSV parsing error:', error);
+          reject(error);
+        });
+
+        parser.on('end', () => {
+          resolve();
+        });
+
+        parser.write(file.buffer);
+        parser.end();
+      });
+
+      console.log('POST /api/csv-mappings/analyze - Headers extracted:', headers);
+      res.json({ headers });
+    } catch (error) {
+      console.error('POST /api/csv-mappings/analyze - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  // Attribute Mapping routes
+  app.get("/api/csv-mappings/:id/attributes", async (req, res) => {
+    console.log('GET /api/csv-mappings/:id/attributes - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/csv-mappings/:id/attributes - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const mappings = await storage.getCsvAttributeMappings(Number(req.params.id));
+      console.log('GET /api/csv-mappings/:id/attributes - Mappings fetched successfully');
+      res.json(mappings);
+    } catch (error) {
+      console.error('GET /api/csv-mappings/:id/attributes - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.post("/api/csv-mappings/:id/attributes", async (req, res) => {
+    console.log('POST /api/csv-mappings/:id/attributes - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/csv-mappings/:id/attributes - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const result = insertCsvAttributeMappingSchema.safeParse({
+        ...req.body,
+        configId: Number(req.params.id)
+      });
+
+      if (!result.success) {
+        console.log('POST /api/csv-mappings/:id/attributes - Invalid data:', result.error);
+        return res.status(400).json(result.error);
+      }
+
+      const mapping = await storage.createCsvAttributeMapping(result.data);
+      console.log('POST /api/csv-mappings/:id/attributes - Mapping created successfully');
+      res.status(201).json(mapping);
+    } catch (error) {
+      console.error('POST /api/csv-mappings/:id/attributes - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });

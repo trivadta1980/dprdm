@@ -17,6 +17,8 @@ import { type RelationshipAttributeDefinition, type InsertRelationshipAttributeD
 import { relationshipAttributeDefinitions } from "@shared/schema";
 import { type RelationshipAttributeValue, type InsertRelationshipAttributeValue } from "@shared/schema";
 import { relationshipAttributeValues } from "@shared/schema";
+import { type CsvMappingConfig, type InsertCsvMappingConfig, type CsvFieldMapping, type InsertCsvFieldMapping, type CsvAttributeMapping, type InsertCsvAttributeMapping } from '@shared/schema'; //Import necessary types for CSV Mapping
+import { csvMappingConfigs, csvFieldMappings, csvAttributeMappings } from '@shared/schema'; //Import necessary tables for CSV Mapping
 
 
 const PostgresSessionStore = connectPg(session);
@@ -119,6 +121,25 @@ export interface IStorage {
   getRelationshipAttributeValues(relationshipValueId: number): Promise<RelationshipAttributeValue[]>;
   updateRelationshipAttributeValue(id: number, value: Partial<InsertRelationshipAttributeValue>): Promise<RelationshipAttributeValue>;
   deleteRelationshipAttributeValue(id: number): Promise<boolean>;
+
+  // CSV Mapping Configuration methods
+  createCsvMappingConfig(config: InsertCsvMappingConfig): Promise<CsvMappingConfig>;
+  getCsvMappingConfig(id: number): Promise<CsvMappingConfig | undefined>;
+  getAllCsvMappingConfigs(): Promise<CsvMappingConfig[]>;
+  updateCsvMappingConfig(id: number, config: Partial<InsertCsvMappingConfig>): Promise<CsvMappingConfig>;
+  deleteCsvMappingConfig(id: number): Promise<boolean>;
+
+  // CSV Field Mapping methods
+  createCsvFieldMapping(mapping: InsertCsvFieldMapping): Promise<CsvFieldMapping>;
+  getCsvFieldMappings(configId: number): Promise<CsvFieldMapping[]>;
+  updateCsvFieldMapping(id: number, mapping: Partial<InsertCsvFieldMapping>): Promise<CsvFieldMapping>;
+  deleteCsvFieldMapping(id: number): Promise<boolean>;
+
+  // CSV Attribute Mapping methods
+  createCsvAttributeMapping(mapping: InsertCsvAttributeMapping): Promise<CsvAttributeMapping>;
+  getCsvAttributeMappings(configId: number): Promise<CsvAttributeMapping[]>;
+  updateCsvAttributeMapping(id: number, mapping: Partial<InsertCsvAttributeMapping>): Promise<CsvAttributeMapping>;
+  deleteCsvAttributeMapping(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -869,6 +890,122 @@ export class DatabaseStorage implements IStorage {
       .where(eq(relationshipAttributeValues.id, id))
       .returning();
     return !!attributeValue;
+  }
+
+  // CSV Mapping Configuration methods
+  async createCsvMappingConfig(config: InsertCsvMappingConfig): Promise<CsvMappingConfig> {
+    const [mappingConfig] = await db
+      .insert(csvMappingConfigs)
+      .values(config)
+      .returning();
+    return mappingConfig;
+  }
+
+  async getCsvMappingConfig(id: number): Promise<CsvMappingConfig | undefined> {
+    const [config] = await db
+      .select()
+      .from(csvMappingConfigs)
+      .where(eq(csvMappingConfigs.id, id));
+    return config;
+  }
+
+  async getAllCsvMappingConfigs(): Promise<CsvMappingConfig[]> {
+    return db.select().from(csvMappingConfigs);
+  }
+
+  async updateCsvMappingConfig(
+    id: number,
+    updates: Partial<InsertCsvMappingConfig>
+  ): Promise<CsvMappingConfig> {
+    const [config] = await db
+      .update(csvMappingConfigs)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(csvMappingConfigs.id, id))
+      .returning();
+    return config;
+  }
+
+  async deleteCsvMappingConfig(id: number): Promise<boolean> {
+    const [config] = await db
+      .delete(csvMappingConfigs)
+      .where(eq(csvMappingConfigs.id, id))
+      .returning();
+    return !!config;
+  }
+
+  // CSV Field Mapping methods
+  async createCsvFieldMapping(mapping: InsertCsvFieldMapping): Promise<CsvFieldMapping> {
+    const [fieldMapping] = await db
+      .insert(csvFieldMappings)
+      .values(mapping)
+      .returning();
+    return fieldMapping;
+  }
+
+  async getCsvFieldMappings(configId: number): Promise<CsvFieldMapping[]> {
+    return db
+      .select()
+      .from(csvFieldMappings)
+      .where(eq(csvFieldMappings.configId, configId));
+  }
+
+  async updateCsvFieldMapping(
+    id: number,
+    updates: Partial<InsertCsvFieldMapping>
+  ): Promise<CsvFieldMapping> {
+    const [mapping] = await db
+      .update(csvFieldMappings)
+      .set(updates)
+      .where(eq(csvFieldMappings.id, id))
+      .returning();
+    return mapping;
+  }
+
+  async deleteCsvFieldMapping(id: number): Promise<boolean> {
+    const [mapping] = await db
+      .delete(csvFieldMappings)
+      .where(eq(csvFieldMappings.id, id))
+      .returning();
+    return !!mapping;
+  }
+
+  // CSV Attribute Mapping methods
+  async createCsvAttributeMapping(mapping: InsertCsvAttributeMapping): Promise<CsvAttributeMapping> {
+    const [attributeMapping] = await db
+      .insert(csvAttributeMappings)
+      .values(mapping)
+      .returning();
+    return attributeMapping;
+  }
+
+  async getCsvAttributeMappings(configId: number): Promise<CsvAttributeMapping[]> {
+    return db
+      .select()
+      .from(csvAttributeMappings)
+      .where(eq(csvAttributeMappings.configId, configId));
+  }
+
+  async updateCsvAttributeMapping(
+    id: number,
+    updates: Partial<InsertCsvAttributeMapping>
+  ): Promise<CsvAttributeMapping> {
+    const [mapping] = await db
+      .update(csvAttributeMappings)
+      .set(updates)
+      .where(eq(csvAttributeMappings.id, id))
+      .returning();
+    return mapping;
+  }
+
+  async deleteCsvAttributeMapping(id: number): Promise<boolean> {
+    const [mapping] = await db
+      .delete(csvAttributeMappings)
+      .where(eq(csvAttributeMappings.id, id))
+      .returning();
+    return !!mapping;
   }
 }
 
