@@ -1,0 +1,195 @@
+Site_ID,Site_Name,Site_Type
+SITE_0001,3rd Party Commercial Distribution Facility (Supplier of EU Released Commercial Drug Product),API
+SITE_0002,Acnos (Interim Distribution Facility) - Global,API
+SITE_0003,"Catalent Pharma Solutions Inc. - Madison, WI US",API
+SITE_0004,BioReliance - Glasgow UK,API
+SITE_0005,BioReliance - Rockville MD US,API
+SITE_0006,"Signma-Aldrich Manufacturing LLC - St. Louis, MO US",API
+SITE_0007,"Fujifilm Diosynth Biotechnoligies College Station, TX",API
+SITE_0008,Seripharm SAS Novasep - Le Mans FR,API
+SITE_0009,"Fujifilm Diosynth Biotechnoligies, England",API
+SITE_0010,"SAFC Inc. - Verona, WI US",API
+SITE_0011,"Boston Analytial Inc. - Salem, NH US",API
+SITE_0012,"SAFC Inc. - Madison, WI US",API
+SITE_0013,"Eurofins BioPharma, Columbia , USA",API
+SITE_0014,"Eurofins Lancaster Laboratories, Inc. - Lancaster, PA US",API
+SITE_0015,Zymeworks Inc.,API
+SITE_0016,Ampac Fine Chemicals LLC,API
+SITE_0017,Patheon Inc. - Mississauga ON CA,DP
+SITE_0018,Baxter Oncology GmbH - Westfalen DE,API
+SITE_0019,"Signma-Aldrich Manufacturing LLC - St. Louis, MO US",DP
+SITE_0020,"Eurofins Lancaster Laboratories, Inc. - Lancaster, PA US",DP
+SITE_0021,"Bristol-Myers Squibb Holdings Pharma, Ltd.",API
+SITE_0022,"Bristol-Myers Squibb Holdings Pharma, Ltd. Liability Company",DP
+SITE_0023,Catalent CTS Llc - Kansas City MO US,API
+SITE_0024,Catalent CTS Llc - Kansas City MO US,DP
+SITE_0025,"Eurofins Advinus Limited Bagalore, India",API
+SITE_0026,Quotient Sciences LLC - Boothwyn PA US,DP
+SITE_0027,Recipharm Pharmaservices Pvt Ltd - Bengaluru IN,DP
+SITE_0028,Quotient Sciences LLC - Garnet Valley PA US,DP
+SITE_0029,F.Hoffmann La Roche Ltd - Grezacherstrass Basel CH,API
+SITE_0030,F.Hoffmann La Roche Ltd. - Kaiseraugst CH,DP
+SITE_0031,Roche Diagonistics GmbH - Mannheim DE,DP
+SITE_0032,Lonza Bend Inc - Bend OR US,API
+SITE_0033,Lonza Bend Inc - Bend OR US,DP
+SITE_0034,Merck Serano S.A. Succurasale de Corsier-sur-Vevey,API
+SITE_0035,Merck Serano S.A. Succurasale d'Aubonne,DP
+SITE_0036,"NextPharma - Scotland, UK",API
+SITE_0037,"NextPharma - Scotland, UK",DP
+SITE_0038,Pharmaron Tianjin Process Development and Manufacturing Co. LTD.,API
+SITE_0039,Patheon Development Service Inc.,DP
+SITE_0040,Piramal Healthcare LTD - Aurora CA,API
+SITE_0041,Samsung BioLogics Company Ltd - Incheon City KR,API
+SITE_0042,Baxter Pharmaceutical Solutions - Bloomington IN US,DP
+SITE_0043,Baxter Oncology GmbH - Westfalen DE,DP
+SITE_0044,"WUXI STA - Shanghai, CN",API
+SITE_0045,Pharmaron Ningbo Technology Development Co Ltd - Hangzhou CN,DP
+SITE_0046,3rd Party Commercial Distribution Facility - Acnos Brazil Source,DP
+SITE_0047,Acnos (Interim Distribution Facility) - Brazil Source,DP
+SITE_0048,3rd Party Commercial Distribution Facility - Acnos EU Source,DP
+SITE_0049,Acnos (Interim Distribution Facility) - EU Source,DP
+SITE_0050,3rd Party Commercial Distribution Facility - Acnos Global Source,DP
+SITE_0051,Acnos (Interim Distribution Facility) - Global,DP
+SITE_0052,3rd Party Commercial Distribution Facility - Acnos India Source,DP
+SITE_0053,Acnos (Interim Distribution Facility) - India Source,DP
+SITE_0054,3rd Party Commercial Distribution Facility - Acnos Mexico Source,DP
+SITE_0055,Acnos (Interim Distribution Facility) - Mexico Source,DP
+SITE_0056,3rd Party Commercial Distribution Facility - Acnos US Source,DP
+SITE_0057,Acnos (Interim Distribution Facility) - US Source,DP
+SITE_0058,3rd Party Commercial Distribution Facility - FCS Brazil Source,DP
+SITE_0059,3rd Party Commercial Distribution Facility - FCS EU Source,DP
+SITE_0060,Fisher Clinical Services (Interim Distribution Facility) - EU Source,DP
+SITE_0061,3rd Party Commercial Distribution Facility - FCS Global Source,DP
+SITE_0062,Fisher Clinical Services (Interim Distribution Facility) - Global Source,DP
+SITE_0063,3rd Party Commercial Distribution Facility - FCS India Source,DP
+SITE_0064,3rd Party Commercial Distribution Facility - FCS Mexico Source,DP
+SITE_0065,3rd Party Commercial Distribution Facility - FCS US Source,DP
+SITE_0066,Fisher Clinical Services (Interim Distribution Facility) - US Source,DP
+SITE_0067,"Eurofins BioPharma, Columbia , USA",DP
+SITE_0068,Yourway Transport BioPharma Services - Allentown PA US,DP
+SITE_0069,PCI Pharma Services - West Chester OH US,DP
+SITE_0070,Almac Clinical Services - Craigavon UK,DP
+SITE_0071,Lonza Bend Inc - Tampa FL US,DP
+SITE_0072,PCI Pharma Services - Burlington ON CA,DP
+SITE_0073,Aurigene Discovery Technologies Limited - Bengaluru IN,DP
+SITE_0074,Genetech Inc -  South San Francisco CA US,DP
+SITE_0075,PCI Pharma Services GmbH - GroBbeeren DE,PL
+SITE_0076,Acnos (Interim Distribution Facility) - US Source,API
+SITE_0077,Fisher Clinical Services - Allentown PA US,PL
+SITE_0078,Fisher Clinical Services (Interim Distribution Facility) - Global Source,PL
+SITE_0079,Fisher Clinical Services - Rheinfelden DE,PL
+SITE_0080,Fisher Clinical Services - Basel Steinbuehlweg CH,PL
+SITE_0081,Fisher Clinical Services - Horsham UK,PL
+SITE_0082,Almac Clinical Services - Craigavon UK,PL
+SITE_0083,Biotec Services International Ltd dba PCI Pharma Services - Bridgend UK,PL
+SITE_0084,PCI Pharma Services - West Chester OH US,PL
+SITE_0085,PCI Pharma Services - Rockford IL US,PL
+SITE_0086,Almac Clinical Services - Souderton US,PL
+SITE_0087,PCI Pharma Services - San Diego CA US,PL
+SITE_0088,Catalent CTS Llc - Kansas City MO US,PL
+SITE_0089,PCI Pharma Services - Burlington ON CA,PL
+SITE_0090,Fisher Clinical Services - Rheinfelden DE,DP
+SITE_0091,Almac Clinical Services - Dundalk IE,PL
+SITE_0092,Parexel Depot - Suzhou CN,PL
+SITE_0093,Yourway Transport BioPharma Services - Allentown PA US,PL
+SITE_0094,PCI Pharma Services - West Chester OH US,SD
+SITE_0095,Almac Clinical Services - Craigavon UK,SD
+SITE_0096,Tamro - Vantaa FI,SD
+SITE_0097,World Courier - Buenos Aires AR,SD
+SITE_0098,World Courier - Mexico City MX,SD
+SITE_0099,Almac Pharmceutical Services Pte. Ltd. - Singapore,SD
+SITE_0100,World Courier - Sao Paulo BR,SD
+SITE_0101,World Courier - Santiago CL,SD
+SITE_0102,World Courier - Moskva RU,SD
+SITE_0103,Trialog Clinical Trials Ltd - Modiin IL,SD
+SITE_0104,Almac Clinical Services - Souderton US,SD
+SITE_0105,"ABC Pharmalogistics, LTD - Tbilisi GE",SD
+SITE_0106,IMP Logistics  - Kyiv UA,SD
+SITE_0107,Almac Clinical Services - Dundalk IE,SD
+SITE_0108,Zuellig Pharma - Phillippines,SD
+SITE_0109,World Courier - Tokyo JP,SD
+SITE_0110,Almac Pharmceutical Services Pte. Ltd. - Singapore,PL
+SITE_0111,PCI Pharma Services - San Diego CA US,SD
+SITE_0112,PCI Pharma Services - Rockford IL US,SD
+SITE_0113,PCI Pharma Services GmbH - GroBbeeren DE,SD
+SITE_0114,PCI Pharma Services - Melbourne AU,SD
+SITE_0115,Biotec Services International Ltd dba PCI Pharma Services - Bridgend UK,SD
+SITE_0116,Catalent Germany Schorndorf GmbH - Schorndorf DE,SD
+SITE_0117,World Courier - Australia,SD
+SITE_0118,Catalent CTS Llc - Kansas City MO US,SD
+SITE_0119,Catalent Pharma Solutions Singapore,SD
+SITE_0120,Fisher Clinical Services - Colombia,SD
+SITE_0121,Fisher Clinical Services - Brazil,SD
+SITE_0122,Fisher Clinical Services - Argentina,SD
+SITE_0123,Fisher Clinical Services - Allentown PA US,SD
+SITE_0124,Fisher Clinical Services - Chile,SD
+SITE_0125,Fisher Clinical Services - Horsham UK,SD
+SITE_0126,Cryosite - New South Wales AU,SD
+SITE_0127,Fisher Clinical Services - Singapore,SD
+SITE_0128,Fisher Clinical Services - Turkey,SD
+SITE_0129,Fisher Clinical Services - Rheinfelden DE,SD
+SITE_0130,Fisher Clinical Services - Mexico,SD
+SITE_0131,Fisher Clinical Service - Russia,SD
+SITE_0132,Fisher Clinical Services - Weil am Rhein DE,SD
+SITE_0133,Fisher Clinical Services - India,SD
+SITE_0134,Fisher Clinical Services - Basel Steinbuehlweg CH,SD
+SITE_0135,"Paraxel International - Quakertown, PA",SD
+SITE_0136,PCI Pharma Services - Burlington ON CA,SD
+SITE_0137,Clinigen Clinical Supplies Management GmbH AM Kronberger Hang 3 Schwalback a. Ts. Germany,SD
+SITE_0138,World Courier - Singapore,SD
+SITE_0139,IMP Logistics Russia,SD
+SITE_0140,Avinex - Kyiv UA,SD
+SITE_0141,World Courier - Bogota CO,SD
+SITE_0142,Zuellig - China,SD
+SITE_0143,Quotient Sciences LLC - Boothwyn PA US,PL
+SITE_0144,Quotient Sciences LLC - Garnet Valley PA US,PL
+SITE_0145,Recipharm Pharmaservices Pvt Ltd - Bengaluru IN,PL
+SITE_0146,Sites in Georgia,Sites
+SITE_0147,Sites in France,Sites
+SITE_0148,Sites in Czechia,Sites
+SITE_0149,Sites in Bulgaria,Sites
+SITE_0150,Sites in Poland,Sites
+SITE_0151,Sites in Germany,Sites
+SITE_0152,Sites in Norway,Sites
+SITE_0153,Sites in Hungary,Sites
+SITE_0154,Sites in Austria,Sites
+SITE_0155,Sites in Denmark,Sites
+SITE_0156,Sites in Ireland,Sites
+SITE_0157,Sites in Netherlands,Sites
+SITE_0158,Sites in Italy,Sites
+SITE_0159,Sites in Belgium,Sites
+SITE_0160,Sites in United Kingdom of Great Britain and Northern Ireland,Sites
+SITE_0161,Sites in Portugal,Sites
+SITE_0162,Sites in Slovakia,Sites
+SITE_0163,Sites in Turkey,Sites
+SITE_0164,Sites in Switzerland,Sites
+SITE_0165,Sites in Sweden,Sites
+SITE_0166,Sites in Spain,Sites
+SITE_0167,Sites in Canada,Sites
+SITE_0168,Sites in United States of America,Sites
+SITE_0169,Sites in Republic of Korea,Sites
+SITE_0170,Sites in Hong Kong,Sites
+SITE_0171,Sites in Australia,Sites
+SITE_0172,Sites in Singapore,Sites
+SITE_0173,Sites in Taiwan,Sites
+SITE_0174,Sites in New Zealand,Sites
+SITE_0175,Sites in Ukraine,Sites
+SITE_0176,Sites in Croatia,Sites
+SITE_0177,Sites in Romania,Sites
+SITE_0178,"EORTC HGUS, ATLANTIS",Sites
+SITE_0179,Sites in Russian Federation,Sites
+SITE_0180,Sites in Argentina,Sites
+SITE_0181,Sites in Brazil,Sites
+SITE_0182,Sites in Chile,Sites
+SITE_0183,Sites in Colombia,Sites
+SITE_0184,Sites in India,Sites
+SITE_0185,Sites in Mexico,Sites
+SITE_0186,Sites in Finland,Sites
+SITE_0187,Sites in Greece,Sites
+SITE_0188,Sites in Thailand,Sites
+SITE_0189,Sites in Malaysia,Sites
+SITE_0190,"Sitess for IST, CETP",Sites
+SITE_0191,Sites in Israel,Sites
+SITE_0192,Sites in Japan,Sites
+SITE_0193,Sitess in China,Sites
+SITE_0194,Sites in Philippines,Sites

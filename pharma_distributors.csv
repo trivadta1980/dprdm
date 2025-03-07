@@ -1,0 +1,1001 @@
+Depot_ID,Name,Location,GDP Compliance
+DEPOT0001,Rapid Distribution,"Sydney, Australia",Pending Review
+DEPOT0002,Inter Distributors,"Paris, France",Certified
+DEPOT0003,Prime Rx International,"Mumbai, India",Certified
+DEPOT0004,Vital Rx Corp,"Shanghai, China",Provisional
+DEPOT0005,United-Meds Alliance,"São Paulo, Brazil",Pending Review
+DEPOT0006,National-Medical Logistics,"New York, USA",Compliant
+DEPOT0007,United-Pharma Logistics,"New York, USA",Provisional
+DEPOT0008,Direct-Health Services,"New York, USA",Certified
+DEPOT0009,GlobalHealthcare Partners,"Tokyo, Japan",Pending Review
+DEPOT0010,NationalLogistics Services,"Mumbai, India",Compliant
+DEPOT0011,Med-Care Co,"Madrid, Spain",Under Inspection
+DEPOT0012,ApexPharma Alliance,Singapore,Provisional
+DEPOT0013,TotalLife Logistics,"Shanghai, China",Compliant
+DEPOT0014,Pharma Inter Network,"Zurich, Switzerland",Certified
+DEPOT0015,Global-Medicine Group,"Tokyo, Japan",Provisional
+DEPOT0016,Direct-Health Supply Chain,"London, UK",Under Inspection
+DEPOT0017,Med Pharma Logistics,"Mumbai, India",Pending Review
+DEPOT0018,Allied Medicine Co,"Toronto, Canada",Certified
+DEPOT0019,Prime Corp,"Tokyo, Japan",Certified
+DEPOT0020,DirectDrug Network,"Toronto, Canada",Provisional
+DEPOT0021,Care Inc,"Amsterdam, Netherlands",Compliant
+DEPOT0022,ProHealth Corp,"Amsterdam, Netherlands",Under Inspection
+DEPOT0023,Metro International,"Toronto, Canada",Pending Review
+DEPOT0024,TotalRx Supply Chain,"Berlin, Germany",Compliant
+DEPOT0025,Rapid Co,"New York, USA",Provisional
+DEPOT0026,Total Drug Partners,"New York, USA",Compliant
+DEPOT0027,Total Distributors,Singapore,Under Inspection
+DEPOT0028,Med Partners,"Tokyo, Japan",Provisional
+DEPOT0029,Metro-Rx Partners,"Mumbai, India",Pending Review
+DEPOT0030,VitalLife Network,"Mumbai, India",Under Inspection
+DEPOT0031,Drug United Solutions,"Sydney, Australia",Pending Review
+DEPOT0032,Global-Healthcare Group,Singapore,Certified
+DEPOT0033,Total Network,"New York, USA",Under Inspection
+DEPOT0034,Apex Pharmacy Inc,"Amsterdam, Netherlands",Compliant
+DEPOT0035,Vital Inc,"Paris, France",Compliant
+DEPOT0036,Healthcare Allied Distribution,"Zurich, Switzerland",Certified
+DEPOT0037,National-Pharmacy Alliance,"Paris, France",Pending Review
+DEPOT0038,Total Corp,"Sydney, Australia",Under Inspection
+DEPOT0039,Pro Corp,"Toronto, Canada",Provisional
+DEPOT0040,Prime Partners,"Shanghai, China",Under Inspection
+DEPOT0041,MetroMedicine Inc,"Mumbai, India",Provisional
+DEPOT0042,Vital Partners,"Shanghai, China",Under Inspection
+DEPOT0043,Global Solutions,"Dubai, UAE",Provisional
+DEPOT0044,RapidMeds Distributors,"Toronto, Canada",Provisional
+DEPOT0045,Prime-Drug Network,"Paris, France",Compliant
+DEPOT0046,Vital-Health Distributors,"São Paulo, Brazil",Provisional
+DEPOT0047,Medicine Apex Co,"Shanghai, China",Under Inspection
+DEPOT0048,CareMeds Supply Chain,"Tokyo, Japan",Certified
+DEPOT0049,Pharmacy Rapid Solutions,"Amsterdam, Netherlands",Compliant
+DEPOT0050,PrimePharmacy Distribution,"Sydney, Australia",Provisional
+DEPOT0051,Supply Pro Partners,"Toronto, Canada",Pending Review
+DEPOT0052,ApexPharma Partners,"Sydney, Australia",Provisional
+DEPOT0053,Life Global Services,"Sydney, Australia",Certified
+DEPOT0054,Global Medical Alliance,"Amsterdam, Netherlands",Provisional
+DEPOT0055,Life Rapid Distribution,"Amsterdam, Netherlands",Provisional
+DEPOT0056,National-Wellness Network,"Tokyo, Japan",Compliant
+DEPOT0057,Inter Therapeutic Alliance,"New York, USA",Certified
+DEPOT0058,MetroTherapeutic Partners,"São Paulo, Brazil",Compliant
+DEPOT0059,InterHealth Network,"Sydney, Australia",Provisional
+DEPOT0060,Pharmacy United Solutions,Singapore,Pending Review
+DEPOT0061,Apex Alliance,"São Paulo, Brazil",Pending Review
+DEPOT0062,United-Drug Co,"Madrid, Spain",Compliant
+DEPOT0063,Prime Network,"Mumbai, India",Compliant
+DEPOT0064,Inter Group,"Dubai, UAE",Under Inspection
+DEPOT0065,Logistics Metro Corp,"Madrid, Spain",Pending Review
+DEPOT0066,Vital-Medical Co,"São Paulo, Brazil",Provisional
+DEPOT0067,AlliedMedical Services,"Zurich, Switzerland",Pending Review
+DEPOT0068,Rapid Medicine Group,"Sydney, Australia",Provisional
+DEPOT0069,VitalLife Services,"Tokyo, Japan",Provisional
+DEPOT0070,Med Life Services,"Sydney, Australia",Compliant
+DEPOT0071,CareLife Logistics,"Amsterdam, Netherlands",Pending Review
+DEPOT0072,Care Care Group,"Dubai, UAE",Provisional
+DEPOT0073,Therapeutic Allied Co,"Paris, France",Certified
+DEPOT0074,Life Prime Inc,"Toronto, Canada",Under Inspection
+DEPOT0075,Logistics Pro International,"Tokyo, Japan",Certified
+DEPOT0076,Vital Wellness LLC,"Zurich, Switzerland",Provisional
+DEPOT0077,Medicine Total Group,"Berlin, Germany",Under Inspection
+DEPOT0078,InterPharma Distributors,"Zurich, Switzerland",Under Inspection
+DEPOT0079,Direct-Health International,"Sydney, Australia",Certified
+DEPOT0080,CareSupply Group,Singapore,Under Inspection
+DEPOT0081,Med Medical Services,"São Paulo, Brazil",Under Inspection
+DEPOT0082,Allied Pharmacy Network,Singapore,Under Inspection
+DEPOT0083,Pro Care Partners,"São Paulo, Brazil",Pending Review
+DEPOT0084,MedMeds Solutions,"Tokyo, Japan",Certified
+DEPOT0085,Direct-Supply Corp,"Shanghai, China",Under Inspection
+DEPOT0086,Therapeutic Care Partners,"Shanghai, China",Compliant
+DEPOT0087,Global-Pharma Network,"London, UK",Provisional
+DEPOT0088,Medical Allied Partners,"New York, USA",Pending Review
+DEPOT0089,MedCare Services,"Tokyo, Japan",Provisional
+DEPOT0090,Direct Healthcare Supply Chain,"New York, USA",Pending Review
+DEPOT0091,Care United Supply Chain,"Dubai, UAE",Compliant
+DEPOT0092,Total Supply Corp,"Berlin, Germany",Pending Review
+DEPOT0093,Therapeutic Care Logistics,"Amsterdam, Netherlands",Provisional
+DEPOT0094,Total-Medical Distributors,"Tokyo, Japan",Under Inspection
+DEPOT0095,Care Co,"Zurich, Switzerland",Certified
+DEPOT0096,Care-Pharmacy International,"Sydney, Australia",Under Inspection
+DEPOT0097,MetroTherapeutic Supply Chain,"London, UK",Certified
+DEPOT0098,Care Pro Inc,"Sydney, Australia",Certified
+DEPOT0099,Meds Apex LLC,"Paris, France",Pending Review
+DEPOT0100,Global Pharmacy Solutions,"Amsterdam, Netherlands",Under Inspection
+DEPOT0101,ApexHealthcare Distribution,"Sydney, Australia",Compliant
+DEPOT0102,Allied Meds LLC,"Zurich, Switzerland",Provisional
+DEPOT0103,Total Logistics,"New York, USA",Provisional
+DEPOT0104,Rapid Therapeutic Inc,"Sydney, Australia",Provisional
+DEPOT0105,Supply National Distribution,"Amsterdam, Netherlands",Provisional
+DEPOT0106,Care Distributors,"New York, USA",Pending Review
+DEPOT0107,Total-Wellness Inc,"Sydney, Australia",Under Inspection
+DEPOT0108,Care Drug Corp,"Paris, France",Under Inspection
+DEPOT0109,National Medicine Inc,"Amsterdam, Netherlands",Compliant
+DEPOT0110,Rapid-Life Group,"Dubai, UAE",Compliant
+DEPOT0111,United Distributors,Singapore,Provisional
+DEPOT0112,Total Health Distributors,Singapore,Pending Review
+DEPOT0113,Global Health Group,"Mumbai, India",Pending Review
+DEPOT0114,Care-Care Solutions,"São Paulo, Brazil",Provisional
+DEPOT0115,UnitedHealth Services,"Mumbai, India",Compliant
+DEPOT0116,Global-Supply Partners,"Toronto, Canada",Under Inspection
+DEPOT0117,Pharma United Partners,"Dubai, UAE",Provisional
+DEPOT0118,GlobalRx Corp,"São Paulo, Brazil",Pending Review
+DEPOT0119,Vital-Logistics LLC,"New York, USA",Pending Review
+DEPOT0120,Vital-Life Distribution,"Berlin, Germany",Certified
+DEPOT0121,Allied-Health Inc,"São Paulo, Brazil",Compliant
+DEPOT0122,Therapeutic Med LLC,"Madrid, Spain",Pending Review
+DEPOT0123,Global-Care Inc,"Madrid, Spain",Certified
+DEPOT0124,Direct-Therapeutic Distribution,"Toronto, Canada",Provisional
+DEPOT0125,Prime Logistics Group,"Paris, France",Compliant
+DEPOT0126,Med-Drug Network,"Paris, France",Certified
+DEPOT0127,PrimeCare Inc,"Madrid, Spain",Provisional
+DEPOT0128,Apex Medicine Supply Chain,"Paris, France",Pending Review
+DEPOT0129,Pharmacy Total Supply Chain,"Shanghai, China",Under Inspection
+DEPOT0130,Logistics Allied Solutions,"Dubai, UAE",Provisional
+DEPOT0131,Pharmacy Allied Partners,"Shanghai, China",Certified
+DEPOT0132,NationalTherapeutic Co,"New York, USA",Pending Review
+DEPOT0133,Inter Logistics,"Zurich, Switzerland",Pending Review
+DEPOT0134,Rapid-Medicine Supply Chain,"Toronto, Canada",Certified
+DEPOT0135,Care Med Distribution,"Dubai, UAE",Provisional
+DEPOT0136,DirectMedical Alliance,"Toronto, Canada",Pending Review
+DEPOT0137,Logistics Care Distributors,"Amsterdam, Netherlands",Compliant
+DEPOT0138,United Logistics,"Shanghai, China",Under Inspection
+DEPOT0139,Life Metro Services,"Sydney, Australia",Provisional
+DEPOT0140,Prime-Pharmacy Logistics,"London, UK",Certified
+DEPOT0141,ApexCare Partners,"Shanghai, China",Under Inspection
+DEPOT0142,DirectCare Supply Chain,Singapore,Certified
+DEPOT0143,Prime Drug Inc,"Toronto, Canada",Under Inspection
+DEPOT0144,Prime-Logistics LLC,"Toronto, Canada",Provisional
+DEPOT0145,Direct-Drug Network,"Zurich, Switzerland",Pending Review
+DEPOT0146,Global-Wellness Supply Chain,"Zurich, Switzerland",Pending Review
+DEPOT0147,Healthcare Care Alliance,"Berlin, Germany",Provisional
+DEPOT0148,MetroHealth Network,"London, UK",Provisional
+DEPOT0149,Drug Pro Group,"Zurich, Switzerland",Compliant
+DEPOT0150,Wellness Med Supply Chain,"Dubai, UAE",Certified
+DEPOT0151,National Wellness Distributors,"London, UK",Pending Review
+DEPOT0152,Prime-Healthcare Partners,"Dubai, UAE",Certified
+DEPOT0153,Prime-Healthcare Co,"Tokyo, Japan",Pending Review
+DEPOT0154,Care Rapid Logistics,"Toronto, Canada",Pending Review
+DEPOT0155,Pharma Med Distribution,"Paris, France",Provisional
+DEPOT0156,Prime-Medicine Partners,"New York, USA",Pending Review
+DEPOT0157,Vital Life Supply Chain,"Zurich, Switzerland",Provisional
+DEPOT0158,Wellness Vital Distributors,"Berlin, Germany",Certified
+DEPOT0159,CareMedical Services,"Sydney, Australia",Provisional
+DEPOT0160,PrimeLife LLC,"Amsterdam, Netherlands",Pending Review
+DEPOT0161,Medicine Rapid LLC,"Madrid, Spain",Certified
+DEPOT0162,MedPharmacy Distributors,"Mumbai, India",Provisional
+DEPOT0163,Care-Drug LLC,"Tokyo, Japan",Provisional
+DEPOT0164,Total Rx Logistics,"Paris, France",Compliant
+DEPOT0165,Meds Pro Services,Singapore,Certified
+DEPOT0166,Med Inc,"Amsterdam, Netherlands",Pending Review
+DEPOT0167,MetroSupply Group,"Toronto, Canada",Certified
+DEPOT0168,ProHealth Supply Chain,"São Paulo, Brazil",Pending Review
+DEPOT0169,National Drug Group,"Paris, France",Pending Review
+DEPOT0170,InterMeds Partners,"Zurich, Switzerland",Pending Review
+DEPOT0171,Vital-Medical Alliance,"Dubai, UAE",Certified
+DEPOT0172,GlobalMeds Services,"Toronto, Canada",Under Inspection
+DEPOT0173,Total Supply Chain,"São Paulo, Brazil",Certified
+DEPOT0174,United Solutions,"Dubai, UAE",Pending Review
+DEPOT0175,Drug Apex Distributors,"Tokyo, Japan",Certified
+DEPOT0176,Prime Care Logistics,"Berlin, Germany",Certified
+DEPOT0177,United-Drug Network,"Amsterdam, Netherlands",Certified
+DEPOT0178,Vital-Logistics Supply Chain,Singapore,Compliant
+DEPOT0179,Life Vital International,Singapore,Compliant
+DEPOT0180,DirectTherapeutic Alliance,"Sydney, Australia",Provisional
+DEPOT0181,Total-Logistics Inc,"Toronto, Canada",Certified
+DEPOT0182,Inter International,"London, UK",Under Inspection
+DEPOT0183,Direct-Rx International,"São Paulo, Brazil",Certified
+DEPOT0184,DirectTherapeutic Network,"Shanghai, China",Compliant
+DEPOT0185,Metro-Health Distribution,"Paris, France",Under Inspection
+DEPOT0186,CareTherapeutic Co,"Berlin, Germany",Under Inspection
+DEPOT0187,Apex-Pharmacy Co,"Toronto, Canada",Under Inspection
+DEPOT0188,Health Apex International,"Sydney, Australia",Compliant
+DEPOT0189,Pro-Life Partners,"Amsterdam, Netherlands",Provisional
+DEPOT0190,Medical Total International,"Toronto, Canada",Provisional
+DEPOT0191,Healthcare Pro Distribution,"Zurich, Switzerland",Provisional
+DEPOT0192,InterDrug Alliance,"Sydney, Australia",Pending Review
+DEPOT0193,InterRx Network,"London, UK",Compliant
+DEPOT0194,Logistics Global Inc,"Amsterdam, Netherlands",Pending Review
+DEPOT0195,Rx Rapid Group,"Mumbai, India",Pending Review
+DEPOT0196,United Therapeutic Supply Chain,"Paris, France",Pending Review
+DEPOT0197,National Therapeutic Network,Singapore,Pending Review
+DEPOT0198,VitalRx Distributors,"Toronto, Canada",Under Inspection
+DEPOT0199,National Corp,"Mumbai, India",Under Inspection
+DEPOT0200,Prime-Care LLC,"Paris, France",Compliant
+DEPOT0201,National Life LLC,"Shanghai, China",Certified
+DEPOT0202,Wellness Allied Distribution,"New York, USA",Pending Review
+DEPOT0203,Therapeutic United Inc,"São Paulo, Brazil",Under Inspection
+DEPOT0204,Pro-Rx Co,Singapore,Compliant
+DEPOT0205,GlobalRx Logistics,"Toronto, Canada",Provisional
+DEPOT0206,MedLogistics Group,"Shanghai, China",Compliant
+DEPOT0207,Logistics Total Corp,"Toronto, Canada",Under Inspection
+DEPOT0208,VitalTherapeutic Solutions,"Paris, France",Under Inspection
+DEPOT0209,Total-Healthcare Network,"Mumbai, India",Pending Review
+DEPOT0210,MedWellness Corp,"Shanghai, China",Compliant
+DEPOT0211,Health Prime Co,"Amsterdam, Netherlands",Compliant
+DEPOT0212,Vital Group,"Mumbai, India",Certified
+DEPOT0213,Allied-Pharmacy Services,Singapore,Certified
+DEPOT0214,United Health Supply Chain,"Amsterdam, Netherlands",Certified
+DEPOT0215,Life Allied Co,"Toronto, Canada",Certified
+DEPOT0216,Life Rapid Logistics,"Shanghai, China",Pending Review
+DEPOT0217,Inter Rx Co,"Mumbai, India",Pending Review
+DEPOT0218,MedCare Logistics,"Madrid, Spain",Provisional
+DEPOT0219,Total Meds International,"Berlin, Germany",Provisional
+DEPOT0220,Med Distributors,"Paris, France",Compliant
+DEPOT0221,Rapid-Medicine Services,"Dubai, UAE",Pending Review
+DEPOT0222,National Medical Alliance,"Tokyo, Japan",Certified
+DEPOT0223,Inter-Medicine Inc,"Zurich, Switzerland",Certified
+DEPOT0224,GlobalCare Services,"London, UK",Pending Review
+DEPOT0225,ProDrug Solutions,"São Paulo, Brazil",Compliant
+DEPOT0226,Apex Therapeutic Partners,"Tokyo, Japan",Under Inspection
+DEPOT0227,Inter-Drug Inc,"Tokyo, Japan",Pending Review
+DEPOT0228,National-Pharmacy Group,"Dubai, UAE",Under Inspection
+DEPOT0229,VitalCare Alliance,"Tokyo, Japan",Under Inspection
+DEPOT0230,GlobalWellness Group,"São Paulo, Brazil",Certified
+DEPOT0231,Allied-Supply Distributors,"São Paulo, Brazil",Certified
+DEPOT0232,Direct Corp,"Shanghai, China",Compliant
+DEPOT0233,United Alliance,"Paris, France",Certified
+DEPOT0234,Therapeutic Apex LLC,"Toronto, Canada",Provisional
+DEPOT0235,Apex-Rx International,"Dubai, UAE",Certified
+DEPOT0236,National Meds Services,"Sydney, Australia",Compliant
+DEPOT0237,Direct-Supply LLC,"Paris, France",Provisional
+DEPOT0238,NationalPharmacy Group,"Zurich, Switzerland",Provisional
+DEPOT0239,Meds Vital Distributors,"Shanghai, China",Provisional
+DEPOT0240,TotalMeds Alliance,"Toronto, Canada",Compliant
+DEPOT0241,Total-Health LLC,"São Paulo, Brazil",Compliant
+DEPOT0242,Medicine Med Group,"Amsterdam, Netherlands",Certified
+DEPOT0243,Global-Drug Services,"Amsterdam, Netherlands",Under Inspection
+DEPOT0244,Medical National Distributors,"Sydney, Australia",Compliant
+DEPOT0245,CareMedical Inc,Singapore,Provisional
+DEPOT0246,CareHealth Distributors,"Amsterdam, Netherlands",Compliant
+DEPOT0247,CareSupply LLC,"Paris, France",Pending Review
+DEPOT0248,National Wellness Inc,"London, UK",Compliant
+DEPOT0249,National Drug Services,"Amsterdam, Netherlands",Under Inspection
+DEPOT0250,Allied Health International,"Paris, France",Provisional
+DEPOT0251,Direct-Life Services,"Toronto, Canada",Compliant
+DEPOT0252,Pro-Pharma LLC,"Mumbai, India",Compliant
+DEPOT0253,TotalPharma Logistics,"São Paulo, Brazil",Provisional
+DEPOT0254,Pharma Care LLC,Singapore,Certified
+DEPOT0255,Prime Inc,"Dubai, UAE",Certified
+DEPOT0256,Global-Medical Alliance,"Dubai, UAE",Pending Review
+DEPOT0257,CarePharmacy Partners,"Paris, France",Provisional
+DEPOT0258,Metro Logistics Distributors,"Mumbai, India",Compliant
+DEPOT0259,Care-Logistics Logistics,"Berlin, Germany",Pending Review
+DEPOT0260,Global-Wellness Services,"London, UK",Provisional
+DEPOT0261,UnitedDrug Network,"Toronto, Canada",Provisional
+DEPOT0262,Therapeutic Global Group,"Mumbai, India",Under Inspection
+DEPOT0263,InterMeds Distribution,"Berlin, Germany",Pending Review
+DEPOT0264,Care Wellness LLC,"London, UK",Pending Review
+DEPOT0265,Logistics Direct LLC,"Berlin, Germany",Under Inspection
+DEPOT0266,Meds Pro Supply Chain,Singapore,Provisional
+DEPOT0267,Metro Logistics Distribution,"Madrid, Spain",Provisional
+DEPOT0268,Total International,"Berlin, Germany",Under Inspection
+DEPOT0269,ApexSupply International,"Berlin, Germany",Under Inspection
+DEPOT0270,VitalHealth International,"Madrid, Spain",Pending Review
+DEPOT0271,Apex Solutions,"Dubai, UAE",Certified
+DEPOT0272,Health Metro Co,"Berlin, Germany",Compliant
+DEPOT0273,Direct Services,"New York, USA",Compliant
+DEPOT0274,Healthcare Pro Corp,"Dubai, UAE",Provisional
+DEPOT0275,Inter Supply LLC,"Berlin, Germany",Pending Review
+DEPOT0276,Allied Healthcare Distributors,"Zurich, Switzerland",Under Inspection
+DEPOT0277,Medical Pro Co,"Tokyo, Japan",Provisional
+DEPOT0278,MetroMeds Network,"New York, USA",Under Inspection
+DEPOT0279,Allied Pharmacy LLC,"Toronto, Canada",Provisional
+DEPOT0280,InterPharma International,"Zurich, Switzerland",Under Inspection
+DEPOT0281,United Services,"New York, USA",Provisional
+DEPOT0282,Vital Therapeutic Co,"São Paulo, Brazil",Certified
+DEPOT0283,Direct Pharma International,"Mumbai, India",Pending Review
+DEPOT0284,Vital Health Group,"Shanghai, China",Pending Review
+DEPOT0285,Rapid Rx Partners,"Berlin, Germany",Under Inspection
+DEPOT0286,MetroSupply Logistics,"Madrid, Spain",Compliant
+DEPOT0287,Total-Medical LLC,"Madrid, Spain",Under Inspection
+DEPOT0288,DirectTherapeutic Corp,"São Paulo, Brazil",Provisional
+DEPOT0289,Prime Therapeutic Distribution,"Mumbai, India",Pending Review
+DEPOT0290,Global-Drug Network,"Dubai, UAE",Under Inspection
+DEPOT0291,Care Apex Solutions,"Zurich, Switzerland",Under Inspection
+DEPOT0292,Logistics National Inc,"Sydney, Australia",Pending Review
+DEPOT0293,Vital Logistics Distribution,"São Paulo, Brazil",Pending Review
+DEPOT0294,PrimeHealth Alliance,"Dubai, UAE",Certified
+DEPOT0295,Drug Rapid International,"Tokyo, Japan",Compliant
+DEPOT0296,Global Distribution,"Shanghai, China",Provisional
+DEPOT0297,National Supply Chain,"London, UK",Certified
+DEPOT0298,Pharmacy Apex Corp,"Paris, France",Pending Review
+DEPOT0299,Medical Allied International,"Tokyo, Japan",Compliant
+DEPOT0300,Rx Med Group,"São Paulo, Brazil",Under Inspection
+DEPOT0301,Vital-Logistics Network,"São Paulo, Brazil",Pending Review
+DEPOT0302,Care Healthcare Partners,"Toronto, Canada",Compliant
+DEPOT0303,Allied-Rx Group,"Dubai, UAE",Certified
+DEPOT0304,Prime-Medicine Distributors,"New York, USA",Provisional
+DEPOT0305,Care Allied International,"Paris, France",Compliant
+DEPOT0306,Pro-Rx Distribution,"Shanghai, China",Compliant
+DEPOT0307,MetroPharma Solutions,"Amsterdam, Netherlands",Under Inspection
+DEPOT0308,Direct Partners,"Toronto, Canada",Provisional
+DEPOT0309,Vital-Medicine Group,"Sydney, Australia",Compliant
+DEPOT0310,Pro-Logistics Group,"Zurich, Switzerland",Provisional
+DEPOT0311,Pharmacy Total Group,"Tokyo, Japan",Certified
+DEPOT0312,Logistics Global Co,"São Paulo, Brazil",Compliant
+DEPOT0313,Vital Therapeutic Inc,"Zurich, Switzerland",Pending Review
+DEPOT0314,Allied Logistics Group,"Dubai, UAE",Compliant
+DEPOT0315,Vital-Care Alliance,"Paris, France",Provisional
+DEPOT0316,Care-Logistics Group,"New York, USA",Under Inspection
+DEPOT0317,Rx Med Alliance,"Amsterdam, Netherlands",Under Inspection
+DEPOT0318,Direct-Medical Alliance,"São Paulo, Brazil",Certified
+DEPOT0319,Allied Meds Network,"London, UK",Under Inspection
+DEPOT0320,MetroHealth Distributors,"Sydney, Australia",Provisional
+DEPOT0321,Metro Medical Logistics,"Madrid, Spain",Compliant
+DEPOT0322,CareMedicine Supply Chain,"Dubai, UAE",Compliant
+DEPOT0323,Apex-Therapeutic Inc,"Shanghai, China",Certified
+DEPOT0324,Direct-Logistics Distribution,"Tokyo, Japan",Under Inspection
+DEPOT0325,Apex Drug Group,"Paris, France",Certified
+DEPOT0326,NationalPharmacy Partners,"Sydney, Australia",Compliant
+DEPOT0327,National Distributors,"Shanghai, China",Pending Review
+DEPOT0328,MetroLogistics Corp,"Sydney, Australia",Provisional
+DEPOT0329,United Supply Chain,"Mumbai, India",Pending Review
+DEPOT0330,VitalCare Logistics,"Toronto, Canada",Provisional
+DEPOT0331,Rx Metro Supply Chain,"Berlin, Germany",Compliant
+DEPOT0332,Global Logistics Supply Chain,"London, UK",Certified
+DEPOT0333,Apex-Pharmacy Alliance,"New York, USA",Compliant
+DEPOT0334,Inter LLC,"São Paulo, Brazil",Certified
+DEPOT0335,Pharma National Distributors,"Zurich, Switzerland",Compliant
+DEPOT0336,Allied Solutions,"New York, USA",Under Inspection
+DEPOT0337,ProMeds Co,"Sydney, Australia",Under Inspection
+DEPOT0338,Inter Network,"Paris, France",Certified
+DEPOT0339,AlliedDrug Services,"Berlin, Germany",Compliant
+DEPOT0340,Total Supply International,"Madrid, Spain",Pending Review
+DEPOT0341,Medicine National Logistics,"New York, USA",Compliant
+DEPOT0342,Allied Co,Singapore,Under Inspection
+DEPOT0343,AlliedMedicine Group,"Toronto, Canada",Under Inspection
+DEPOT0344,Allied Logistics,Singapore,Compliant
+DEPOT0345,DirectLife Solutions,"Sydney, Australia",Compliant
+DEPOT0346,Apex-Pharma International,"Mumbai, India",Provisional
+DEPOT0347,Healthcare Metro Network,"Zurich, Switzerland",Provisional
+DEPOT0348,NationalPharmacy Alliance,"Tokyo, Japan",Under Inspection
+DEPOT0349,Allied Distributors,"Sydney, Australia",Compliant
+DEPOT0350,Medicine Metro International,"Sydney, Australia",Certified
+DEPOT0351,Logistics Global Supply Chain,"Tokyo, Japan",Certified
+DEPOT0352,Life National Distributors,"Berlin, Germany",Provisional
+DEPOT0353,Vital Pharma Partners,"Toronto, Canada",Certified
+DEPOT0354,United-Rx Corp,Singapore,Pending Review
+DEPOT0355,Inter Rx LLC,"Toronto, Canada",Under Inspection
+DEPOT0356,United-Medical Group,"Madrid, Spain",Pending Review
+DEPOT0357,Total Group,"Shanghai, China",Under Inspection
+DEPOT0358,Life Apex Distributors,"New York, USA",Provisional
+DEPOT0359,UnitedSupply Group,"Tokyo, Japan",Compliant
+DEPOT0360,Metro Supply Chain,"Tokyo, Japan",Certified
+DEPOT0361,Care Services,"Madrid, Spain",Pending Review
+DEPOT0362,NationalPharma International,"Madrid, Spain",Pending Review
+DEPOT0363,National Health LLC,"Amsterdam, Netherlands",Pending Review
+DEPOT0364,United Corp,"Toronto, Canada",Provisional
+DEPOT0365,Metro Supply Supply Chain,"London, UK",Pending Review
+DEPOT0366,Drug Total Corp,"London, UK",Under Inspection
+DEPOT0367,MedWellness Co,"Zurich, Switzerland",Under Inspection
+DEPOT0368,Apex Pharma International,Singapore,Certified
+DEPOT0369,Supply Care LLC,"Toronto, Canada",Compliant
+DEPOT0370,Prime Supply Chain,"Amsterdam, Netherlands",Certified
+DEPOT0371,PrimeTherapeutic Group,"Sydney, Australia",Certified
+DEPOT0372,Care Logistics,"Mumbai, India",Under Inspection
+DEPOT0373,Inter-Healthcare Group,"London, UK",Provisional
+DEPOT0374,Prime Medicine LLC,"Shanghai, China",Certified
+DEPOT0375,Rapid-Health Alliance,"Dubai, UAE",Under Inspection
+DEPOT0376,PrimePharmacy Supply Chain,"Tokyo, Japan",Certified
+DEPOT0377,TotalHealthcare LLC,"Berlin, Germany",Provisional
+DEPOT0378,Pro Network,"Paris, France",Certified
+DEPOT0379,Global Partners,"Madrid, Spain",Certified
+DEPOT0380,Pro Services,"Sydney, Australia",Under Inspection
+DEPOT0381,Pro-Healthcare Co,"Berlin, Germany",Under Inspection
+DEPOT0382,Apex Pharmacy Co,"Mumbai, India",Provisional
+DEPOT0383,Meds National Alliance,"Toronto, Canada",Pending Review
+DEPOT0384,Therapeutic Inter Co,"Tokyo, Japan",Provisional
+DEPOT0385,MetroHealth Solutions,"Madrid, Spain",Compliant
+DEPOT0386,Global Care Distributors,"São Paulo, Brazil",Certified
+DEPOT0387,MedSupply Inc,"London, UK",Pending Review
+DEPOT0388,Apex-Therapeutic Group,"Mumbai, India",Under Inspection
+DEPOT0389,Allied LLC,"Zurich, Switzerland",Provisional
+DEPOT0390,Therapeutic Inter Inc,"Shanghai, China",Pending Review
+DEPOT0391,National-Supply Logistics,"Zurich, Switzerland",Compliant
+DEPOT0392,Care Prime Distribution,"Shanghai, China",Compliant
+DEPOT0393,Allied Rx Partners,Singapore,Under Inspection
+DEPOT0394,MedMedicine Partners,"Amsterdam, Netherlands",Under Inspection
+DEPOT0395,DirectHealth Supply Chain,"Amsterdam, Netherlands",Compliant
+DEPOT0396,Wellness Apex Services,"São Paulo, Brazil",Compliant
+DEPOT0397,Direct-Pharma LLC,"Madrid, Spain",Certified
+DEPOT0398,DirectHealthcare Co,"Shanghai, China",Certified
+DEPOT0399,RapidPharmacy Supply Chain,"Berlin, Germany",Pending Review
+DEPOT0400,United Care Partners,"Paris, France",Compliant
+DEPOT0401,Life United Corp,Singapore,Compliant
+DEPOT0402,Metro Rx International,"Zurich, Switzerland",Compliant
+DEPOT0403,Care Corp,"Paris, France",Provisional
+DEPOT0404,Healthcare Care Inc,"Amsterdam, Netherlands",Pending Review
+DEPOT0405,GlobalMedicine Network,Singapore,Under Inspection
+DEPOT0406,InterHealth Services,"Berlin, Germany",Certified
+DEPOT0407,TotalPharma International,"London, UK",Under Inspection
+DEPOT0408,Care-Medical Logistics,"São Paulo, Brazil",Certified
+DEPOT0409,Total Alliance,"Zurich, Switzerland",Certified
+DEPOT0410,United Rx Solutions,"Shanghai, China",Compliant
+DEPOT0411,Supply Global Solutions,"Sydney, Australia",Under Inspection
+DEPOT0412,NationalPharmacy Network,"Madrid, Spain",Under Inspection
+DEPOT0413,Apex Distribution,"Tokyo, Japan",Certified
+DEPOT0414,Direct Life International,"Dubai, UAE",Certified
+DEPOT0415,United Medicine Inc,"New York, USA",Certified
+DEPOT0416,Logistics Direct Partners,"Amsterdam, Netherlands",Pending Review
+DEPOT0417,Global Medical International,"Tokyo, Japan",Under Inspection
+DEPOT0418,Care Rx Corp,"Tokyo, Japan",Provisional
+DEPOT0419,Med Distribution,"Berlin, Germany",Pending Review
+DEPOT0420,Life Pro Supply Chain,"Sydney, Australia",Pending Review
+DEPOT0421,Apex-Medical Corp,"Shanghai, China",Pending Review
+DEPOT0422,United Distribution,"Dubai, UAE",Provisional
+DEPOT0423,Inter Therapeutic Partners,"Berlin, Germany",Pending Review
+DEPOT0424,InterPharma Inc,"New York, USA",Provisional
+DEPOT0425,Apex Partners,"Sydney, Australia",Under Inspection
+DEPOT0426,Vital Therapeutic Supply Chain,"Amsterdam, Netherlands",Certified
+DEPOT0427,Care Direct Corp,"Zurich, Switzerland",Pending Review
+DEPOT0428,Global Life Group,"Sydney, Australia",Compliant
+DEPOT0429,Prime-Medical Supply Chain,"Shanghai, China",Under Inspection
+DEPOT0430,Vital-Meds Network,"Shanghai, China",Provisional
+DEPOT0431,Prime-Pharma Solutions,"Paris, France",Certified
+DEPOT0432,CareWellness Co,"Tokyo, Japan",Compliant
+DEPOT0433,Drug Global Group,"Tokyo, Japan",Under Inspection
+DEPOT0434,Healthcare Care International,"Paris, France",Compliant
+DEPOT0435,Pro Group,"Paris, France",Under Inspection
+DEPOT0436,Allied Supply Network,"Madrid, Spain",Certified
+DEPOT0437,Vital Meds Services,"London, UK",Provisional
+DEPOT0438,Wellness Global Alliance,Singapore,Provisional
+DEPOT0439,Allied-Meds Distribution,"Amsterdam, Netherlands",Pending Review
+DEPOT0440,Total Meds Logistics,"Paris, France",Compliant
+DEPOT0441,Inter Distribution,"Amsterdam, Netherlands",Certified
+DEPOT0442,Apex-Health Co,"Toronto, Canada",Pending Review
+DEPOT0443,Med Drug International,Singapore,Pending Review
+DEPOT0444,National LLC,"Toronto, Canada",Pending Review
+DEPOT0445,Care Inter Inc,"Paris, France",Certified
+DEPOT0446,Apex Services,"Mumbai, India",Pending Review
+DEPOT0447,Global-Supply Supply Chain,"Tokyo, Japan",Pending Review
+DEPOT0448,InterLife LLC,"Madrid, Spain",Under Inspection
+DEPOT0449,United-Supply Network,"Paris, France",Certified
+DEPOT0450,Health Prime LLC,"São Paulo, Brazil",Certified
+DEPOT0451,Vital Co,"Paris, France",Pending Review
+DEPOT0452,Allied Supply International,"Tokyo, Japan",Certified
+DEPOT0453,United-Meds LLC,"Madrid, Spain",Certified
+DEPOT0454,Health Metro LLC,"Zurich, Switzerland",Certified
+DEPOT0455,Allied-Life LLC,Singapore,Under Inspection
+DEPOT0456,Med-Pharmacy Solutions,"Paris, France",Compliant
+DEPOT0457,PrimeMedicine Co,"Toronto, Canada",Pending Review
+DEPOT0458,Logistics Med Distribution,Singapore,Certified
+DEPOT0459,Total-Life Supply Chain,"Paris, France",Pending Review
+DEPOT0460,Pro International,"New York, USA",Certified
+DEPOT0461,GlobalDrug Corp,"Berlin, Germany",Provisional
+DEPOT0462,Health Inter Services,"Zurich, Switzerland",Under Inspection
+DEPOT0463,Allied-Wellness Services,"Tokyo, Japan",Under Inspection
+DEPOT0464,Inter Partners,"Paris, France",Certified
+DEPOT0465,CareDrug Supply Chain,"London, UK",Pending Review
+DEPOT0466,Therapeutic Inter Distribution,"London, UK",Pending Review
+DEPOT0467,Care Total Distributors,"London, UK",Compliant
+DEPOT0468,Prime Health Group,"Zurich, Switzerland",Pending Review
+DEPOT0469,Direct Distribution,"Sydney, Australia",Certified
+DEPOT0470,National-Drug Co,"Tokyo, Japan",Under Inspection
+DEPOT0471,Metro Inc,"Shanghai, China",Pending Review
+DEPOT0472,Logistics United Logistics,"Toronto, Canada",Pending Review
+DEPOT0473,Inter Services,"Paris, France",Under Inspection
+DEPOT0474,Rx Metro Inc,"Berlin, Germany",Pending Review
+DEPOT0475,InterMeds LLC,"Zurich, Switzerland",Provisional
+DEPOT0476,United Drug Network,"Sydney, Australia",Provisional
+DEPOT0477,Vital Wellness Logistics,"São Paulo, Brazil",Provisional
+DEPOT0478,Rapid Healthcare Distribution,"London, UK",Under Inspection
+DEPOT0479,Care International,"Dubai, UAE",Pending Review
+DEPOT0480,MedWellness LLC,"Amsterdam, Netherlands",Certified
+DEPOT0481,Allied Pharma Co,"Zurich, Switzerland",Provisional
+DEPOT0482,Global Health Solutions,"Paris, France",Under Inspection
+DEPOT0483,Apex Co,Singapore,Provisional
+DEPOT0484,Allied-Healthcare Alliance,"São Paulo, Brazil",Certified
+DEPOT0485,National Network,"New York, USA",Pending Review
+DEPOT0486,Drug National Supply Chain,"Berlin, Germany",Compliant
+DEPOT0487,Healthcare Total Distribution,"Berlin, Germany",Certified
+DEPOT0488,ProTherapeutic LLC,"Sydney, Australia",Certified
+DEPOT0489,Vital Solutions,"Tokyo, Japan",Pending Review
+DEPOT0490,Prime Logistics,"Madrid, Spain",Compliant
+DEPOT0491,Direct Distributors,Singapore,Certified
+DEPOT0492,Pro Supply Group,"Zurich, Switzerland",Certified
+DEPOT0493,National Alliance,"Toronto, Canada",Pending Review
+DEPOT0494,Health Direct Supply Chain,"Mumbai, India",Under Inspection
+DEPOT0495,Pro LLC,"Dubai, UAE",Certified
+DEPOT0496,Prime Therapeutic Partners,"Madrid, Spain",Pending Review
+DEPOT0497,VitalHealth Corp,"New York, USA",Under Inspection
+DEPOT0498,VitalLife Solutions,"Sydney, Australia",Provisional
+DEPOT0499,Medical Med Group,"São Paulo, Brazil",Pending Review
+DEPOT0500,Allied-Life Logistics,"Sydney, Australia",Compliant
+DEPOT0501,Metro-Medicine Services,"Shanghai, China",Compliant
+DEPOT0502,Global Supply Chain,"Dubai, UAE",Certified
+DEPOT0503,Pro Solutions,"Mumbai, India",Pending Review
+DEPOT0504,Apex Supply International,"Berlin, Germany",Certified
+DEPOT0505,Healthcare Prime Distributors,Singapore,Provisional
+DEPOT0506,Med Group,"London, UK",Under Inspection
+DEPOT0507,RapidHealth Co,"Amsterdam, Netherlands",Under Inspection
+DEPOT0508,National Logistics Solutions,"Berlin, Germany",Certified
+DEPOT0509,Inter-Pharma Group,"Zurich, Switzerland",Compliant
+DEPOT0510,Meds Global Alliance,"São Paulo, Brazil",Pending Review
+DEPOT0511,Rapid Therapeutic Corp,"Shanghai, China",Provisional
+DEPOT0512,Care-Care Network,"Shanghai, China",Certified
+DEPOT0513,United-Wellness Group,"Sydney, Australia",Compliant
+DEPOT0514,ProMeds Inc,"Tokyo, Japan",Certified
+DEPOT0515,Total-Supply Alliance,"Madrid, Spain",Under Inspection
+DEPOT0516,Rapid International,"Sydney, Australia",Compliant
+DEPOT0517,Care Pro Alliance,"New York, USA",Certified
+DEPOT0518,Wellness Total Group,"São Paulo, Brazil",Provisional
+DEPOT0519,Total Pharmacy Network,"Mumbai, India",Provisional
+DEPOT0520,Prime-Health Services,"Amsterdam, Netherlands",Under Inspection
+DEPOT0521,Care Metro LLC,"Madrid, Spain",Pending Review
+DEPOT0522,GlobalHealthcare Network,Singapore,Under Inspection
+DEPOT0523,United Rx LLC,"Zurich, Switzerland",Under Inspection
+DEPOT0524,Total-Supply Solutions,"Amsterdam, Netherlands",Compliant
+DEPOT0525,Vital Healthcare LLC,Singapore,Pending Review
+DEPOT0526,RapidRx Distributors,"Sydney, Australia",Certified
+DEPOT0527,Healthcare Med Logistics,"Amsterdam, Netherlands",Pending Review
+DEPOT0528,Vital-Pharmacy Group,"Dubai, UAE",Pending Review
+DEPOT0529,Pharmacy Direct Network,"Mumbai, India",Compliant
+DEPOT0530,Drug Care Services,"São Paulo, Brazil",Under Inspection
+DEPOT0531,Prime-Pharmacy Network,Singapore,Under Inspection
+DEPOT0532,InterPharmacy Supply Chain,"Dubai, UAE",Compliant
+DEPOT0533,Rapid-Care Co,"London, UK",Certified
+DEPOT0534,Inter Medical Partners,"São Paulo, Brazil",Compliant
+DEPOT0535,Metro Network,"Paris, France",Compliant
+DEPOT0536,MetroCare Solutions,"São Paulo, Brazil",Certified
+DEPOT0537,TotalWellness Group,"London, UK",Compliant
+DEPOT0538,Vital-Pharma Group,"Shanghai, China",Provisional
+DEPOT0539,Pharmacy Inter International,"Tokyo, Japan",Certified
+DEPOT0540,Prime Medical Inc,"Sydney, Australia",Provisional
+DEPOT0541,Wellness Inter Services,"Sydney, Australia",Provisional
+DEPOT0542,Rapid Care Partners,"Toronto, Canada",Compliant
+DEPOT0543,Prime-Health Distribution,"São Paulo, Brazil",Pending Review
+DEPOT0544,Healthcare Rapid LLC,"London, UK",Under Inspection
+DEPOT0545,Metro Pharma Services,"Berlin, Germany",Certified
+DEPOT0546,Medical Inter Solutions,"New York, USA",Provisional
+DEPOT0547,Vital Supply Distributors,"Mumbai, India",Compliant
+DEPOT0548,Pro Drug Corp,"São Paulo, Brazil",Under Inspection
+DEPOT0549,Med-Pharma Solutions,"Tokyo, Japan",Certified
+DEPOT0550,Allied-Rx Inc,"Amsterdam, Netherlands",Pending Review
+DEPOT0551,National-Care Inc,"Paris, France",Pending Review
+DEPOT0552,PrimeCare Services,"Tokyo, Japan",Provisional
+DEPOT0553,Apex-Wellness LLC,"Tokyo, Japan",Under Inspection
+DEPOT0554,Vital Rx Partners,"Dubai, UAE",Compliant
+DEPOT0555,AlliedRx Corp,"London, UK",Pending Review
+DEPOT0556,Apex-Health International,"Dubai, UAE",Pending Review
+DEPOT0557,Allied Pharma Partners,"Madrid, Spain",Compliant
+DEPOT0558,National-Life Partners,"Zurich, Switzerland",Pending Review
+DEPOT0559,Rapid Medicine Corp,"New York, USA",Pending Review
+DEPOT0560,Allied Drug Alliance,"Toronto, Canada",Under Inspection
+DEPOT0561,Wellness Direct Alliance,"Tokyo, Japan",Compliant
+DEPOT0562,Pro Partners,"Tokyo, Japan",Compliant
+DEPOT0563,National-Medicine Alliance,"Paris, France",Compliant
+DEPOT0564,National International,"Berlin, Germany",Provisional
+DEPOT0565,Life United Logistics,"Shanghai, China",Compliant
+DEPOT0566,Pharma Med Distributors,"Sydney, Australia",Under Inspection
+DEPOT0567,Pro Drug Services,"Tokyo, Japan",Provisional
+DEPOT0568,Vital Life Distributors,"New York, USA",Pending Review
+DEPOT0569,ProTherapeutic Distributors,"Madrid, Spain",Provisional
+DEPOT0570,Vital Distributors,"Paris, France",Under Inspection
+DEPOT0571,Life Global Distributors,"Zurich, Switzerland",Pending Review
+DEPOT0572,United-Logistics Co,"Mumbai, India",Provisional
+DEPOT0573,Global Group,Singapore,Under Inspection
+DEPOT0574,Medicine Vital Supply Chain,"Paris, France",Certified
+DEPOT0575,Rapid Inc,"São Paulo, Brazil",Pending Review
+DEPOT0576,Direct Wellness Services,"New York, USA",Compliant
+DEPOT0577,National-Healthcare Solutions,"Dubai, UAE",Compliant
+DEPOT0578,CareHealthcare Distribution,"New York, USA",Pending Review
+DEPOT0579,MetroDrug Partners,"Toronto, Canada",Certified
+DEPOT0580,United-Medicine Co,"Dubai, UAE",Provisional
+DEPOT0581,GlobalMedicine Supply Chain,"Mumbai, India",Certified
+DEPOT0582,Vital Pharma Distributors,"Berlin, Germany",Provisional
+DEPOT0583,Total-Logistics Services,"Zurich, Switzerland",Under Inspection
+DEPOT0584,Drug Apex Partners,"New York, USA",Under Inspection
+DEPOT0585,Wellness United Co,"Zurich, Switzerland",Provisional
+DEPOT0586,National Pharmacy Group,"São Paulo, Brazil",Compliant
+DEPOT0587,Total Pharmacy LLC,"São Paulo, Brazil",Provisional
+DEPOT0588,Logistics Allied Partners,"Mumbai, India",Under Inspection
+DEPOT0589,Apex Corp,"Zurich, Switzerland",Certified
+DEPOT0590,Med-Pharma Services,"Madrid, Spain",Provisional
+DEPOT0591,Inter Wellness Solutions,"Paris, France",Provisional
+DEPOT0592,UnitedWellness International,Singapore,Under Inspection
+DEPOT0593,Direct Health Corp,"Paris, France",Under Inspection
+DEPOT0594,AlliedWellness LLC,"Amsterdam, Netherlands",Certified
+DEPOT0595,Global Therapeutic LLC,"Paris, France",Certified
+DEPOT0596,Apex-Healthcare International,"Shanghai, China",Compliant
+DEPOT0597,UnitedSupply Solutions,Singapore,Pending Review
+DEPOT0598,Medicine Care Co,"São Paulo, Brazil",Certified
+DEPOT0599,Med Care Logistics,"São Paulo, Brazil",Certified
+DEPOT0600,Prime-Meds Distributors,"New York, USA",Pending Review
+DEPOT0601,Global-Therapeutic Solutions,"Tokyo, Japan",Compliant
+DEPOT0602,Pro-Pharmacy Co,"Mumbai, India",Certified
+DEPOT0603,Pro Supply Chain,"Berlin, Germany",Pending Review
+DEPOT0604,Rapid LLC,"São Paulo, Brazil",Provisional
+DEPOT0605,GlobalHealthcare International,"Sydney, Australia",Compliant
+DEPOT0606,Care Group,"Sydney, Australia",Compliant
+DEPOT0607,Rapid-Healthcare Corp,"Paris, France",Compliant
+DEPOT0608,ApexHealth Partners,"Shanghai, China",Pending Review
+DEPOT0609,Apex Supply Chain,"Berlin, Germany",Provisional
+DEPOT0610,Inter-Medicine Partners,"Amsterdam, Netherlands",Pending Review
+DEPOT0611,Metro Group,"Amsterdam, Netherlands",Certified
+DEPOT0612,Total LLC,"New York, USA",Provisional
+DEPOT0613,Metro Medical Network,"Zurich, Switzerland",Under Inspection
+DEPOT0614,RapidWellness Logistics,"Mumbai, India",Pending Review
+DEPOT0615,Allied Inc,"Dubai, UAE",Under Inspection
+DEPOT0616,ApexCare Corp,"Sydney, Australia",Under Inspection
+DEPOT0617,Medical Global Supply Chain,"London, UK",Provisional
+DEPOT0618,ProHealth Distributors,"Zurich, Switzerland",Compliant
+DEPOT0619,DirectHealth Alliance,"Toronto, Canada",Certified
+DEPOT0620,GlobalPharmacy Solutions,"Tokyo, Japan",Compliant
+DEPOT0621,InterHealthcare Co,"Tokyo, Japan",Pending Review
+DEPOT0622,DirectMedicine Supply Chain,"Mumbai, India",Compliant
+DEPOT0623,Therapeutic Prime Distribution,Singapore,Under Inspection
+DEPOT0624,Prime Co,"Mumbai, India",Under Inspection
+DEPOT0625,DirectDrug Corp,"Madrid, Spain",Pending Review
+DEPOT0626,Metro Co,"Paris, France",Certified
+DEPOT0627,Drug United Supply Chain,"Shanghai, China",Compliant
+DEPOT0628,Inter-Supply Partners,"Shanghai, China",Pending Review
+DEPOT0629,Prime International,"Dubai, UAE",Compliant
+DEPOT0630,Rx Med Co,"New York, USA",Compliant
+DEPOT0631,Med Supply Chain,"Paris, France",Certified
+DEPOT0632,Care-Medical Group,"Mumbai, India",Under Inspection
+DEPOT0633,VitalHealthcare Supply Chain,"London, UK",Compliant
+DEPOT0634,AlliedSupply International,"Berlin, Germany",Under Inspection
+DEPOT0635,Meds Rapid Alliance,"New York, USA",Provisional
+DEPOT0636,InterWellness Distributors,Singapore,Provisional
+DEPOT0637,PrimeCare Partners,"Zurich, Switzerland",Certified
+DEPOT0638,United Supply Distribution,"Sydney, Australia",Certified
+DEPOT0639,Wellness Vital Distribution,"Tokyo, Japan",Compliant
+DEPOT0640,CareTherapeutic Partners,"New York, USA",Compliant
+DEPOT0641,Care Prime Solutions,Singapore,Under Inspection
+DEPOT0642,Vital Supply Solutions,"Amsterdam, Netherlands",Under Inspection
+DEPOT0643,Direct Meds Co,"Madrid, Spain",Pending Review
+DEPOT0644,GlobalMedical Partners,"Toronto, Canada",Certified
+DEPOT0645,United LLC,"London, UK",Compliant
+DEPOT0646,United-Medical Logistics,"Tokyo, Japan",Under Inspection
+DEPOT0647,Prime-Life Inc,"Berlin, Germany",Compliant
+DEPOT0648,Prime Distribution,"Berlin, Germany",Provisional
+DEPOT0649,United Co,"London, UK",Pending Review
+DEPOT0650,Care Network,"London, UK",Pending Review
+DEPOT0651,Direct-Pharma Co,"Madrid, Spain",Under Inspection
+DEPOT0652,ProHealthcare Solutions,"Dubai, UAE",Certified
+DEPOT0653,Care Health Services,"Shanghai, China",Compliant
+DEPOT0654,AlliedSupply LLC,"Toronto, Canada",Certified
+DEPOT0655,Metro-Rx Inc,"Tokyo, Japan",Provisional
+DEPOT0656,DirectDrug Distribution,"Berlin, Germany",Certified
+DEPOT0657,Vital Wellness Network,"São Paulo, Brazil",Pending Review
+DEPOT0658,ApexMeds Distribution,"Berlin, Germany",Pending Review
+DEPOT0659,TotalCare Distributors,"Berlin, Germany",Pending Review
+DEPOT0660,Prime LLC,"Berlin, Germany",Certified
+DEPOT0661,Allied International,"Dubai, UAE",Compliant
+DEPOT0662,Wellness Pro Partners,"Dubai, UAE",Under Inspection
+DEPOT0663,Apex Supply Network,Singapore,Certified
+DEPOT0664,Rapid Corp,"São Paulo, Brazil",Under Inspection
+DEPOT0665,Therapeutic Vital International,"Shanghai, China",Under Inspection
+DEPOT0666,Med-Medical Co,"Mumbai, India",Under Inspection
+DEPOT0667,Metro Partners,"Mumbai, India",Under Inspection
+DEPOT0668,Medicine Pro Logistics,"São Paulo, Brazil",Pending Review
+DEPOT0669,AlliedHealth Partners,"New York, USA",Certified
+DEPOT0670,Rx United Alliance,"Sydney, Australia",Provisional
+DEPOT0671,AlliedRx Distribution,"Tokyo, Japan",Compliant
+DEPOT0672,AlliedHealthcare Solutions,"Berlin, Germany",Under Inspection
+DEPOT0673,Rapid-Pharma Group,"Tokyo, Japan",Pending Review
+DEPOT0674,Rx Total Supply Chain,"Sydney, Australia",Pending Review
+DEPOT0675,Rx Apex Alliance,Singapore,Pending Review
+DEPOT0676,VitalLife Co,"London, UK",Certified
+DEPOT0677,Pharma Direct Alliance,"Sydney, Australia",Certified
+DEPOT0678,Inter Wellness International,"Paris, France",Provisional
+DEPOT0679,MedMeds LLC,"Tokyo, Japan",Provisional
+DEPOT0680,ProMeds Network,Singapore,Pending Review
+DEPOT0681,MetroCare Group,"New York, USA",Compliant
+DEPOT0682,United Supply Partners,"Shanghai, China",Compliant
+DEPOT0683,ProPharmacy Partners,"Shanghai, China",Compliant
+DEPOT0684,Apex Health Co,"Tokyo, Japan",Under Inspection
+DEPOT0685,Total-Drug Co,"Mumbai, India",Under Inspection
+DEPOT0686,Drug Direct Services,Singapore,Under Inspection
+DEPOT0687,Rx Total Distributors,"Madrid, Spain",Provisional
+DEPOT0688,Direct LLC,"Berlin, Germany",Provisional
+DEPOT0689,Med Services,"Shanghai, China",Certified
+DEPOT0690,ProDrug Inc,"Shanghai, China",Provisional
+DEPOT0691,UnitedPharmacy Alliance,"Amsterdam, Netherlands",Under Inspection
+DEPOT0692,Pro Distributors,"Sydney, Australia",Compliant
+DEPOT0693,DirectMeds LLC,"Toronto, Canada",Provisional
+DEPOT0694,Pro Logistics International,"Toronto, Canada",Pending Review
+DEPOT0695,MedHealth Services,"London, UK",Compliant
+DEPOT0696,ApexMedicine Group,"New York, USA",Certified
+DEPOT0697,InterMedical Distributors,"Madrid, Spain",Under Inspection
+DEPOT0698,Medicine Pro Network,"London, UK",Provisional
+DEPOT0699,Direct Medical Co,"New York, USA",Under Inspection
+DEPOT0700,Inter Pharmacy Logistics,"Shanghai, China",Provisional
+DEPOT0701,Med Rx Corp,"New York, USA",Certified
+DEPOT0702,Pro Meds Solutions,"Dubai, UAE",Compliant
+DEPOT0703,Prime Pharma Partners,"Berlin, Germany",Provisional
+DEPOT0704,United Supply LLC,"Tokyo, Japan",Pending Review
+DEPOT0705,Therapeutic Total Co,"Berlin, Germany",Compliant
+DEPOT0706,Metro Therapeutic International,"Sydney, Australia",Under Inspection
+DEPOT0707,Health United LLC,"Dubai, UAE",Provisional
+DEPOT0708,Supply Global Inc,"Berlin, Germany",Compliant
+DEPOT0709,National Therapeutic Services,"Mumbai, India",Under Inspection
+DEPOT0710,PrimeLogistics International,"Sydney, Australia",Compliant
+DEPOT0711,Metro Pharmacy Logistics,"Shanghai, China",Certified
+DEPOT0712,Total Healthcare Network,"São Paulo, Brazil",Under Inspection
+DEPOT0713,Drug Total Distribution,"Toronto, Canada",Certified
+DEPOT0714,Care-Meds International,Singapore,Pending Review
+DEPOT0715,Pro-Healthcare Supply Chain,"Zurich, Switzerland",Compliant
+DEPOT0716,Medicine Direct Group,"Berlin, Germany",Provisional
+DEPOT0717,CareHealthcare Inc,"New York, USA",Certified
+DEPOT0718,UnitedHealthcare Distribution,"Berlin, Germany",Pending Review
+DEPOT0719,Metro Pharmacy Network,"Dubai, UAE",Compliant
+DEPOT0720,MedMedical Group,"Amsterdam, Netherlands",Pending Review
+DEPOT0721,InterMedical Logistics,"São Paulo, Brazil",Certified
+DEPOT0722,Rapid Solutions,"London, UK",Under Inspection
+DEPOT0723,Medicine Med Inc,"Toronto, Canada",Pending Review
+DEPOT0724,Therapeutic Total International,Singapore,Certified
+DEPOT0725,Allied Medical Distribution,Singapore,Pending Review
+DEPOT0726,Total Wellness Services,"Paris, France",Pending Review
+DEPOT0727,Direct-Medical Co,"Zurich, Switzerland",Provisional
+DEPOT0728,United Network,"New York, USA",Provisional
+DEPOT0729,Metro Care Co,"Sydney, Australia",Pending Review
+DEPOT0730,VitalRx International,"São Paulo, Brazil",Provisional
+DEPOT0731,DirectLogistics Group,"Sydney, Australia",Provisional
+DEPOT0732,Rapid-Pharma Services,"Zurich, Switzerland",Provisional
+DEPOT0733,Apex-Medicine Alliance,"Dubai, UAE",Compliant
+DEPOT0734,MetroPharma Network,"Amsterdam, Netherlands",Certified
+DEPOT0735,Pharma Rapid Solutions,Singapore,Compliant
+DEPOT0736,Allied-Care Corp,"Paris, France",Provisional
+DEPOT0737,Metro-Therapeutic International,"São Paulo, Brazil",Pending Review
+DEPOT0738,RapidPharmacy Inc,"Amsterdam, Netherlands",Compliant
+DEPOT0739,Direct-Supply Inc,Singapore,Pending Review
+DEPOT0740,Allied Services,"London, UK",Certified
+DEPOT0741,Rapid Medicine Distribution,"Mumbai, India",Provisional
+DEPOT0742,Global Rx Distributors,Singapore,Provisional
+DEPOT0743,Healthcare Direct Distributors,"Toronto, Canada",Compliant
+DEPOT0744,Vital Healthcare Logistics,"Paris, France",Certified
+DEPOT0745,Metro Medicine Co,"Tokyo, Japan",Under Inspection
+DEPOT0746,Pharmacy Allied Co,"Mumbai, India",Pending Review
+DEPOT0747,Care Healthcare International,"Madrid, Spain",Provisional
+DEPOT0748,Allied-Wellness Group,"London, UK",Provisional
+DEPOT0749,Apex Medicine Group,"Paris, France",Under Inspection
+DEPOT0750,Care Logistics Group,"Shanghai, China",Certified
+DEPOT0751,Allied Pharmacy Supply Chain,"São Paulo, Brazil",Pending Review
+DEPOT0752,Pharma Vital Group,"Mumbai, India",Provisional
+DEPOT0753,MetroDrug Inc,"New York, USA",Certified
+DEPOT0754,Inter-Rx Partners,"Dubai, UAE",Provisional
+DEPOT0755,Pharmacy Care Distributors,"Shanghai, China",Under Inspection
+DEPOT0756,GlobalLogistics LLC,"Paris, France",Provisional
+DEPOT0757,Apex Health International,"Berlin, Germany",Pending Review
+DEPOT0758,Pro-Life Services,"New York, USA",Under Inspection
+DEPOT0759,Vital-Healthcare Partners,"Zurich, Switzerland",Under Inspection
+DEPOT0760,Global Medical Partners,"London, UK",Pending Review
+DEPOT0761,MetroRx Alliance,"São Paulo, Brazil",Pending Review
+DEPOT0762,Prime Wellness Network,"Dubai, UAE",Under Inspection
+DEPOT0763,National-Therapeutic Logistics,"Dubai, UAE",Under Inspection
+DEPOT0764,Direct International,"New York, USA",Compliant
+DEPOT0765,Logistics Care Services,Singapore,Pending Review
+DEPOT0766,Global Logistics,"Dubai, UAE",Provisional
+DEPOT0767,Rapid Pharmacy Co,"Madrid, Spain",Compliant
+DEPOT0768,United-Drug Inc,"London, UK",Under Inspection
+DEPOT0769,Health Vital Co,"Mumbai, India",Compliant
+DEPOT0770,Pro Inc,"Mumbai, India",Compliant
+DEPOT0771,GlobalSupply Logistics,"New York, USA",Provisional
+DEPOT0772,AlliedMeds Distribution,"São Paulo, Brazil",Provisional
+DEPOT0773,Med-Health International,"Shanghai, China",Provisional
+DEPOT0774,VitalWellness Solutions,"New York, USA",Under Inspection
+DEPOT0775,ProMeds Distributors,"Dubai, UAE",Compliant
+DEPOT0776,MetroWellness Partners,"Paris, France",Provisional
+DEPOT0777,MedMeds Services,"New York, USA",Compliant
+DEPOT0778,VitalLife Corp,"São Paulo, Brazil",Certified
+DEPOT0779,Metro-Pharma Services,Singapore,Provisional
+DEPOT0780,GlobalTherapeutic Partners,"Shanghai, China",Certified
+DEPOT0781,Care-Healthcare Group,"Shanghai, China",Under Inspection
+DEPOT0782,Vital Services,"Mumbai, India",Pending Review
+DEPOT0783,Vital Network,Singapore,Pending Review
+DEPOT0784,Life Prime Solutions,"Shanghai, China",Pending Review
+DEPOT0785,DirectHealthcare Partners,"Shanghai, China",Under Inspection
+DEPOT0786,Allied Wellness Supply Chain,"Dubai, UAE",Compliant
+DEPOT0787,CareMedicine Co,"Zurich, Switzerland",Provisional
+DEPOT0788,Vital-Medical Distributors,"Mumbai, India",Pending Review
+DEPOT0789,MedCare Supply Chain,"Berlin, Germany",Pending Review
+DEPOT0790,DirectWellness Alliance,"Shanghai, China",Pending Review
+DEPOT0791,Allied Therapeutic Services,"New York, USA",Provisional
+DEPOT0792,Direct-Therapeutic Partners,"Sydney, Australia",Certified
+DEPOT0793,United Medical Logistics,"Amsterdam, Netherlands",Certified
+DEPOT0794,ApexMeds Solutions,"São Paulo, Brazil",Certified
+DEPOT0795,Apex-Drug International,"Amsterdam, Netherlands",Compliant
+DEPOT0796,Med Medicine Inc,"Paris, France",Pending Review
+DEPOT0797,Direct-Healthcare Solutions,"Shanghai, China",Pending Review
+DEPOT0798,Medical Apex Partners,"Berlin, Germany",Provisional
+DEPOT0799,Global Supply Group,"Sydney, Australia",Under Inspection
+DEPOT0800,Total Wellness Solutions,"Berlin, Germany",Pending Review
+DEPOT0801,Supply United Supply Chain,"Tokyo, Japan",Pending Review
+DEPOT0802,United Meds Alliance,"New York, USA",Certified
+DEPOT0803,Inter-Care Inc,"Paris, France",Certified
+DEPOT0804,Wellness Rapid Inc,"New York, USA",Certified
+DEPOT0805,Care-Pharma LLC,"Tokyo, Japan",Compliant
+DEPOT0806,Allied Wellness Logistics,"Toronto, Canada",Under Inspection
+DEPOT0807,Med Health Distribution,"Sydney, Australia",Under Inspection
+DEPOT0808,Metro Life Distribution,"Madrid, Spain",Under Inspection
+DEPOT0809,Logistics Vital Network,"Shanghai, China",Compliant
+DEPOT0810,National-Medicine Network,Singapore,Provisional
+DEPOT0811,Healthcare Global Group,"New York, USA",Provisional
+DEPOT0812,National Medical Distributors,"Sydney, Australia",Pending Review
+DEPOT0813,Healthcare Rapid Distribution,"Mumbai, India",Under Inspection
+DEPOT0814,Rapid Network,"London, UK",Provisional
+DEPOT0815,Logistics Inter Solutions,"São Paulo, Brazil",Certified
+DEPOT0816,Health Pro Partners,"Toronto, Canada",Compliant
+DEPOT0817,InterCare LLC,"Zurich, Switzerland",Provisional
+DEPOT0818,Total-Rx Group,"Mumbai, India",Under Inspection
+DEPOT0819,Med Medical Supply Chain,Singapore,Compliant
+DEPOT0820,Meds Allied Logistics,"Zurich, Switzerland",Certified
+DEPOT0821,InterMedical Solutions,"Zurich, Switzerland",Pending Review
+DEPOT0822,Care Drug Partners,"Toronto, Canada",Compliant
+DEPOT0823,Care-Health Corp,"Tokyo, Japan",Under Inspection
+DEPOT0824,Global Co,"London, UK",Pending Review
+DEPOT0825,RapidPharmacy International,"Tokyo, Japan",Provisional
+DEPOT0826,Care-Drug International,"New York, USA",Pending Review
+DEPOT0827,Metro-Medical Group,"Toronto, Canada",Pending Review
+DEPOT0828,National Supply Co,"Mumbai, India",Compliant
+DEPOT0829,Apex International,"Amsterdam, Netherlands",Certified
+DEPOT0830,Meds National Solutions,"São Paulo, Brazil",Pending Review
+DEPOT0831,ProTherapeutic Services,"Toronto, Canada",Pending Review
+DEPOT0832,Logistics Rapid Services,Singapore,Compliant
+DEPOT0833,UnitedWellness LLC,"Madrid, Spain",Provisional
+DEPOT0834,Therapeutic Allied Services,"Amsterdam, Netherlands",Pending Review
+DEPOT0835,MetroSupply LLC,Singapore,Certified
+DEPOT0836,NationalHealthcare Network,"Madrid, Spain",Pending Review
+DEPOT0837,National Drug Inc,"Toronto, Canada",Compliant
+DEPOT0838,TotalMedicine Services,"London, UK",Pending Review
+DEPOT0839,ProPharmacy Logistics,"Dubai, UAE",Under Inspection
+DEPOT0840,Rapid Life Co,"Dubai, UAE",Under Inspection
+DEPOT0841,Allied-Medicine Supply Chain,"London, UK",Provisional
+DEPOT0842,Metro-Supply Logistics,"Zurich, Switzerland",Provisional
+DEPOT0843,Allied Group,"Toronto, Canada",Under Inspection
+DEPOT0844,NationalPharma Distributors,"Shanghai, China",Provisional
+DEPOT0845,Rx Apex Co,"Madrid, Spain",Provisional
+DEPOT0846,Direct Co,"Sydney, Australia",Certified
+DEPOT0847,Wellness Pro LLC,"Sydney, Australia",Certified
+DEPOT0848,Total Services,"Madrid, Spain",Provisional
+DEPOT0849,Medicine Pro Distributors,"Madrid, Spain",Under Inspection
+DEPOT0850,Care Metro Partners,"Toronto, Canada",Under Inspection
+DEPOT0851,Vital-Drug Group,"Mumbai, India",Pending Review
+DEPOT0852,Direct Inc,"Tokyo, Japan",Certified
+DEPOT0853,Pharma Total Supply Chain,"Paris, France",Pending Review
+DEPOT0854,Rapid-Health Corp,"Berlin, Germany",Pending Review
+DEPOT0855,InterCare Solutions,"Amsterdam, Netherlands",Provisional
+DEPOT0856,Pharma Inter Corp,"Sydney, Australia",Under Inspection
+DEPOT0857,MetroSupply Partners,Singapore,Under Inspection
+DEPOT0858,InterSupply Corp,Singapore,Provisional
+DEPOT0859,Allied-Medical Distributors,"Sydney, Australia",Compliant
+DEPOT0860,ProSupply Distributors,"Zurich, Switzerland",Compliant
+DEPOT0861,Metro Pharmacy Services,"Paris, France",Under Inspection
+DEPOT0862,Wellness Global Network,"Madrid, Spain",Pending Review
+DEPOT0863,Therapeutic Rapid International,"Berlin, Germany",Compliant
+DEPOT0864,Prime Therapeutic Solutions,"Zurich, Switzerland",Certified
+DEPOT0865,RapidMeds Network,"Sydney, Australia",Pending Review
+DEPOT0866,Med Meds LLC,"Tokyo, Japan",Provisional
+DEPOT0867,GlobalDrug Distribution,"Mumbai, India",Compliant
+DEPOT0868,Apex Supply Solutions,"London, UK",Certified
+DEPOT0869,Therapeutic Allied Partners,"Madrid, Spain",Pending Review
+DEPOT0870,Logistics National LLC,"Paris, France",Pending Review
+DEPOT0871,InterRx International,"Paris, France",Under Inspection
+DEPOT0872,GlobalHealth Network,"Mumbai, India",Under Inspection
+DEPOT0873,PrimeLogistics Corp,Singapore,Pending Review
+DEPOT0874,Prime Solutions,"Toronto, Canada",Provisional
+DEPOT0875,VitalPharmacy Inc,"London, UK",Pending Review
+DEPOT0876,NationalLife LLC,"Sydney, Australia",Provisional
+DEPOT0877,Med Medicine Supply Chain,Singapore,Provisional
+DEPOT0878,Health Total Network,"Tokyo, Japan",Provisional
+DEPOT0879,Total Medical Services,"New York, USA",Under Inspection
+DEPOT0880,RapidPharma Solutions,"Amsterdam, Netherlands",Certified
+DEPOT0881,InterLife Supply Chain,"Zurich, Switzerland",Under Inspection
+DEPOT0882,Prime Services,"Berlin, Germany",Compliant
+DEPOT0883,CareMedical Group,"Mumbai, India",Provisional
+DEPOT0884,United Inc,"London, UK",Provisional
+DEPOT0885,Inter-Health Solutions,"Tokyo, Japan",Provisional
+DEPOT0886,RapidDrug Corp,"London, UK",Pending Review
+DEPOT0887,PrimeMedical Corp,"Sydney, Australia",Provisional
+DEPOT0888,InterHealth Co,"Berlin, Germany",Provisional
+DEPOT0889,Metro-Healthcare Solutions,"Tokyo, Japan",Pending Review
+DEPOT0890,Med Alliance,"Sydney, Australia",Under Inspection
+DEPOT0891,Total-Rx Logistics,"Madrid, Spain",Pending Review
+DEPOT0892,Apex Drug Logistics,"São Paulo, Brazil",Under Inspection
+DEPOT0893,Care-Wellness Partners,"Zurich, Switzerland",Provisional
+DEPOT0894,Med Drug Supply Chain,"Paris, France",Provisional
+DEPOT0895,Medical Direct LLC,"Sydney, Australia",Compliant
+DEPOT0896,Pro-Therapeutic Co,"Paris, France",Compliant
+DEPOT0897,DirectCare LLC,"Amsterdam, Netherlands",Certified
+DEPOT0898,Pro-Drug Corp,"Paris, France",Under Inspection
+DEPOT0899,Prime Alliance,"New York, USA",Pending Review
+DEPOT0900,National-Rx Logistics,"Shanghai, China",Compliant
+DEPOT0901,CareLogistics Services,"London, UK",Under Inspection
+DEPOT0902,Care Drug Alliance,"Paris, France",Under Inspection
+DEPOT0903,Total Partners,"Paris, France",Under Inspection
+DEPOT0904,PrimeWellness Corp,"Toronto, Canada",Certified
+DEPOT0905,Prime-Care Inc,"São Paulo, Brazil",Provisional
+DEPOT0906,NationalDrug Group,"Sydney, Australia",Pending Review
+DEPOT0907,Total Pharmacy Logistics,"Paris, France",Provisional
+DEPOT0908,Pharma Total International,"Amsterdam, Netherlands",Certified
+DEPOT0909,VitalPharma Distribution,Singapore,Provisional
+DEPOT0910,GlobalPharmacy Inc,"Mumbai, India",Certified
+DEPOT0911,UnitedHealthcare Alliance,"São Paulo, Brazil",Certified
+DEPOT0912,ApexHealthcare Services,"London, UK",Compliant
+DEPOT0913,UnitedTherapeutic International,Singapore,Certified
+DEPOT0914,Allied Care Services,"New York, USA",Pending Review
+DEPOT0915,TotalMedicine Co,"Amsterdam, Netherlands",Provisional
+DEPOT0916,Med-Wellness Services,"Sydney, Australia",Pending Review
+DEPOT0917,RapidLife International,"Tokyo, Japan",Pending Review
+DEPOT0918,Therapeutic Med Alliance,"Paris, France",Provisional
+DEPOT0919,ApexRx Inc,"Madrid, Spain",Provisional
+DEPOT0920,Meds Inter Co,"Dubai, UAE",Certified
+DEPOT0921,Prime Medical Partners,"Berlin, Germany",Under Inspection
+DEPOT0922,DirectPharma Group,"London, UK",Certified
+DEPOT0923,Inter-Medical Services,"Tokyo, Japan",Provisional
+DEPOT0924,Meds Total Inc,"Toronto, Canada",Compliant
+DEPOT0925,ApexHealthcare Partners,"Amsterdam, Netherlands",Compliant
+DEPOT0926,Total-Drug Distributors,"São Paulo, Brazil",Under Inspection
+DEPOT0927,Logistics Med International,"São Paulo, Brazil",Pending Review
+DEPOT0928,GlobalHealth Inc,"Amsterdam, Netherlands",Certified
+DEPOT0929,DirectMedical Co,Singapore,Compliant
+DEPOT0930,Life Allied Solutions,"São Paulo, Brazil",Compliant
+DEPOT0931,Direct-Pharmacy Corp,"Mumbai, India",Certified
+DEPOT0932,Meds Global Corp,"São Paulo, Brazil",Under Inspection
+DEPOT0933,National-Supply Partners,"São Paulo, Brazil",Certified
+DEPOT0934,Rapid-Health Partners,"Madrid, Spain",Provisional
+DEPOT0935,ApexDrug Distribution,"Berlin, Germany",Pending Review
+DEPOT0936,Inter-Rx Distributors,"New York, USA",Pending Review
+DEPOT0937,NationalWellness Network,"Toronto, Canada",Provisional
+DEPOT0938,CareDrug Corp,"Zurich, Switzerland",Certified
+DEPOT0939,GlobalDrug Group,"Zurich, Switzerland",Compliant
+DEPOT0940,Total Drug Distributors,"New York, USA",Pending Review
+DEPOT0941,United-Care Supply Chain,"Mumbai, India",Provisional
+DEPOT0942,Rx Allied Corp,"Tokyo, Japan",Under Inspection
+DEPOT0943,Vital Logistics Group,"Sydney, Australia",Pending Review
+DEPOT0944,Care-Medicine Partners,"Dubai, UAE",Compliant
+DEPOT0945,Healthcare Direct Co,"Dubai, UAE",Certified
+DEPOT0946,Vital-Pharma Services,"São Paulo, Brazil",Compliant
+DEPOT0947,United Group,"Mumbai, India",Provisional
+DEPOT0948,Global-Medical Partners,"São Paulo, Brazil",Compliant
+DEPOT0949,Pro Healthcare Supply Chain,"Sydney, Australia",Certified
+DEPOT0950,Allied-Health Corp,"Toronto, Canada",Provisional
+DEPOT0951,NationalTherapeutic International,"Amsterdam, Netherlands",Provisional
+DEPOT0952,Metro Corp,"Dubai, UAE",Compliant
+DEPOT0953,United Partners,"Mumbai, India",Provisional
+DEPOT0954,Life Apex Logistics,"Amsterdam, Netherlands",Pending Review
+DEPOT0955,Meds United Corp,Singapore,Under Inspection
+DEPOT0956,Logistics Apex Solutions,"Madrid, Spain",Certified
+DEPOT0957,MedWellness Partners,"Berlin, Germany",Certified
+DEPOT0958,Pro Life Logistics,"Tokyo, Japan",Under Inspection
+DEPOT0959,Inter Pharma Services,"Zurich, Switzerland",Provisional
+DEPOT0960,AlliedWellness Logistics,"Toronto, Canada",Compliant
+DEPOT0961,Supply Metro Network,"Zurich, Switzerland",Under Inspection
+DEPOT0962,Direct Medicine Co,"Madrid, Spain",Pending Review
+DEPOT0963,Pro Medical Solutions,"Madrid, Spain",Provisional
+DEPOT0964,Rx Apex Distributors,"Toronto, Canada",Certified
+DEPOT0965,Vital Alliance,"Dubai, UAE",Pending Review
+DEPOT0966,Inter Logistics Solutions,"Dubai, UAE",Certified
+DEPOT0967,Rapid Services,Singapore,Under Inspection
+DEPOT0968,UnitedPharmacy LLC,"Sydney, Australia",Pending Review
+DEPOT0969,National Logistics,"Toronto, Canada",Certified
+DEPOT0970,TotalLife Distribution,"São Paulo, Brazil",Certified
+DEPOT0971,Total Health Partners,"Tokyo, Japan",Pending Review
+DEPOT0972,Inter Pharma Supply Chain,"Sydney, Australia",Pending Review
+DEPOT0973,Meds Metro Services,"London, UK",Compliant
+DEPOT0974,Logistics Pro Services,"Sydney, Australia",Compliant
+DEPOT0975,UnitedLogistics Co,"Madrid, Spain",Pending Review
+DEPOT0976,Pro Medicine LLC,"Tokyo, Japan",Certified
+DEPOT0977,CareHealth Partners,"Zurich, Switzerland",Provisional
+DEPOT0978,ApexHealth Corp,"Tokyo, Japan",Provisional
+DEPOT0979,UnitedHealth Partners,Singapore,Under Inspection
+DEPOT0980,AlliedLogistics Services,"Madrid, Spain",Under Inspection
+DEPOT0981,Allied-Care Solutions,"Dubai, UAE",Pending Review
+DEPOT0982,Med Corp,"Paris, France",Certified
+DEPOT0983,Apex LLC,"Berlin, Germany",Certified
+DEPOT0984,Pharmacy United Services,"Toronto, Canada",Compliant
+DEPOT0985,Apex-Healthcare Group,"Toronto, Canada",Compliant
+DEPOT0986,ProHealth Partners,"Dubai, UAE",Under Inspection
+DEPOT0987,Global Wellness Supply Chain,"Dubai, UAE",Compliant
+DEPOT0988,Rapid Meds Supply Chain,"Amsterdam, Netherlands",Pending Review
+DEPOT0989,Prime Logistics Services,"Toronto, Canada",Under Inspection
+DEPOT0990,Drug Total Alliance,"Tokyo, Japan",Compliant
+DEPOT0991,Metro Meds Co,"Toronto, Canada",Provisional
+DEPOT0992,Inter Pharmacy Solutions,"Shanghai, China",Under Inspection
+DEPOT0993,Pro Therapeutic International,"London, UK",Pending Review
+DEPOT0994,Supply Rapid Logistics,"Sydney, Australia",Certified
+DEPOT0995,Prime Wellness Alliance,"Tokyo, Japan",Pending Review
+DEPOT0996,TotalDrug Group,"Berlin, Germany",Pending Review
+DEPOT0997,Pharma Prime Group,"Berlin, Germany",Certified
+DEPOT0998,Care-Wellness Services,"Dubai, UAE",Pending Review
+DEPOT0999,Med-Therapeutic Network,"Madrid, Spain",Under Inspection
+DEPOT1000,TotalPharma Partners,"Berlin, Germany",Under Inspection
