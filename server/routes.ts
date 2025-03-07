@@ -665,6 +665,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add relationship attribute definition routes
+  app.get("/api/relationships/:id/attribute-definitions", async (req, res) => {
+    console.log('GET /api/relationships/:id/attribute-definitions - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/relationships/:id/attribute-definitions - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const definitions = await storage.getRelationshipAttributeDefinitions(Number(req.params.id));
+      console.log('GET /api/relationships/:id/attribute-definitions - Definitions fetched successfully');
+      res.json(definitions);
+    } catch (error) {
+      console.error('GET /api/relationships/:id/attribute-definitions - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.post("/api/relationships/:id/attribute-definitions", async (req, res) => {
+    console.log('POST /api/relationships/:id/attribute-definitions - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/relationships/:id/attribute-definitions - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const result = insertRelationshipAttributeDefinitionSchema.safeParse({
+        ...req.body,
+        relationshipTypeId: Number(req.params.id)
+      });
+
+      if (!result.success) {
+        console.log('POST /api/relationships/:id/attribute-definitions - Invalid data:', result.error);
+        return res.status(400).json(result.error);
+      }
+
+      const definition = await storage.createRelationshipAttributeDefinition(result.data);
+      console.log('POST /api/relationships/:id/attribute-definitions - Definition created successfully');
+      res.status(201).json(definition);
+    } catch (error) {
+      console.error('POST /api/relationships/:id/attribute-definitions - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.patch("/api/relationships/attribute-definitions/:id", async (req, res) => {
+    console.log('PATCH /api/relationships/attribute-definitions/:id - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('PATCH /api/relationships/attribute-definitions/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const definition = await storage.updateRelationshipAttributeDefinition(
+        Number(req.params.id),
+        req.body
+      );
+      console.log('PATCH /api/relationships/attribute-definitions/:id - Definition updated successfully');
+      res.json(definition);
+    } catch (error) {
+      console.error('PATCH /api/relationships/attribute-definitions/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.delete("/api/relationships/attribute-definitions/:id", async (req, res) => {
+    console.log('DELETE /api/relationships/attribute-definitions/:id - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('DELETE /api/relationships/attribute-definitions/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const success = await storage.deleteRelationshipAttributeDefinition(Number(req.params.id));
+      if (success) {
+        console.log('DELETE /api/relationships/attribute-definitions/:id - Definition deleted successfully');
+        res.sendStatus(200);
+      } else {
+        console.log('DELETE /api/relationships/attribute-definitions/:id - Definition not found');
+        res.sendStatus(404);
+      }
+    } catch (error) {
+      console.error('DELETE /api/relationships/attribute-definitions/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  // Add relationship attribute value routes
+  app.get("/api/relationships/values/:valueId/attributes", async (req, res) => {
+    console.log('GET /api/relationships/values/:valueId/attributes - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/relationships/values/:valueId/attributes - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const values = await storage.getRelationshipAttributeValues(Number(req.params.valueId));
+      console.log('GET /api/relationships/values/:valueId/attributes - Values fetched successfully');
+      res.json(values);
+    } catch (error) {
+      console.error('GET /api/relationships/values/:valueId/attributes - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.post("/api/relationships/values/:valueId/attributes", async (req, res) => {
+    console.log('POST /api/relationships/values/:valueId/attributes - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/relationships/values/:valueId/attributes - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const result = insertRelationshipAttributeValueSchema.safeParse({
+        ...req.body,
+        relationshipValueId: Number(req.params.valueId)
+      });
+
+      if (!result.success) {
+        console.log('POST /api/relationships/values/:valueId/attributes - Invalid data:', result.error);
+        return res.status(400).json(result.error);
+      }
+
+      const value = await storage.createRelationshipAttributeValue(result.data);
+      console.log('POST /api/relationships/values/:valueId/attributes - Value created successfully');
+      res.status(201).json(value);
+    } catch (error) {
+      console.error('POST /api/relationships/values/:valueId/attributes - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.patch("/api/relationships/attribute-values/:id", async (req, res) => {
+    console.log('PATCH /api/relationships/attribute-values/:id - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('PATCH /api/relationships/attribute-values/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const value = await storage.updateRelationshipAttributeValue(
+        Number(req.params.id),
+        req.body
+      );
+      console.log('PATCH /api/relationships/attribute-values/:id - Value updated successfully');
+      res.json(value);
+    } catch (error) {
+      console.error('PATCH /api/relationships/attribute-values/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.delete("/api/relationships/attribute-values/:id", async (req, res) => {
+    console.log('DELETE /api/relationships/attribute-values/:id - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('DELETE /api/relationships/attribute-values/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const success = await storage.deleteRelationshipAttributeValue(Number(req.params.id));
+      if (success) {
+        console.log('DELETE /api/relationships/attribute-values/:id - Value deleted successfully');
+        res.sendStatus(200);
+      } else {
+        console.log('DELETE /api/relationships/attribute-values/:id - Value not found');
+        res.sendStatus(404);
+      }
+    } catch (error) {
+      console.error('DELETE /api/relationships/attribute-values/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   // Crosswalk Mapping routes
   app.get("/api/crosswalks", async (req, res) => {
     console.log('GET /api/crosswalks - Request received');
@@ -1016,7 +1182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // For DataItems, ensure we set a display name from the available properties
             if (source.labels.includes('DataItem')) {
               // Try to find a suitable name property from the data
-              const nameProperties = Object.entries(properties).find(([key, value]) => 
+              const nameProperties = Object.entries(properties).find(([key, value]) =>
                 key.toLowerCase().includes('name') ||
                 key.toLowerCase().includes('title') ||
                 key.toLowerCase().includes('site')
@@ -1039,7 +1205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (target && !nodeMap.has(target.identity.toString())) {
             const properties = { ...target.properties };
             if (target.labels.includes('DataItem')) {
-              const nameProperties = Object.entries(properties).find(([key, value]) => 
+              const nameProperties = Object.entries(properties).find(([key, value]) =>
                 key.toLowerCase().includes('name') ||
                 key.toLowerCase().includes('title') ||
                 key.toLowerCase().includes('site')

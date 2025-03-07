@@ -129,6 +129,47 @@ export const relationships = pgTable("relationships", {
 });
 
 // Add after the existing relationships table definition
+export const relationshipAttributeDefinitions = pgTable("relationship_attribute_definitions", {
+  id: serial("id").primaryKey(),
+  relationshipTypeId: integer("relationship_type_id").references(() => relationships.id).notNull(),
+  name: text("name").notNull(),
+  dataType: text("data_type").notNull(), // string, number, boolean, date, etc.
+  isRequired: boolean("is_required").default(false).notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const relationshipAttributeValues = pgTable("relationship_attribute_values", {
+  id: serial("id").primaryKey(),
+  relationshipValueId: integer("relationship_value_id").references(() => relationshipValues.id).notNull(),
+  attributeDefinitionId: integer("attribute_definition_id").references(() => relationshipAttributeDefinitions.id).notNull(),
+  value: text("value").notNull(), // Store all values as text, convert based on dataType when reading
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Add relations
+export const relationshipAttributeDefinitionsRelations = relations(relationshipAttributeDefinitions, ({ one, many }) => ({
+  relationshipType: one(relationships, {
+    fields: [relationshipAttributeDefinitions.relationshipTypeId],
+    references: [relationships.id],
+  }),
+  values: many(relationshipAttributeValues),
+}));
+
+export const relationshipAttributeValuesRelations = relations(relationshipAttributeValues, ({ one }) => ({
+  relationshipValue: one(relationshipValues, {
+    fields: [relationshipAttributeValues.relationshipValueId],
+    references: [relationshipValues.id],
+  }),
+  attributeDefinition: one(relationshipAttributeDefinitions, {
+    fields: [relationshipAttributeValues.attributeDefinitionId],
+    references: [relationshipAttributeDefinitions.id],
+  }),
+}));
+
+// Add after the existing relationships table definition
 export const relationshipValues = pgTable("relationship_values", {
   id: serial("id").primaryKey(),
   relationshipId: integer("relationship_id")
@@ -356,3 +397,24 @@ export type Session = typeof sessions.$inferSelect;
 // Add after existing types
 export type InsertCrosswalkMapping = z.infer<typeof insertCrosswalkMappingSchema>;
 export type CrosswalkMapping = typeof crosswalkMappings.$inferSelect;
+
+// Add types for the new tables
+export type RelationshipAttributeDefinition = typeof relationshipAttributeDefinitions.$inferSelect;
+export type InsertRelationshipAttributeDefinition = typeof relationshipAttributeDefinitions.$inferInsert;
+export type RelationshipAttributeValue = typeof relationshipAttributeValues.$inferSelect;
+export type InsertRelationshipAttributeValue = typeof relationshipAttributeValues.$inferInsert;
+
+// Add validation schemas
+export const insertRelationshipAttributeDefinitionSchema = createInsertSchema(relationshipAttributeDefinitions).extend({
+  relationshipTypeId: z.coerce.number(),
+  name: z.string().min(1, "Attribute name is required"),
+  dataType: z.enum(["string", "number", "boolean", "date"]),
+  isRequired: z.boolean().default(false),
+  description: z.string().optional(),
+});
+
+export const insertRelationshipAttributeValueSchema = createInsertSchema(relationshipAttributeValues).extend({
+  relationshipValueId: z.coerce.number(),
+  attributeDefinitionId: z.coerce.number(),
+  value: z.string(),
+});

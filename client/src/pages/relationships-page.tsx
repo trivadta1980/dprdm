@@ -33,17 +33,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Plus, GitFork, Pencil, Trash2, ArrowRight } from "lucide-react";
+import { Plus, GitFork, Pencil, Trash2, ArrowRight, Settings } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { ReferenceDataSet, ReferenceDataTypeSchema, Relationship } from "@shared/schema";
+import type { 
+  ReferenceDataSet, 
+  ReferenceDataTypeSchema, 
+  Relationship,
+  RelationshipAttributeDefinition 
+} from "@shared/schema";
 import { useState } from "react";
 import { Link } from "wouter";
 import { Link as LinkIcon } from "lucide-react";
-
+import { Switch } from "@/components/ui/switch";
 
 // Form schema for relationships
 const relationshipSchema = z.object({
@@ -56,15 +61,30 @@ const relationshipSchema = z.object({
   targetField: z.string(),
 });
 
+// Form schema for attribute definitions
+const attributeDefinitionSchema = z.object({
+  name: z.string().min(1, "Attribute name is required"),
+  dataType: z.enum(["string", "number", "boolean", "date"]),
+  isRequired: z.boolean().default(false),
+  description: z.string().optional(),
+});
+
 type RelationshipForm = z.infer<typeof relationshipSchema>;
+type AttributeDefinitionForm = z.infer<typeof attributeDefinitionSchema>;
 
 export default function RelationshipsPage() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAttributeDialogOpen, setIsAttributeDialogOpen] = useState(false);
   const [editingRelationship, setEditingRelationship] = useState<Relationship | null>(null);
+  const [selectedRelationshipId, setSelectedRelationshipId] = useState<number | null>(null);
 
   const form = useForm<RelationshipForm>({
     resolver: zodResolver(relationshipSchema),
+  });
+
+  const attributeForm = useForm<AttributeDefinitionForm>({
+    resolver: zodResolver(attributeDefinitionSchema),
   });
 
   // Fetch relationships
@@ -77,20 +97,15 @@ export default function RelationshipsPage() {
     queryKey: ["/api/reference-data"],
   });
 
+  // Fetch attribute definitions for the selected relationship
+  const { data: attributeDefinitions = [] } = useQuery<RelationshipAttributeDefinition[]>({
+    queryKey: [`/api/relationships/${selectedRelationshipId}/attribute-definitions`],
+    enabled: !!selectedRelationshipId,
+  });
+
   // Get the selected data sets
   const sourceDataSet = dataSets.find(ds => ds.id.toString() === form.watch("sourceDataSetId"));
   const targetDataSet = dataSets.find(ds => ds.id.toString() === form.watch("targetDataSetId"));
-
-  // Fetch schemas for selected data sets
-  const { data: sourceSchemas = [] } = useQuery<ReferenceDataTypeSchema[]>({
-    queryKey: [`/api/reference-types/${sourceDataSet?.typeId}/schemas`],
-    enabled: !!sourceDataSet?.typeId,
-  });
-
-  const { data: targetSchemas = [] } = useQuery<ReferenceDataTypeSchema[]>({
-    queryKey: [`/api/reference-types/${targetDataSet?.typeId}/schemas`],
-    enabled: !!targetDataSet?.typeId,
-  });
 
   // Create/Update relationship mutation
   const mutateRelationship = useMutation({
@@ -121,6 +136,37 @@ export default function RelationshipsPage() {
     },
   });
 
+  // Create attribute definition mutation
+  const mutateAttributeDefinition = useMutation({
+    mutationFn: async (data: AttributeDefinitionForm) => {
+      if (!selectedRelationshipId) return;
+      const res = await apiRequest(
+        "POST",
+        `/api/relationships/${selectedRelationshipId}/attribute-definitions`,
+        data
+      );
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [`/api/relationships/${selectedRelationshipId}/attribute-definitions`],
+      });
+      setIsAttributeDialogOpen(false);
+      attributeForm.reset();
+      toast({
+        title: "Success",
+        description: "Attribute definition created successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create attribute definition",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Delete relationship mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -142,8 +188,35 @@ export default function RelationshipsPage() {
     },
   });
 
+  // Delete attribute definition mutation
+  const deleteAttributeMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/relationships/attribute-definitions/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [`/api/relationships/${selectedRelationshipId}/attribute-definitions`],
+      });
+      toast({
+        title: "Success",
+        description: "Attribute definition deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete attribute definition",
+        variant: "destructive",
+      });
+    },
+  });
+
   function onSubmit(data: RelationshipForm) {
     mutateRelationship.mutate(data);
+  }
+
+  function onAttributeSubmit(data: AttributeDefinitionForm) {
+    mutateAttributeDefinition.mutate(data);
   }
 
   function handleEdit(relationship: Relationship) {
@@ -166,6 +239,12 @@ export default function RelationshipsPage() {
     }
   }
 
+  function handleDeleteAttribute(id: number) {
+    if (window.confirm("Are you sure you want to delete this attribute definition?")) {
+      deleteAttributeMutation.mutate(id);
+    }
+  }
+
   // Helper function to get dataset name by ID
   const getDataSetName = (id: number) => {
     return dataSets.find(ds => ds.id === id)?.name || "Unknown Dataset";
@@ -180,20 +259,23 @@ export default function RelationshipsPage() {
               <GitFork className="h-5 w-5" />
               Relationship Management
             </CardTitle>
-            <Dialog open={isDialogOpen} onOpenChange={(open) => {
-              if (!open) {
-                setEditingRelationship(null);
-                form.reset();
-              }
-              setIsDialogOpen(open);
-            }}>
+            <Dialog
+              open={isDialogOpen}
+              onOpenChange={(open) => {
+                if (!open) {
+                  setEditingRelationship(null);
+                  form.reset();
+                }
+                setIsDialogOpen(open);
+              }}
+            >
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
                   New Relationship
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>
                     {editingRelationship ? 'Edit Relationship' : 'Create New Relationship'}
@@ -214,176 +296,148 @@ export default function RelationshipsPage() {
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={form.control}
-                      name="sourceDataSetId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Source Data Set</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="sourceDataSetId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Source Data Set</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select source data set" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {dataSets.map((dataSet) => (
+                                  <SelectItem
+                                    key={dataSet.id}
+                                    value={dataSet.id.toString()}
+                                  >
+                                    {dataSet.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="targetDataSetId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Target Data Set</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select target data set" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {dataSets.map((dataSet) => (
+                                  <SelectItem
+                                    key={dataSet.id}
+                                    value={dataSet.id.toString()}
+                                  >
+                                    {dataSet.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="relationshipType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Relationship Type</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select relationship type" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="parent-child">Parent-Child</SelectItem>
+                                <SelectItem value="reference">Reference</SelectItem>
+                                <SelectItem value="association">Association</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="cardinality"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Cardinality</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select cardinality" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="one-to-one">One-to-One</SelectItem>
+                                <SelectItem value="one-to-many">One-to-Many</SelectItem>
+                                <SelectItem value="many-to-many">Many-to-Many</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="sourceField"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Source Field</FormLabel>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select source data set" />
-                              </SelectTrigger>
+                              <Input placeholder="Enter source field" {...field} />
                             </FormControl>
-                            <SelectContent>
-                              {dataSets.map((dataSet) => (
-                                <SelectItem
-                                  key={dataSet.id}
-                                  value={dataSet.id.toString()}
-                                >
-                                  {dataSet.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="targetDataSetId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Target Data Set</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="targetField"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Target Field</FormLabel>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select target data set" />
-                              </SelectTrigger>
+                              <Input placeholder="Enter target field" {...field} />
                             </FormControl>
-                            <SelectContent>
-                              {dataSets.map((dataSet) => (
-                                <SelectItem
-                                  key={dataSet.id}
-                                  value={dataSet.id.toString()}
-                                >
-                                  {dataSet.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="relationshipType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Relationship Type</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select relationship type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="parent-child">Parent-Child</SelectItem>
-                              <SelectItem value="reference">Reference</SelectItem>
-                              <SelectItem value="association">Association</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="cardinality"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Cardinality</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select cardinality" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="one-to-one">One-to-One</SelectItem>
-                              <SelectItem value="one-to-many">One-to-Many</SelectItem>
-                              <SelectItem value="many-to-many">Many-to-Many</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="sourceField"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Source Field</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select source field" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {sourceSchemas.map((schema) => (
-                                <SelectItem
-                                  key={schema.id}
-                                  value={schema.name}
-                                >
-                                  {schema.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="targetField"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Target Field</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select target field" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {targetSchemas.map((schema) => (
-                                <SelectItem
-                                  key={schema.id}
-                                  value={schema.name}
-                                >
-                                  {schema.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                     <Button type="submit" className="w-full">
                       {editingRelationship ? 'Update' : 'Create'} Relationship
                     </Button>
@@ -430,6 +484,17 @@ export default function RelationshipsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
+                          onClick={() => {
+                            setSelectedRelationshipId(relationship.id);
+                            setIsAttributeDialogOpen(true);
+                          }}
+                          className="hover:bg-blue-50"
+                        >
+                          <Settings className="h-4 w-4 text-blue-600" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           asChild
                           className="hover:bg-green-50"
                         >
@@ -467,6 +532,137 @@ export default function RelationshipsPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Attribute Definitions Dialog */}
+        <Dialog
+          open={isAttributeDialogOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              attributeForm.reset();
+            }
+            setIsAttributeDialogOpen(open);
+          }}
+        >
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Manage Relationship Attributes</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Form {...attributeForm}>
+                <form onSubmit={attributeForm.handleSubmit(onAttributeSubmit)} className="space-y-4">
+                  <FormField
+                    control={attributeForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Attribute Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter attribute name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={attributeForm.control}
+                    name="dataType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data Type</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select data type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="string">String</SelectItem>
+                            <SelectItem value="number">Number</SelectItem>
+                            <SelectItem value="boolean">Boolean</SelectItem>
+                            <SelectItem value="date">Date</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={attributeForm.control}
+                    name="isRequired"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between">
+                        <FormLabel>Required</FormLabel>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={attributeForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter description" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full">
+                    Add Attribute Definition
+                  </Button>
+                </form>
+              </Form>
+
+              {/* Display existing attribute definitions */}
+              {attributeDefinitions.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-lg font-medium mb-4">Existing Attributes</h3>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Required</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {attributeDefinitions.map((attr) => (
+                        <TableRow key={attr.id}>
+                          <TableCell>{attr.name}</TableCell>
+                          <TableCell>{attr.dataType}</TableCell>
+                          <TableCell>{attr.isRequired ? "Yes" : "No"}</TableCell>
+                          <TableCell>{attr.description}</TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteAttribute(attr.id)}
+                              className="hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );

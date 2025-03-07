@@ -13,6 +13,10 @@ import { type RelationshipValue, type InsertRelationshipValue } from "@shared/sc
 import { relationshipValues } from "@shared/schema"; //Import necessary table for RelationshipValue
 import { type CrosswalkMapping, type InsertCrosswalkMapping } from "@shared/schema"; //Import necessary types and table for crosswalk mappings
 import { crosswalkMappings } from "@shared/schema"; //Import necessary table for crosswalk mappings
+import { type RelationshipAttributeDefinition, type InsertRelationshipAttributeDefinition } from "@shared/schema";
+import { relationshipAttributeDefinitions } from "@shared/schema";
+import { type RelationshipAttributeValue, type InsertRelationshipAttributeValue } from "@shared/schema";
+import { relationshipAttributeValues } from "@shared/schema";
 
 
 const PostgresSessionStore = connectPg(session);
@@ -102,6 +106,19 @@ export interface IStorage {
     user: string;
     timestamp: Date;
   }>>;
+
+  // Relationship attribute definition methods
+  createRelationshipAttributeDefinition(definition: InsertRelationshipAttributeDefinition): Promise<RelationshipAttributeDefinition>;
+  getRelationshipAttributeDefinition(id: number): Promise<RelationshipAttributeDefinition | undefined>;
+  getRelationshipAttributeDefinitions(relationshipTypeId: number): Promise<RelationshipAttributeDefinition[]>;
+  updateRelationshipAttributeDefinition(id: number, definition: Partial<InsertRelationshipAttributeDefinition>): Promise<RelationshipAttributeDefinition>;
+  deleteRelationshipAttributeDefinition(id: number): Promise<boolean>;
+
+  // Relationship attribute value methods
+  createRelationshipAttributeValue(value: InsertRelationshipAttributeValue): Promise<RelationshipAttributeValue>;
+  getRelationshipAttributeValues(relationshipValueId: number): Promise<RelationshipAttributeValue[]>;
+  updateRelationshipAttributeValue(id: number, value: Partial<InsertRelationshipAttributeValue>): Promise<RelationshipAttributeValue>;
+  deleteRelationshipAttributeValue(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -766,6 +783,92 @@ export class DatabaseStorage implements IStorage {
       }));
 
     return allActivities;
+  }
+
+  // Implement relationship attribute definition methods
+  async createRelationshipAttributeDefinition(definition: InsertRelationshipAttributeDefinition): Promise<RelationshipAttributeDefinition> {
+    const [attributeDef] = await db
+      .insert(relationshipAttributeDefinitions)
+      .values(definition)
+      .returning();
+    return attributeDef;
+  }
+
+  async getRelationshipAttributeDefinition(id: number): Promise<RelationshipAttributeDefinition | undefined> {
+    const [attributeDef] = await db
+      .select()
+      .from(relationshipAttributeDefinitions)
+      .where(eq(relationshipAttributeDefinitions.id, id));
+    return attributeDef;
+  }
+
+  async getRelationshipAttributeDefinitions(relationshipTypeId: number): Promise<RelationshipAttributeDefinition[]> {
+    return db
+      .select()
+      .from(relationshipAttributeDefinitions)
+      .where(eq(relationshipAttributeDefinitions.relationshipTypeId, relationshipTypeId));
+  }
+
+  async updateRelationshipAttributeDefinition(
+    id: number,
+    updates: Partial<InsertRelationshipAttributeDefinition>
+  ): Promise<RelationshipAttributeDefinition> {
+    const [attributeDef] = await db
+      .update(relationshipAttributeDefinitions)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(relationshipAttributeDefinitions.id, id))
+      .returning();
+    return attributeDef;
+  }
+
+  async deleteRelationshipAttributeDefinition(id: number): Promise<boolean> {
+    const [attributeDef] = await db
+      .delete(relationshipAttributeDefinitions)
+      .where(eq(relationshipAttributeDefinitions.id, id))
+      .returning();
+    return !!attributeDef;
+  }
+
+  // Implement relationship attribute value methods
+  async createRelationshipAttributeValue(value: InsertRelationshipAttributeValue): Promise<RelationshipAttributeValue> {
+    const [attributeValue] = await db
+      .insert(relationshipAttributeValues)
+      .values(value)
+      .returning();
+    return attributeValue;
+  }
+
+  async getRelationshipAttributeValues(relationshipValueId: number): Promise<RelationshipAttributeValue[]> {
+    return db
+      .select()
+      .from(relationshipAttributeValues)
+      .where(eq(relationshipAttributeValues.relationshipValueId, relationshipValueId));
+  }
+
+  async updateRelationshipAttributeValue(
+    id: number,
+    updates: Partial<InsertRelationshipAttributeValue>
+  ): Promise<RelationshipAttributeValue> {
+    const [attributeValue] = await db
+      .update(relationshipAttributeValues)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(relationshipAttributeValues.id, id))
+      .returning();
+    return attributeValue;
+  }
+
+  async deleteRelationshipAttributeValue(id: number): Promise<boolean> {
+    const [attributeValue] = await db
+      .delete(relationshipAttributeValues)
+      .where(eq(relationshipAttributeValues.id, id))
+      .returning();
+    return !!attributeValue;
   }
 }
 
