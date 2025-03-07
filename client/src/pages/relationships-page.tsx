@@ -158,14 +158,19 @@ export default function RelationshipsPage() {
 
       console.log("Creating attribute with data:", requestData);
 
-      const response = await apiRequest("POST", `/api/relationships/${selectedRelationshipId}/attribute-definitions`, requestData);
+      try {
+        const response = await apiRequest(`/api/relationships/${selectedRelationshipId}/attribute-definitions`, {
+          method: 'POST',
+          data: requestData
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create attribute definition');
+        const result = await response.json();
+        console.log("Server response:", result);
+        return result;
+      } catch (error) {
+        console.error("API request failed:", error);
+        throw error;
       }
-
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
