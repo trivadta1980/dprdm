@@ -75,40 +75,58 @@ export default function GraphVisualizationPage() {
     let filteredNodes = graphData.nodes;
     let nodeIds = new Set<string>();
 
-    // Filter by node type
+    // Filter by node type if selected
     if (filterType !== 'all') {
       filteredNodes = filteredNodes.filter(node => node.label === filterType);
     }
 
-    // Filter by dataset
+    // Filter by dataset if selected
     if (filterDataset !== 'all') {
-      // Get the dataset node and its connected nodes
+      // First, find the dataset node
       const datasetNode = graphData.nodes.find(
         node => node.label === 'DataSet' && node.properties?.name === filterDataset
       );
+
       if (datasetNode) {
         const connectedNodes = new Set([datasetNode.id]);
+
+        // First pass: Get all directly connected nodes
         graphData.links.forEach(link => {
-          if (link.source === datasetNode.id) {
-            connectedNodes.add(typeof link.target === 'object' ? link.target.id : link.target);
+          const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+          const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+
+          // If this is a CONTAINS relationship or the source is our dataset
+          if (link.type === 'CONTAINS' || sourceId === datasetNode.id) {
+            connectedNodes.add(targetId);
           }
-          if (link.target === datasetNode.id) {
-            connectedNodes.add(typeof link.source === 'object' ? link.source.id : link.source);
+          // If this is a relationship between items in our dataset
+          if (connectedNodes.has(sourceId)) {
+            connectedNodes.add(targetId);
           }
         });
+
+        // Second pass: Include relationships between connected nodes
+        graphData.links.forEach(link => {
+          const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+          const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+
+          if (connectedNodes.has(sourceId) || connectedNodes.has(targetId)) {
+            connectedNodes.add(sourceId);
+            connectedNodes.add(targetId);
+          }
+        });
+
         filteredNodes = filteredNodes.filter(node => connectedNodes.has(node.id));
       }
     }
 
     nodeIds = new Set(filteredNodes.map(node => node.id));
 
-    const filteredLinks = graphData.links.filter(
-      link => {
-        const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-        const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-        return nodeIds.has(sourceId) && nodeIds.has(targetId);
-      }
-    );
+    const filteredLinks = graphData.links.filter(link => {
+      const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+      const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+      return nodeIds.has(sourceId) && nodeIds.has(targetId);
+    });
 
     return {
       nodes: filteredNodes,

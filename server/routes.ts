@@ -976,8 +976,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      console.log("GET /api/graph/visualization - Neo4j is available, executing query");
-
       // Create Neo4j driver instance
       const driver = neo4j.driver(
         process.env.NEO4J_URI,
@@ -987,10 +985,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const session = driver.session();
 
       try {
-        // Query to get nodes and relationships with proper labels and names
+        // Enhanced query to get nodes and their relationships
         const result = await session.run(`
           MATCH (n)
           OPTIONAL MATCH (n)-[r]->(m)
+          WITH n, r, m
+          WHERE n:DataSet OR n:DataItem OR n:RelationshipType OR EXISTS((n)-[:CONTAINS]->()) OR EXISTS(()-[:CONTAINS]->(n))
           RETURN n, r, m
         `);
 
@@ -1013,16 +1013,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           if (source && !nodeMap.has(source.identity.toString())) {
             const properties = { ...source.properties };
-            // For DataItems, ensure we set a display name
-            if (source.labels.includes('DataItem') && properties.name === undefined) {
+            // For DataItems, ensure we set a display name from the available properties
+            if (source.labels.includes('DataItem')) {
               // Try to find a suitable name property from the data
-              const nameKeys = Object.keys(properties).find(key =>
+              const nameProperties = Object.entries(properties).find(([key, value]) => 
                 key.toLowerCase().includes('name') ||
                 key.toLowerCase().includes('title') ||
                 key.toLowerCase().includes('site')
               );
-              if (nameKeys) {
-                properties.name = properties[nameKeys];
+              if (nameProperties) {
+                properties.name = nameProperties[1];
               }
             }
 
@@ -1038,14 +1038,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           if (target && !nodeMap.has(target.identity.toString())) {
             const properties = { ...target.properties };
-            if (target.labels.includes('DataItem') && properties.name === undefined) {
-              const nameKeys = Object.keys(properties).find(key =>
+            if (target.labels.includes('DataItem')) {
+              const nameProperties = Object.entries(properties).find(([key, value]) => 
                 key.toLowerCase().includes('name') ||
                 key.toLowerCase().includes('title') ||
                 key.toLowerCase().includes('site')
               );
-              if (nameKeys) {
-                properties.name = properties[nameKeys];
+              if (nameProperties) {
+                properties.name = nameProperties[1];
               }
             }
 
