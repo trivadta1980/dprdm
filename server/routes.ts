@@ -12,6 +12,7 @@ import { promisify } from "util";
 import { db } from './db';
 import { isNeo4jAvailable } from './neo4j';
 import GraphDataService from './services/graphDataService';
+import neo4j from 'neo4j-driver';
 
 const scryptAsync = promisify(scrypt);
 
@@ -977,92 +978,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("GET /api/graph/visualization - Neo4j is available, executing query");
 
-      // Query to get nodes and relationships with proper labels and names
-      const records = await GraphDataService.runQuery(`
-      MATCH (n)
-      OPTIONAL MATCH (n)-[r]->(m)
-      RETURN n, r, m
-    `);
+      // Create Neo4j driver instance
+      const driver = neo4j.driver(
+        process.env.NEO4J_URI,
+        neo4j.auth.basic(process.env.NEO4J_USERNAME, process.env.NEO4J_PASSWORD)
+      );
 
-      const nodes = [];
-      const links = [];
-      const nodeMap = new Map();
+      const session = driver.session();
 
-      const nodeColors = {
-        DataSet: '#4285F4',
-        DataItem: '#34A853',
-        RelationshipType: '#FBBC05',
-        CrosswalkMapping: '#EA4335'
-      };
+      try {
+        // Query to get nodes and relationships with proper labels and names
+        const result = await session.run(`
+          MATCH (n)
+          OPTIONAL MATCH (n)-[r]->(m)
+          RETURN n, r, m
+        `);
 
-      // Process nodes and relationships
-      records.forEach(record => {
-        const source = record.get('n');
-        const relationship = record.get('r');
-        const target = record.get('m');
+        const nodes = [];
+        const links = [];
+        const nodeMap = new Map();
 
-        if (source && !nodeMap.has(source.identity.toString())) {
-          const properties = { ...source.properties };
-          // For DataItems, ensure we set a display name
-          if (source.labels.includes('DataItem') && properties.name === undefined) {
-            // Try to find a suitable name property from the data
-            const nameKeys = Object.keys(properties).find(key =>
-              key.toLowerCase().includes('name') ||
-              key.toLowerCase().includes('title') ||
-              key.toLowerCase().includes('site')
-            );
-            if (nameKeys) {
-              properties.name = properties[nameKeys];
+        const nodeColors = {
+          DataSet: '#4285F4',
+          DataItem: '#34A853',
+          RelationshipType: '#FBBC05',
+          CrosswalkMapping: '#EA4335'
+        };
+
+        // Process nodes and relationships
+        result.records.forEach(record => {
+          const source = record.get('n');
+          const relationship = record.get('r');
+          const target = record.get('m');
+
+          if (source && !nodeMap.has(source.identity.toString())) {
+            const properties = { ...source.properties };
+            // For DataItems, ensure we set a display name
+            if (source.labels.includes('DataItem') && properties.name === undefined) {
+              // Try to find a suitable name property from the data
+              const nameKeys = Object.keys(properties).find(key =>
+                key.toLowerCase().includes('name') ||
+                key.toLowerCase().includes('title') ||
+                key.toLowerCase().includes('site')
+              );
+              if (nameKeys) {
+                properties.name = properties[nameKeys];
+              }
             }
+
+            nodeMap.set(source.identity.toString(), nodes.length);
+            nodes.push({
+              id: source.identity.toString(),
+              label: source.labels[0],
+              properties: properties,
+              color: nodeColors[source.labels[0]] || '#4285F4',
+              val: source.labels[0] === 'DataSet' ? 15 : 10
+            });
           }
 
-          nodeMap.set(source.identity.toString(), nodes.length);
-          nodes.push({
-            id: source.identity.toString(),
-            label: source.labels[0],
-            properties: properties,
-            color: nodeColors[source.labels[0]] || '#4285F4',
-            val: source.labels[0] === 'DataSet' ? 15 : 10
-          });
-        }
-
-        if (target && !nodeMap.has(target.identity.toString())) {
-          const properties = { ...target.properties };
-          if (target.labels.includes('DataItem') && properties.name === undefined) {
-            const nameKeys = Object.keys(properties).find(key =>
-              key.toLowerCase().includes('name') ||
-              key.toLowerCase().includes('title') ||
-              key.toLowerCase().includes('site')
-            );
-            if (nameKeys) {
-              properties.name = properties[nameKeys];
+          if (target && !nodeMap.has(target.identity.toString())) {
+            const properties = { ...target.properties };
+            if (target.labels.includes('DataItem') && properties.name === undefined) {
+              const nameKeys = Object.keys(properties).find(key =>
+                key.toLowerCase().includes('name') ||
+                key.toLowerCase().includes('title') ||
+                key.toLowerCase().includes('site')
+              );
+              if (nameKeys) {
+                properties.name = properties[nameKeys];
+              }
             }
+
+            nodeMap.set(target.identity.toString(), nodes.length);
+            nodes.push({
+              id: target.identity.toString(),
+              label: target.labels[0],
+              properties: properties,
+              color: nodeColors[target.labels[0]] || '#4285F4',
+              val: target.labels[0] === 'DataSet' ? 15 : 10
+            });
           }
 
-          nodeMap.set(target.identity.toString(), nodes.length);
-          nodes.push({
-            id: target.identity.toString(),
-            label: target.labels[0],
-            properties: properties,
-            color: nodeColors[target.labels[0]] || '#4285F4',
-            val: target.labels[0] === 'DataSet' ? 15 : 10
-          });
-        }
+          if (relationship) {
+            links.push({
+              source: source.identity.toString(),
+              target: target.identity.toString(),
+              type: relationship.type,
+              properties: relationship.properties
+            });
+          }
+        });
 
-        if (relationship) {
-          links.push({
-            source: source.identity.toString(),
-            target: target.identity.toString(),
-            type: relationship.type,
-            properties: relationship.properties
-          });
-        }
-      });
+        console.log("GET /api/graph/visualization - Processed nodes:", nodes.length);
+        console.log("GET /api/graph/visualization - Processed links:", links.length);
 
-      console.log("GET /api/graph/visualization - Processed nodes:", nodes.length);
-      console.log("GET /api/graph/visualization - Processed links:", links.length);
-
-      res.json({ nodes, links });
+        res.json({ nodes, links });
+      } finally {
+        await session.close();
+        await driver.close();
+      }
     } catch (error) {
       console.error('Error fetching graph data:', error);
       res.status(500).json({ error: error.message });
