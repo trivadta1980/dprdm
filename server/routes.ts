@@ -670,6 +670,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Add after the existing relationship values routes
+  app.get("/api/relationships/:id/values/:valueId/attributes", async (req, res) => {
+    console.log('GET /api/relationships/:id/values/:valueId/attributes - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/relationships/:id/values/:valueId/attributes - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const values = await storage.getRelationshipAttributeValues(Number(req.params.valueId));
+      console.log('GET /api/relationships/:id/values/:valueId/attributes - Values fetched successfully');
+      res.json(values);
+    } catch (error) {
+      console.error('GET /api/relationships/:id/values/:valueId/attributes - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   app.post("/api/relationships/:id/values/import", upload.single('file'), async (req, res) => {
     console.log('POST /api/relationships/:id/values/import - Request received');
     if (!req.isAuthenticated()) {

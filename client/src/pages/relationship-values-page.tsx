@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, GitFork, Trash2, Upload, FileDown } from "lucide-react";
+import { Plus, GitFork, Trash2, Upload, FileDown, Info } from "lucide-react";
 import { useParams } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -34,6 +34,7 @@ import type {
   ReferenceDataSet,
   RelationshipValue,
   RelationshipAttributeDefinition,
+  RelationshipAttributeValue,
 } from "@shared/schema";
 
 export default function RelationshipValuesPage() {
@@ -45,6 +46,7 @@ export default function RelationshipValuesPage() {
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [selectedValueId, setSelectedValueId] = useState<number | null>(null);
   const [columnMapping, setColumnMapping] = useState<{
     sourceInstanceId?: string;
     targetInstanceId?: string;
@@ -94,6 +96,12 @@ export default function RelationshipValuesPage() {
   const { data: attributeDefinitions = [] } = useQuery<RelationshipAttributeDefinition[]>({
     queryKey: [`/api/relationships/${id}/attribute-definitions`],
     enabled: !!id,
+  });
+
+  // Add new query for attribute values
+  const { data: attributeValues = [] } = useQuery<RelationshipAttributeValue[]>({
+    queryKey: [`/api/relationships/${id}/values/${selectedValueId}/attributes`],
+    enabled: !!selectedValueId,
   });
 
   // Handle CSV file upload
@@ -525,7 +533,80 @@ export default function RelationshipValuesPage() {
                           relationship?.targetField
                         )}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right space-x-2">
+                        <Dialog onOpenChange={(open) => {
+                          if (open) {
+                            setSelectedValueId(value.id);
+                          } else {
+                            setSelectedValueId(null);
+                          }
+                        }}>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="hover:bg-blue-50"
+                            >
+                              <Info className="h-4 w-4 text-blue-600" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Attribute Values</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div>
+                                <h3 className="text-sm font-medium mb-2">Relationship Details</h3>
+                                <div className="space-y-2">
+                                  <p>
+                                    <span className="font-medium">Source:</span>{" "}
+                                    {getInstanceDisplayValue(
+                                      value.sourceInstanceId,
+                                      sourceDataSet,
+                                      relationship?.sourceField
+                                    )}
+                                  </p>
+                                  <p>
+                                    <span className="font-medium">Target:</span>{" "}
+                                    {getInstanceDisplayValue(
+                                      value.targetInstanceId,
+                                      targetDataSet,
+                                      relationship?.targetField
+                                    )}
+                                  </p>
+                                </div>
+                              </div>
+                              <div>
+                                <h3 className="text-sm font-medium mb-2">Attributes</h3>
+                                {attributeValues.length > 0 ? (
+                                  <Table>
+                                    <TableHeader>
+                                      <TableRow>
+                                        <TableHead>Attribute</TableHead>
+                                        <TableHead>Value</TableHead>
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      {attributeValues.map((attrValue) => {
+                                        const definition = attributeDefinitions.find(
+                                          (def) => def.id === attrValue.attributeDefinitionId
+                                        );
+                                        return (
+                                          <TableRow key={attrValue.id}>
+                                            <TableCell>{definition?.name || 'Unknown'}</TableCell>
+                                            <TableCell>{attrValue.value}</TableCell>
+                                          </TableRow>
+                                        );
+                                      })}
+                                    </TableBody>
+                                  </Table>
+                                ) : (
+                                  <p className="text-gray-500">No attribute values defined.</p>
+                                )}
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                         <Button
                           variant="ghost"
                           size="sm"
