@@ -76,6 +76,20 @@ export default function RelationshipValuesPage() {
     enabled: !!relationship?.targetDataSetId,
   });
 
+  // Fetch available targets for selected source
+  const { data: availableTargets = [] } = useQuery<Array<{ id: string; [key: string]: any }>>({
+    queryKey: [`/api/relationships/${id}/values/available-targets`, selectedSource],
+    queryFn: async () => {
+      if (!selectedSource) return [];
+      const response = await apiRequest(`/api/relationships/${id}/values/available-targets?sourceId=${selectedSource}`, {
+        method: 'GET'
+      });
+      return response.json();
+    },
+    enabled: !!selectedSource,
+  });
+
+
   // Fetch attribute definitions
   const { data: attributeDefinitions = [] } = useQuery<RelationshipAttributeDefinition[]>({
     queryKey: [`/api/relationships/${id}/attribute-definitions`],
