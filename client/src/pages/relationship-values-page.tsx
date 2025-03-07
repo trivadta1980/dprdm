@@ -114,14 +114,16 @@ export default function RelationshipValuesPage() {
   };
 
   // Handle column mapping change
-  const handleMappingChange = (field: string, value: string) => {
+  const handleMappingChange = (field: string, value: string | null) => {
+    if (!value) return;
+
     if (field.startsWith('attribute_')) {
       const attributeId = Number(field.replace('attribute_', ''));
       setColumnMapping(prev => ({
         ...prev,
         attributes: {
           ...prev.attributes,
-          [attributeId]: value,
+          [attributeId]: value === 'none' ? undefined : value,
         },
       }));
     } else {
@@ -181,12 +183,15 @@ export default function RelationshipValuesPage() {
     mutationFn: async () => {
       if (!selectedSource || !selectedTarget) return;
 
-      const res = await apiRequest("POST", `/api/relationships/${id}/values`, {
-        relationshipId: Number(id),
-        sourceInstanceId: selectedSource,
-        targetInstanceId: selectedTarget,
+      const response = await apiRequest(`/api/relationships/${id}/values`, {
+        method: "POST",
+        data: {
+          relationshipId: Number(id),
+          sourceInstanceId: selectedSource,
+          targetInstanceId: selectedTarget,
+        }
       });
-      return res.json();
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
@@ -210,7 +215,9 @@ export default function RelationshipValuesPage() {
   // Delete relationship value mutation
   const deleteMutation = useMutation({
     mutationFn: async (valueId: number) => {
-      await apiRequest("DELETE", `/api/relationships/${id}/values/${valueId}`);
+      await apiRequest(`/api/relationships/${id}/values/${valueId}`, {
+        method: "DELETE"
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
@@ -254,7 +261,6 @@ export default function RelationshipValuesPage() {
       </MainLayout>
     );
   }
-
 
   // Show error state if relationship is not found
   if (!relationship) {
@@ -357,14 +363,14 @@ export default function RelationshipValuesPage() {
                                 <div key={attr.id}>
                                   <label className="text-sm">{attr.name}</label>
                                   <Select
-                                    value={columnMapping.attributes[attr.id]}
+                                    value={columnMapping.attributes[attr.id] || 'none'}
                                     onValueChange={(value) => handleMappingChange(`attribute_${attr.id}`, value)}
                                   >
                                     <SelectTrigger>
                                       <SelectValue placeholder="Select column (optional)" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="">None</SelectItem>
+                                      <SelectItem value="none">No mapping</SelectItem>
                                       {csvHeaders.map((header) => (
                                         <SelectItem key={header} value={header}>
                                           {header}
