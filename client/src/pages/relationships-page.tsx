@@ -39,9 +39,9 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { 
-  ReferenceDataSet, 
-  ReferenceDataTypeSchema, 
+import type {
+  ReferenceDataSet,
+  ReferenceDataTypeSchema,
   Relationship,
   RelationshipAttributeDefinition,
   InsertRelationshipAttributeDefinition
@@ -62,10 +62,12 @@ const relationshipSchema = z.object({
   targetField: z.string(),
 });
 
-// Form schema for attribute definitions
+// Form schema for attribute definitions - updated with proper validation
 const attributeDefinitionSchema = z.object({
   name: z.string().min(1, "Attribute name is required"),
-  dataType: z.enum(["string", "number", "boolean", "date"]),
+  dataType: z.enum(["string", "number", "boolean", "date"], {
+    required_error: "Data type is required"
+  }),
   isRequired: z.boolean().default(false),
   description: z.string().optional(),
 });
@@ -142,10 +144,17 @@ export default function RelationshipsPage() {
     },
   });
 
-  // Create attribute definition mutation
+  // Create attribute definition mutation - updated with proper error handling
   const mutateAttributeDefinition = useMutation({
     mutationFn: async (data: AttributeDefinitionForm) => {
-      if (!selectedRelationshipId) return;
+      if (!selectedRelationshipId) {
+        throw new Error("No relationship selected");
+      }
+
+      console.log("Creating attribute with data:", {
+        ...data,
+        relationshipTypeId: selectedRelationshipId
+      });
 
       const response = await apiRequest("POST", `/api/relationships/${selectedRelationshipId}/attribute-definitions`, {
         method: "POST",
@@ -154,6 +163,11 @@ export default function RelationshipsPage() {
           relationshipTypeId: selectedRelationshipId
         }
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create attribute definition');
+      }
 
       return response.json();
     },

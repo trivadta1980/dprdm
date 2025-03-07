@@ -684,6 +684,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/relationships/:id/attribute-definitions", async (req, res) => {
     console.log('POST /api/relationships/:id/attribute-definitions - Request received');
+    console.log('Request body:', req.body);
+
     if (!req.isAuthenticated()) {
       console.log('POST /api/relationships/:id/attribute-definitions - Unauthorized access');
       return res.sendStatus(401);
@@ -699,8 +701,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json(result.error);
       }
 
+      console.log('Validated data:', result.data);
       const definition = await storage.createRelationshipAttributeDefinition(result.data);
-      console.log('POST /api/relationships/:id/attribute-definitions - Definition created successfully');
+      console.log('POST /api/relationships/:id/attribute-definitions - Definition created successfully:', definition);
       res.status(201).json(definition);
     } catch (error) {
       console.error('POST /api/relationships/:id/attribute-definitions - Error:', error);
