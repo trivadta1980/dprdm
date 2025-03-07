@@ -151,18 +151,14 @@ export default function RelationshipsPage() {
         throw new Error("No relationship selected");
       }
 
-      console.log("Creating attribute with data:", {
+      const requestData = {
         ...data,
         relationshipTypeId: selectedRelationshipId
-      });
+      };
 
-      const response = await apiRequest("POST", `/api/relationships/${selectedRelationshipId}/attribute-definitions`, {
-        method: "POST",
-        data: {
-          ...data,
-          relationshipTypeId: selectedRelationshipId
-        }
-      });
+      console.log("Creating attribute with data:", requestData);
+
+      const response = await apiRequest("POST", `/api/relationships/${selectedRelationshipId}/attribute-definitions`, requestData);
 
       if (!response.ok) {
         const errorData = await response.json();
