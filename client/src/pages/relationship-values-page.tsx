@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, GitFork, Trash2, Upload } from "lucide-react";
+import { Plus, GitFork, Trash2, Upload, FileDown } from "lucide-react";
 import { useParams } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -290,6 +290,33 @@ export default function RelationshipValuesPage() {
               Relationship Values: {relationship?.name}
             </CardTitle>
             <div className="flex gap-2">
+              <Button variant="outline" onClick={() => {
+                // Create and download template CSV
+                const headers = ['source_instance_id', 'target_instance_id'];
+
+                // Add attribute columns to headers
+                if (attributeDefinitions) {
+                  attributeDefinitions.forEach(attr => {
+                    headers.push(`attribute_${attr.name.toLowerCase().replace(/\s+/g, '_')}`);
+                  });
+                }
+
+                // Create CSV content
+                const csvContent = headers.join(',');
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${relationship?.name || 'relationship'}_template.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+              }}>
+                <FileDown className="h-4 w-4 mr-2" />
+                Export Template
+              </Button>
+
               <Dialog
                 open={isImportDialogOpen}
                 onOpenChange={setIsImportDialogOpen}
