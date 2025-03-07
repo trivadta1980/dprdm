@@ -669,6 +669,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add after the existing relationship values routes
+  app.post("/api/relationships/:id/values/import", upload.single('file'), async (req, res) => {
+    console.log('POST /api/relationships/:id/values/import - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/relationships/:id/values/import - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      const file = req.file;
+      const mapping = JSON.parse(req.body.mapping);
+
+      if (!file || !mapping) {
+        return res.status(400).json({ error: "Missing file or mapping configuration" });
+      }
+
+      console.log('Mapping configuration:', mapping);
+
+      // Parse CSV
+      const records: any[] = [];
+      const parser = parse({
+        columns: true,
+        skip_empty_lines: true,
+        trim: true
+      });
+
+      await new Promise<void>((resolve, reject) => {
+        parser.on('readable', function() {
+          let record;
+          while ((record = parser.read()) !== null) {
+            records.push(record);
+          }
+        });
+
+        parser.on('error', (error) => {
+          console.error('CSV parsing error:', error);
+          reject(error);
+        });
+
+        parser.on('end', () => {
+          resolve();
+        });
+
+        parser.write(file.buffer);
+        parser.end();
+      });
+
+      // Process records and create relationship values with attributes
+      for (const record of records) {
+        // Create relationship value
+        const relationshipValue = await storage.createRelationshipValue({
+          relationshipId: Number(req.params.id),
+          sourceInstanceId: record[mapping.sourceInstanceId],
+          targetInstanceId: record[mapping.targetInstanceId],
+          metadata: {} // Optional metadata
+        });
+
+        // Create attribute values
+        for (const [attributeId, columnName] of Object.entries(mapping.attributes)) {
+          if (columnName && record[columnName]) {
+            await storage.createRelationshipAttributeValue({
+              relationshipValueId: relationshipValue.id,
+              attributeDefinitionId: Number(attributeId),
+              value: String(record[columnName])
+            });
+          }
+        }
+      }
+
+      res.status(201).json({ message: "Import completed successfully" });
+    } catch (error) {
+      console.error('POST /api/relationships/:id/values/import - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   // Add relationship attribute definition routes
   app.get("/api/relationships/:id/attribute-definitions", async (req, res) => {
     console.log('GET /api/relationships/:id/attribute-definitions - Request received');

@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, GitFork, Trash2 } from "lucide-react";
+import { Plus, GitFork, Trash2, Upload } from "lucide-react";
 import { useParams } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -33,59 +33,133 @@ import type {
   Relationship,
   ReferenceDataSet,
   RelationshipValue,
+  RelationshipAttributeDefinition,
 } from "@shared/schema";
 
 export default function RelationshipValuesPage() {
-  // Get the relationship ID from the URL parameters
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
-
-  console.log('RelationshipValuesPage mounted with ID:', id); // Debug log
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [columnMapping, setColumnMapping] = useState<{
+    sourceInstanceId?: string;
+    targetInstanceId?: string;
+    attributes: Record<number, string>;
+  }>({
+    attributes: {},
+  });
 
   // Fetch relationship details
-  const { data: relationship, isLoading: isLoadingRelationship } = useQuery<Relationship>({
+  const { data: relationship } = useQuery<Relationship>({
     queryKey: [`/api/relationships/${id}`],
     enabled: !!id,
-    onSuccess: (data) => console.log('Relationship data loaded:', data), // Debug log
-    onError: (error) => console.error('Error loading relationship:', error), // Debug log
   });
 
   // Fetch relationship values
-  const { data: values = [], isLoading: isLoadingValues } = useQuery<RelationshipValue[]>({
+  const { data: values = [] } = useQuery<RelationshipValue[]>({
     queryKey: [`/api/relationships/${id}/values`],
     enabled: !!id,
-    onSuccess: (data) => console.log('Values loaded:', data), // Debug log
-    onError: (error) => console.error('Error loading values:', error), // Debug log
   });
 
   // Fetch source and target datasets
   const { data: sourceDataSet } = useQuery<ReferenceDataSet>({
     queryKey: [`/api/reference-data/${relationship?.sourceDataSetId}`],
     enabled: !!relationship?.sourceDataSetId,
-    onSuccess: (data) => console.log('Source dataset loaded:', data), // Debug log
   });
 
   const { data: targetDataSet } = useQuery<ReferenceDataSet>({
     queryKey: [`/api/reference-data/${relationship?.targetDataSetId}`],
     enabled: !!relationship?.targetDataSetId,
-    onSuccess: (data) => console.log('Target dataset loaded:', data), // Debug log
   });
 
-  // Fetch available targets for selected source
-  const { data: availableTargets = [] } = useQuery<Array<{ id: string; [key: string]: any }>>({
-    queryKey: [`/api/relationships/${id}/values/available-targets`, selectedSource],
-    queryFn: async () => {
-      if (!selectedSource) return [];
-      const res = await apiRequest(
-        "GET",
-        `/api/relationships/${id}/values/available-targets?sourceId=${selectedSource}`
-      );
-      return res.json();
+  // Fetch attribute definitions
+  const { data: attributeDefinitions = [] } = useQuery<RelationshipAttributeDefinition[]>({
+    queryKey: [`/api/relationships/${id}/attribute-definitions`],
+    enabled: !!id,
+  });
+
+  // Handle CSV file upload
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setCsvFile(file);
+
+    // Read CSV headers
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const headers = text.split('\n')[0].split(',').map(h => h.trim());
+      setCsvHeaders(headers);
+    };
+    reader.readAsText(file);
+  };
+
+  // Handle column mapping change
+  const handleMappingChange = (field: string, value: string) => {
+    if (field.startsWith('attribute_')) {
+      const attributeId = Number(field.replace('attribute_', ''));
+      setColumnMapping(prev => ({
+        ...prev,
+        attributes: {
+          ...prev.attributes,
+          [attributeId]: value,
+        },
+      }));
+    } else {
+      setColumnMapping(prev => ({
+        ...prev,
+        [field]: value,
+      }));
+    }
+  };
+
+  // Import mutation
+  const importMutation = useMutation({
+    mutationFn: async () => {
+      if (!csvFile || !columnMapping.sourceInstanceId || !columnMapping.targetInstanceId) {
+        throw new Error("Please select mapping for required fields");
+      }
+
+      const formData = new FormData();
+      formData.append('file', csvFile);
+      formData.append('mapping', JSON.stringify(columnMapping));
+
+      const response = await fetch(`/api/relationships/${id}/values/import`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Import failed');
+      }
+
+      return response.json();
     },
-    enabled: !!selectedSource,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
+      setIsImportDialogOpen(false);
+      setCsvFile(null);
+      setCsvHeaders([]);
+      setColumnMapping({ attributes: {} });
+      toast({
+        title: "Success",
+        description: "Relationship values imported successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to import relationship values",
+        variant: "destructive",
+      });
+    },
   });
 
   // Create relationship value mutation
@@ -157,7 +231,7 @@ export default function RelationshipValuesPage() {
   }
 
   // Show loading state if any of the required data is still loading
-  if (isLoadingRelationship || isLoadingValues) {
+  if (!relationship || !sourceDataSet || !targetDataSet || !attributeDefinitions) {
     return (
       <MainLayout>
         <div className="flex justify-center items-center h-screen">
@@ -166,6 +240,7 @@ export default function RelationshipValuesPage() {
       </MainLayout>
     );
   }
+
 
   // Show error state if relationship is not found
   if (!relationship) {
@@ -194,85 +269,190 @@ export default function RelationshipValuesPage() {
               <GitFork className="h-5 w-5" />
               Relationship Values: {relationship?.name}
             </CardTitle>
-            <Dialog
-              open={isDialogOpen}
-              onOpenChange={(open) => {
-                if (!open) {
-                  setSelectedSource(null);
-                  setSelectedTarget(null);
-                }
-                setIsDialogOpen(open);
-              }}
-            >
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Value
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Relationship Value</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <div>
-                    <label className="text-sm font-medium">Source Instance</label>
-                    <Select
-                      value={selectedSource || ""}
-                      onValueChange={setSelectedSource}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select source instance" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {sourceDataSet && Object.entries(sourceDataSet.data).map(([id, data]) => (
-                          <SelectItem key={id} value={id}>
-                            {getInstanceDisplayValue(id, sourceDataSet, relationship?.sourceField)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Target Instance</label>
-                    <Select
-                      value={selectedTarget || ""}
-                      onValueChange={setSelectedTarget}
-                      disabled={!selectedSource}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select target instance" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableTargets.map((target) => (
-                          <SelectItem key={target.id} value={target.id}>
-                            {getInstanceDisplayValue(
-                              target.id,
-                              targetDataSet,
-                              relationship?.targetField
-                            )}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button
-                    className="w-full"
-                    onClick={() => createMutation.mutate()}
-                    disabled={!selectedSource || !selectedTarget}
-                  >
-                    Create Relationship Value
+            <div className="flex gap-2">
+              <Dialog
+                open={isImportDialogOpen}
+                onOpenChange={setIsImportDialogOpen}
+              >
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Import Values
                   </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Import Relationship Values</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Upload CSV</label>
+                      <input
+                        type="file"
+                        accept=".csv"
+                        onChange={handleFileChange}
+                        className="mt-1 block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                      />
+                    </div>
+
+                    {csvHeaders.length > 0 && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium">Source Instance ID Column</label>
+                          <Select
+                            value={columnMapping.sourceInstanceId}
+                            onValueChange={(value) => handleMappingChange('sourceInstanceId', value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select column" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {csvHeaders.map((header) => (
+                                <SelectItem key={header} value={header}>
+                                  {header}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium">Target Instance ID Column</label>
+                          <Select
+                            value={columnMapping.targetInstanceId}
+                            onValueChange={(value) => handleMappingChange('targetInstanceId', value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select column" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {csvHeaders.map((header) => (
+                                <SelectItem key={header} value={header}>
+                                  {header}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {attributeDefinitions.length > 0 && (
+                          <div>
+                            <h3 className="text-sm font-medium mb-2">Attribute Mappings</h3>
+                            <div className="space-y-2">
+                              {attributeDefinitions.map((attr) => (
+                                <div key={attr.id}>
+                                  <label className="text-sm">{attr.name}</label>
+                                  <Select
+                                    value={columnMapping.attributes[attr.id]}
+                                    onValueChange={(value) => handleMappingChange(`attribute_${attr.id}`, value)}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select column (optional)" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="">None</SelectItem>
+                                      {csvHeaders.map((header) => (
+                                        <SelectItem key={header} value={header}>
+                                          {header}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <Button
+                          className="w-full"
+                          onClick={() => importMutation.mutate()}
+                          disabled={!columnMapping.sourceInstanceId || !columnMapping.targetInstanceId}
+                        >
+                          Import Values
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog
+                open={isDialogOpen}
+                onOpenChange={(open) => {
+                  if (!open) {
+                    setSelectedSource(null);
+                    setSelectedTarget(null);
+                  }
+                  setIsDialogOpen(open);
+                }}
+              >
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Value
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create New Relationship Value</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <div>
+                      <label className="text-sm font-medium">Source Instance</label>
+                      <Select
+                        value={selectedSource || ""}
+                        onValueChange={setSelectedSource}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select source instance" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {sourceDataSet && Object.entries(sourceDataSet.data).map(([id, data]) => (
+                            <SelectItem key={id} value={id}>
+                              {getInstanceDisplayValue(id, sourceDataSet, relationship?.sourceField)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Target Instance</label>
+                      <Select
+                        value={selectedTarget || ""}
+                        onValueChange={setSelectedTarget}
+                        disabled={!selectedSource}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select target instance" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableTargets.map((target) => (
+                            <SelectItem key={target.id} value={target.id}>
+                              {getInstanceDisplayValue(
+                                target.id,
+                                targetDataSet,
+                                relationship?.targetField
+                              )}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      className="w-full"
+                      onClick={() => createMutation.mutate()}
+                      disabled={!selectedSource || !selectedTarget}
+                    >
+                      Create Relationship Value
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           </CardHeader>
           <CardContent>
-            {isLoadingValues ? (
-              <div className="flex justify-center items-center h-32">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            ) : values.length > 0 ? (
+            {values.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow>
