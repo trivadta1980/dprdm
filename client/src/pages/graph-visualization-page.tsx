@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState, useCallback } from "react";
 import ForceGraph2D from "react-force-graph-2d";
 import { MainLayout } from "@/components/layout/main-layout";
@@ -11,18 +10,48 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, RefreshCw, ZoomIn } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
+interface GraphNode {
+  id: string;
+  label: string;
+  properties: {
+    name?: string;
+    [key: string]: any;
+  };
+  color?: string;
+  val?: number;
+  x?: number;
+  y?: number;
+}
+
+interface GraphLink {
+  source: string | GraphNode;
+  target: string | GraphNode;
+  type: string;
+  properties?: Record<string, any>;
+}
+
+interface GraphData {
+  nodes: GraphNode[];
+  links: GraphLink[];
+}
+
 export default function GraphVisualizationPage() {
-  const [graphData, setGraphData] = useState({ nodes: [], links: [] });
+  const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedNodeId, setSelectedNodeId] = useState(null);
-  const [selectedNodeInfo, setSelectedNodeInfo] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedNodeInfo, setSelectedNodeInfo] = useState<GraphNode | null>(null);
   const [filterType, setFilterType] = useState('all');
+  const [filterDataset, setFilterDataset] = useState('all');
 
-  const graphRef = useRef(null);
+  const graphRef = useRef<any>(null);
 
-  // Extract unique node types for filtering
-  const nodeTypes = [...new Set((graphData.nodes || []).map(node => node.label))];
+  // Extract unique node types and dataset names for filtering
+  const nodeTypes = Array.from(new Set(graphData.nodes.map(node => node.label)));
+  const datasetNames = Array.from(new Set(graphData.nodes
+    .filter(node => node.label === 'DataSet')
+    .map(node => node.properties?.name || '')
+  ));
 
   // Fetch graph data from API
   const fetchGraphData = useCallback(async () => {
@@ -33,7 +62,7 @@ export default function GraphVisualizationPage() {
       const data = await response.json();
       console.log("Graph data fetched:", data);
       setGraphData(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching graph data:", err);
       setError(err.message || "Failed to load graph data");
     } finally {
@@ -41,27 +70,54 @@ export default function GraphVisualizationPage() {
     }
   }, []);
 
-  // Filter graph data based on selected type
+  // Filter graph data based on selected type and dataset
   const filteredData = useCallback(() => {
-    if (filterType === 'all') {
-      return graphData;
+    let filteredNodes = graphData.nodes;
+    let nodeIds = new Set<string>();
+
+    // Filter by node type
+    if (filterType !== 'all') {
+      filteredNodes = filteredNodes.filter(node => node.label === filterType);
     }
 
-    const filteredNodes = (graphData.nodes || []).filter(node => node.label === filterType);
-    const nodeIds = new Set(filteredNodes.map(node => node.id));
-    
-    const filteredLinks = (graphData.links || []).filter(
-      link => nodeIds.has(link.source.id || link.source) && nodeIds.has(link.target.id || link.target)
+    // Filter by dataset
+    if (filterDataset !== 'all') {
+      // Get the dataset node and its connected nodes
+      const datasetNode = graphData.nodes.find(
+        node => node.label === 'DataSet' && node.properties?.name === filterDataset
+      );
+      if (datasetNode) {
+        const connectedNodes = new Set([datasetNode.id]);
+        graphData.links.forEach(link => {
+          if (link.source === datasetNode.id) {
+            connectedNodes.add(typeof link.target === 'object' ? link.target.id : link.target);
+          }
+          if (link.target === datasetNode.id) {
+            connectedNodes.add(typeof link.source === 'object' ? link.source.id : link.source);
+          }
+        });
+        filteredNodes = filteredNodes.filter(node => connectedNodes.has(node.id));
+      }
+    }
+
+    nodeIds = new Set(filteredNodes.map(node => node.id));
+
+    const filteredLinks = graphData.links.filter(
+      link => {
+        const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+        const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+        return nodeIds.has(sourceId) && nodeIds.has(targetId);
+      }
     );
 
     return {
       nodes: filteredNodes,
       links: filteredLinks
     };
-  }, [graphData, filterType]);
+  }, [graphData, filterType, filterDataset]);
 
   // Handle node click
-  const handleNodeClick = useCallback(node => {
+  const handleNodeClick = useCallback((node: GraphNode) => {
     setSelectedNodeId(node.id);
     setSelectedNodeInfo(node);
   }, []);
@@ -73,71 +129,61 @@ export default function GraphVisualizationPage() {
     }
   }, []);
 
-  // Handle filter change
-  const handleFilterChange = useCallback(value => {
-    setFilterType(value);
-  }, []);
-
   // Load graph data when component mounts
   useEffect(() => {
     fetchGraphData();
   }, [fetchGraphData]);
 
   // Custom node renderer
-  const nodeCanvasObject = useCallback((node, ctx, globalScale) => {
+  const nodeCanvasObject = useCallback((node: GraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
     const label = node.properties?.name || node.label;
     const fontSize = 12/globalScale;
     const nodeSize = node.val || 10;
-    
+
     // Draw node circle
     ctx.beginPath();
     ctx.fillStyle = node.color || '#4285F4';
-    ctx.arc(node.x, node.y, nodeSize / globalScale, 0, 2 * Math.PI);
+    ctx.arc(node.x!, node.y!, nodeSize / globalScale, 0, 2 * Math.PI);
     ctx.fill();
-    
+
     // Draw node border, highlight if selected
     ctx.strokeStyle = node.id === selectedNodeId ? '#FF5722' : '#FFFFFF';
     ctx.lineWidth = node.id === selectedNodeId ? 2 / globalScale : 1 / globalScale;
     ctx.stroke();
-    
+
     // Draw node label if scale is appropriate
     if (globalScale > 0.5) {
       ctx.font = `${fontSize}px Sans-Serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = '#FFFFFF';
-      
+
       // Draw label background
       const textWidth = ctx.measureText(label).width;
       ctx.fillStyle = 'rgba(0,0,0,0.6)';
       ctx.fillRect(
-        node.x - textWidth/2 - 2,
-        node.y + nodeSize/globalScale + 2,
+        node.x! - textWidth/2 - 2,
+        node.y! + nodeSize/globalScale + 2,
         textWidth + 4,
         fontSize + 2
       );
-      
+
       // Draw text
       ctx.fillStyle = '#FFFFFF';
       ctx.fillText(
         label,
-        node.x,
-        node.y + nodeSize/globalScale + fontSize/2 + 2
+        node.x!,
+        node.y! + nodeSize/globalScale + fontSize/2 + 2
       );
     }
   }, [selectedNodeId]);
-
-  // Initialize
-  useEffect(() => {
-    fetchGraphData();
-  }, [fetchGraphData]);
 
   // Reset view when graph data or filter changes
   useEffect(() => {
     if (!loading && graphRef.current) {
       setTimeout(() => handleResetView(), 300);
     }
-  }, [loading, handleResetView, filterType]);
+  }, [loading, handleResetView, filterType, filterDataset]);
 
   return (
     <MainLayout>
@@ -152,7 +198,7 @@ export default function GraphVisualizationPage() {
                 <div className="flex flex-wrap items-center gap-4 mb-4">
                   <div>
                     <span className="text-sm font-medium mr-2">Filter by Type:</span>
-                    <Select value={filterType} onValueChange={handleFilterChange}>
+                    <Select value={filterType} onValueChange={setFilterType}>
                       <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
@@ -160,6 +206,20 @@ export default function GraphVisualizationPage() {
                         <SelectItem value="all">All Types</SelectItem>
                         {nodeTypes.map(type => (
                           <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium mr-2">Filter by Dataset:</span>
+                    <Select value={filterDataset} onValueChange={setFilterDataset}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select dataset" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Datasets</SelectItem>
+                        {datasetNames.map(name => (
+                          <SelectItem key={name} value={name}>{name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

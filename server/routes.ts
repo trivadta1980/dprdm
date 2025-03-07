@@ -117,8 +117,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/reference-types", async (req, res) => {
     console.log('GET /api/reference-types - Request received'); //Added logging
     if (!req.isAuthenticated()) {
-        console.log('GET /api/reference-types - Unauthorized access'); //Added logging
-        return res.sendStatus(401);
+      console.log('GET /api/reference-types - Unauthorized access'); //Added logging
+      return res.sendStatus(401);
     }
 
     try {
@@ -130,13 +130,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: String(error) });
     }
   });
-  
+
   // Add endpoint to get a single reference type by ID
   app.get("/api/reference-types/:id", async (req, res) => {
     console.log('GET /api/reference-types/:id - Request received for ID:', req.params.id); //Added logging
     if (!req.isAuthenticated()) {
-        console.log('GET /api/reference-types/:id - Unauthorized access'); //Added logging
-        return res.sendStatus(401);
+      console.log('GET /api/reference-types/:id - Unauthorized access'); //Added logging
+      return res.sendStatus(401);
     }
 
     try {
@@ -144,12 +144,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get the single type from the database
       const types = await storage.getAllReferenceDataTypes();
       const type = types.find(t => t.id === typeId);
-      
+
       if (!type) {
         console.log('GET /api/reference-types/:id - Type not found for ID:', typeId); //Added logging
         return res.status(404).json({ error: "Reference data type not found" });
       }
-      
+
       console.log('GET /api/reference-types/:id - Type found:', type); //Added logging
       res.json(type);
     } catch (error) {
@@ -161,8 +161,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/reference-types", async (req, res) => {
     console.log('POST /api/reference-types - Request received'); //Added logging
     if (!req.isAuthenticated()) {
-        console.log('POST /api/reference-types - Unauthorized access'); //Added logging
-        return res.sendStatus(401);
+      console.log('POST /api/reference-types - Unauthorized access'); //Added logging
+      return res.sendStatus(401);
     }
     try {
       console.log('POST /api/reference-types - Creating reference type with data:', req.body);
@@ -178,8 +178,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/reference-types/:id/schemas", async (req, res) => {
     console.log('GET /api/reference-types/:id/schemas - Request received'); //Added logging
     if (!req.isAuthenticated()) {
-        console.log('GET /api/reference-types/:id/schemas - Unauthorized access'); //Added logging
-        return res.sendStatus(401);
+      console.log('GET /api/reference-types/:id/schemas - Unauthorized access'); //Added logging
+      return res.sendStatus(401);
     }
     try {
       const schemas = await storage.getReferenceDataTypeSchemas(Number(req.params.id));
@@ -194,8 +194,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/reference-types/:id", async (req, res) => {
     console.log('PATCH /api/reference-types/:id - Request received'); //Added logging
     if (!req.isAuthenticated()) {
-        console.log('PATCH /api/reference-types/:id - Unauthorized access'); //Added logging
-        return res.sendStatus(401);
+      console.log('PATCH /api/reference-types/:id - Unauthorized access'); //Added logging
+      return res.sendStatus(401);
     }
     try {
       console.log('PATCH /api/reference-types/:id - Updating reference type with data:', req.body);
@@ -215,8 +215,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/reference-data", async (req, res) => {
     console.log('GET /api/reference-data - Request received'); //Added logging
     if (!req.isAuthenticated()) {
-        console.log('GET /api/reference-data - Unauthorized access'); //Added logging
-        return res.sendStatus(401);
+      console.log('GET /api/reference-data - Unauthorized access'); //Added logging
+      return res.sendStatus(401);
     }
     try {
       const dataSets = await storage.getAllReferenceDataSets();
@@ -264,8 +264,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/reference-data", async (req, res) => {
     console.log('POST /api/reference-data - Request received'); //Added logging
     if (!req.isAuthenticated()) {
-        console.log('POST /api/reference-data - Unauthorized access'); //Added logging
-        return res.sendStatus(401);
+      console.log('POST /api/reference-data - Unauthorized access'); //Added logging
+      return res.sendStatus(401);
     }
     try {
       const dataSet = await storage.createReferenceDataSet(req.body);
@@ -290,8 +290,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/reference-data/:id/template", async (req, res) => {
     console.log('GET /api/reference-data/:id/template - Request received'); //Added logging
     if (!req.isAuthenticated()) {
-        console.log('GET /api/reference-data/:id/template - Unauthorized access'); //Added logging
-        return res.sendStatus(401);
+      console.log('GET /api/reference-data/:id/template - Unauthorized access'); //Added logging
+      return res.sendStatus(401);
     }
     try {
       const dataSetId = Number(req.params.id);
@@ -426,8 +426,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/reference-data/:id", async (req, res) => {
     console.log('PATCH /api/reference-data/:id - Request received'); //Added logging
     if (!req.isAuthenticated()) {
-        console.log('PATCH /api/reference-data/:id - Unauthorized access'); //Added logging
-        return res.sendStatus(401);
+      console.log('PATCH /api/reference-data/:id - Unauthorized access'); //Added logging
+      return res.sendStatus(401);
     }
     try {
       const dataSet = await storage.updateReferenceDataSet(
@@ -454,8 +454,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/reference-data/:id", async (req, res) => {
     console.log('DELETE /api/reference-data/:id - Request received'); //Added logging
     if (!req.isAuthenticated()) {
-        console.log('DELETE /api/reference-data/:id - Unauthorized access'); //Added logging
-        return res.sendStatus(401);
+      console.log('DELETE /api/reference-data/:id - Unauthorized access'); //Added logging
+      return res.sendStatus(401);
     }
     try {
       const success = await storage.deleteReferenceDataSet(Number(req.params.id));
@@ -904,38 +904,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-// Debug endpoint to get raw crosswalk data
-app.get('/api/crosswalks/debug', async (req, res) => {
-  try {
-    console.log('GET /api/crosswalks/debug - Request received');
-    if (!req.isAuthenticated()) {
-      console.log('GET /api/crosswalks/debug - Unauthorized access');
-      return res.sendStatus(401);
-    }
-
-    // Get all crosswalks with their raw data
-    const crosswalks = await storage.getAllCrosswalkMappings();
-
-    // Add more detailed logging for debugging
-    console.log('GET /api/crosswalks/debug - Raw data fetched successfully, count:', crosswalks.length);
-    if (crosswalks.length > 0) {
-      console.log('GET /api/crosswalks/debug - First record sample:', JSON.stringify(crosswalks[0]));
-
-      // Add a specific mapping data example for debugging
-      if (crosswalks[0].mappingData) {
-        console.log('GET /api/crosswalks/debug - First record mapping data:', 
-                   JSON.stringify(crosswalks[0].mappingData));
+  // Debug endpoint to get raw crosswalk data
+  app.get('/api/crosswalks/debug', async (req, res) => {
+    try {
+      console.log('GET /api/crosswalks/debug - Request received');
+      if (!req.isAuthenticated()) {
+        console.log('GET /api/crosswalks/debug - Unauthorized access');
+        return res.sendStatus(401);
       }
-    } else {
-      console.log('GET /api/crosswalks/debug - No records found');
-    }
 
-    return res.json(crosswalks || []);
-  } catch (error) {
-    console.error('GET /api/crosswalks/debug - Error:', error);
-    return res.status(500).json({ error: String(error) });
-  }
-});
+      // Get all crosswalks with their raw data
+      const crosswalks = await storage.getAllCrosswalkMappings();
+
+      // Add more detailed logging for debugging
+      console.log('GET /api/crosswalks/debug - Raw data fetched successfully, count:', crosswalks.length);
+      if (crosswalks.length > 0) {
+        console.log('GET /api/crosswalks/debug - First record sample:', JSON.stringify(crosswalks[0]));
+
+        // Add a specific mapping data example for debugging
+        if (crosswalks[0].mappingData) {
+          console.log('GET /api/crosswalks/debug - First record mapping data:',
+            JSON.stringify(crosswalks[0].mappingData));
+        }
+      } else {
+        console.log('GET /api/crosswalks/debug - No records found');
+      }
+
+      return res.json(crosswalks || []);
+    } catch (error) {
+      console.error('GET /api/crosswalks/debug - Error:', error);
+      return res.status(500).json({ error: String(error) });
+    }
+  });
 
 
   // System status endpoint
@@ -959,64 +959,96 @@ app.get('/api/crosswalks/debug', async (req, res) => {
     });
   });
 
-  // Graph visualization endpoint
+  // Add the graph visualization endpoint
   app.get('/api/graph/visualization', async (req, res) => {
-    console.log('GET /api/graph/visualization - Request received');
-    if (!req.isAuthenticated()) {
-      console.log('GET /api/graph/visualization - Unauthorized access');
-      return res.sendStatus(401);
-    }
-    
     try {
+      console.log("GET /api/graph/visualization - Checking if Neo4j is available");
+
       if (!isNeo4jAvailable()) {
-        console.log('GET /api/graph/visualization - Neo4j not available');
-        return res.status(503).json({ error: "Neo4j database not available" });
+        console.log("GET /api/graph/visualization - Neo4j not available");
+        console.log("NEO4J_URI:", process.env.NEO4J_URI ? "Found" : "Not found");
+        console.log("NEO4J_USERNAME:", process.env.NEO4J_USERNAME ? "Found" : "Not found");
+        console.log("NEO4J_PASSWORD:", process.env.NEO4J_PASSWORD ? "Found (but redacted)" : "Not found");
+        return res.status(503).json({
+          error: "Neo4j database not available",
+          reason: "Neo4j connection has not been established. Check server logs for details."
+        });
       }
-      
-      // Import the runQuery function from neo4j module
-      const { runQuery } = await import('./neo4j');
-      
-      // Query to get nodes and relationships
-      const records = await runQuery(`
-        MATCH (n)
-        OPTIONAL MATCH (n)-[r]->(m)
-        RETURN n, r, m
-      `);
-      
+
+      console.log("GET /api/graph/visualization - Neo4j is available, executing query");
+
+      // Query to get nodes and relationships with proper labels and names
+      const records = await GraphDataService.runQuery(`
+      MATCH (n)
+      OPTIONAL MATCH (n)-[r]->(m)
+      RETURN n, r, m
+    `);
+
       const nodes = [];
       const links = [];
       const nodeMap = new Map();
-      
+
+      const nodeColors = {
+        DataSet: '#4285F4',
+        DataItem: '#34A853',
+        RelationshipType: '#FBBC05',
+        CrosswalkMapping: '#EA4335'
+      };
+
       // Process nodes and relationships
       records.forEach(record => {
         const source = record.get('n');
         const relationship = record.get('r');
         const target = record.get('m');
-        
+
         if (source && !nodeMap.has(source.identity.toString())) {
+          const properties = { ...source.properties };
+          // For DataItems, ensure we set a display name
+          if (source.labels.includes('DataItem') && properties.name === undefined) {
+            // Try to find a suitable name property from the data
+            const nameKeys = Object.keys(properties).find(key =>
+              key.toLowerCase().includes('name') ||
+              key.toLowerCase().includes('title') ||
+              key.toLowerCase().includes('site')
+            );
+            if (nameKeys) {
+              properties.name = properties[nameKeys];
+            }
+          }
+
           nodeMap.set(source.identity.toString(), nodes.length);
           nodes.push({
             id: source.identity.toString(),
             label: source.labels[0],
-            properties: source.properties,
-            // Set different node size based on type
-            val: source.labels[0] === 'DataSet' ? 20 : 10,
-            // Different colors for different node types
-            color: getNodeColor(source.labels[0])
+            properties: properties,
+            color: nodeColors[source.labels[0]] || '#4285F4',
+            val: source.labels[0] === 'DataSet' ? 15 : 10
           });
         }
-        
+
         if (target && !nodeMap.has(target.identity.toString())) {
+          const properties = { ...target.properties };
+          if (target.labels.includes('DataItem') && properties.name === undefined) {
+            const nameKeys = Object.keys(properties).find(key =>
+              key.toLowerCase().includes('name') ||
+              key.toLowerCase().includes('title') ||
+              key.toLowerCase().includes('site')
+            );
+            if (nameKeys) {
+              properties.name = properties[nameKeys];
+            }
+          }
+
           nodeMap.set(target.identity.toString(), nodes.length);
           nodes.push({
             id: target.identity.toString(),
             label: target.labels[0],
-            properties: target.properties,
-            val: target.labels[0] === 'DataSet' ? 20 : 10,
-            color: getNodeColor(target.labels[0])
+            properties: properties,
+            color: nodeColors[target.labels[0]] || '#4285F4',
+            val: target.labels[0] === 'DataSet' ? 15 : 10
           });
         }
-        
+
         if (relationship) {
           links.push({
             source: source.identity.toString(),
@@ -1026,25 +1058,28 @@ app.get('/api/crosswalks/debug', async (req, res) => {
           });
         }
       });
-      
-      console.log('GET /api/graph/visualization - Data fetched successfully, nodes:', nodes.length, 'links:', links.length);
+
+      console.log("GET /api/graph/visualization - Processed nodes:", nodes.length);
+      console.log("GET /api/graph/visualization - Processed links:", links.length);
+
       res.json({ nodes, links });
     } catch (error) {
-      console.error('GET /api/graph/visualization - Error:', error);
-      res.status(500).json({ error: String(error) });
+      console.error('Error fetching graph data:', error);
+      res.status(500).json({ error: error.message });
     }
   });
 
   // Helper function to assign colors based on node type
-  function getNodeColor(label) {
-    const colorMap = {
-      'DataSet': '#4285F4',       // Blue
-      'DataItem': '#34A853',      // Green
-      'RelationshipType': '#FBBC05', // Yellow/Orange
-      'CrosswalkMapping': '#EA4335' // Red
-    };
-    return colorMap[label] || '#9334E6'; // Default purple
-  }
+  //This function is no longer needed as node colors are handled in the visualization endpoint.
+  // function getNodeColor(label) {
+  //   const colorMap = {
+  //     'DataSet': '#4285F4',       // Blue
+  //     'DataItem': '#34A853',      // Green
+  //     'RelationshipType': '#FBBC05', // Yellow/Orange
+  //     'CrosswalkMapping': '#EA4335' // Red
+  //   };
+  //   return colorMap[label] || '#9334E6'; // Default purple
+  // }
 
   const httpServer = createServer(app);
   return httpServer;
