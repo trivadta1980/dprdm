@@ -4,8 +4,12 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import multer from "multer";
 import { parse } from "csv-parse";
-import { insertRelationshipSchema } from "@shared/schema";
-import { insertCrosswalkMappingSchema } from "@shared/schema";
+import { 
+  insertRelationshipSchema, 
+  insertCrosswalkMappingSchema,
+  insertRelationshipAttributeDefinitionSchema,
+  insertRelationshipAttributeValueSchema
+} from "@shared/schema";
 import { sql } from "drizzle-orm";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
