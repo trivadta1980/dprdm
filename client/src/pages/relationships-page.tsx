@@ -43,7 +43,8 @@ import type {
   ReferenceDataSet, 
   ReferenceDataTypeSchema, 
   Relationship,
-  RelationshipAttributeDefinition 
+  RelationshipAttributeDefinition,
+  InsertRelationshipAttributeDefinition
 } from "@shared/schema";
 import { useState } from "react";
 import { Link } from "wouter";
@@ -85,6 +86,10 @@ export default function RelationshipsPage() {
 
   const attributeForm = useForm<AttributeDefinitionForm>({
     resolver: zodResolver(attributeDefinitionSchema),
+    defaultValues: {
+      isRequired: false,
+      description: "",
+    },
   });
 
   // Fetch relationships
@@ -92,7 +97,7 @@ export default function RelationshipsPage() {
     queryKey: ["/api/relationships"],
   });
 
-  // Fetch reference data sets for dropdowns and relationship display
+  // Fetch reference data sets for dropdowns
   const { data: dataSets = [] } = useQuery<ReferenceDataSet[]>({
     queryKey: ["/api/reference-data"],
   });
@@ -103,10 +108,6 @@ export default function RelationshipsPage() {
     enabled: !!selectedRelationshipId,
   });
 
-  // Get the selected data sets
-  const sourceDataSet = dataSets.find(ds => ds.id.toString() === form.watch("sourceDataSetId"));
-  const targetDataSet = dataSets.find(ds => ds.id.toString() === form.watch("targetDataSetId"));
-
   // Create/Update relationship mutation
   const mutateRelationship = useMutation({
     mutationFn: async (data: RelationshipForm) => {
@@ -114,8 +115,13 @@ export default function RelationshipsPage() {
       const endpoint = editingRelationship
         ? `/api/relationships/${editingRelationship.id}`
         : "/api/relationships";
-      const res = await apiRequest(method, endpoint, data);
-      return res.json();
+
+      const response = await apiRequest(method, endpoint, {
+        method,
+        data
+      });
+
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
@@ -140,25 +146,34 @@ export default function RelationshipsPage() {
   const mutateAttributeDefinition = useMutation({
     mutationFn: async (data: AttributeDefinitionForm) => {
       if (!selectedRelationshipId) return;
-      const res = await apiRequest(
-        "POST",
-        `/api/relationships/${selectedRelationshipId}/attribute-definitions`,
-        data
-      );
-      return res.json();
+
+      const response = await apiRequest("POST", `/api/relationships/${selectedRelationshipId}/attribute-definitions`, {
+        method: "POST",
+        data: {
+          ...data,
+          relationshipTypeId: selectedRelationshipId
+        }
+      });
+
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [`/api/relationships/${selectedRelationshipId}/attribute-definitions`],
       });
-      setIsAttributeDialogOpen(false);
-      attributeForm.reset();
+      attributeForm.reset({
+        name: "",
+        dataType: undefined,
+        isRequired: false,
+        description: "",
+      });
       toast({
         title: "Success",
         description: "Attribute definition created successfully",
       });
     },
     onError: (error: Error) => {
+      console.error("Error creating attribute:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to create attribute definition",
@@ -170,7 +185,9 @@ export default function RelationshipsPage() {
   // Delete relationship mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/relationships/${id}`);
+      await apiRequest("DELETE", `/api/relationships/${id}`, {
+        method: "DELETE"
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
@@ -191,7 +208,9 @@ export default function RelationshipsPage() {
   // Delete attribute definition mutation
   const deleteAttributeMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/relationships/attribute-definitions/${id}`);
+      await apiRequest("DELETE", `/api/relationships/attribute-definitions/${id}`, {
+        method: "DELETE"
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -216,6 +235,7 @@ export default function RelationshipsPage() {
   }
 
   function onAttributeSubmit(data: AttributeDefinitionForm) {
+    console.log("Submitting attribute:", data);
     mutateAttributeDefinition.mutate(data);
   }
 
@@ -538,7 +558,12 @@ export default function RelationshipsPage() {
           open={isAttributeDialogOpen}
           onOpenChange={(open) => {
             if (!open) {
-              attributeForm.reset();
+              attributeForm.reset({
+                name: "",
+                dataType: undefined,
+                isRequired: false,
+                description: "",
+              });
             }
             setIsAttributeDialogOpen(open);
           }}
