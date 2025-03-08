@@ -97,6 +97,9 @@ export default function RelationshipsPage() {
   const selectedSourceDataset = form.watch("sourceDataSetId");
   const selectedTargetDataset = form.watch("targetDataSetId");
 
+  // Add debug logs
+  console.log("Selected Source Dataset ID:", selectedSourceDataset);
+
   // Fetch relationships
   const { data: relationships = [], isLoading: isLoadingRelationships } = useQuery<Relationship[]>({
     queryKey: ["/api/relationships"],
@@ -107,11 +110,12 @@ export default function RelationshipsPage() {
     queryKey: ["/api/reference-data"],
   });
 
-  // Add queries for selected datasets
+  // Add queries for selected datasets with debug logs
   const { data: sourceDataSet } = useQuery<ReferenceDataSet>({
     queryKey: [`/api/reference-data/${selectedSourceDataset}`],
     enabled: !!selectedSourceDataset,
     onSuccess: (data) => {
+      console.log("Source dataset API response:", data);
       // Store raw API response for debugging
       setApiDebugData(prev => ({ ...prev, source: data }));
 
@@ -124,6 +128,7 @@ export default function RelationshipsPage() {
       // Get the first instance to check structure
       const instances = Object.values(data.data);
       if (instances.length === 0) {
+        console.log("No instances found in source dataset");
         setSourceFields([]);
         return;
       }
@@ -131,7 +136,7 @@ export default function RelationshipsPage() {
       // Extract all unique fields from the first instance
       const firstInstance = instances[0];
       const fields = Object.keys(firstInstance).filter(field => !field.startsWith('_'));
-      console.log("Source dataset fields:", fields);
+      console.log("Source dataset fields extracted:", fields);
       setSourceFields(fields);
     }
   });
