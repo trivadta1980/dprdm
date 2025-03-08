@@ -73,7 +73,7 @@ export class GraphDataService {
     const data = dataSet.data as Record<string, any>;
     for (const [_, item] of Object.entries(data)) {
       // Use the site name as the unique identifier
-      const siteId = item.Site_Name || item.name || JSON.stringify(item);
+      const siteName = item.Site_Name || item.name || JSON.stringify(item);
 
       // Create a meaningful label from the item's properties
       const label = Object.entries(item)
@@ -83,9 +83,9 @@ export class GraphDataService {
 
       // Create or update the item node
       const createItemQuery = `
-        MERGE (item:DataItem {id: $siteId, dataSetId: $dataSetId})
-        SET item.label = $label,
-            item.name = $siteId,
+        MERGE (item:DataItem {name: $siteName})
+        SET item.dataSetId = $dataSetId,
+            item.label = $label,
             item += $properties
         RETURN item
       `;
@@ -99,14 +99,14 @@ export class GraphDataService {
 
       try {
         await runQuery(createItemQuery, {
-          siteId,
+          siteName,
           dataSetId: dataSetId.toString(),
           label,
           properties
         });
-        console.log(`Created/Updated node for ${siteId}`);
+        console.log(`Created/Updated node for ${siteName}`);
       } catch (error) {
-        console.error(`Error creating node for ${siteId}:`, error);
+        console.error(`Error creating node for ${siteName}:`, error);
       }
     }
 
@@ -148,34 +148,18 @@ export class GraphDataService {
           }
         }
 
-        // First verify both nodes exist
-        const verifyNodesQuery = `
-          MATCH (source:DataItem {id: $sourceId})
-          MATCH (target:DataItem {id: $targetId})
-          RETURN source, target
+        // Create relationship using site names instead of IDs
+        const createRelInstanceQuery = `
+          MATCH (source:DataItem {name: $sourceId})
+          MATCH (target:DataItem {name: $targetId})
+          MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {
+            relationshipId: $relationshipId
+          }]->(target)
+          SET r += $attributes
+          RETURN r
         `;
 
         try {
-          const nodesExist = await runQuery(verifyNodesQuery, {
-            sourceId: value.sourceInstanceId,
-            targetId: value.targetInstanceId
-          });
-
-          if (nodesExist.length === 0) {
-            console.error(`Nodes not found for relationship: source=${value.sourceInstanceId}, target=${value.targetInstanceId}`);
-            continue;
-          }
-
-          const createRelInstanceQuery = `
-            MATCH (source:DataItem {id: $sourceId})
-            MATCH (target:DataItem {id: $targetId})
-            MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {
-              relationshipId: $relationshipId
-            }]->(target)
-            SET r += $attributes
-            RETURN r
-          `;
-
           await runQuery(createRelInstanceQuery, {
             sourceId: value.sourceInstanceId,
             targetId: value.targetInstanceId,
@@ -183,9 +167,9 @@ export class GraphDataService {
             attributes
           });
 
-          console.log(`Successfully created relationship with attributes:`, attributes);
+          console.log(`Successfully created relationship from "${value.sourceInstanceId}" to "${value.targetInstanceId}" with attributes:`, attributes);
         } catch (error) {
-          console.error(`Error creating relationship:`, error);
+          console.error(`Error creating relationship from "${value.sourceInstanceId}" to "${value.targetInstanceId}":`, error);
         }
       }
     }
