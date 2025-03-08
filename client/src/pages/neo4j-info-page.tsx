@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {Badge} from "@/components/ui/badge";
 
 interface Neo4jStats {
   totalNodes: number;
@@ -19,6 +20,7 @@ interface Neo4jStats {
     source: string;
     type: string;
     target: string;
+    attributes?: Record<string, any>;
   }>;
 }
 
@@ -120,6 +122,7 @@ export default function Neo4jInfoPage() {
                           <TableHead>Source Node</TableHead>
                           <TableHead>Relationship Type</TableHead>
                           <TableHead>Target Node</TableHead>
+                          <TableHead>Attributes</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -128,6 +131,19 @@ export default function Neo4jInfoPage() {
                             <TableCell>{rel.source}</TableCell>
                             <TableCell>{rel.type}</TableCell>
                             <TableCell>{rel.target}</TableCell>
+                            <TableCell>
+                              {rel.attributes && Object.keys(rel.attributes).length > 0 ? (
+                                <div className="space-y-1">
+                                  {Object.entries(rel.attributes).map(([key, value]) => (
+                                    <Badge key={key} variant="outline" className="mr-1">
+                                      {key}: {value}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">No attributes</span>
+                              )}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

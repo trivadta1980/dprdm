@@ -312,10 +312,14 @@ export class GraphDataService {
       `;
       const countResult = await runQuery(countQuery);
 
-      // Get sample relationships
+      // Get sample relationships with their properties
       const sampleQuery = `
         MATCH (source:DataItem)-[r]->(target:DataItem)
-        RETURN source.name as sourceNode, type(r) as relType, target.name as targetNode
+        RETURN 
+          source.name as sourceNode, 
+          type(r) as relType, 
+          target.name as targetNode,
+          properties(r) as attributes
         LIMIT 5
       `;
       const sampleResult = await runQuery(sampleQuery);
@@ -326,7 +330,8 @@ export class GraphDataService {
         sampleRelationships: sampleResult.map(record => ({
           source: record.get('sourceNode'),
           type: record.get('relType'),
-          target: record.get('targetNode')
+          target: record.get('targetNode'),
+          attributes: record.get('attributes')
         }))
       };
     } finally {
