@@ -1,12 +1,11 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Express } from "express";
+import { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
-import { resetPasswordRequestSchema, resetPasswordSchema } from "@shared/schema";
 
 declare global {
   namespace Express {
@@ -41,12 +40,28 @@ export function setupAuth(app: Express) {
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    }
   };
 
   app.set("trust proxy", 1);
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
+
+  app.use("/api", (req: Request, res: Response, next: NextFunction) => {
+    if (req.path === "/login" || req.path === "/register" || req.path === "/reset-password/request" || req.path === "/reset-password") {
+      return next();
+    }
+
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to:', req.path);
+      return res.sendStatus(401);
+    }
+    next();
+  });
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
@@ -76,18 +91,14 @@ export function setupAuth(app: Express) {
       return res.status(400).send("Email already exists");
     }
 
-    // Use submitted password if provided, otherwise use DEFAULT_PASSWORD
     const passwordToUse = req.body.password || DEFAULT_PASSWORD;
     const hashedPassword = await hashPassword(passwordToUse);
-    
-    // If password was provided by user, they don't need to change it
     const requireChange = !req.body.password;
-    
     const user = await storage.createUser({
       ...req.body,
       password: hashedPassword,
       requirePasswordChange: requireChange,
-      roleId: req.body.roleId || 3 // Use provided role or default to 'user' (ID 3)
+      roleId: req.body.roleId || 3
     });
 
     req.login(user, (err) => {
@@ -112,7 +123,6 @@ export function setupAuth(app: Express) {
     res.json(req.user);
   });
 
-  // Password reset request
   app.post("/api/reset-password/request", async (req, res) => {
     const result = resetPasswordRequestSchema.safeParse(req.body);
     if (!result.success) {
@@ -121,21 +131,16 @@ export function setupAuth(app: Express) {
 
     const user = await storage.getUserByEmail(result.data.email);
     if (!user) {
-      // Don't reveal whether the email exists
       return res.sendStatus(200);
     }
 
     const token = await generateResetToken();
     const expiry = new Date();
-    expiry.setHours(expiry.getHours() + 1); // Token expires in 1 hour
+    expiry.setHours(expiry.getHours() + 1); 
 
     await storage.setResetToken(user.id, token, expiry);
 
-    // Configure email
     const nodemailer = require('nodemailer');
-    
-    // Create a transporter using SMTP
-    // You should set these environment variables in .env file
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.example.com',
       port: parseInt(process.env.SMTP_PORT || '587'),
@@ -145,12 +150,8 @@ export function setupAuth(app: Express) {
         pass: process.env.SMTP_PASS || ''
       }
     });
-    
-    // Reset link that includes the token
     const resetLink = `${process.env.APP_URL || req.headers.origin}/reset-password?token=${token}`;
-    
     try {
-      // Send email
       await transporter.sendMail({
         from: process.env.EMAIL_FROM || '"Password Reset" <noreply@example.com>',
         to: result.data.email,
@@ -164,12 +165,10 @@ export function setupAuth(app: Express) {
           <p>If you did not request this reset, please ignore this email.</p>
         `
       });
-      
       console.log('Password reset email sent to:', result.data.email);
       res.sendStatus(200);
     } catch (error) {
       console.error('Error sending password reset email:', error);
-      // For development, return the token even if email fails
       if (process.env.NODE_ENV === "development") {
         res.json({ token, emailError: error.message });
       } else {
@@ -178,7 +177,6 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // Reset password with token
   app.post("/api/reset-password", async (req, res) => {
     const result = resetPasswordSchema.safeParse(req.body);
     if (!result.success) {
@@ -199,7 +197,6 @@ export function setupAuth(app: Express) {
     res.sendStatus(200);
   });
 
-  // Role management (admin only)
   app.post("/api/roles", async (req, res) => {
     if (!req.isAuthenticated() || req.user.roleId !== 1) {
       return res.sendStatus(403);
@@ -220,7 +217,6 @@ export function setupAuth(app: Express) {
     res.json(roles);
   });
 
-  // User management (admin only)
   app.delete("/api/users/:id", async (req, res) => {
     if (!req.isAuthenticated() || req.user.roleId !== 1) {
       return res.sendStatus(403);
@@ -238,7 +234,6 @@ export function setupAuth(app: Express) {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     const userId = Number(req.params.id);
-    // Only allow users to update their own profile unless they're an admin
     if (req.user.id !== userId && req.user.roleId !== 1) {
       return res.sendStatus(403);
     }
@@ -251,7 +246,6 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // Add password change endpoint
   app.post("/api/change-password", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
@@ -275,15 +269,12 @@ export function setupAuth(app: Express) {
     res.sendStatus(200);
   });
 
-  // Add these routes after the existing role routes in setupAuth function
   app.patch("/api/roles/:id", async (req, res) => {
     if (!req.isAuthenticated() || req.user.roleId !== 1) {
       return res.sendStatus(403);
     }
 
     const roleId = Number(req.params.id);
-
-    // Prevent modifying admin role
     if (roleId === 1) {
       return res.status(403).send("Cannot modify admin role");
     }
@@ -293,7 +284,6 @@ export function setupAuth(app: Express) {
       return res.status(404).send("Role not found");
     }
 
-    // Check if name is being changed and if it already exists
     if (req.body.name !== existingRole.name) {
       const roleWithName = await storage.getRoleByName(req.body.name);
       if (roleWithName) {
@@ -311,8 +301,6 @@ export function setupAuth(app: Express) {
     }
 
     const roleId = Number(req.params.id);
-
-    // Prevent deleting admin role
     if (roleId === 1) {
       return res.status(403).send("Cannot delete admin role");
     }
@@ -325,3 +313,10 @@ export function setupAuth(app: Express) {
     }
   });
 }
+
+export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.isAuthenticated()) {
+    return res.sendStatus(401);
+  }
+  next();
+};
