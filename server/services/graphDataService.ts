@@ -178,6 +178,8 @@ export class GraphDataService {
       return null;
     }
 
+    console.log(`Starting to sync relationship ${relationshipId}`);
+
     // Fetch relationship with all attribute values
     const relationship = await db.query.relationships.findFirst({
       where: eq(schema.relationships.id, relationshipId),
@@ -199,6 +201,8 @@ export class GraphDataService {
     if (!relationship) {
       throw new Error(`Relationship with ID ${relationshipId} not found`);
     }
+
+    console.log(`Found relationship: ${JSON.stringify(relationship, null, 2)}`);
 
     // Create relationship type in Neo4j
     const createRelTypeQuery = `
@@ -223,9 +227,12 @@ export class GraphDataService {
 
     // Create relationship instances between data items with attribute values
     for (const relValue of relationship.values) {
+      console.log(`Processing relationship value: ${JSON.stringify(relValue, null, 2)}`);
+
       // Collect all attributes for this relationship value
       const attributes: Record<string, string> = {};
       if (relValue.attributeValues) {
+        console.log(`Found ${relValue.attributeValues.length} attribute values`);
         for (const attrValue of relValue.attributeValues) {
           if (attrValue.definition?.name) {
             console.log(`Adding attribute ${attrValue.definition.name}: ${attrValue.value}`);
@@ -233,6 +240,8 @@ export class GraphDataService {
           }
         }
       }
+
+      console.log(`Final attributes object: ${JSON.stringify(attributes, null, 2)}`);
 
       const createRelInstanceQuery = `
         MATCH (source:DataItem {id: $sourceId, dataSetId: $sourceDataSetId})
@@ -242,14 +251,19 @@ export class GraphDataService {
         RETURN r
       `;
 
-      await runQuery(createRelInstanceQuery, {
-        sourceId: relValue.sourceInstanceId,
-        targetId: relValue.targetInstanceId,
-        sourceDataSetId: relationship.sourceDataSetId.toString(),
-        targetDataSetId: relationship.targetDataSetId.toString(),
-        relationshipId: relationship.id.toString(),
-        attributes: { ...attributes, ...relValue.metadata }
-      });
+      try {
+        await runQuery(createRelInstanceQuery, {
+          sourceId: relValue.sourceInstanceId,
+          targetId: relValue.targetInstanceId,
+          sourceDataSetId: relationship.sourceDataSetId.toString(),
+          targetDataSetId: relationship.targetDataSetId.toString(),
+          relationshipId: relationship.id.toString(),
+          attributes: { ...attributes, ...relValue.metadata }
+        });
+        console.log(`Successfully created relationship with attributes:`, attributes);
+      } catch (error) {
+        console.error(`Error creating relationship:`, error);
+      }
     }
 
     return relationship.id;
