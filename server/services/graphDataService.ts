@@ -150,41 +150,60 @@ export class GraphDataService {
           eq(schema.relationships.targetDataSetId, dataSetId)
         ),
         with: {
-          values: {
-            with: {
-              attributeValues: {
-                with: {
-                  definition: {
-                    columns: {
-                      id: true,
-                      name: true,
-                    }
-                  }
-                },
-                columns: {
-                  value: true,
-                  attribute_definition_id: true,
-                  relationship_value_id: true
-                }
-              }
-            },
-            columns: {
-              id: true,
-              sourceInstanceId: true,
-              targetInstanceId: true
-            }
-          }
+          values: true
         }
       });
 
       console.log(`Found ${relationships.length} relationships for dataset ${dataSetId}`);
 
-      // Create relationships between nodes
+      // Process relationships and sync to Neo4j
       for (const relationship of relationships) {
-        console.log(`Processing relationship ${relationship.id} (${relationship.relationshipType})`);
+        console.log(`\nProcessing relationship ${relationship.id} (${relationship.relationshipType})`);
 
-        for (const value of relationship.values) {
-          // First verify both nodes exist
+        // Get all attribute values for this relationship's values
+        const attributeValuesQuery = `
+          SELECT 
+            rv.id as value_id,
+            rv.source_instance_id,
+            rv.target_instance_id,
+            rad.name as attribute_name,
+            rav.value as attribute_value
+          FROM relationship_values rv
+          JOIN relationship_attribute_values rav ON rv.id = rav.relationship_value_id
+          JOIN relationship_attribute_definitions rad ON rav.attribute_definition_id = rad.id
+          WHERE rv.relationship_id = $1
+        `;
+
+        const attributeValues = await db.execute(attributeValuesQuery, [relationship.id]);
+        console.log(`Found ${attributeValues.rows.length} attribute values for relationship ${relationship.id}`);
+        console.log('Sample of raw attribute data:', attributeValues.rows.slice(0, 2));
+
+        // Group attribute values by relationship value ID
+        const valueAttributes: {[key: string]: any} = {};
+        for (const row of attributeValues.rows) {
+          if (!valueAttributes[row.value_id]) {
+            valueAttributes[row.value_id] = {
+              sourceInstanceId: row.source_instance_id,
+              targetInstanceId: row.target_instance_id,
+              attributes: {
+                relationshipId: relationship.id.toString(),
+                type: relationship.relationshipType
+              }
+            };
+          }
+          if (row.attribute_value !== null) {
+            valueAttributes[row.value_id].attributes[row.attribute_name] = row.attribute_value;
+          }
+        }
+
+        console.log('Grouped attributes by value_id:', JSON.stringify(valueAttributes, null, 2));
+
+        // Process each relationship value with its attributes
+        for (const valueId of Object.keys(valueAttributes)) {
+          const value = valueAttributes[valueId];
+          console.log(`\nProcessing value_id ${valueId} with attributes:`, value.attributes);
+
+          // Verify nodes exist first
           const verifyNodesQuery = `
             MATCH (source:DataItem {name: $sourceName})
             MATCH (target:DataItem {name: $targetName})
@@ -202,36 +221,11 @@ export class GraphDataService {
               continue;
             }
 
-            // Collect all attributes for this relationship value
-            const attributes: Record<string, string> = {
-              relationshipId: relationship.id.toString(),
-              type: relationship.relationshipType
-            };
-
-            // Add all attribute values using the properly joined data
-            if (value.attributeValues) {
-              for (const attrValue of value.attributeValues) {
-                if (attrValue.definition?.name) {
-                  attributes[attrValue.definition.name] = attrValue.value || '';
-                }
-              }
-            }
-
-            // Log for debugging
-            console.log('Processing relationship:', {
-              source: value.sourceInstanceId,
-              target: value.targetInstanceId,
-              type: relationship.relationshipType,
-              attributes: JSON.stringify(attributes, null, 2)
-            });
-
-            // Create relationship with attributes
+            // Create relationship with attributes in Neo4j
             const createRelQuery = `
               MATCH (source:DataItem {name: $sourceName})
               MATCH (target:DataItem {name: $targetName})
-              MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {
-                relationshipId: $relationshipId
-              }]->(target)
+              MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {relationshipId: $relationshipId}]->(target)
               SET r += $attributes
               RETURN r
             `;
@@ -240,16 +234,17 @@ export class GraphDataService {
               sourceName: value.sourceInstanceId,
               targetName: value.targetInstanceId,
               relationshipId: relationship.id.toString(),
-              attributes
+              attributes: value.attributes
             });
 
-            console.log(`Created relationship: ${value.sourceInstanceId} -> ${value.targetInstanceId}`);
+            console.log(`Created relationship: ${value.sourceInstanceId} -> ${value.targetInstanceId} with attributes:`, value.attributes);
           } catch (error) {
             console.error(`Error creating relationship:`, error);
             console.error('Query parameters:', {
               sourceName: value.sourceInstanceId,
               targetName: value.targetInstanceId,
-              relationshipId: relationship.id.toString()
+              relationshipId: relationship.id.toString(),
+              attributes: value.attributes
             });
           }
         }
