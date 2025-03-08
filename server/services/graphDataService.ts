@@ -1,7 +1,7 @@
 import { db } from '../db';
 import neo4j, { isNeo4jAvailable, runQuery } from '../neo4j';
 import * as schema from '@shared/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, or } from 'drizzle-orm';
 
 export class GraphDataService {
   static isAvailable() {
@@ -33,12 +33,11 @@ export class GraphDataService {
       throw new Error(`Dataset ${dataSetId} not found`);
     }
 
-    // Query Neo4j for statistics
+    // Query Neo4j for statistics - only count instances and their relationships
     const statsQuery = `
       MATCH (item:DataItem {dataSetId: $dataSetId})
       OPTIONAL MATCH (item)-[r]-()
       RETURN 
-        count(DISTINCT item) as totalNodes,
         count(DISTINCT item) as dataItems,
         count(DISTINCT r) as relationships
     `;
@@ -47,7 +46,7 @@ export class GraphDataService {
     const stats = result[0].get(0);
 
     return {
-      totalNodes: stats.get('totalNodes').toNumber(),
+      totalNodes: stats.get('dataItems').toNumber(),
       dataItems: stats.get('dataItems').toNumber(),
       relationships: stats.get('relationships').toNumber(),
       datasetName: dataSet.name
@@ -70,10 +69,23 @@ export class GraphDataService {
       throw new Error(`Reference data set with ID ${dataSetId} not found`);
     }
 
-    // Create nodes for each item in the dataset
+    // Create nodes for each instance in the dataset
     const data = dataSet.data as Record<string, any>;
-
     for (const [itemId, item] of Object.entries(data)) {
+      // Create a meaningful label from the item's properties
+      const label = Object.entries(item)
+        .filter(([key, value]) => key !== '_history' && value !== null && value !== undefined)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join('\n');
+
+      // Create or update the item node with all its properties
+      const createItemQuery = `
+        MERGE (item:DataItem {id: $itemId, dataSetId: $dataSetId})
+        SET item.label = $label,
+            item += $properties
+        RETURN item
+      `;
+
       const properties: Record<string, any> = {};
       for (const [key, value] of Object.entries(item)) {
         if (key !== '_history' && value !== null && value !== undefined) {
@@ -81,23 +93,17 @@ export class GraphDataService {
         }
       }
 
-      // Create or update the item node
-      const createItemQuery = `
-        MERGE (item:DataItem {id: $itemId, dataSetId: $dataSetId})
-        SET item += $properties
-        RETURN item
-      `;
-
       await runQuery(createItemQuery, {
         itemId,
-        dataSetId: dataSet.id.toString(),
-        properties,
+        dataSetId: dataSetId.toString(),
+        label,
+        properties
       });
     }
 
-    // Find and sync all relationships that involve this dataset
+    // Find and sync all relationships involving this dataset
     const relationships = await db.query.relationships.findMany({
-      where: and(
+      where: or(
         eq(schema.relationships.sourceDataSetId, dataSetId),
         eq(schema.relationships.targetDataSetId, dataSetId)
       ),
@@ -117,21 +123,25 @@ export class GraphDataService {
     // Create relationship instances with their attributes
     for (const relationship of relationships) {
       for (const relValue of relationship.values) {
-        // Prepare attribute data
+        // Collect all attribute values for this relationship
         const attributes: Record<string, string> = {};
         for (const attrValue of relValue.attributeValues) {
           attributes[attrValue.definition.name] = attrValue.value;
         }
 
+        // Create a meaningful label for the relationship from its attributes
+        const label = Object.entries(attributes)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join('\n');
+
         const createRelInstanceQuery = `
           MATCH (source:DataItem {id: $sourceId, dataSetId: $sourceDataSetId})
           MATCH (target:DataItem {id: $targetId, dataSetId: $targetDataSetId})
           MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {
-            relationshipId: $relationshipId,
-            sourceInstanceId: $sourceInstanceId,
-            targetInstanceId: $targetInstanceId
+            relationshipId: $relationshipId
           }]->(target)
-          SET r += $attributes
+          SET r.label = $label,
+              r += $attributes
           RETURN r
         `;
 
@@ -141,8 +151,7 @@ export class GraphDataService {
           sourceDataSetId: relationship.sourceDataSetId.toString(),
           targetDataSetId: relationship.targetDataSetId.toString(),
           relationshipId: relationship.id.toString(),
-          sourceInstanceId: relValue.sourceInstanceId,
-          targetInstanceId: relValue.targetInstanceId,
+          label,
           attributes
         });
       }

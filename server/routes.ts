@@ -28,32 +28,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin-only routes for user management
   app.get("/api/users", async (req, res) => {
-    console.log('GET /api/users - Request received'); // Added logging
+    console.log('GET /api/users - Request received'); 
     if (!req.isAuthenticated() || req.user.roleId !== 1) {
-      console.log('GET /api/users - Unauthorized access'); // Added logging
+      console.log('GET /api/users - Unauthorized access'); 
       return res.sendStatus(403);
     }
     const users = await storage.getAllUsers();
-    console.log('GET /api/users - Users fetched successfully'); // Added logging
+    console.log('GET /api/users - Users fetched successfully'); 
     res.json(users);
   });
 
   // Update user route
   app.patch("/api/users/:id", async (req, res) => {
-    console.log('PATCH /api/users/:id - Request received for user ID:', req.params.id); // Added logging
-    console.log('PATCH /api/users/:id - Update data:', req.body); // Added logging
+    console.log('PATCH /api/users/:id - Request received for user ID:', req.params.id); 
+    console.log('PATCH /api/users/:id - Update data:', req.body); 
 
     if (!req.isAuthenticated()) {
-      console.log('PATCH /api/users/:id - User not authenticated'); // Added logging
+      console.log('PATCH /api/users/:id - User not authenticated'); 
       return res.sendStatus(401);
     }
 
     const userId = Number(req.params.id);
-    console.log('PATCH /api/users/:id - Authenticated user ID:', req.user.id, 'Role ID:', req.user.roleId); // Added logging
+    console.log('PATCH /api/users/:id - Authenticated user ID:', req.user.id, 'Role ID:', req.user.roleId); 
 
     // Only allow users to update their own profile unless they're an admin
     if (req.user.id !== userId && req.user.roleId !== 1) {
-      console.log('PATCH /api/users/:id - Permission denied: User cannot edit this profile'); // Added logging
+      console.log('PATCH /api/users/:id - Permission denied: User cannot edit this profile'); 
       return res.sendStatus(403);
     }
 
@@ -66,31 +66,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = await storage.updateUser(userId, req.body);
-      console.log('PATCH /api/users/:id - Update result:', user); // Added logging
+      console.log('PATCH /api/users/:id - Update result:', user); 
       if (user) {
         res.json(user);
       } else {
-        console.log('PATCH /api/users/:id - User not found'); // Added logging
+        console.log('PATCH /api/users/:id - User not found'); 
         res.sendStatus(404);
       }
     } catch (error) {
-      console.error('PATCH /api/users/:id - Error updating user:', error); // Added logging
+      console.error('PATCH /api/users/:id - Error updating user:', error); 
       res.status(500).json({ error: String(error) });
     }
   });
 
   // Delete user route
   app.delete("/api/users/:id", async (req, res) => {
-    console.log('DELETE /api/users/:id - Request received for user ID:', req.params.id); // Added logging
-
+    console.log('DELETE /api/users/:id - Request received for user ID:', req.params.id); 
+    
     if (!req.isAuthenticated()) {
-      console.log('DELETE /api/users/:id - User not authenticated'); // Added logging
+      console.log('DELETE /api/users/:id - User not authenticated'); 
       return res.sendStatus(401);
     }
 
     // Only admin can delete users
     if (req.user.roleId !== 1) {
-      console.log('DELETE /api/users/:id - Permission denied: User is not admin'); // Added logging
+      console.log('DELETE /api/users/:id - Permission denied: User is not admin'); 
       return res.sendStatus(403);
     }
 
@@ -98,7 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     // Prevent deleting the admin user (assuming user with ID 1 is the main admin)
     if (userId === 1) {
-      console.log('DELETE /api/users/:id - Cannot delete main admin user'); // Added logging
+      console.log('DELETE /api/users/:id - Cannot delete main admin user'); 
       return res.status(403).json({ error: "Cannot delete the main admin user" });
     }
 
@@ -106,14 +106,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const success = await storage.deleteUser(userId);
 
       if (success) {
-        console.log('DELETE /api/users/:id - User deleted successfully'); // Added logging
+        console.log('DELETE /api/users/:id - User deleted successfully'); 
         res.sendStatus(200);
       } else {
-        console.log('DELETE /api/users/:id - User not found'); // Added logging
+        console.log('DELETE /api/users/:id - User not found'); 
         res.sendStatus(404);
       }
     } catch (error) {
-      console.error('DELETE /api/users/:id - Error deleting user:', error); // Added logging
+      console.error('DELETE /api/users/:id - Error deleting user:', error); 
       res.status(500).json({ error: String(error) });
     }
   });
@@ -1413,17 +1413,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(503).json({ error: "Neo4j is not available" });
       }
 
-      // First sync the dataset if needed
+      // First sync the dataset to ensure data is present
       await GraphDataService.syncReferenceDataSet(dataSetId);
 
-      // Query Neo4j for graph data
+      // Query Neo4j for graph data - only instances and their relationships
       const session = GraphDataService.getSession();
       try {
-        // Query to get all instances and their relationships for this dataset
         const result = await session.run(`
           MATCH (item:DataItem {dataSetId: $dataSetId})
           OPTIONAL MATCH (item)-[r]-(related:DataItem)
-          WHERE related.dataSetId = $dataSetId
+          WHERE related.dataSetId = $dataSetId OR type(r) = 'MAPS_TO'
           RETURN 
             collect(DISTINCT item) as items,
             collect(DISTINCT r) as rels
@@ -1433,35 +1432,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const nodes = [];
         const links = [];
 
-        // Add instance nodes
+        // Process instance nodes
         const items = record.get('items');
         items.forEach(item => {
-          // Create a display label from the item's properties
-          const label = Object.entries(item.properties)
-            .filter(([key]) => !['id', 'dataSetId'].includes(key))
-            .map(([_, value]) => value)
-            .join(' - ');
-
           nodes.push({
             id: item.properties.id,
-            label: label,
+            label: item.properties.label || item.properties.id,
             type: 'DataItem'
           });
         });
 
-        // Add relationships with their attributes
+        // Process relationships
         const relationships = record.get('rels');
         relationships.forEach(rel => {
-          const attributes = Object.entries(rel.properties)
-            .filter(([key]) => !['relationshipId', 'sourceInstanceId', 'targetInstanceId'].includes(key))
-            .map(([key, value]) => `${key}: ${value}`)
-            .join('\n');
-
           links.push({
-            source: rel.properties.sourceInstanceId,
-            target: rel.properties.targetInstanceId,
+            source: rel.startNode.properties.id,
+            target: rel.endNode.properties.id,
             type: rel.type,
-            label: attributes
+            label: rel.properties.label || rel.type
           });
         });
 
