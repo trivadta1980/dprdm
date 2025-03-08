@@ -24,6 +24,7 @@ interface GraphData {
     source: string;
     target: string;
     type: string;
+    label?: string; // Added to support relationship attributes
   }>;
 }
 
@@ -134,9 +135,10 @@ export default function DatasetGraphPage() {
                   graphData={graphData}
                   nodeLabel="label"
                   nodeColor={(node: any) => 
-                    node.type === 'DataSet' ? '#ff6b6b' : '#4dabf7'
+                    node.type === 'DataItem' ? '#4dabf7' : '#ff6b6b'
                   }
                   linkColor={() => '#868e96'}
+                  linkLabel="label" // Show relationship attributes
                   linkDirectionalArrowLength={6}
                   linkDirectionalArrowRelPos={1}
                   linkCurvature={0.2}
@@ -146,7 +148,7 @@ export default function DatasetGraphPage() {
                     ctx.font = `${fontSize}px Sans-Serif`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillStyle = node.type === 'DataSet' ? '#ff6b6b' : '#4dabf7';
+                    ctx.fillStyle = node.type === 'DataItem' ? '#4dabf7' : '#ff6b6b';
                     ctx.fillText(label, node.x, node.y);
                   }}
                 />
