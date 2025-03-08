@@ -20,8 +20,15 @@ export class GraphDataService {
       throw new Error("Neo4j not available");
     }
 
+    console.log('Starting getDatasetGraphStats for dataset:', dataSetId);
+
     // First make sure data exists by syncing
-    await this.syncReferenceDataSet(dataSetId);
+    try {
+      await this.syncReferenceDataSet(dataSetId);
+    } catch (error) {
+      console.error('Error during sync:', error);
+      throw error;
+    }
 
     // Get the dataset name
     const dataSet = await db.query.referenceDataSets.findFirst({
@@ -31,6 +38,9 @@ export class GraphDataService {
     if (!dataSet) {
       throw new Error(`Dataset ${dataSetId} not found`);
     }
+
+    console.log('Dataset found:', dataSet.name);
+    console.log('Dataset data sample:', Object.entries(dataSet.data as Record<string, any>).slice(0, 2));
 
     // Query Neo4j for statistics and visualization data
     const vizQuery = `
@@ -53,6 +63,11 @@ export class GraphDataService {
     console.log('Executing visualization query for dataset:', dataSetId);
     const result = await runQuery(vizQuery);
     const graphData = result[0].get('result');
+
+    console.log('Visualization data summary:', {
+      nodeCount: graphData.nodes.length,
+      linkCount: graphData.links.length
+    });
 
     return {
       totalNodes: graphData.nodes.length,
