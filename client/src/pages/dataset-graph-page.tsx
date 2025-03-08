@@ -91,6 +91,27 @@ export default function DatasetGraphPage() {
     );
   }
 
+  // Transform data for ForceGraph2D
+  const graphDataFormatted = {
+    nodes: graphData.visualization.nodes.map(node => ({
+      ...node,
+      // Add required properties for ForceGraph2D
+      x: undefined, // Let ForceGraph2D calculate positions
+      y: undefined,
+      name: node.label // Used for node labels
+    })),
+    links: graphData.visualization.links.map(link => {
+      // Find the actual node objects for source and target
+      const sourceNode = graphData.visualization.nodes.find(n => n.id === link.source);
+      const targetNode = graphData.visualization.nodes.find(n => n.id === link.target);
+      return {
+        ...link,
+        source: sourceNode,
+        target: targetNode
+      };
+    }).filter(link => link.source && link.target) // Only keep valid links
+  };
+
   return (
     <MainLayout>
       <div className="max-w-6xl mx-auto space-y-6">
@@ -152,11 +173,11 @@ export default function DatasetGraphPage() {
             <CardTitle>Graph Visualization</CardTitle>
           </CardHeader>
           <CardContent>
-            {graphData.visualization && graphData.visualization.nodes.length > 0 ? (
+            {graphDataFormatted.nodes.length > 0 ? (
               <div className="h-[600px] border rounded-lg overflow-hidden">
                 <ForceGraph2D
-                  graphData={graphData.visualization}
-                  nodeLabel="label"
+                  graphData={graphDataFormatted}
+                  nodeLabel="name"
                   nodeColor={(node: any) => node.type === 'DataItem' ? '#4dabf7' : '#ff6b6b'}
                   linkColor={() => '#868e96'}
                   linkLabel="type"
@@ -164,7 +185,7 @@ export default function DatasetGraphPage() {
                   linkDirectionalArrowRelPos={1}
                   linkCurvature={0.2}
                   nodeCanvasObject={(node: any, ctx, globalScale) => {
-                    const label = node.label;
+                    const label = node.name;
                     const fontSize = 12 / globalScale;
                     ctx.font = `${fontSize}px Sans-Serif`;
                     ctx.textAlign = 'center';
