@@ -23,15 +23,47 @@ interface Neo4jStats {
 }
 
 export default function Neo4jInfoPage() {
-  const { data: stats, isLoading } = useQuery<Neo4jStats>({
+  // Add debugging for query execution and response
+  const { data: stats, isLoading, error } = useQuery<Neo4jStats>({
     queryKey: ['/api/graph/debug'],
+    onSuccess: (data) => {
+      console.log('Neo4j debug data received:', data);
+    },
+    onError: (err) => {
+      console.error('Error fetching Neo4j debug data:', err);
+    }
   });
+
+  console.log('Current stats:', stats);
+  console.log('Loading state:', isLoading);
+  console.log('Error state:', error);
 
   if (isLoading) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-[200px]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="max-w-6xl mx-auto space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-destructive">Error Loading Neo4j Data</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Failed to load Neo4j database information. Please try again later.</p>
+              <Button variant="outline" onClick={() => window.history.back()} className="mt-4">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </MainLayout>
     );
@@ -81,24 +113,30 @@ export default function Neo4jInfoPage() {
                   <CardTitle>Sample Relationships</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Source Node</TableHead>
-                        <TableHead>Relationship Type</TableHead>
-                        <TableHead>Target Node</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {stats?.sampleRelationships?.map((rel, idx) => (
-                        <TableRow key={idx}>
-                          <TableCell>{rel.source}</TableCell>
-                          <TableCell>{rel.type}</TableCell>
-                          <TableCell>{rel.target}</TableCell>
+                  {stats?.sampleRelationships && stats.sampleRelationships.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Source Node</TableHead>
+                          <TableHead>Relationship Type</TableHead>
+                          <TableHead>Target Node</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {stats.sampleRelationships.map((rel, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell>{rel.source}</TableCell>
+                            <TableCell>{rel.type}</TableCell>
+                            <TableCell>{rel.target}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <p className="text-muted-foreground text-center py-4">
+                      No relationships found in the database.
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </div>

@@ -304,13 +304,13 @@ export class GraphDataService {
 
     const session = this.getSession();
     try {
-      // Count all relationships
+      // Count nodes and relationships separately
       const countQuery = `
-        MATCH ()-[r]->() 
-        RETURN count(r) as relationshipCount
+        MATCH (n) 
+        OPTIONAL MATCH ()-[r]->()
+        RETURN count(DISTINCT n) as nodeCount, count(DISTINCT r) as relationshipCount
       `;
       const countResult = await runQuery(countQuery);
-      console.log(`Total relationships in Neo4j: ${countResult[0].get('relationshipCount')}`);
 
       // Get sample relationships
       const sampleQuery = `
@@ -319,14 +319,11 @@ export class GraphDataService {
         LIMIT 5
       `;
       const sampleResult = await runQuery(sampleQuery);
-      console.log("\nSample relationships:");
-      sampleResult.forEach(record => {
-        console.log(`${record.get('sourceNode')} -[${record.get('relType')}]-> ${record.get('targetNode')}`);
-      });
 
       return {
-        count: countResult[0].get('relationshipCount').toNumber(),
-        samples: sampleResult.map(record => ({
+        totalNodes: countResult[0].get('nodeCount').toNumber(),
+        totalRelationships: countResult[0].get('relationshipCount').toNumber(),
+        sampleRelationships: sampleResult.map(record => ({
           source: record.get('sourceNode'),
           type: record.get('relType'),
           target: record.get('targetNode')

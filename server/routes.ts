@@ -1526,15 +1526,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const debugInfo = await GraphDataService.debugRelationships();
-
-      const response = {
-        totalNodes: debugInfo.count,
-        totalRelationships: debugInfo.count, // This represents total relationships
-        sampleRelationships: debugInfo.samples
-      };
-
       console.log('GET /api/graph/debug - Debug info retrieved successfully');
-      res.json(response);
+      res.json(debugInfo);
     } catch (error) {
       console.error('GET /api/graph/debug - Error:', error);
       res.status(500).json({ error: String(error) });

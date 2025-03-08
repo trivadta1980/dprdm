@@ -5,10 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, RefreshCw, ZoomIn } from "lucide-react";
+import { Loader2, RefreshCw, ZoomIn, Database } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 
 interface GraphNode {
   id: string;
@@ -36,6 +35,7 @@ interface GraphData {
 }
 
 export default function GraphVisualizationPage() {
+  const [, setLocation] = useLocation();
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -208,7 +208,18 @@ export default function GraphVisualizationPage() {
       <div className="container mx-auto p-4 space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Data Graph Visualization</CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle>Data Graph Visualization</CardTitle>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setLocation('/neo4j-info')}
+                >
+                  <Database className="h-4 w-4 mr-2" />
+                  View Neo4j Info
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
