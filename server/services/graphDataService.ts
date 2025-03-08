@@ -155,7 +155,15 @@ export class GraphDataService {
           eq(schema.relationships.targetDataSetId, dataSetId)
         ),
         with: {
-          values: true
+          values: {
+            with: {
+              attributeValues: {
+                with: {
+                  definition: true
+                }
+              }
+            }
+          }
         }
       });
 
@@ -166,6 +174,20 @@ export class GraphDataService {
         console.log(`Processing relationship ${relationship.id} (${relationship.relationshipType})`);
 
         for (const value of relationship.values) {
+          // Collect all attributes for this relationship value
+          const attributes: Record<string, string> = {
+            relationshipId: relationship.id.toString(),
+            type: relationship.relationshipType
+          };
+
+          if (value.attributeValues) {
+            for (const attrValue of value.attributeValues) {
+              if (attrValue.definition?.name) {
+                attributes[attrValue.definition.name] = attrValue.value || '';
+              }
+            }
+          }
+
           // First verify both nodes exist
           const verifyNodesQuery = `
             MATCH (source:DataItem {name: $sourceName})
@@ -184,29 +206,32 @@ export class GraphDataService {
               continue;
             }
 
-            // Create relationship
+            // Create relationship with attributes
             const createRelQuery = `
               MATCH (source:DataItem {name: $sourceName})
               MATCH (target:DataItem {name: $targetName})
               MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {
                 relationshipId: $relationshipId
               }]->(target)
+              SET r += $attributes
               RETURN r
             `;
 
             await runQuery(createRelQuery, {
               sourceName: value.sourceInstanceId,
               targetName: value.targetInstanceId,
-              relationshipId: relationship.id.toString()
+              relationshipId: relationship.id.toString(),
+              attributes
             });
 
-            console.log(`Created relationship: ${value.sourceInstanceId} -> ${value.targetInstanceId}`);
+            console.log(`Created relationship: ${value.sourceInstanceId} -> ${value.targetInstanceId} with attributes:`, attributes);
           } catch (error) {
             console.error(`Error creating relationship:`, error);
             console.error('Query parameters:', {
               sourceName: value.sourceInstanceId,
               targetName: value.targetInstanceId,
-              relationshipId: relationship.id.toString()
+              relationshipId: relationship.id.toString(),
+              attributes
             });
           }
         }

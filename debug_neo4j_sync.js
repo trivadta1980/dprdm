@@ -40,18 +40,6 @@ async function debugSync() {
     const countResult = await session.run(countQuery);
     console.log('Total nodes:', countResult.records[0].get('total').toNumber());
 
-    console.log('\nChecking nodes for dataset 11...');
-    const nodeQuery = `
-      MATCH (n:DataItem)
-      WHERE n.dataSetId = '11'
-      RETURN n.name as name, n.label as label
-    `;
-    const nodeResult = await session.run(nodeQuery);
-    console.log('Sample nodes:', nodeResult.records.map(record => ({
-      name: record.get('name'),
-      label: record.get('label')
-    })));
-
     // Try to create a test relationship
     console.log('\nTesting relationship creation...');
     const createRelQuery = `
@@ -61,19 +49,45 @@ async function debugSync() {
       WITH collect(source) as nodes
       WITH nodes[0] as source, nodes[1] as target
       WHERE source IS NOT NULL AND target IS NOT NULL
-      CREATE (source)-[r:SUPPLIES_TO { type: 'TEST' }]->(target)
-      RETURN source.name as source, target.name as target
+      CREATE (source)-[r:SUPPLIES_TO { 
+        type: 'TEST',
+        relationshipId: '1',
+        product: 'TEST_PRODUCT',
+        quantity: '100',
+        frequency: 'WEEKLY'
+      }]->(target)
+      RETURN source.name as source, target.name as target, properties(r) as attributes
     `;
 
     const relResult = await session.run(createRelQuery);
     if (relResult.records.length > 0) {
       console.log('Created test relationship:', {
         source: relResult.records[0].get('source'),
-        target: relResult.records[0].get('target')
+        target: relResult.records[0].get('target'),
+        attributes: relResult.records[0].get('attributes')
       });
     } else {
       console.log('No relationships created - not enough nodes found');
     }
+
+    // Check relationships and their attributes
+    console.log('\nChecking all relationships and their attributes...');
+    const relQuery = `
+      MATCH (source:DataItem)-[r]->(target:DataItem)
+      WHERE source.dataSetId = '11' OR target.dataSetId = '11'
+      RETURN source.name as source, type(r) as type, properties(r) as attributes, target.name as target
+    `;
+
+    const relationships = await session.run(relQuery);
+    console.log('\nFound relationships:');
+    relationships.records.forEach(record => {
+      console.log({
+        source: record.get('source'),
+        type: record.get('type'),
+        attributes: record.get('attributes'),
+        target: record.get('target')
+      });
+    });
 
   } catch (error) {
     console.error('Error:', error);
