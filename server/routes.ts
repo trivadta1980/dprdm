@@ -1394,6 +1394,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add after the existing /api/graph/dataset/:id route
+  app.get("/api/graph/dataset/:id/visualization", async (req, res) => {
+    console.log('GET /api/graph/dataset/:id/visualization - Request received');
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const dataSetId = Number(req.params.id);
+      const dataSet = await storage.getReferenceDataSet(dataSetId);
+
+      if (!dataSet) {
+        return res.status(404).json({ error: "Dataset not found" });
+      }
+
+      if (!GraphDataService.isAvailable()) {
+        return res.status(503).json({ error: "Neo4j is not available" });
+      }
+
+      // First sync the dataset if needed
+      await GraphDataService.syncReferenceDataSet(dataSetId);
+
+      // Query Neo4j for graph data
+      const session = GraphDataService.getSession();
+      try {
+        // Query to get all nodes and relationships for this dataset
+        const result = await session.run(`
+          MATCH (ds:DataSet {id: $dataSetId})
+          OPTIONAL MATCH (ds)-[r]-(n)
+          RETURN ds, collect(DISTINCT r) as rels, collect(DISTINCT n) as nodes
+        `, { dataSetId: dataSetId });
+
+        const record = result.records[0];
+        const nodes = [];
+        const links = [];
+
+        // Add dataset node
+        const dsNode = record.get('ds');
+        nodes.push({
+          id: `ds_${dsNode.properties.id}`,
+          label: dsNode.properties.name,
+          type: 'DataSet'
+        });
+
+        // Add related nodes and relationships
+        const relatedNodes = record.get('nodes');
+        const relationships = record.get('rels');
+
+        relatedNodes.forEach(node => {
+          nodes.push({
+            id: `${node.labels[0]}_${node.properties.id}`,
+            label: node.properties.name || node.properties.id,
+            type: node.labels[0]
+          });
+        });
+
+        relationships.forEach(rel => {
+          links.push({
+            source: `${rel.startNode.labels[0]}_${rel.startNode.properties.id}`,
+            target: `${rel.endNode.labels[0]}_${rel.endNode.properties.id}`,
+            type: rel.type
+          });
+        });
+
+        res.json({ nodes, links });
+      } finally {
+        await session.close();
+      }
+    } catch (error) {
+      console.error('GET /api/graph/dataset/:id/visualization - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
