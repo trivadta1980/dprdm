@@ -20,10 +20,8 @@ export class GraphDataService {
       throw new Error("Neo4j not available");
     }
 
-    // First make sure data exists by syncing
     await this.syncReferenceDataSet(dataSetId);
 
-    // Get the dataset name
     const dataSet = await db.query.referenceDataSets.findFirst({
       where: eq(schema.referenceDataSets.id, dataSetId)
     });
@@ -32,7 +30,6 @@ export class GraphDataService {
       throw new Error(`Dataset ${dataSetId} not found`);
     }
 
-    // Query Neo4j for statistics
     const statsQuery = `
       MATCH (item:DataItem {dataSetId: $dataSetId})
       OPTIONAL MATCH (item)-[r]-()
@@ -58,7 +55,6 @@ export class GraphDataService {
       return null;
     }
 
-    // Fetch the reference data set
     const dataSet = await db.query.referenceDataSets.findFirst({
       where: eq(schema.referenceDataSets.id, dataSetId)
     });
@@ -69,19 +65,10 @@ export class GraphDataService {
 
     console.log(`Syncing dataset ${dataSetId} (${dataSet.name}) to Neo4j`);
 
-    // Create nodes for each instance in the dataset
     const data = dataSet.data as Record<string, any>;
     for (const [_, item] of Object.entries(data)) {
-      // Use the site name as the unique identifier
       const siteId = item.Site_Name || item.name || JSON.stringify(item);
 
-      // Create a meaningful label from the item's properties
-      const label = Object.entries(item)
-        .filter(([key, value]) => key !== '_history' && value !== null && value !== undefined)
-        .map(([key, value]) => `${key}: ${value}`)
-        .join('\n');
-
-      // Create or update the item node
       const createItemQuery = `
         MERGE (item:DataItem {id: $siteId, dataSetId: $dataSetId})
         SET item.label = $label,
@@ -100,12 +87,11 @@ export class GraphDataService {
       await runQuery(createItemQuery, {
         siteId,
         dataSetId: dataSetId.toString(),
-        label,
+        label: siteId,
         properties
       });
     }
 
-    // Find and sync all relationships where this dataset is either source or target
     const relationships = await db.query.relationships.findMany({
       where: or(
         eq(schema.relationships.sourceDataSetId, dataSetId),
@@ -124,17 +110,14 @@ export class GraphDataService {
       }
     });
 
-    console.log(`Found ${relationships.length} relationships for dataset ${dataSetId}`);
+    console.log(`Found ${relationships.length} relationships to sync for dataset ${dataSetId}`);
 
-    // Get relationship values and their attributes for each relationship
     for (const relationship of relationships) {
       console.log(`Processing relationship ${relationship.id} (${relationship.relationshipType})`);
 
-      // Create relationship instances with attributes
       for (const value of relationship.values) {
         console.log(`Creating relationship between "${value.sourceInstanceId}" and "${value.targetInstanceId}"`);
 
-        // Collect all attributes for this relationship value
         const attributes: Record<string, string> = {};
         if (value.attributeValues) {
           for (const attrValue of value.attributeValues) {
@@ -145,24 +128,48 @@ export class GraphDataService {
           }
         }
 
-        const createRelInstanceQuery = `
+        console.log(`Relationship attributes:`, attributes);
+        console.log(`Metadata:`, value.metadata);
+
+        const verifyNodesQuery = `
           MATCH (source:DataItem {id: $sourceId})
           MATCH (target:DataItem {id: $targetId})
-          MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {
-            relationshipId: $relationshipId
-          }]->(target)
-          SET r += $attributes
-          RETURN r
+          RETURN source, target
         `;
 
         try {
-          await runQuery(createRelInstanceQuery, {
+          const nodesExist = await runQuery(verifyNodesQuery, {
+            sourceId: value.sourceInstanceId,
+            targetId: value.targetInstanceId
+          });
+
+          if (nodesExist.length === 0) {
+            console.error(`One or both nodes not found for relationship: ${value.sourceInstanceId} -> ${value.targetInstanceId}`);
+            continue;
+          }
+
+          const createRelQuery = `
+            MATCH (source:DataItem {id: $sourceId})
+            MATCH (target:DataItem {id: $targetId})
+            MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {relationshipId: $relationshipId}]->(target)
+            SET r = $attributes
+            RETURN r
+          `;
+
+          await runQuery(createRelQuery, {
             sourceId: value.sourceInstanceId,
             targetId: value.targetInstanceId,
             relationshipId: relationship.id.toString(),
-            attributes: { ...attributes, ...value.metadata }
+            attributes: { 
+              ...attributes,
+              ...value.metadata,
+              type: relationship.relationshipType,
+              sourceDataSetId: relationship.sourceDataSetId.toString(),
+              targetDataSetId: relationship.targetDataSetId.toString()
+            }
           });
-          console.log(`Successfully created relationship with attributes:`, attributes);
+
+          console.log(`Successfully created relationship with attributes`);
         } catch (error) {
           console.error(`Error creating relationship:`, error);
         }
@@ -180,7 +187,6 @@ export class GraphDataService {
 
     console.log(`Starting to sync relationship ${relationshipId}`);
 
-    // Fetch relationship with all attribute values
     const relationship = await db.query.relationships.findFirst({
       where: eq(schema.relationships.id, relationshipId),
       with: {
@@ -204,32 +210,9 @@ export class GraphDataService {
 
     console.log(`Found relationship: ${JSON.stringify(relationship, null, 2)}`);
 
-    // Create relationship type in Neo4j
-    const createRelTypeQuery = `
-      MERGE (rel:RelationshipType {id: $id, name: $name})
-      SET rel.relationshipType = $relType,
-          rel.cardinality = $cardinality,
-          rel.sourceField = $sourceField,
-          rel.targetField = $targetField,
-          rel.updatedAt = $updatedAt
-      RETURN rel
-    `;
-
-    await runQuery(createRelTypeQuery, {
-      id: relationship.id.toString(),
-      name: relationship.name,
-      relType: relationship.relationshipType,
-      cardinality: relationship.cardinality,
-      sourceField: relationship.sourceField,
-      targetField: relationship.targetField,
-      updatedAt: relationship.updatedAt.toISOString(),
-    });
-
-    // Create relationship instances between data items with attribute values
     for (const relValue of relationship.values) {
       console.log(`Processing relationship value: ${JSON.stringify(relValue, null, 2)}`);
 
-      // Collect all attributes for this relationship value
       const attributes: Record<string, string> = {};
       if (relValue.attributeValues) {
         console.log(`Found ${relValue.attributeValues.length} attribute values`);
@@ -243,24 +226,45 @@ export class GraphDataService {
 
       console.log(`Final attributes object: ${JSON.stringify(attributes, null, 2)}`);
 
-      const createRelInstanceQuery = `
-        MATCH (source:DataItem {id: $sourceId, dataSetId: $sourceDataSetId})
-        MATCH (target:DataItem {id: $targetId, dataSetId: $targetDataSetId})
-        MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {relationshipId: $relationshipId}]->(target)
-        SET r += $attributes
-        RETURN r
+      const verifyNodesQuery = `
+        MATCH (source:DataItem {id: $sourceId})
+        MATCH (target:DataItem {id: $targetId})
+        RETURN source, target
       `;
 
       try {
-        await runQuery(createRelInstanceQuery, {
+        const nodesExist = await runQuery(verifyNodesQuery, {
+          sourceId: relValue.sourceInstanceId,
+          targetId: relValue.targetInstanceId
+        });
+
+        if (nodesExist.length === 0) {
+          console.error(`One or both nodes not found for relationship: ${relValue.sourceInstanceId} -> ${relValue.targetInstanceId}`);
+          continue;
+        }
+
+        const createRelQuery = `
+          MATCH (source:DataItem {id: $sourceId})
+          MATCH (target:DataItem {id: $targetId})
+          MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {relationshipId: $relationshipId}]->(target)
+          SET r = $attributes
+          RETURN r
+        `;
+
+        await runQuery(createRelQuery, {
           sourceId: relValue.sourceInstanceId,
           targetId: relValue.targetInstanceId,
-          sourceDataSetId: relationship.sourceDataSetId.toString(),
-          targetDataSetId: relationship.targetDataSetId.toString(),
           relationshipId: relationship.id.toString(),
-          attributes: { ...attributes, ...relValue.metadata }
+          attributes: { 
+            ...attributes,
+            ...relValue.metadata,
+            type: relationship.relationshipType,
+            sourceDataSetId: relationship.sourceDataSetId.toString(),
+            targetDataSetId: relationship.targetDataSetId.toString()
+          }
         });
-        console.log(`Successfully created relationship with attributes:`, attributes);
+
+        console.log(`Successfully created relationship with attributes`);
       } catch (error) {
         console.error(`Error creating relationship:`, error);
       }
@@ -269,14 +273,12 @@ export class GraphDataService {
     return relationship.id;
   }
 
-  // Sync crosswalk mappings to Neo4j
   static async syncCrosswalkMapping(crosswalkId: number) {
     if (!this.isAvailable()) {
       console.warn("Neo4j not available, skipping crosswalk sync");
       return null;
     }
 
-    // Fetch crosswalk data from PostgreSQL
     const crosswalk = await db.query.crosswalkMappings.findFirst({
       where: eq(schema.crosswalkMappings.id, crosswalkId),
       with: {
@@ -289,7 +291,6 @@ export class GraphDataService {
       throw new Error(`Crosswalk with ID ${crosswalkId} not found`);
     }
 
-    // Create crosswalk in Neo4j
     const createCrosswalkQuery = `
       MERGE (cw:Crosswalk {id: $id, name: $name})
       SET cw.description = $description,
@@ -308,7 +309,6 @@ export class GraphDataService {
       updatedAt: crosswalk.updatedAt.toISOString(),
     });
 
-    // Create mappings between items
     const mappingData = crosswalk.mappingData as Record<string, string>;
 
     for (const [sourceId, targetId] of Object.entries(mappingData)) {
@@ -337,7 +337,6 @@ export class GraphDataService {
 
     const session = this.getSession();
     try {
-      // Count nodes and relationships separately
       const countQuery = `
         MATCH (n) 
         OPTIONAL MATCH ()-[r]->()
@@ -345,7 +344,6 @@ export class GraphDataService {
       `;
       const countResult = await runQuery(countQuery);
 
-      // Get sample relationships with their properties
       const sampleQuery = `
         MATCH (source:DataItem)-[r]->(target:DataItem)
         RETURN 
@@ -380,7 +378,6 @@ export class GraphDataService {
     const params: Record<string, any> = { productId };
 
     if (sourceLocation && targetLocation) {
-      // Find paths between specific source and target locations
       query = `
         MATCH path = (source:DataItem {name: $sourceLocation})-[r:ASSOCIATION*]->(target:DataItem {name: $targetLocation})
         WHERE ALL(rel IN r WHERE rel.product = $productId)
@@ -393,7 +390,6 @@ export class GraphDataService {
       params.sourceLocation = sourceLocation;
       params.targetLocation = targetLocation;
     } else if (sourceLocation) {
-      // Find all possible destinations from a source
       query = `
         MATCH path = (source:DataItem {name: $sourceLocation})-[r:ASSOCIATION*]->(target:DataItem)
         WHERE ALL(rel IN r WHERE rel.product = $productId)
@@ -405,7 +401,6 @@ export class GraphDataService {
       `;
       params.sourceLocation = sourceLocation;
     } else {
-      // Find all paths for a product
       query = `
         MATCH path = (source:DataItem)-[r:ASSOCIATION*]->(target:DataItem)
         WHERE ALL(rel IN r WHERE rel.product = $productId)
