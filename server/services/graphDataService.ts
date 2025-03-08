@@ -72,7 +72,7 @@ export class GraphDataService {
     // Create nodes for each instance in the dataset
     const data = dataSet.data as Record<string, any>;
     for (const [_, item] of Object.entries(data)) {
-      // For sites dataset, use the site name as the unique identifier
+      // Use the site name as the unique identifier
       const siteId = item.Site_Name || item.name || JSON.stringify(item);
 
       // Create a meaningful label from the item's properties
@@ -115,20 +115,35 @@ export class GraphDataService {
 
     console.log(`Found ${relationships.length} relationships for dataset ${dataSetId}`);
 
-    // Get relationship values for each relationship
+    // Get relationship values and their attributes for each relationship
     for (const relationship of relationships) {
       console.log(`Processing relationship ${relationship.id} (${relationship.relationshipType})`);
 
-      // Fetch relationship values directly
+      // Fetch relationship values with their attributes
       const values = await db.query.relationshipValues.findMany({
-        where: eq(schema.relationshipValues.relationshipId, relationship.id)
+        where: eq(schema.relationshipValues.relationshipId, relationship.id),
+        with: {
+          attributeValues: {
+            with: {
+              definition: true
+            }
+          }
+        }
       });
 
       console.log(`Found ${values.length} relationship values for relationship ${relationship.id}`);
 
-      // Create relationship instances
+      // Create relationship instances with attributes
       for (const value of values) {
         console.log(`Creating relationship between "${value.sourceInstanceId}" and "${value.targetInstanceId}"`);
+
+        // Collect all attributes for this relationship value
+        const attributes: Record<string, string> = {};
+        for (const attrValue of value.attributeValues) {
+          if (attrValue.definition?.name) {
+            attributes[attrValue.definition.name] = attrValue.value;
+          }
+        }
 
         const createRelInstanceQuery = `
           MATCH (source:DataItem {id: $sourceId})
@@ -136,6 +151,7 @@ export class GraphDataService {
           MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {
             relationshipId: $relationshipId
           }]->(target)
+          SET r += $attributes
           RETURN r
         `;
 
@@ -143,9 +159,10 @@ export class GraphDataService {
           await runQuery(createRelInstanceQuery, {
             sourceId: value.sourceInstanceId,
             targetId: value.targetInstanceId,
-            relationshipId: relationship.id.toString()
+            relationshipId: relationship.id.toString(),
+            attributes
           });
-          console.log(`Successfully created relationship between "${value.sourceInstanceId}" and "${value.targetInstanceId}"`);
+          console.log(`Successfully created relationship with attributes:`, attributes);
         } catch (error) {
           console.error(`Error creating relationship:`, error);
         }
@@ -155,7 +172,6 @@ export class GraphDataService {
     return dataSet.id;
   }
 
-  // Sync relationship data to Neo4j
   static async syncRelationship(relationshipId: number) {
     if (!this.isAvailable()) {
       console.warn("Neo4j not available, skipping relationship sync");
@@ -319,6 +335,59 @@ export class GraphDataService {
     } finally {
       await session.close();
     }
+  }
+  static async findProductShippingPaths(productId: string, sourceLocation?: string, targetLocation?: string) {
+    if (!this.isAvailable()) {
+      throw new Error("Neo4j not available");
+    }
+
+    let query: string;
+    const params: Record<string, any> = { productId };
+
+    if (sourceLocation && targetLocation) {
+      // Find paths between specific source and target locations
+      query = `
+        MATCH path = (source:DataItem {name: $sourceLocation})-[r:ASSOCIATION*]->(target:DataItem {name: $targetLocation})
+        WHERE ALL(rel IN r WHERE rel.product = $productId)
+        RETURN path, 
+               [node IN nodes(path) | node.name] as nodeNames,
+               [rel IN relationships(path) | type(rel)] as relationshipTypes,
+               length(path) as pathLength
+        ORDER BY pathLength
+      `;
+      params.sourceLocation = sourceLocation;
+      params.targetLocation = targetLocation;
+    } else if (sourceLocation) {
+      // Find all possible destinations from a source
+      query = `
+        MATCH path = (source:DataItem {name: $sourceLocation})-[r:ASSOCIATION*]->(target:DataItem)
+        WHERE ALL(rel IN r WHERE rel.product = $productId)
+        RETURN path,
+               [node IN nodes(path) | node.name] as nodeNames,
+               [rel IN relationships(path) | type(rel)] as relationshipTypes,
+               length(path) as pathLength
+        ORDER BY pathLength
+      `;
+      params.sourceLocation = sourceLocation;
+    } else {
+      // Find all paths for a product
+      query = `
+        MATCH path = (source:DataItem)-[r:ASSOCIATION*]->(target:DataItem)
+        WHERE ALL(rel IN r WHERE rel.product = $productId)
+        RETURN path,
+               [node IN nodes(path) | node.name] as nodeNames,
+               [rel IN relationships(path) | type(rel)] as relationshipTypes,
+               length(path) as pathLength
+        ORDER BY pathLength
+      `;
+    }
+
+    const result = await runQuery(query, params);
+    return result.map(record => ({
+      nodes: record.get('nodeNames'),
+      relationships: record.get('relationshipTypes'),
+      length: record.get('pathLength').toNumber()
+    }));
   }
 }
 

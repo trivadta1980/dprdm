@@ -756,7 +756,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.status(201).json({ message: "Import completed successfully" });
     } catch (error) {
-      console.error('POST /api/relationships/:id/values/import - Error:', error);
+      console.error('POST /api/relationships/:id/values/import - Error:, error);
       res.status(500).json({ error: String(error) });
     }
   });
@@ -1484,6 +1484,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Add this route after the existing graph routes
+  app.get("/api/graph/product-paths", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      if (!isNeo4jAvailable()) {
+        return res.status(503).json({ error: "Neo4j is not available" });
+      }
+
+      const { productId, source, target } = req.query;
+      if (!productId) {
+        return res.status(400).json({ error: "Product ID is required" });
+      }
+
+      const paths = await GraphDataService.findProductShippingPaths(
+        productId as string,
+        source as string | undefined,
+        target as string | undefined
+      );
+
+      res.json(paths);
+    } catch (error) {
+      console.error('Error finding product paths:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  // Add after existing graph routes
   app.get("/api/graph/debug", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
