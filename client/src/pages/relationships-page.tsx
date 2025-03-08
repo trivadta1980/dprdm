@@ -398,6 +398,53 @@ export default function RelationshipsPage() {
     return dataSets.find(ds => ds.id === id)?.name || "Unknown Dataset";
   };
 
+  // Modified dataset selection handler
+  const handleSourceDatasetChange = async (value: string) => {
+    console.log("Source Dataset selected:", value);
+    form.setValue("sourceDataSetId", value);
+
+    try {
+      console.log("Fetching source dataset fields:", value);
+      const response = await apiRequest(`/api/reference-data/${value}`, {
+        method: 'GET'
+      });
+      const data = await response.json();
+      console.log("Source dataset API response:", data);
+
+      setApiDebugData(prev => ({
+        ...prev,
+        source: data,
+        sourceSelection: `Selected dataset ID: ${value}`
+      }));
+
+      if (!data?.data) {
+        console.log("No data in source dataset");
+        setSourceFields([]);
+        return;
+      }
+
+      const instances = Object.values(data.data);
+      if (instances.length === 0) {
+        console.log("No instances found in source dataset");
+        setSourceFields([]);
+        return;
+      }
+
+      const firstInstance = instances[0];
+      const fields = Object.keys(firstInstance).filter(field => !field.startsWith('_'));
+      console.log("Source dataset fields:", fields);
+      setSourceFields(fields);
+    } catch (error) {
+      console.error("Error fetching source dataset:", error);
+      setSourceFields([]);
+      setApiDebugData(prev => ({
+        ...prev,
+        source: { error: error.message }
+      }));
+    }
+  };
+
+
   return (
     <MainLayout>
       <div className="max-w-6xl mx-auto space-y-6">
@@ -453,14 +500,7 @@ export default function RelationshipsPage() {
                           <FormItem>
                             <FormLabel>Source Data Set</FormLabel>
                             <Select
-                              onValueChange={(value) => {
-                                console.log("Source Dataset selected:", value);
-                                field.onChange(value);
-                                setApiDebugData(prev => ({
-                                  ...prev,
-                                  sourceSelection: `Selected dataset ID: ${value}`
-                                }));
-                              }}
+                              onValueChange={handleSourceDatasetChange}
                               defaultValue={field.value}
                             >
                               <FormControl>
