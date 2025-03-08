@@ -134,6 +134,12 @@ export default function RelationshipsPage() {
     }
   });
 
+  // Fetch attribute definitions for the selected relationship
+  const { data: attributeDefinitions = [] } = useQuery<RelationshipAttributeDefinition[]>({
+    queryKey: [`/api/relationships/${selectedRelationshipId}/attribute-definitions`],
+    enabled: !!selectedRelationshipId,
+  });
+
   // Create/Update relationship mutation
   const mutateRelationship = useMutation({
     mutationFn: async (data: RelationshipForm) => {
