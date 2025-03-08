@@ -115,20 +115,33 @@ export class GraphDataService {
 
     console.log(`Found ${relationships.length} relationships for dataset ${dataSetId}`);
 
-    // Get relationship values for each relationship
+    // Process each relationship
     for (const relationship of relationships) {
       console.log(`Processing relationship ${relationship.id} (${relationship.relationshipType})`);
 
-      // Fetch relationship values directly
+      // Fetch relationship values with their attributes
       const values = await db.query.relationshipValues.findMany({
-        where: eq(schema.relationshipValues.relationshipId, relationship.id)
+        where: eq(schema.relationshipValues.relationshipId, relationship.id),
+        with: {
+          attributeValues: {
+            with: {
+              definition: true
+            }
+          }
+        }
       });
 
       console.log(`Found ${values.length} relationship values for relationship ${relationship.id}`);
 
-      // Create relationship instances
+      // Create relationship instances with attributes
       for (const value of values) {
         console.log(`Creating relationship between "${value.sourceInstanceId}" and "${value.targetInstanceId}"`);
+
+        // Collect all attribute values for this relationship
+        const attributes: Record<string, string> = {};
+        for (const attrValue of value.attributeValues) {
+          attributes[attrValue.definition.name] = attrValue.value;
+        }
 
         const createRelInstanceQuery = `
           MATCH (source:DataItem {id: $sourceId})
@@ -136,6 +149,7 @@ export class GraphDataService {
           MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {
             relationshipId: $relationshipId
           }]->(target)
+          SET r += $attributes
           RETURN r
         `;
 
@@ -143,9 +157,10 @@ export class GraphDataService {
           await runQuery(createRelInstanceQuery, {
             sourceId: value.sourceInstanceId,
             targetId: value.targetInstanceId,
-            relationshipId: relationship.id.toString()
+            relationshipId: relationship.id.toString(),
+            attributes
           });
-          console.log(`Successfully created relationship between "${value.sourceInstanceId}" and "${value.targetInstanceId}"`);
+          console.log(`Successfully created relationship between "${value.sourceInstanceId}" and "${value.targetInstanceId}" with attributes:`, attributes);
         } catch (error) {
           console.error(`Error creating relationship:`, error);
         }
@@ -155,7 +170,6 @@ export class GraphDataService {
     return dataSet.id;
   }
 
-  // Sync relationship data to Neo4j
   static async syncRelationship(relationshipId: number) {
     if (!this.isAvailable()) {
       console.warn("Neo4j not available, skipping relationship sync");
@@ -296,16 +310,20 @@ export class GraphDataService {
       const countResult = await runQuery(countQuery);
       console.log(`Total relationships in Neo4j: ${countResult[0].get('relationshipCount')}`);
 
-      // Get sample relationships
+      // Get sample relationships with their properties
       const sampleQuery = `
         MATCH (source:DataItem)-[r]->(target:DataItem)
-        RETURN source.name as sourceNode, type(r) as relType, target.name as targetNode
+        RETURN source.name as sourceNode, 
+               type(r) as relType, 
+               target.name as targetNode,
+               properties(r) as relProps
         LIMIT 5
       `;
       const sampleResult = await runQuery(sampleQuery);
-      console.log("\nSample relationships:");
+      console.log("\nSample relationships with properties:");
       sampleResult.forEach(record => {
         console.log(`${record.get('sourceNode')} -[${record.get('relType')}]-> ${record.get('targetNode')}`);
+        console.log('Properties:', record.get('relProps'));
       });
 
       return {
@@ -313,7 +331,8 @@ export class GraphDataService {
         samples: sampleResult.map(record => ({
           source: record.get('sourceNode'),
           type: record.get('relType'),
-          target: record.get('targetNode')
+          target: record.get('targetNode'),
+          properties: record.get('relProps')
         }))
       };
     } finally {
