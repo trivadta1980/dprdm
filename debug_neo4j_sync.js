@@ -52,6 +52,29 @@ async function debugSync() {
       label: record.get('label')
     })));
 
+    // Try to create a test relationship
+    console.log('\nTesting relationship creation...');
+    const createRelQuery = `
+      MATCH (source:DataItem)
+      WHERE source.dataSetId = '11'
+      WITH source LIMIT 2
+      WITH collect(source) as nodes
+      WITH nodes[0] as source, nodes[1] as target
+      WHERE source IS NOT NULL AND target IS NOT NULL
+      CREATE (source)-[r:SUPPLIES_TO { type: 'TEST' }]->(target)
+      RETURN source.name as source, target.name as target
+    `;
+
+    const relResult = await session.run(createRelQuery);
+    if (relResult.records.length > 0) {
+      console.log('Created test relationship:', {
+        source: relResult.records[0].get('source'),
+        target: relResult.records[0].get('target')
+      });
+    } else {
+      console.log('No relationships created - not enough nodes found');
+    }
+
   } catch (error) {
     console.error('Error:', error);
   } finally {

@@ -148,6 +148,70 @@ export class GraphDataService {
 
       console.log(`Successfully created ${nodesCreated} nodes for dataset ${dataSetId}`);
 
+      // Find and sync all relationships where this dataset is either source or target
+      const relationships = await db.query.relationships.findMany({
+        where: or(
+          eq(schema.relationships.sourceDataSetId, dataSetId),
+          eq(schema.relationships.targetDataSetId, dataSetId)
+        ),
+        with: {
+          values: true
+        }
+      });
+
+      console.log(`Found ${relationships.length} relationships for dataset ${dataSetId}`);
+
+      // Create relationships between nodes
+      for (const relationship of relationships) {
+        console.log(`Processing relationship ${relationship.id} (${relationship.relationshipType})`);
+
+        for (const value of relationship.values) {
+          // First verify both nodes exist
+          const verifyNodesQuery = `
+            MATCH (source:DataItem {name: $sourceName})
+            MATCH (target:DataItem {name: $targetName})
+            RETURN source, target
+          `;
+
+          try {
+            const nodesExist = await runQuery(verifyNodesQuery, {
+              sourceName: value.sourceInstanceId,
+              targetName: value.targetInstanceId
+            });
+
+            if (nodesExist.length === 0) {
+              console.warn(`Skipping relationship - One or both nodes not found: source=${value.sourceInstanceId}, target=${value.targetInstanceId}`);
+              continue;
+            }
+
+            // Create relationship
+            const createRelQuery = `
+              MATCH (source:DataItem {name: $sourceName})
+              MATCH (target:DataItem {name: $targetName})
+              MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {
+                relationshipId: $relationshipId
+              }]->(target)
+              RETURN r
+            `;
+
+            await runQuery(createRelQuery, {
+              sourceName: value.sourceInstanceId,
+              targetName: value.targetInstanceId,
+              relationshipId: relationship.id.toString()
+            });
+
+            console.log(`Created relationship: ${value.sourceInstanceId} -> ${value.targetInstanceId}`);
+          } catch (error) {
+            console.error(`Error creating relationship:`, error);
+            console.error('Query parameters:', {
+              sourceName: value.sourceInstanceId,
+              targetName: value.targetInstanceId,
+              relationshipId: relationship.id.toString()
+            });
+          }
+        }
+      }
+
     } catch (error) {
       console.error(`Error syncing dataset ${dataSetId} to Neo4j:`, error);
       throw error;
