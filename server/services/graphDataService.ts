@@ -139,6 +139,7 @@ export class GraphDataService {
         if (value.attributeValues) {
           for (const attrValue of value.attributeValues) {
             if (attrValue.definition?.name) {
+              console.log(`Adding attribute ${attrValue.definition.name}: ${attrValue.value}`);
               attributes[attrValue.definition.name] = attrValue.value;
             }
           }
@@ -177,7 +178,7 @@ export class GraphDataService {
       return null;
     }
 
-    // Fetch relationship data from PostgreSQL
+    // Fetch relationship with all attribute values
     const relationship = await db.query.relationships.findFirst({
       where: eq(schema.relationships.id, relationshipId),
       with: {
@@ -191,8 +192,8 @@ export class GraphDataService {
               }
             }
           }
-        },
-      },
+        }
+      }
     });
 
     if (!relationship) {
@@ -227,6 +228,7 @@ export class GraphDataService {
       if (relValue.attributeValues) {
         for (const attrValue of relValue.attributeValues) {
           if (attrValue.definition?.name) {
+            console.log(`Adding attribute ${attrValue.definition.name}: ${attrValue.value}`);
             attributes[attrValue.definition.name] = attrValue.value;
           }
         }
@@ -246,7 +248,7 @@ export class GraphDataService {
         sourceDataSetId: relationship.sourceDataSetId.toString(),
         targetDataSetId: relationship.targetDataSetId.toString(),
         relationshipId: relationship.id.toString(),
-        attributes: { ...attributes, ...relValue.metadata } // Combine attributes with metadata
+        attributes: { ...attributes, ...relValue.metadata }
       });
     }
 
