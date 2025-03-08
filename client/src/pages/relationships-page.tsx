@@ -115,11 +115,23 @@ export default function RelationshipsPage() {
   // Add queries for selected datasets with debug logs
   const { data: sourceDataSet } = useQuery<ReferenceDataSet>({
     queryKey: [`/api/reference-data/${selectedSourceDataset}`],
+    queryFn: async () => {
+      console.log("Fetching source dataset:", selectedSourceDataset);
+      const response = await apiRequest(`/api/reference-data/${selectedSourceDataset}`, {
+        method: 'GET'
+      });
+      const data = await response.json();
+      console.log("Source dataset API response:", data);
+      return data;
+    },
     enabled: !!selectedSourceDataset,
     onSuccess: (data) => {
-      console.log("Source dataset API response:", data);
+      console.log("Source dataset API success handler:", data);
       // Store raw API response for debugging
-      setApiDebugData(prev => ({ ...prev, source: data }));
+      setApiDebugData(prev => ({
+        ...prev,
+        source: data
+      }));
 
       if (!data?.data) {
         console.log("No data in source dataset");
@@ -140,15 +152,36 @@ export default function RelationshipsPage() {
       const fields = Object.keys(firstInstance).filter(field => !field.startsWith('_'));
       console.log("Source dataset fields:", fields);
       setSourceFields(fields);
+    },
+    onError: (error) => {
+      console.error("Error fetching source dataset:", error);
+      setSourceFields([]);
+      setApiDebugData(prev => ({
+        ...prev,
+        source: { error: error.message }
+      }));
     }
   });
 
   const { data: targetDataSet } = useQuery<ReferenceDataSet>({
     queryKey: [`/api/reference-data/${selectedTargetDataset}`],
+    queryFn: async () => {
+      console.log("Fetching target dataset:", selectedTargetDataset);
+      const response = await apiRequest(`/api/reference-data/${selectedTargetDataset}`, {
+        method: 'GET'
+      });
+      const data = await response.json();
+      console.log("Target dataset API response:", data);
+      return data;
+    },
     enabled: !!selectedTargetDataset,
     onSuccess: (data) => {
+      console.log("Target dataset API success handler:", data);
       // Store raw API response for debugging
-      setApiDebugData(prev => ({ ...prev, target: data }));
+      setApiDebugData(prev => ({
+        ...prev,
+        target: data
+      }));
 
       if (!data?.data) {
         console.log("No data in target dataset");
@@ -159,6 +192,7 @@ export default function RelationshipsPage() {
       // Get the first instance to check structure
       const instances = Object.values(data.data);
       if (instances.length === 0) {
+        console.log("No instances found in target dataset");
         setTargetFields([]);
         return;
       }
@@ -168,6 +202,14 @@ export default function RelationshipsPage() {
       const fields = Object.keys(firstInstance).filter(field => !field.startsWith('_'));
       console.log("Target dataset fields:", fields);
       setTargetFields(fields);
+    },
+    onError: (error) => {
+      console.error("Error fetching target dataset:", error);
+      setTargetFields([]);
+      setApiDebugData(prev => ({
+        ...prev,
+        target: { error: error.message }
+      }));
     }
   });
 
