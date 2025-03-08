@@ -28,6 +28,7 @@ const ChangePasswordPage = lazy(() => import("@/pages/change-password"));
 const ApiTestPage = lazy(() => import("@/pages/api-test-page"));
 const ResetPasswordPage = lazy(() => import("@/pages/reset-password-page"));
 const GraphVisualizationPage = lazy(() => import("@/pages/graph-visualization-page"));
+const Neo4jInfoPage = lazy(() => import("@/pages/neo4j-info-page")); // Add Neo4j info page import
 
 export default function App() {
   return (
@@ -120,6 +121,11 @@ export default function App() {
               </Route>
               <Route path="/debug" component={DebugPanel} />
               <Route path="/graph-visualization" component={GraphVisualizationPage} />
+              <Route path="/neo4j-info">
+                <ProtectedRoute>
+                  <Neo4jInfoPage />
+                </ProtectedRoute>
+              </Route>
             </Router>
           </Suspense>
           <Toaster />
