@@ -82,7 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete user route
   app.delete("/api/users/:id", async (req, res) => {
     console.log('DELETE /api/users/:id - Request received for user ID:', req.params.id); 
-    
+
     if (!req.isAuthenticated()) {
       console.log('DELETE /api/users/:id - User not authenticated'); 
       return res.sendStatus(401);
@@ -1420,13 +1420,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const session = GraphDataService.getSession();
       try {
         const result = await session.run(`
-          MATCH (item:DataItem {dataSetId: $dataSetId})
-          OPTIONAL MATCH (item)-[r]-(related:DataItem)
-          RETURN 
-            collect(DISTINCT item) as items,
-            collect(DISTINCT related) as relatedItems,
-            collect(DISTINCT r) as rels
-        `, { dataSetId: dataSetId.toString() });
+            MATCH (item:DataItem {dataSetId: $dataSetId})
+            OPTIONAL MATCH (item)-[r]->(target:DataItem)
+            RETURN 
+              collect(DISTINCT item) as items,
+              collect(DISTINCT target) as relatedItems,
+              collect(DISTINCT r) as rels
+          `, { dataSetId: dataSetId.toString() });
 
         const record = result.records[0];
         const nodes = new Set();
@@ -1437,7 +1437,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         items.forEach(item => {
           nodes.add(JSON.stringify({
             id: item.properties.id,
-            label: item.properties.label || item.properties.name || item.properties.id,
+            label: item.properties.name,
             type: 'DataItem'
           }));
         });
@@ -1448,7 +1448,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (item) {
             nodes.add(JSON.stringify({
               id: item.properties.id,
-              label: item.properties.label || item.properties.name || item.properties.id,
+              label: item.properties.name,
               type: 'DataItem'
             }));
           }
@@ -1462,7 +1462,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               source: rel.startNode.properties.id,
               target: rel.endNode.properties.id,
               type: rel.type,
-              label: rel.properties.label || rel.type
+              label: rel.properties.label
             });
           }
         });

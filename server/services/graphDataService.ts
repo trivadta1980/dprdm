@@ -140,7 +140,7 @@ export class GraphDataService {
           .map(([key, value]) => `${key}: ${value}`)
           .join('\n');
 
-        // Create the relationship between source and target instances
+        // Create the relationship between source and target instances using exact site names
         const createRelInstanceQuery = `
           MATCH (source:DataItem {id: $sourceId})
           MATCH (target:DataItem {id: $targetId})
@@ -160,9 +160,9 @@ export class GraphDataService {
             label,
             attributes
           });
-          console.log(`Created relationship between ${relValue.sourceInstanceId} and ${relValue.targetInstanceId}`);
+          console.log(`Created relationship between "${relValue.sourceInstanceId}" and "${relValue.targetInstanceId}"`);
         } catch (error) {
-          console.error(`Error creating relationship: ${error}`);
+          console.error(`Error creating relationship:`, error);
         }
       }
     }
