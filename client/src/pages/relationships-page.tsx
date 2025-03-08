@@ -444,6 +444,52 @@ export default function RelationshipsPage() {
     }
   };
 
+  // Modified dataset selection handler for target dataset
+  const handleTargetDatasetChange = async (value: string) => {
+    console.log("Target Dataset selected:", value);
+    form.setValue("targetDataSetId", value);
+
+    try {
+      console.log("Fetching target dataset fields:", value);
+      const response = await apiRequest(`/api/reference-data/${value}`, {
+        method: 'GET'
+      });
+      const data = await response.json();
+      console.log("Target dataset API response:", data);
+
+      setApiDebugData(prev => ({
+        ...prev,
+        target: data,
+        targetSelection: `Selected dataset ID: ${value}`
+      }));
+
+      if (!data?.data) {
+        console.log("No data in target dataset");
+        setTargetFields([]);
+        return;
+      }
+
+      const instances = Object.values(data.data);
+      if (instances.length === 0) {
+        console.log("No instances found in target dataset");
+        setTargetFields([]);
+        return;
+      }
+
+      const firstInstance = instances[0];
+      const fields = Object.keys(firstInstance).filter(field => !field.startsWith('_'));
+      console.log("Target dataset fields:", fields);
+      setTargetFields(fields);
+    } catch (error) {
+      console.error("Error fetching target dataset:", error);
+      setTargetFields([]);
+      setApiDebugData(prev => ({
+        ...prev,
+        target: { error: error.message }
+      }));
+    }
+  };
+
 
   return (
     <MainLayout>
@@ -530,14 +576,7 @@ export default function RelationshipsPage() {
                           <FormItem>
                             <FormLabel>Target Data Set</FormLabel>
                             <Select
-                              onValueChange={(value) => {
-                                console.log("Target Dataset selected:", value);
-                                field.onChange(value);
-                                setApiDebugData(prev => ({
-                                  ...prev,
-                                  targetSelection: `Selected dataset ID: ${value}`
-                                }));
-                              }}
+                              onValueChange={handleTargetDatasetChange}
                               defaultValue={field.value}
                             >
                               <FormControl>
