@@ -110,7 +110,18 @@ export class GraphDataService {
       where: or(
         eq(schema.relationships.sourceDataSetId, dataSetId),
         eq(schema.relationships.targetDataSetId, dataSetId)
-      )
+      ),
+      with: {
+        values: {
+          with: {
+            attributeValues: {
+              with: {
+                definition: true
+              }
+            }
+          }
+        }
+      }
     });
 
     console.log(`Found ${relationships.length} relationships for dataset ${dataSetId}`);
@@ -119,29 +130,17 @@ export class GraphDataService {
     for (const relationship of relationships) {
       console.log(`Processing relationship ${relationship.id} (${relationship.relationshipType})`);
 
-      // Fetch relationship values with their attributes
-      const values = await db.query.relationshipValues.findMany({
-        where: eq(schema.relationshipValues.relationshipId, relationship.id),
-        with: {
-          attributeValues: {
-            with: {
-              definition: true
-            }
-          }
-        }
-      });
-
-      console.log(`Found ${values.length} relationship values for relationship ${relationship.id}`);
-
       // Create relationship instances with attributes
-      for (const value of values) {
+      for (const value of relationship.values) {
         console.log(`Creating relationship between "${value.sourceInstanceId}" and "${value.targetInstanceId}"`);
 
         // Collect all attributes for this relationship value
         const attributes: Record<string, string> = {};
-        for (const attrValue of value.attributeValues) {
-          if (attrValue.definition?.name) {
-            attributes[attrValue.definition.name] = attrValue.value;
+        if (value.attributeValues) {
+          for (const attrValue of value.attributeValues) {
+            if (attrValue.definition?.name) {
+              attributes[attrValue.definition.name] = attrValue.value;
+            }
           }
         }
 
@@ -160,7 +159,7 @@ export class GraphDataService {
             sourceId: value.sourceInstanceId,
             targetId: value.targetInstanceId,
             relationshipId: relationship.id.toString(),
-            attributes
+            attributes: { ...attributes, ...value.metadata }
           });
           console.log(`Successfully created relationship with attributes:`, attributes);
         } catch (error) {
@@ -184,7 +183,15 @@ export class GraphDataService {
       with: {
         sourceDataSet: true,
         targetDataSet: true,
-        values: true,
+        values: {
+          with: {
+            attributeValues: {
+              with: {
+                definition: true
+              }
+            }
+          }
+        },
       },
     });
 
@@ -213,13 +220,23 @@ export class GraphDataService {
       updatedAt: relationship.updatedAt.toISOString(),
     });
 
-    // Create relationship instances between data items
+    // Create relationship instances between data items with attribute values
     for (const relValue of relationship.values) {
+      // Collect all attributes for this relationship value
+      const attributes: Record<string, string> = {};
+      if (relValue.attributeValues) {
+        for (const attrValue of relValue.attributeValues) {
+          if (attrValue.definition?.name) {
+            attributes[attrValue.definition.name] = attrValue.value;
+          }
+        }
+      }
+
       const createRelInstanceQuery = `
         MATCH (source:DataItem {id: $sourceId, dataSetId: $sourceDataSetId})
         MATCH (target:DataItem {id: $targetId, dataSetId: $targetDataSetId})
         MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {relationshipId: $relationshipId}]->(target)
-        SET r += $metadata
+        SET r += $attributes
         RETURN r
       `;
 
@@ -229,7 +246,7 @@ export class GraphDataService {
         sourceDataSetId: relationship.sourceDataSetId.toString(),
         targetDataSetId: relationship.targetDataSetId.toString(),
         relationshipId: relationship.id.toString(),
-        metadata: relValue.metadata || {},
+        attributes: { ...attributes, ...relValue.metadata } // Combine attributes with metadata
       });
     }
 
