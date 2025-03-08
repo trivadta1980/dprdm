@@ -97,12 +97,17 @@ export class GraphDataService {
         }
       }
 
-      await runQuery(createItemQuery, {
-        siteId,
-        dataSetId: dataSetId.toString(),
-        label,
-        properties
-      });
+      try {
+        await runQuery(createItemQuery, {
+          siteId,
+          dataSetId: dataSetId.toString(),
+          label,
+          properties
+        });
+        console.log(`Created/Updated node for ${siteId}`);
+      } catch (error) {
+        console.error(`Error creating node for ${siteId}:`, error);
+      }
     }
 
     // Find and sync all relationships where this dataset is either source or target
@@ -110,7 +115,18 @@ export class GraphDataService {
       where: or(
         eq(schema.relationships.sourceDataSetId, dataSetId),
         eq(schema.relationships.targetDataSetId, dataSetId)
-      )
+      ),
+      with: {
+        values: {
+          with: {
+            attributeValues: {
+              with: {
+                definition: true
+              }
+            }
+          }
+        }
+      }
     });
 
     console.log(`Found ${relationships.length} relationships for dataset ${dataSetId}`);
@@ -119,49 +135,54 @@ export class GraphDataService {
     for (const relationship of relationships) {
       console.log(`Processing relationship ${relationship.id} (${relationship.relationshipType})`);
 
-      // Fetch relationship values with their attributes
-      const values = await db.query.relationshipValues.findMany({
-        where: eq(schema.relationshipValues.relationshipId, relationship.id),
-        with: {
-          attributeValues: {
-            with: {
-              definition: true
-            }
-          }
-        }
-      });
-
-      console.log(`Found ${values.length} relationship values for relationship ${relationship.id}`);
-
-      // Create relationship instances with attributes
-      for (const value of values) {
+      for (const value of relationship.values) {
         console.log(`Creating relationship between "${value.sourceInstanceId}" and "${value.targetInstanceId}"`);
 
         // Collect all attributes for this relationship value
         const attributes: Record<string, string> = {};
-        for (const attrValue of value.attributeValues) {
-          if (attrValue.definition?.name) {
-            attributes[attrValue.definition.name] = attrValue.value;
+        if (value.attributeValues) {
+          for (const attrValue of value.attributeValues) {
+            if (attrValue.definition?.name) {
+              attributes[attrValue.definition.name] = attrValue.value;
+            }
           }
         }
 
-        const createRelInstanceQuery = `
+        // First verify both nodes exist
+        const verifyNodesQuery = `
           MATCH (source:DataItem {id: $sourceId})
           MATCH (target:DataItem {id: $targetId})
-          MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {
-            relationshipId: $relationshipId
-          }]->(target)
-          SET r += $attributes
-          RETURN r
+          RETURN source, target
         `;
 
         try {
+          const nodesExist = await runQuery(verifyNodesQuery, {
+            sourceId: value.sourceInstanceId,
+            targetId: value.targetInstanceId
+          });
+
+          if (nodesExist.length === 0) {
+            console.error(`Nodes not found for relationship: source=${value.sourceInstanceId}, target=${value.targetInstanceId}`);
+            continue;
+          }
+
+          const createRelInstanceQuery = `
+            MATCH (source:DataItem {id: $sourceId})
+            MATCH (target:DataItem {id: $targetId})
+            MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {
+              relationshipId: $relationshipId
+            }]->(target)
+            SET r += $attributes
+            RETURN r
+          `;
+
           await runQuery(createRelInstanceQuery, {
             sourceId: value.sourceInstanceId,
             targetId: value.targetInstanceId,
             relationshipId: relationship.id.toString(),
             attributes
           });
+
           console.log(`Successfully created relationship with attributes:`, attributes);
         } catch (error) {
           console.error(`Error creating relationship:`, error);
