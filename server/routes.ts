@@ -1419,42 +1419,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Query Neo4j for graph data
       const session = GraphDataService.getSession();
       try {
-        // Query to get all nodes and relationships for this dataset
+        // Query to get all instances and their relationships for this dataset
         const result = await session.run(`
-          MATCH (ds:DataSet {id: $dataSetId})
-          OPTIONAL MATCH (ds)-[r]-(n)
-          RETURN ds, collect(DISTINCT r) as rels, collect(DISTINCT n) as nodes
-        `, { dataSetId: dataSetId });
+          MATCH (item:DataItem {dataSetId: $dataSetId})
+          OPTIONAL MATCH (item)-[r]-(related:DataItem)
+          WHERE related.dataSetId = $dataSetId
+          RETURN 
+            collect(DISTINCT item) as items,
+            collect(DISTINCT r) as rels
+        `, { dataSetId: dataSetId.toString() });
 
         const record = result.records[0];
         const nodes = [];
         const links = [];
 
-        // Add dataset node
-        const dsNode = record.get('ds');
-        nodes.push({
-          id: `ds_${dsNode.properties.id}`,
-          label: dsNode.properties.name,
-          type: 'DataSet'
-        });
+        // Add instance nodes
+        const items = record.get('items');
+        items.forEach(item => {
+          // Create a display label from the item's properties
+          const label = Object.entries(item.properties)
+            .filter(([key]) => !['id', 'dataSetId'].includes(key))
+            .map(([_, value]) => value)
+            .join(' - ');
 
-        // Add related nodes and relationships
-        const relatedNodes = record.get('nodes');
-        const relationships = record.get('rels');
-
-        relatedNodes.forEach(node => {
           nodes.push({
-            id: `${node.labels[0]}_${node.properties.id}`,
-            label: node.properties.name || node.properties.id,
-            type: node.labels[0]
+            id: item.properties.id,
+            label: label,
+            type: 'DataItem'
           });
         });
 
+        // Add relationships with their attributes
+        const relationships = record.get('rels');
         relationships.forEach(rel => {
+          const attributes = Object.entries(rel.properties)
+            .filter(([key]) => !['relationshipId', 'sourceInstanceId', 'targetInstanceId'].includes(key))
+            .map(([key, value]) => `${key}: ${value}`)
+            .join('\n');
+
           links.push({
-            source: `${rel.startNode.labels[0]}_${rel.startNode.properties.id}`,
-            target: `${rel.endNode.labels[0]}_${rel.endNode.properties.id}`,
-            type: rel.type
+            source: rel.properties.sourceInstanceId,
+            target: rel.properties.targetInstanceId,
+            type: rel.type,
+            label: attributes
           });
         });
 

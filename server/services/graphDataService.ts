@@ -1,16 +1,13 @@
 import { db } from '../db';
 import neo4j, { isNeo4jAvailable, runQuery } from '../neo4j';
 import * as schema from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
-// Base class for graph data operations
 export class GraphDataService {
-  // Check if graph database is available
   static isAvailable() {
     return isNeo4jAvailable();
   }
 
-  // Get Neo4j session
   static getSession() {
     if (!this.isAvailable()) {
       throw new Error("Neo4j not available");
@@ -38,11 +35,10 @@ export class GraphDataService {
 
     // Query Neo4j for statistics
     const statsQuery = `
-      MATCH (ds:DataSet {id: $dataSetId})
-      OPTIONAL MATCH (ds)-[:CONTAINS]->(item:DataItem)
+      MATCH (item:DataItem {dataSetId: $dataSetId})
       OPTIONAL MATCH (item)-[r]-()
       RETURN 
-        count(DISTINCT ds) + count(DISTINCT item) as totalNodes,
+        count(DISTINCT item) as totalNodes,
         count(DISTINCT item) as dataItems,
         count(DISTINCT r) as relationships
     `;
@@ -58,68 +54,39 @@ export class GraphDataService {
     };
   }
 
-  // Create or update reference data set in Neo4j
+  // Sync dataset instances and their relationships to Neo4j
   static async syncReferenceDataSet(dataSetId: number) {
     if (!this.isAvailable()) {
       console.warn("Neo4j not available, skipping graph sync");
       return null;
     }
 
-    // Fetch the reference data set from PostgreSQL
+    // Fetch the reference data set and its instances
     const dataSet = await db.query.referenceDataSets.findFirst({
-      where: eq(schema.referenceDataSets.id, dataSetId),
-      with: {
-        type: {
-          with: {
-            schemas: true,
-          },
-        },
-      },
+      where: eq(schema.referenceDataSets.id, dataSetId)
     });
 
     if (!dataSet) {
       throw new Error(`Reference data set with ID ${dataSetId} not found`);
     }
 
-    // Create the dataset node in Neo4j
-    const createDataSetQuery = `
-      MERGE (ds:DataSet {id: $id, name: $name})
-      SET ds.description = $description, 
-          ds.typeId = $typeId,
-          ds.typeName = $typeName,
-          ds.updatedAt = $updatedAt
-      RETURN ds
-    `;
-
-    await runQuery(createDataSetQuery, {
-      id: dataSet.id.toString(),
-      name: dataSet.name,
-      description: dataSet.description || "",
-      typeId: dataSet.typeId.toString(),
-      typeName: dataSet.type.name,
-      updatedAt: dataSet.updatedAt.toISOString(),
-    });
-
     // Create nodes for each item in the dataset
     const data = dataSet.data as Record<string, any>;
 
     for (const [itemId, item] of Object.entries(data)) {
-      const createItemQuery = `
-        MERGE (item:DataItem {id: $itemId, dataSetId: $dataSetId})
-        SET item += $properties
-        WITH item
-        MATCH (ds:DataSet {id: $dataSetId})
-        MERGE (ds)-[:CONTAINS]->(item)
-        RETURN item
-      `;
-
-      // Prepare properties object, excluding _history
       const properties: Record<string, any> = {};
       for (const [key, value] of Object.entries(item)) {
         if (key !== '_history' && value !== null && value !== undefined) {
           properties[key] = value.toString();
         }
       }
+
+      // Create or update the item node
+      const createItemQuery = `
+        MERGE (item:DataItem {id: $itemId, dataSetId: $dataSetId})
+        SET item += $properties
+        RETURN item
+      `;
 
       await runQuery(createItemQuery, {
         itemId,
@@ -128,9 +95,61 @@ export class GraphDataService {
       });
     }
 
+    // Find and sync all relationships that involve this dataset
+    const relationships = await db.query.relationships.findMany({
+      where: and(
+        eq(schema.relationships.sourceDataSetId, dataSetId),
+        eq(schema.relationships.targetDataSetId, dataSetId)
+      ),
+      with: {
+        values: {
+          with: {
+            attributeValues: {
+              with: {
+                definition: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Create relationship instances with their attributes
+    for (const relationship of relationships) {
+      for (const relValue of relationship.values) {
+        // Prepare attribute data
+        const attributes: Record<string, string> = {};
+        for (const attrValue of relValue.attributeValues) {
+          attributes[attrValue.definition.name] = attrValue.value;
+        }
+
+        const createRelInstanceQuery = `
+          MATCH (source:DataItem {id: $sourceId, dataSetId: $sourceDataSetId})
+          MATCH (target:DataItem {id: $targetId, dataSetId: $targetDataSetId})
+          MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {
+            relationshipId: $relationshipId,
+            sourceInstanceId: $sourceInstanceId,
+            targetInstanceId: $targetInstanceId
+          }]->(target)
+          SET r += $attributes
+          RETURN r
+        `;
+
+        await runQuery(createRelInstanceQuery, {
+          sourceId: relValue.sourceInstanceId,
+          targetId: relValue.targetInstanceId,
+          sourceDataSetId: relationship.sourceDataSetId.toString(),
+          targetDataSetId: relationship.targetDataSetId.toString(),
+          relationshipId: relationship.id.toString(),
+          sourceInstanceId: relValue.sourceInstanceId,
+          targetInstanceId: relValue.targetInstanceId,
+          attributes
+        });
+      }
+    }
+
     return dataSet.id;
   }
-
   // Sync relationship data to Neo4j
   static async syncRelationship(relationshipId: number) {
     if (!this.isAvailable()) {
