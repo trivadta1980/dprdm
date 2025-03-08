@@ -65,17 +65,10 @@ export class GraphDataService {
 
     console.log(`Syncing dataset ${dataSetId} (${dataSet.name}) to Neo4j`);
 
+    // Create nodes first
     const data = dataSet.data as Record<string, any>;
     for (const [_, item] of Object.entries(data)) {
       const siteId = item.Site_Name || item.name || JSON.stringify(item);
-
-      const createItemQuery = `
-        MERGE (item:DataItem {id: $siteId, dataSetId: $dataSetId})
-        SET item.label = $label,
-            item.name = $siteId,
-            item += $properties
-        RETURN item
-      `;
 
       const properties: Record<string, any> = {};
       for (const [key, value] of Object.entries(item)) {
@@ -84,14 +77,27 @@ export class GraphDataService {
         }
       }
 
-      await runQuery(createItemQuery, {
-        siteId,
-        dataSetId: dataSetId.toString(),
-        label: siteId,
-        properties
-      });
+      const createNodeQuery = `
+        MERGE (item:DataItem {id: $siteId})
+        SET item.dataSetId = $dataSetId,
+            item.name = $siteId,
+            item += $properties
+        RETURN item
+      `;
+
+      try {
+        await runQuery(createNodeQuery, {
+          siteId,
+          dataSetId: dataSetId.toString(),
+          properties
+        });
+        console.log(`Created/Updated node: ${siteId}`);
+      } catch (error) {
+        console.error(`Error creating node for ${siteId}:`, error);
+      }
     }
 
+    // Now handle relationships
     const relationships = await db.query.relationships.findMany({
       where: or(
         eq(schema.relationships.sourceDataSetId, dataSetId),
@@ -110,27 +116,16 @@ export class GraphDataService {
       }
     });
 
-    console.log(`Found ${relationships.length} relationships to sync for dataset ${dataSetId}`);
+    console.log(`Found ${relationships.length} relationships to process for dataset ${dataSetId}`);
 
     for (const relationship of relationships) {
       console.log(`Processing relationship ${relationship.id} (${relationship.relationshipType})`);
 
       for (const value of relationship.values) {
-        console.log(`Creating relationship between "${value.sourceInstanceId}" and "${value.targetInstanceId}"`);
+        const sourceId = value.sourceInstanceId;
+        const targetId = value.targetInstanceId;
 
-        const attributes: Record<string, string> = {};
-        if (value.attributeValues) {
-          for (const attrValue of value.attributeValues) {
-            if (attrValue.definition?.name) {
-              console.log(`Adding attribute ${attrValue.definition.name}: ${attrValue.value}`);
-              attributes[attrValue.definition.name] = attrValue.value;
-            }
-          }
-        }
-
-        console.log(`Relationship attributes:`, attributes);
-        console.log(`Metadata:`, value.metadata);
-
+        // First verify both nodes exist
         const verifyNodesQuery = `
           MATCH (source:DataItem {id: $sourceId})
           MATCH (target:DataItem {id: $targetId})
@@ -139,37 +134,51 @@ export class GraphDataService {
 
         try {
           const nodesExist = await runQuery(verifyNodesQuery, {
-            sourceId: value.sourceInstanceId,
-            targetId: value.targetInstanceId
+            sourceId,
+            targetId
           });
 
           if (nodesExist.length === 0) {
-            console.error(`One or both nodes not found for relationship: ${value.sourceInstanceId} -> ${value.targetInstanceId}`);
+            console.error(`Cannot create relationship - nodes not found: ${sourceId} -> ${targetId}`);
             continue;
           }
 
-          const createRelQuery = `
+          // Collect relationship attributes
+          const attributes: Record<string, string> = {};
+          if (value.attributeValues) {
+            for (const attrValue of value.attributeValues) {
+              if (attrValue.definition?.name) {
+                attributes[attrValue.definition.name] = attrValue.value;
+              }
+            }
+          }
+
+          // Add metadata and relationship properties
+          const allAttributes = {
+            ...attributes,
+            ...value.metadata,
+            relationshipId: relationship.id.toString(),
+            type: relationship.relationshipType,
+            sourceDataSetId: relationship.sourceDataSetId.toString(),
+            targetDataSetId: relationship.targetDataSetId.toString()
+          };
+
+          // Create the relationship
+          const createRelationshipQuery = `
             MATCH (source:DataItem {id: $sourceId})
             MATCH (target:DataItem {id: $targetId})
-            MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {relationshipId: $relationshipId}]->(target)
+            CREATE (source)-[r:${relationship.relationshipType.toUpperCase()}]->(target)
             SET r = $attributes
             RETURN r
           `;
 
-          await runQuery(createRelQuery, {
-            sourceId: value.sourceInstanceId,
-            targetId: value.targetInstanceId,
-            relationshipId: relationship.id.toString(),
-            attributes: { 
-              ...attributes,
-              ...value.metadata,
-              type: relationship.relationshipType,
-              sourceDataSetId: relationship.sourceDataSetId.toString(),
-              targetDataSetId: relationship.targetDataSetId.toString()
-            }
+          await runQuery(createRelationshipQuery, {
+            sourceId,
+            targetId,
+            attributes: allAttributes
           });
 
-          console.log(`Successfully created relationship with attributes`);
+          console.log(`Created relationship: ${sourceId} -[${relationship.relationshipType}]-> ${targetId}`);
         } catch (error) {
           console.error(`Error creating relationship:`, error);
         }
@@ -255,7 +264,7 @@ export class GraphDataService {
           sourceId: relValue.sourceInstanceId,
           targetId: relValue.targetInstanceId,
           relationshipId: relationship.id.toString(),
-          attributes: { 
+          attributes: {
             ...attributes,
             ...relValue.metadata,
             type: relationship.relationshipType,
