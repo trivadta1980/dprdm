@@ -81,18 +81,17 @@ export default function RelationshipsPage() {
   const [isAttributeDialogOpen, setIsAttributeDialogOpen] = useState(false);
   const [editingRelationship, setEditingRelationship] = useState<Relationship | null>(null);
   const [selectedRelationshipId, setSelectedRelationshipId] = useState<number | null>(null);
+  // Add state for available fields
+  const [sourceFields, setSourceFields] = useState<string[]>([]);
+  const [targetFields, setTargetFields] = useState<string[]>([]);
 
   const form = useForm<RelationshipForm>({
     resolver: zodResolver(relationshipSchema),
   });
 
-  const attributeForm = useForm<AttributeDefinitionForm>({
-    resolver: zodResolver(attributeDefinitionSchema),
-    defaultValues: {
-      isRequired: false,
-      description: "",
-    },
-  });
+  // Watch source and target dataset selections
+  const selectedSourceDataset = form.watch("sourceDataSetId");
+  const selectedTargetDataset = form.watch("targetDataSetId");
 
   // Fetch relationships
   const { data: relationships = [], isLoading: isLoadingRelationships } = useQuery<Relationship[]>({
@@ -104,10 +103,35 @@ export default function RelationshipsPage() {
     queryKey: ["/api/reference-data"],
   });
 
-  // Fetch attribute definitions for the selected relationship
-  const { data: attributeDefinitions = [] } = useQuery<RelationshipAttributeDefinition[]>({
-    queryKey: [`/api/relationships/${selectedRelationshipId}/attribute-definitions`],
-    enabled: !!selectedRelationshipId,
+  // Add queries for selected datasets
+  const { data: sourceDataSet } = useQuery<ReferenceDataSet>({
+    queryKey: [`/api/reference-data/${selectedSourceDataset}`],
+    enabled: !!selectedSourceDataset,
+    onSuccess: (data) => {
+      if (data?.data && Object.keys(data.data).length > 0) {
+        // Extract fields from the first instance
+        const firstInstanceKey = Object.keys(data.data)[0];
+        const fields = Object.keys(data.data[firstInstanceKey]);
+        setSourceFields(fields.filter(f => !f.startsWith('_'))); // Filter out internal fields
+      } else {
+        setSourceFields([]); // Handle cases where data is empty or null.
+      }
+    }
+  });
+
+  const { data: targetDataSet } = useQuery<ReferenceDataSet>({
+    queryKey: [`/api/reference-data/${selectedTargetDataset}`],
+    enabled: !!selectedTargetDataset,
+    onSuccess: (data) => {
+      if (data?.data && Object.keys(data.data).length > 0) {
+        // Extract fields from the first instance
+        const firstInstanceKey = Object.keys(data.data)[0];
+        const fields = Object.keys(data.data[firstInstanceKey]);
+        setTargetFields(fields.filter(f => !f.startsWith('_'))); // Filter out internal fields
+      } else {
+        setTargetFields([]); // Handle cases where data is empty or null.
+      }
+    }
   });
 
   // Create/Update relationship mutation
@@ -156,8 +180,6 @@ export default function RelationshipsPage() {
         relationshipTypeId: selectedRelationshipId
       };
 
-      console.log("Creating attribute with data:", requestData);
-
       try {
         const response = await apiRequest(`/api/relationships/${selectedRelationshipId}/attribute-definitions`, {
           method: 'POST',
@@ -165,7 +187,6 @@ export default function RelationshipsPage() {
         });
 
         const result = await response.json();
-        console.log("Server response:", result);
         return result;
       } catch (error) {
         console.error("API request failed:", error);
@@ -245,12 +266,19 @@ export default function RelationshipsPage() {
     },
   });
 
+  const attributeForm = useForm<AttributeDefinitionForm>({
+    resolver: zodResolver(attributeDefinitionSchema),
+    defaultValues: {
+      isRequired: false,
+      description: "",
+    },
+  });
+
   function onSubmit(data: RelationshipForm) {
     mutateRelationship.mutate(data);
   }
 
   function onAttributeSubmit(data: AttributeDefinitionForm) {
-    console.log("Submitting attribute:", data);
     mutateAttributeDefinition.mutate(data);
   }
 
@@ -452,9 +480,24 @@ export default function RelationshipsPage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Source Field</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter source field" {...field} />
-                            </FormControl>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              disabled={!selectedSourceDataset}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select source field" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {sourceFields.map((fieldName) => (
+                                  <SelectItem key={fieldName} value={fieldName}>
+                                    {fieldName}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -465,9 +508,24 @@ export default function RelationshipsPage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Target Field</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter target field" {...field} />
-                            </FormControl>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              disabled={!selectedTargetDataset}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select target field" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {targetFields.map((fieldName) => (
+                                  <SelectItem key={fieldName} value={fieldName}>
+                                    {fieldName}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
