@@ -108,13 +108,25 @@ export default function RelationshipsPage() {
     queryKey: [`/api/reference-data/${selectedSourceDataset}`],
     enabled: !!selectedSourceDataset,
     onSuccess: (data) => {
-      if (data?.data && Object.keys(data.data).length > 0) {
-        // Extract fields from the first instance
-        const firstInstanceKey = Object.keys(data.data)[0];
-        const fields = Object.keys(data.data[firstInstanceKey]);
-        setSourceFields(fields.filter(f => !f.startsWith('_'))); // Filter out internal fields
+      console.log("Source dataset received:", data);
+      if (data?.data) {
+        // Get all unique fields from all instances
+        const allFields = new Set<string>();
+        Object.values(data.data).forEach(instance => {
+          if (instance) {
+            Object.keys(instance).forEach(field => {
+              if (!field.startsWith('_')) {
+                allFields.add(field);
+              }
+            });
+          }
+        });
+        const fields = Array.from(allFields);
+        console.log("Extracted source fields:", fields);
+        setSourceFields(fields);
       } else {
-        setSourceFields([]); // Handle cases where data is empty or null.
+        console.log("No data in source dataset");
+        setSourceFields([]);
       }
     }
   });
@@ -123,13 +135,25 @@ export default function RelationshipsPage() {
     queryKey: [`/api/reference-data/${selectedTargetDataset}`],
     enabled: !!selectedTargetDataset,
     onSuccess: (data) => {
-      if (data?.data && Object.keys(data.data).length > 0) {
-        // Extract fields from the first instance
-        const firstInstanceKey = Object.keys(data.data)[0];
-        const fields = Object.keys(data.data[firstInstanceKey]);
-        setTargetFields(fields.filter(f => !f.startsWith('_'))); // Filter out internal fields
+      console.log("Target dataset received:", data);
+      if (data?.data) {
+        // Get all unique fields from all instances
+        const allFields = new Set<string>();
+        Object.values(data.data).forEach(instance => {
+          if (instance) {
+            Object.keys(instance).forEach(field => {
+              if (!field.startsWith('_')) {
+                allFields.add(field);
+              }
+            });
+          }
+        });
+        const fields = Array.from(allFields);
+        console.log("Extracted target fields:", fields);
+        setTargetFields(fields);
       } else {
-        setTargetFields([]); // Handle cases where data is empty or null.
+        console.log("No data in target dataset");
+        setTargetFields([]);
       }
     }
   });
