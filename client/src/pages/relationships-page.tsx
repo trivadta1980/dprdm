@@ -227,7 +227,7 @@ export default function RelationshipsPage() {
         ? `/api/relationships/${editingRelationship.id}`
         : "/api/relationships";
 
-      const response = await apiRequest(method, endpoint, {
+      const response = await apiRequest(endpoint, {
         method,
         data
       });
@@ -306,7 +306,7 @@ export default function RelationshipsPage() {
   // Delete relationship mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/relationships/${id}`, {
+      await apiRequest(`/api/relationships/${id}`, {
         method: "DELETE"
       });
     },
@@ -329,7 +329,7 @@ export default function RelationshipsPage() {
   // Delete attribute definition mutation
   const deleteAttributeMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/relationships/attribute-definitions/${id}`, {
+      await apiRequest(`/api/relationships/attribute-definitions/${id}`, {
         method: "DELETE"
       });
     },
@@ -489,6 +489,7 @@ export default function RelationshipsPage() {
       }));
     }
   };
+
 
 
   return (
