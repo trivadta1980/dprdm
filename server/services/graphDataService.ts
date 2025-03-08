@@ -94,7 +94,6 @@ export class GraphDataService {
     }
 
     console.log(`Syncing dataset ${dataSetId} (${dataSet.name}) to Neo4j`);
-    console.log('Dataset data:', dataSet.data);
 
     // Create nodes for each instance in the dataset
     const data = dataSet.data as Record<string, any>;
@@ -110,17 +109,14 @@ export class GraphDataService {
       await runQuery(clearQuery);
       console.log(`Cleared existing nodes for dataset ${dataSetId}`);
 
+      // Create nodes for the dataset
       for (const [_, item] of Object.entries(data)) {
-        // Use the site name as the unique identifier
         const siteName = item.Site_Name || item.name || JSON.stringify(item);
-
-        // Create a meaningful label from the item's properties
         const label = Object.entries(item)
           .filter(([key, value]) => key !== '_history' && value !== null && value !== undefined)
           .map(([key, value]) => `${key}: ${value}`)
           .join('\n');
 
-        // Create or update the item node
         const createItemQuery = `
           MERGE (item:DataItem {name: $siteName})
           SET item.dataSetId = $dataSetId,
@@ -143,7 +139,6 @@ export class GraphDataService {
           properties
         });
         nodesCreated++;
-        console.log(`Created/Updated node for ${siteName}`);
       }
 
       console.log(`Successfully created ${nodesCreated} nodes for dataset ${dataSetId}`);
@@ -159,9 +154,24 @@ export class GraphDataService {
             with: {
               attributeValues: {
                 with: {
-                  definition: true
+                  definition: {
+                    columns: {
+                      id: true,
+                      name: true,
+                    }
+                  }
+                },
+                columns: {
+                  value: true,
+                  attribute_definition_id: true,
+                  relationship_value_id: true
                 }
               }
+            },
+            columns: {
+              id: true,
+              sourceInstanceId: true,
+              targetInstanceId: true
             }
           }
         }
@@ -174,20 +184,6 @@ export class GraphDataService {
         console.log(`Processing relationship ${relationship.id} (${relationship.relationshipType})`);
 
         for (const value of relationship.values) {
-          // Collect all attributes for this relationship value
-          const attributes: Record<string, string> = {
-            relationshipId: relationship.id.toString(),
-            type: relationship.relationshipType
-          };
-
-          if (value.attributeValues) {
-            for (const attrValue of value.attributeValues) {
-              if (attrValue.definition?.name) {
-                attributes[attrValue.definition.name] = attrValue.value || '';
-              }
-            }
-          }
-
           // First verify both nodes exist
           const verifyNodesQuery = `
             MATCH (source:DataItem {name: $sourceName})
@@ -205,6 +201,29 @@ export class GraphDataService {
               console.warn(`Skipping relationship - One or both nodes not found: source=${value.sourceInstanceId}, target=${value.targetInstanceId}`);
               continue;
             }
+
+            // Collect all attributes for this relationship value
+            const attributes: Record<string, string> = {
+              relationshipId: relationship.id.toString(),
+              type: relationship.relationshipType
+            };
+
+            // Add all attribute values using the properly joined data
+            if (value.attributeValues) {
+              for (const attrValue of value.attributeValues) {
+                if (attrValue.definition?.name) {
+                  attributes[attrValue.definition.name] = attrValue.value || '';
+                }
+              }
+            }
+
+            // Log for debugging
+            console.log('Processing relationship:', {
+              source: value.sourceInstanceId,
+              target: value.targetInstanceId,
+              type: relationship.relationshipType,
+              attributes: JSON.stringify(attributes, null, 2)
+            });
 
             // Create relationship with attributes
             const createRelQuery = `
@@ -224,14 +243,13 @@ export class GraphDataService {
               attributes
             });
 
-            console.log(`Created relationship: ${value.sourceInstanceId} -> ${value.targetInstanceId} with attributes:`, attributes);
+            console.log(`Created relationship: ${value.sourceInstanceId} -> ${value.targetInstanceId}`);
           } catch (error) {
             console.error(`Error creating relationship:`, error);
             console.error('Query parameters:', {
               sourceName: value.sourceInstanceId,
               targetName: value.targetInstanceId,
-              relationshipId: relationship.id.toString(),
-              attributes
+              relationshipId: relationship.id.toString()
             });
           }
         }
