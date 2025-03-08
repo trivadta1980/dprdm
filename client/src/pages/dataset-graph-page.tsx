@@ -24,7 +24,6 @@ interface GraphData {
     source: string;
     target: string;
     type: string;
-    label?: string; // Added to support relationship attributes
   }>;
 }
 
@@ -32,26 +31,37 @@ export default function DatasetGraphPage() {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
 
-  // Fetch graph statistics
-  const { data: graphStats, isLoading: statsLoading, refetch: refetchStats } = useQuery<GraphStats>({
+  // Fetch graph statistics and visualization data in one query
+  const { data: graphData, isLoading, refetch } = useQuery<{
+    totalNodes: number;
+    dataItems: number;
+    relationships: number;
+    datasetName: string;
+    visualization: {
+      nodes: Array<{
+        id: string;
+        label: string;
+        type: string;
+      }>;
+      links: Array<{
+        source: string;
+        target: string;
+        type: string;
+      }>;
+    };
+  }>({
     queryKey: [`/api/graph/dataset/${id}`],
   });
 
-  // Fetch graph visualization data
-  const { data: graphData, isLoading: graphLoading, refetch: refetchGraph } = useQuery<GraphData>({
-    queryKey: [`/api/graph/dataset/${id}/visualization`],
-  });
-
   const handleRefresh = () => {
-    refetchStats();
-    refetchGraph();
+    refetch();
     toast({
       title: "Refreshing",
       description: "Updating graph data...",
     });
   };
 
-  if (statsLoading || graphLoading) {
+  if (isLoading) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-[200px]">
@@ -80,14 +90,14 @@ export default function DatasetGraphPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {graphStats ? (
+            {graphData ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Total Nodes</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-3xl font-bold">{graphStats.totalNodes}</p>
+                    <p className="text-3xl font-bold">{graphData.totalNodes}</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -95,7 +105,7 @@ export default function DatasetGraphPage() {
                     <CardTitle className="text-lg">Data Items</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-3xl font-bold">{graphStats.dataItems}</p>
+                    <p className="text-3xl font-bold">{graphData.dataItems}</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -103,11 +113,11 @@ export default function DatasetGraphPage() {
                     <CardTitle className="text-lg">Relationships</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-3xl font-bold">{graphStats.relationships}</p>
+                    <p className="text-3xl font-bold">{graphData.relationships}</p>
                   </CardContent>
                 </Card>
                 <div className="col-span-full">
-                  <h3 className="text-lg font-semibold mb-2">Dataset: {graphStats.datasetName}</h3>
+                  <h3 className="text-lg font-semibold mb-2">Dataset: {graphData.datasetName}</h3>
                   <p className="text-gray-500">
                     These statistics show the current state of your data in the graph database.
                     Click refresh to update if you've made recent changes.
@@ -129,22 +139,20 @@ export default function DatasetGraphPage() {
             <CardTitle>Graph Visualization</CardTitle>
           </CardHeader>
           <CardContent>
-            {graphData && graphData.nodes.length > 0 ? (
+            {graphData?.visualization && graphData.visualization.nodes.length > 0 ? (
               <div className="h-[600px] border rounded-lg overflow-hidden">
                 <ForceGraph2D
-                  graphData={graphData}
+                  graphData={graphData.visualization}
                   nodeLabel="label"
-                  nodeColor={(node: any) => 
-                    node.type === 'DataItem' ? '#4dabf7' : '#ff6b6b'
-                  }
+                  nodeColor={(node: any) => node.type === 'DataItem' ? '#4dabf7' : '#ff6b6b'}
                   linkColor={() => '#868e96'}
-                  linkLabel="label" // Show relationship attributes
+                  linkLabel="type"
                   linkDirectionalArrowLength={6}
                   linkDirectionalArrowRelPos={1}
                   linkCurvature={0.2}
                   nodeCanvasObject={(node: any, ctx, globalScale) => {
                     const label = node.label;
-                    const fontSize = 12/globalScale;
+                    const fontSize = 12 / globalScale;
                     ctx.font = `${fontSize}px Sans-Serif`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';

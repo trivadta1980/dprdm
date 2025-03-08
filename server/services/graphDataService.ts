@@ -32,23 +32,36 @@ export class GraphDataService {
       throw new Error(`Dataset ${dataSetId} not found`);
     }
 
-    // Query Neo4j for statistics
-    const statsQuery = `
-      MATCH (item:DataItem {dataSetId: $dataSetId})
-      OPTIONAL MATCH (item)-[r]-()
-      RETURN 
-        count(DISTINCT item) as dataItems,
-        count(DISTINCT r) as relationships
+    // Query Neo4j for statistics and visualization data
+    const vizQuery = `
+      MATCH (item:DataItem)
+      WHERE item.dataSetId = $dataSetId
+      WITH collect(item) as items
+      MATCH (source:DataItem)-[r]->(target:DataItem)
+      WHERE source IN items OR target IN items
+      RETURN {
+        nodes: [node in items | {
+          id: node.name,
+          label: node.name,
+          type: labels(node)[0]
+        }],
+        links: collect({
+          source: source.name,
+          target: target.name,
+          type: type(r)
+        })
+      } as result
     `;
 
-    const result = await runQuery(statsQuery, { dataSetId: dataSetId.toString() });
-    const stats = result[0];
+    const result = await runQuery(vizQuery, { dataSetId: dataSetId.toString() });
+    const graphData = result[0].get('result');
 
     return {
-      totalNodes: stats.get('dataItems').toNumber(),
-      dataItems: stats.get('dataItems').toNumber(),
-      relationships: stats.get('relationships').toNumber(),
-      datasetName: dataSet.name
+      totalNodes: graphData.nodes.length,
+      dataItems: graphData.nodes.length,
+      relationships: graphData.links.length,
+      datasetName: dataSet.name,
+      visualization: graphData
     };
   }
 
