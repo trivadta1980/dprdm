@@ -84,6 +84,10 @@ export default function RelationshipsPage() {
   // Add state for available fields
   const [sourceFields, setSourceFields] = useState<string[]>([]);
   const [targetFields, setTargetFields] = useState<string[]>([]);
+  const [apiDebugData, setApiDebugData] = useState<{
+    source?: any;
+    target?: any;
+  }>({});
 
   const form = useForm<RelationshipForm>({
     resolver: zodResolver(relationshipSchema),
@@ -108,6 +112,9 @@ export default function RelationshipsPage() {
     queryKey: [`/api/reference-data/${selectedSourceDataset}`],
     enabled: !!selectedSourceDataset,
     onSuccess: (data) => {
+      // Store raw API response for debugging
+      setApiDebugData(prev => ({ ...prev, source: data }));
+
       if (!data?.data) {
         console.log("No data in source dataset");
         setSourceFields([]);
@@ -133,6 +140,9 @@ export default function RelationshipsPage() {
     queryKey: [`/api/reference-data/${selectedTargetDataset}`],
     enabled: !!selectedTargetDataset,
     onSuccess: (data) => {
+      // Store raw API response for debugging
+      setApiDebugData(prev => ({ ...prev, target: data }));
+
       if (!data?.data) {
         console.log("No data in target dataset");
         setTargetFields([]);
@@ -354,6 +364,7 @@ export default function RelationshipsPage() {
                 if (!open) {
                   setEditingRelationship(null);
                   form.reset();
+                  setApiDebugData({}); // Clear debug data when dialog closes
                 }
                 setIsDialogOpen(open);
               }}
@@ -557,6 +568,30 @@ export default function RelationshipsPage() {
                         )}
                       />
                     </div>
+
+                    {/* Add API Debug Section */}
+                    <div className="mt-6 space-y-4">
+                      <h3 className="text-sm font-medium">API Response Debug</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium">Source Dataset Response</label>
+                          <textarea
+                            className="w-full h-32 mt-1 px-3 py-2 text-sm border rounded-md bg-muted"
+                            value={JSON.stringify(apiDebugData.source, null, 2)}
+                            readOnly
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Target Dataset Response</label>
+                          <textarea
+                            className="w-full h-32 mt-1 px-3 py-2 text-sm border rounded-md bg-muted"
+                            value={JSON.stringify(apiDebugData.target, null, 2)}
+                            readOnly
+                          />
+                        </div>
+                      </div>
+                    </div>
+
                     <Button type="submit" className="w-full">
                       {editingRelationship ? 'Update' : 'Create'} Relationship
                     </Button>
