@@ -77,8 +77,8 @@ export default function ReferenceDataPage() {
     setLocation(`/reference-data/${dataSet.id}/instances`);
   }
 
-  function handleViewInNeo4j(dataSet: ReferenceDataSet) {
-    setLocation(`/reference-data/${dataSet.id}/neo4j`);
+  function handleViewGraph(dataSet: ReferenceDataSet) {
+    setLocation(`/reference-data/${dataSet.id}/graph`);
   }
 
   if (isLoading) {
@@ -135,10 +135,10 @@ export default function ReferenceDataPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleViewInNeo4j(dataSet)}
+                          onClick={() => handleViewGraph(dataSet)}
                         >
                           <Share2 className="h-4 w-4 mr-2" />
-                          View in Neo4j
+                          Graph View
                         </Button>
                         <Button
                           variant="ghost"
