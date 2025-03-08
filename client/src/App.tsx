@@ -1,15 +1,14 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { lazy, Suspense } from "react";
-import { Route, Router } from "wouter"; // Assuming wouter is used
+import { Route, Router } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import ProtectedRoute from "@/lib/protected-route";
 import DebugPanel from '@/pages/debug-panel';
 import ReferenceTypesDebugPage from "./pages/reference-types-debug";
-import ReferenceTypesListPage from "./pages/reference-types-list-page"; // Added import
-
+import ReferenceTypesListPage from "./pages/reference-types-list-page";
 
 // Lazy load pages
 const HomePage = lazy(() => import("@/pages/home-page"));
@@ -20,6 +19,7 @@ const ReferenceTypesPage = lazy(() => import("@/pages/reference-types-page"));
 const ReferenceDataPage = lazy(() => import("@/pages/reference-data-page"));
 const ReferenceDataCreatePage = lazy(() => import("@/pages/reference-data-create-page"));
 const ReferenceDataInstancesPage = lazy(() => import("@/pages/reference-data-instances-page"));
+const DatasetGraphPage = lazy(() => import("@/pages/dataset-graph-page"));
 const RelationshipsPage = lazy(() => import("@/pages/relationships-page"));
 const RelationshipValuesPage = lazy(() => import("@/pages/relationship-values-page"));
 const CrosswalksPage = lazy(() => import("@/pages/crosswalks-list-page"));
@@ -27,8 +27,7 @@ const CrosswalkPage = lazy(() => import("@/pages/crosswalk-page"));
 const ChangePasswordPage = lazy(() => import("@/pages/change-password"));
 const ApiTestPage = lazy(() => import("@/pages/api-test-page"));
 const ResetPasswordPage = lazy(() => import("@/pages/reset-password-page"));
-const GraphVisualizationPage = lazy(() => import("@/pages/graph-visualization-page")); // Added GraphVisualizationPage
-
+const GraphVisualizationPage = lazy(() => import("@/pages/graph-visualization-page"));
 
 export default function App() {
   return (
@@ -59,12 +58,12 @@ export default function App() {
                   <ReferenceTypesPage />
                 </ProtectedRoute>
               </Route>
-              <Route path="/reference-types-list"> {/* Added route for new Reference Types List page */}
+              <Route path="/reference-types-list">
                 <ProtectedRoute>
                   <ReferenceTypesListPage />
                 </ProtectedRoute>
               </Route>
-              <Route path="/reference-types-debug"> {/* Added route for debug page */}
+              <Route path="/reference-types-debug">
                 <ProtectedRoute>
                   <ReferenceTypesDebugPage />
                 </ProtectedRoute>
@@ -77,6 +76,11 @@ export default function App() {
               <Route path="/reference-data/:id/instances">
                 <ProtectedRoute>
                   <ReferenceDataInstancesPage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/reference-data/:id/graph">
+                <ProtectedRoute>
+                  <DatasetGraphPage />
                 </ProtectedRoute>
               </Route>
               <Route path="/reference-data">
@@ -115,7 +119,7 @@ export default function App() {
                 </ProtectedRoute>
               </Route>
               <Route path="/debug" component={DebugPanel} />
-              <Route path="/graph-visualization" component={GraphVisualizationPage} /> {/* Added route for graph visualization */}
+              <Route path="/graph-visualization" component={GraphVisualizationPage} />
             </Router>
           </Suspense>
           <Toaster />
