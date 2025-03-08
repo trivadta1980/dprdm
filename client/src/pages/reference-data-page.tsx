@@ -3,7 +3,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus, Pencil, Trash2, Database } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Database, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type {
@@ -77,6 +77,10 @@ export default function ReferenceDataPage() {
     setLocation(`/reference-data/${dataSet.id}/instances`);
   }
 
+  function handleViewInNeo4j(dataSet: ReferenceDataSet) {
+    setLocation(`/reference-data/${dataSet.id}/neo4j`);
+  }
+
   if (isLoading) {
     return (
       <MainLayout>
@@ -127,6 +131,14 @@ export default function ReferenceDataPage() {
                         >
                           <Database className="h-4 w-4 mr-2" />
                           Manage Instances
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewInNeo4j(dataSet)}
+                        >
+                          <Share2 className="h-4 w-4 mr-2" />
+                          View in Neo4j
                         </Button>
                         <Button
                           variant="ghost"
