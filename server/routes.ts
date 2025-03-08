@@ -1483,6 +1483,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add this route after the existing graph routes
+  app.get("/api/graph/debug", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      if (!isNeo4jAvailable()) {
+        return res.status(503).json({ error: "Neo4j is not available" });
+      }
+
+      const debug = await GraphDataService.debugRelationships();
+      res.json(debug);
+    } catch (error) {
+      console.error('Error debugging Neo4j relationships:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

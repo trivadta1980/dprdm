@@ -295,6 +295,45 @@ export class GraphDataService {
 
     return crosswalk.id;
   }
+  static async debugRelationships() {
+    if (!this.isAvailable()) {
+      throw new Error("Neo4j not available");
+    }
+
+    const session = this.getSession();
+    try {
+      // Count all relationships
+      const countQuery = `
+        MATCH ()-[r]->() 
+        RETURN count(r) as relationshipCount
+      `;
+      const countResult = await runQuery(countQuery);
+      console.log(`Total relationships in Neo4j: ${countResult[0].get('relationshipCount')}`);
+
+      // Get sample relationships
+      const sampleQuery = `
+        MATCH (source:DataItem)-[r]->(target:DataItem)
+        RETURN source.name as sourceNode, type(r) as relType, target.name as targetNode
+        LIMIT 5
+      `;
+      const sampleResult = await runQuery(sampleQuery);
+      console.log("\nSample relationships:");
+      sampleResult.forEach(record => {
+        console.log(`${record.get('sourceNode')} -[${record.get('relType')}]-> ${record.get('targetNode')}`);
+      });
+
+      return {
+        count: countResult[0].get('relationshipCount').toNumber(),
+        samples: sampleResult.map(record => ({
+          source: record.get('sourceNode'),
+          type: record.get('relType'),
+          target: record.get('targetNode')
+        }))
+      };
+    } finally {
+      await session.close();
+    }
+  }
 }
 
 export default GraphDataService;
