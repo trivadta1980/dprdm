@@ -1437,7 +1437,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         items.forEach(item => {
           nodes.add(JSON.stringify({
             id: item.properties.id,
-            label: item.properties.label || item.properties.id,
+            label: item.properties.label || item.properties.name || item.properties.id,
             type: 'DataItem'
           }));
         });
@@ -1448,7 +1448,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (item) {
             nodes.add(JSON.stringify({
               id: item.properties.id,
-              label: item.properties.label || item.properties.id,
+              label: item.properties.label || item.properties.name || item.properties.id,
               type: 'DataItem'
             }));
           }

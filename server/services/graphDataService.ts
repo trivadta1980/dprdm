@@ -32,7 +32,7 @@ export class GraphDataService {
       throw new Error(`Dataset ${dataSetId} not found`);
     }
 
-    // Query Neo4j for statistics - count both direct and related relationships
+    // Query Neo4j for statistics
     const statsQuery = `
       MATCH (item:DataItem {dataSetId: $dataSetId})
       OPTIONAL MATCH (item)-[r]-()
@@ -69,17 +69,21 @@ export class GraphDataService {
 
     // Create nodes for each instance in the dataset
     const data = dataSet.data as Record<string, any>;
-    for (const [itemId, item] of Object.entries(data)) {
+    for (const [_, item] of Object.entries(data)) {
+      // For sites dataset, use the site name as the unique identifier
+      const siteId = item.Site_Name || item.name || JSON.stringify(item);
+
       // Create a meaningful label from the item's properties
       const label = Object.entries(item)
         .filter(([key, value]) => key !== '_history' && value !== null && value !== undefined)
         .map(([key, value]) => `${key}: ${value}`)
         .join('\n');
 
-      // Create or update the item node with all its properties
+      // Create or update the item node
       const createItemQuery = `
-        MERGE (item:DataItem {id: $itemId, dataSetId: $dataSetId})
+        MERGE (item:DataItem {id: $siteId, dataSetId: $dataSetId})
         SET item.label = $label,
+            item.name = $siteId,
             item += $properties
         RETURN item
       `;
@@ -92,7 +96,7 @@ export class GraphDataService {
       }
 
       await runQuery(createItemQuery, {
-        itemId,
+        siteId,
         dataSetId: dataSetId.toString(),
         label,
         properties
