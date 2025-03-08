@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, RefreshCw } from "lucide-react";
+import { ArrowLeft, Database, Loader2, RefreshCw } from "lucide-react";
 import ForceGraph2D from "react-force-graph-2d";
 import { useToast } from "@/hooks/use-toast";
 
@@ -23,6 +23,7 @@ interface GraphData {
 export default function DatasetNeo4jPage() {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   // Fetch graph data for the dataset
   const { data: graphData, isLoading, refetch } = useQuery<GraphData>({
@@ -57,6 +58,10 @@ export default function DatasetNeo4jPage() {
               <Button variant="outline" onClick={() => window.history.back()}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
+              </Button>
+              <Button variant="outline" onClick={() => setLocation('/neo4j-info')}>
+                <Database className="h-4 w-4 mr-2" />
+                View Neo4j Info
               </Button>
               <Button onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4 mr-2" />

@@ -756,7 +756,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.status(201).json({ message: "Import completed successfully" });
     } catch (error) {
-      console.error('POST /api/relationships/:id/values/import - Error:, error);
+      console.error('POST /api/relationships/:id/values/import - Error:', error);
       res.status(500).json({ error: String(error) });
     }
   });
@@ -1514,19 +1514,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Add after existing graph routes
   app.get("/api/graph/debug", async (req, res) => {
+    console.log('GET /api/graph/debug - Request received');
     if (!req.isAuthenticated()) {
+      console.log('GET /api/graph/debug - Unauthorized access');
       return res.sendStatus(401);
     }
 
     try {
       if (!isNeo4jAvailable()) {
-        return res.status(503).json({ error: "Neo4j is not available" });
+        throw new Error("Neo4j is not available");
       }
 
-      const debug = await GraphDataService.debugRelationships();
-      res.json(debug);
+      const debugInfo = await GraphDataService.debugRelationships();
+
+      const response = {
+        totalNodes: debugInfo.count,
+        totalRelationships: debugInfo.count, // This represents total relationships
+        sampleRelationships: debugInfo.samples
+      };
+
+      console.log('GET /api/graph/debug - Debug info retrieved successfully');
+      res.json(response);
     } catch (error) {
-      console.error('Error debugging Neo4j relationships:', error);
+      console.error('GET /api/graph/debug - Error:', error);
       res.status(500).json({ error: String(error) });
     }
   });
