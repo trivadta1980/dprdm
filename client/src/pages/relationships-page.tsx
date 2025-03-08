@@ -87,6 +87,8 @@ export default function RelationshipsPage() {
   const [apiDebugData, setApiDebugData] = useState<{
     source?: any;
     target?: any;
+    sourceSelection?: string;
+    targetSelection?: string;
   }>({});
 
   const form = useForm<RelationshipForm>({
@@ -409,7 +411,14 @@ export default function RelationshipsPage() {
                           <FormItem>
                             <FormLabel>Source Data Set</FormLabel>
                             <Select
-                              onValueChange={field.onChange}
+                              onValueChange={(value) => {
+                                console.log("Source Dataset selected:", value);
+                                field.onChange(value);
+                                setApiDebugData(prev => ({
+                                  ...prev,
+                                  sourceSelection: `Selected dataset ID: ${value}`
+                                }));
+                              }}
                               defaultValue={field.value}
                             >
                               <FormControl>
@@ -439,7 +448,14 @@ export default function RelationshipsPage() {
                           <FormItem>
                             <FormLabel>Target Data Set</FormLabel>
                             <Select
-                              onValueChange={field.onChange}
+                              onValueChange={(value) => {
+                                console.log("Target Dataset selected:", value);
+                                field.onChange(value);
+                                setApiDebugData(prev => ({
+                                  ...prev,
+                                  targetSelection: `Selected dataset ID: ${value}`
+                                }));
+                              }}
                               defaultValue={field.value}
                             >
                               <FormControl>
@@ -580,19 +596,29 @@ export default function RelationshipsPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="text-sm font-medium">Source Dataset Response</label>
-                          <textarea
-                            className="w-full h-32 mt-1 px-3 py-2 text-sm border rounded-md bg-muted"
-                            value={JSON.stringify(apiDebugData.source, null, 2)}
-                            readOnly
-                          />
+                          <div className="space-y-2">
+                            <div className="text-xs text-blue-600">
+                              {apiDebugData.sourceSelection || "No selection made yet"}
+                            </div>
+                            <textarea
+                              className="w-full h-32 mt-1 px-3 py-2 text-sm border rounded-md bg-muted"
+                              value={JSON.stringify(apiDebugData.source, null, 2)}
+                              readOnly
+                            />
+                          </div>
                         </div>
                         <div>
                           <label className="text-sm font-medium">Target Dataset Response</label>
-                          <textarea
-                            className="w-full h-32 mt-1 px-3 py-2 text-sm border rounded-md bg-muted"
-                            value={JSON.stringify(apiDebugData.target, null, 2)}
-                            readOnly
-                          />
+                          <div className="space-y-2">
+                            <div className="text-xs text-blue-600">
+                              {apiDebugData.targetSelection || "No selection made yet"}
+                            </div>
+                            <textarea
+                              className="w-full h-32 mt-1 px-3 py-2 text-sm border rounded-md bg-muted"
+                              value={JSON.stringify(apiDebugData.target, null, 2)}
+                              readOnly
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
