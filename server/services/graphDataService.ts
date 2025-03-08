@@ -1,4 +1,3 @@
-
 import { db } from '../db';
 import neo4j, { isNeo4jAvailable, runQuery } from '../neo4j';
 import * as schema from '@shared/schema';
@@ -9,6 +8,54 @@ export class GraphDataService {
   // Check if graph database is available
   static isAvailable() {
     return isNeo4jAvailable();
+  }
+
+  // Get Neo4j session
+  static getSession() {
+    if (!this.isAvailable()) {
+      throw new Error("Neo4j not available");
+    }
+    return neo4j.getSession();
+  }
+
+  // Get statistics about dataset nodes and relationships
+  static async getDatasetGraphStats(dataSetId: number) {
+    if (!this.isAvailable()) {
+      throw new Error("Neo4j not available");
+    }
+
+    // First make sure data exists by syncing
+    await this.syncReferenceDataSet(dataSetId);
+
+    // Get the dataset name
+    const dataSet = await db.query.referenceDataSets.findFirst({
+      where: eq(schema.referenceDataSets.id, dataSetId)
+    });
+
+    if (!dataSet) {
+      throw new Error(`Dataset ${dataSetId} not found`);
+    }
+
+    // Query Neo4j for statistics
+    const statsQuery = `
+      MATCH (ds:DataSet {id: $dataSetId})
+      OPTIONAL MATCH (ds)-[:CONTAINS]->(item:DataItem)
+      OPTIONAL MATCH (item)-[r]-()
+      RETURN 
+        count(DISTINCT ds) + count(DISTINCT item) as totalNodes,
+        count(DISTINCT item) as dataItems,
+        count(DISTINCT r) as relationships
+    `;
+
+    const result = await runQuery(statsQuery, { dataSetId: dataSetId.toString() });
+    const stats = result[0].get(0);
+
+    return {
+      totalNodes: stats.get('totalNodes').toNumber(),
+      dataItems: stats.get('dataItems').toNumber(),
+      relationships: stats.get('relationships').toNumber(),
+      datasetName: dataSet.name
+    };
   }
 
   // Create or update reference data set in Neo4j
@@ -55,7 +102,7 @@ export class GraphDataService {
 
     // Create nodes for each item in the dataset
     const data = dataSet.data as Record<string, any>;
-    
+
     for (const [itemId, item] of Object.entries(data)) {
       const createItemQuery = `
         MERGE (item:DataItem {id: $itemId, dataSetId: $dataSetId})
@@ -190,7 +237,7 @@ export class GraphDataService {
 
     // Create mappings between items
     const mappingData = crosswalk.mappingData as Record<string, string>;
-    
+
     for (const [sourceId, targetId] of Object.entries(mappingData)) {
       const createMappingQuery = `
         MATCH (source:DataItem {id: $sourceId, dataSetId: $sourceDataSetId})

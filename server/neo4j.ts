@@ -1,4 +1,3 @@
-
 import neo4j from 'neo4j-driver';
 
 // Check for Neo4j connection credentials
@@ -9,7 +8,7 @@ console.log("Debug: Process ENV NEO4J_PASSWORD =", process.env.NEO4J_PASSWORD ? 
 // Get environment variables directly from file as a fallback
 import fs from 'fs';
 import path from 'path';
-let envVars = {};
+let envVars: Record<string, string> = {};
 try {
   const envFile = fs.readFileSync(path.resolve(process.cwd(), '.env'), 'utf8');
   envFile.split('\n').forEach(line => {
@@ -75,6 +74,14 @@ export const runQuery = async (query: string, params = {}) => {
   }
 };
 
+// Get a new session
+export const getSession = () => {
+  if (!driver) {
+    throw new Error("Neo4j connection not available");
+  }
+  return driver.session();
+};
+
 // Close the driver when the application shuts down
 export const closeDriver = async () => {
   if (driver) {
@@ -86,5 +93,6 @@ export const closeDriver = async () => {
 export default {
   runQuery,
   isNeo4jAvailable,
-  closeDriver
+  closeDriver,
+  getSession
 };

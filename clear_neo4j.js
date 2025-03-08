@@ -2,8 +2,8 @@ import neo4j from 'neo4j-driver';
 
 async function clearNeo4jDatabase() {
   // Get Neo4j credentials from environment variables
-  const uri = process.env.NEO4J_URI || 'neo4j://localhost:7687';
-  const user = process.env.NEO4J_USER || 'neo4j';
+  const uri = process.env.NEO4J_URI;
+  const user = process.env.NEO4J_USER;
   const password = process.env.NEO4J_PASSWORD;
 
   // Create a driver instance
