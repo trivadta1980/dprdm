@@ -30,17 +30,20 @@ export class GraphDataService {
       throw error;
     }
 
-    // Get the dataset name
-    const dataSet = await db.query.referenceDataSets.findFirst({
-      where: eq(schema.referenceDataSets.id, dataSetId)
-    });
+    // Get the dataset name using raw SQL
+    const datasetQuery = `
+      SELECT id, name, data 
+      FROM reference_data_sets 
+      WHERE id = $1
+    `;
+    const datasetResult = await db.execute(datasetQuery, [dataSetId]);
+    const dataSet = datasetResult.rows[0];
 
     if (!dataSet) {
       throw new Error(`Dataset ${dataSetId} not found`);
     }
 
     console.log('Dataset found:', dataSet.name);
-    console.log('Dataset data sample:', Object.entries(dataSet.data as Record<string, any>).slice(0, 2));
 
     // Query Neo4j for statistics and visualization data
     const vizQuery = `
@@ -84,10 +87,14 @@ export class GraphDataService {
       return null;
     }
 
-    // Fetch the reference data set
-    const dataSet = await db.query.referenceDataSets.findFirst({
-      where: eq(schema.referenceDataSets.id, dataSetId)
-    });
+    // Fetch the reference data set using raw SQL
+    const datasetQuery = `
+      SELECT id, name, data 
+      FROM reference_data_sets 
+      WHERE id = $1
+    `;
+    const datasetResult = await db.execute(datasetQuery, [dataSetId]);
+    const dataSet = datasetResult.rows[0];
 
     if (!dataSet) {
       throw new Error(`Reference data set with ID ${dataSetId} not found`);
@@ -143,65 +150,51 @@ export class GraphDataService {
 
       console.log(`Successfully created ${nodesCreated} nodes for dataset ${dataSetId}`);
 
-      // Find and sync all relationships where this dataset is either source or target
-      const relationships = await db.query.relationships.findMany({
-        where: or(
-          eq(schema.relationships.sourceDataSetId, dataSetId),
-          eq(schema.relationships.targetDataSetId, dataSetId)
-        ),
-        with: {
-          values: true
-        }
-      });
+      // Find relationships where this dataset is either source or target
+      const relationshipsQuery = `
+        SELECT DISTINCT 
+          r.id as relationship_id,
+          r.relationship_type,
+          rv.id as value_id,
+          rv.source_instance_id,
+          rv.target_instance_id,
+          CASE WHEN COUNT(rad.id) > 0 THEN
+            json_agg(
+              json_build_object(
+                'name', rad.name,
+                'value', rav.value
+              )
+            ) filter (where rad.name is not null)
+          ELSE
+            NULL
+          END as attributes
+        FROM relationships r
+        JOIN relationship_values rv ON rv.relationship_id = r.id
+        LEFT JOIN relationship_attribute_values rav ON rv.id = rav.relationship_value_id
+        LEFT JOIN relationship_attribute_definitions rad ON rav.attribute_definition_id = rad.id
+        WHERE r.source_data_set_id = $1 OR r.target_data_set_id = $1
+        GROUP BY r.id, r.relationship_type, rv.id, rv.source_instance_id, rv.target_instance_id
+      `;
 
-      console.log(`Found ${relationships.length} relationships for dataset ${dataSetId}`);
+      const relationships = await db.execute(relationshipsQuery, [dataSetId]);
+      console.log(`Found ${relationships.rows.length} relationships for dataset ${dataSetId}`);
 
-      // Process relationships and sync to Neo4j
-      for (const relationship of relationships) {
-        console.log(`\nProcessing relationship ${relationship.id} (${relationship.relationshipType})`);
+      // Process each relationship with its attributes
+      for (const row of relationships.rows) {
+        console.log('\nProcessing relationship:', {
+          id: row.relationship_id,
+          type: row.relationship_type,
+          source: row.source_instance_id,
+          target: row.target_instance_id,
+          hasAttributes: row.attributes !== null
+        });
 
-        // Get all attribute values for this relationship's values
-        const attributeValuesQuery = `
-          SELECT 
-            rv.id as value_id,
-            rv.source_instance_id,
-            rv.target_instance_id,
-            rad.name as attribute_name,
-            rav.value as attribute_value
-          FROM relationship_values rv
-          JOIN relationship_attribute_values rav ON rv.id = rav.relationship_value_id
-          JOIN relationship_attribute_definitions rad ON rav.attribute_definition_id = rad.id
-          WHERE rv.relationship_id = $1
-        `;
-
-        const attributeValues = await db.execute(attributeValuesQuery, [relationship.id]);
-        console.log(`Found ${attributeValues.rows.length} attribute values for relationship ${relationship.id}`);
-        console.log('Sample of raw attribute data:', attributeValues.rows.slice(0, 2));
-
-        // Group attribute values by relationship value ID
-        const valueAttributes: {[key: string]: any} = {};
-        for (const row of attributeValues.rows) {
-          if (!valueAttributes[row.value_id]) {
-            valueAttributes[row.value_id] = {
-              sourceInstanceId: row.source_instance_id,
-              targetInstanceId: row.target_instance_id,
-              attributes: {
-                relationshipId: relationship.id.toString(),
-                type: relationship.relationshipType
-              }
-            };
+        try {
+          // Skip if source or target is missing
+          if (!row.source_instance_id || !row.target_instance_id) {
+            console.log('Skipping relationship - missing source or target');
+            continue;
           }
-          if (row.attribute_value !== null) {
-            valueAttributes[row.value_id].attributes[row.attribute_name] = row.attribute_value;
-          }
-        }
-
-        console.log('Grouped attributes by value_id:', JSON.stringify(valueAttributes, null, 2));
-
-        // Process each relationship value with its attributes
-        for (const valueId of Object.keys(valueAttributes)) {
-          const value = valueAttributes[valueId];
-          console.log(`\nProcessing value_id ${valueId} with attributes:`, value.attributes);
 
           // Verify nodes exist first
           const verifyNodesQuery = `
@@ -210,43 +203,61 @@ export class GraphDataService {
             RETURN source, target
           `;
 
-          try {
-            const nodesExist = await runQuery(verifyNodesQuery, {
-              sourceName: value.sourceInstanceId,
-              targetName: value.targetInstanceId
-            });
+          const nodesExist = await runQuery(verifyNodesQuery, {
+            sourceName: row.source_instance_id,
+            targetName: row.target_instance_id
+          });
 
-            if (nodesExist.length === 0) {
-              console.warn(`Skipping relationship - One or both nodes not found: source=${value.sourceInstanceId}, target=${value.targetInstanceId}`);
-              continue;
-            }
-
-            // Create relationship with attributes in Neo4j
-            const createRelQuery = `
-              MATCH (source:DataItem {name: $sourceName})
-              MATCH (target:DataItem {name: $targetName})
-              MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {relationshipId: $relationshipId}]->(target)
-              SET r += $attributes
-              RETURN r
-            `;
-
-            await runQuery(createRelQuery, {
-              sourceName: value.sourceInstanceId,
-              targetName: value.targetInstanceId,
-              relationshipId: relationship.id.toString(),
-              attributes: value.attributes
-            });
-
-            console.log(`Created relationship: ${value.sourceInstanceId} -> ${value.targetInstanceId} with attributes:`, value.attributes);
-          } catch (error) {
-            console.error(`Error creating relationship:`, error);
-            console.error('Query parameters:', {
-              sourceName: value.sourceInstanceId,
-              targetName: value.targetInstanceId,
-              relationshipId: relationship.id.toString(),
-              attributes: value.attributes
-            });
+          if (nodesExist.length === 0) {
+            console.warn(`Skipping relationship - Nodes not found: source=${row.source_instance_id}, target=${row.target_instance_id}`);
+            continue;
           }
+
+          // Build attributes object starting with base attributes
+          const attributes: Record<string, any> = {
+            relationshipId: row.relationship_id.toString(),
+            type: row.relationship_type
+          };
+
+          // Add additional attributes only if they exist
+          if (row.attributes && Array.isArray(row.attributes)) {
+            console.log(`Adding ${row.attributes.length} attributes to relationship`);
+            for (const attr of row.attributes) {
+              if (attr.value !== null && attr.name) {
+                attributes[attr.name] = attr.value;
+              }
+            }
+          } else {
+            console.log(`No additional attributes for ${row.relationship_type} relationship`);
+          }
+
+          console.log('Creating Neo4j relationship with attributes:', {
+            source: row.source_instance_id,
+            target: row.target_instance_id,
+            type: row.relationship_type,
+            attributes: JSON.stringify(attributes, null, 2)
+          });
+
+          // Create or update relationship with attributes in Neo4j
+          const createRelQuery = `
+            MATCH (source:DataItem {name: $sourceName})
+            MATCH (target:DataItem {name: $targetName})
+            MERGE (source)-[r:${row.relationship_type.toUpperCase()} {relationshipId: $relationshipId}]->(target)
+            SET r = $attributes
+            RETURN r
+          `;
+
+          await runQuery(createRelQuery, {
+            sourceName: row.source_instance_id,
+            targetName: row.target_instance_id,
+            relationshipId: attributes.relationshipId,
+            attributes
+          });
+
+          console.log('Successfully created relationship');
+        } catch (error) {
+          console.error('Error creating relationship:', error);
+          console.error('Relationship data:', row);
         }
       }
 
@@ -258,6 +269,47 @@ export class GraphDataService {
     return dataSet.id;
   }
 
+  static async debugRelationships() {
+    if (!this.isAvailable()) {
+      throw new Error("Neo4j not available");
+    }
+
+    const session = this.getSession();
+    try {
+      // Count nodes and relationships
+      const countQuery = `
+        MATCH (n) 
+        OPTIONAL MATCH ()-[r]->()
+        RETURN count(DISTINCT n) as nodeCount, count(DISTINCT r) as relationshipCount
+      `;
+      const countResult = await runQuery(countQuery);
+
+      // Get sample relationships with their properties
+      const sampleQuery = `
+        MATCH (source:DataItem)-[r]->(target:DataItem)
+        RETURN 
+          source.name as sourceNode, 
+          type(r) as relType, 
+          target.name as targetNode,
+          properties(r) as attributes
+        LIMIT 5
+      `;
+      const sampleResult = await runQuery(sampleQuery);
+
+      return {
+        totalNodes: countResult[0].get('nodeCount').toNumber(),
+        totalRelationships: countResult[0].get('relationshipCount').toNumber(),
+        sampleRelationships: sampleResult.map(record => ({
+          source: record.get('sourceNode'),
+          type: record.get('relType'),
+          target: record.get('targetNode'),
+          attributes: record.get('attributes')
+        }))
+      };
+    } finally {
+      await session.close();
+    }
+  }
   static async syncRelationship(relationshipId: number) {
     if (!this.isAvailable()) {
       console.warn("Neo4j not available, skipping relationship sync");
@@ -382,47 +434,6 @@ export class GraphDataService {
     }
 
     return crosswalk.id;
-  }
-  static async debugRelationships() {
-    if (!this.isAvailable()) {
-      throw new Error("Neo4j not available");
-    }
-
-    const session = this.getSession();
-    try {
-      // Count nodes and relationships separately
-      const countQuery = `
-        MATCH (n) 
-        OPTIONAL MATCH ()-[r]->()
-        RETURN count(DISTINCT n) as nodeCount, count(DISTINCT r) as relationshipCount
-      `;
-      const countResult = await runQuery(countQuery);
-
-      // Get sample relationships with their properties
-      const sampleQuery = `
-        MATCH (source:DataItem)-[r]->(target:DataItem)
-        RETURN 
-          source.name as sourceNode, 
-          type(r) as relType, 
-          target.name as targetNode,
-          properties(r) as attributes
-        LIMIT 5
-      `;
-      const sampleResult = await runQuery(sampleQuery);
-
-      return {
-        totalNodes: countResult[0].get('nodeCount').toNumber(),
-        totalRelationships: countResult[0].get('relationshipCount').toNumber(),
-        sampleRelationships: sampleResult.map(record => ({
-          source: record.get('sourceNode'),
-          type: record.get('relType'),
-          target: record.get('targetNode'),
-          attributes: record.get('attributes')
-        }))
-      };
-    } finally {
-      await session.close();
-    }
   }
   static async findProductShippingPaths(productId: string, sourceLocation?: string, targetLocation?: string) {
     if (!this.isAvailable()) {
