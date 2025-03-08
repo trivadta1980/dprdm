@@ -1416,44 +1416,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // First sync the dataset to ensure data is present
       await GraphDataService.syncReferenceDataSet(dataSetId);
 
-      // Query Neo4j for graph data - only instances and their relationships
+      // Query Neo4j for graph data - get all connected nodes and relationships
       const session = GraphDataService.getSession();
       try {
         const result = await session.run(`
           MATCH (item:DataItem {dataSetId: $dataSetId})
           OPTIONAL MATCH (item)-[r]-(related:DataItem)
-          WHERE related.dataSetId = $dataSetId OR type(r) = 'MAPS_TO'
           RETURN 
             collect(DISTINCT item) as items,
+            collect(DISTINCT related) as relatedItems,
             collect(DISTINCT r) as rels
         `, { dataSetId: dataSetId.toString() });
 
         const record = result.records[0];
-        const nodes = [];
+        const nodes = new Set();
         const links = [];
 
-        // Process instance nodes
+        // Process main dataset items
         const items = record.get('items');
         items.forEach(item => {
-          nodes.push({
+          nodes.add(JSON.stringify({
             id: item.properties.id,
             label: item.properties.label || item.properties.id,
             type: 'DataItem'
-          });
+          }));
+        });
+
+        // Process related items from other datasets
+        const relatedItems = record.get('relatedItems');
+        relatedItems.forEach(item => {
+          if (item) {
+            nodes.add(JSON.stringify({
+              id: item.properties.id,
+              label: item.properties.label || item.properties.id,
+              type: 'DataItem'
+            }));
+          }
         });
 
         // Process relationships
         const relationships = record.get('rels');
         relationships.forEach(rel => {
-          links.push({
-            source: rel.startNode.properties.id,
-            target: rel.endNode.properties.id,
-            type: rel.type,
-            label: rel.properties.label || rel.type
-          });
+          if (rel) {
+            links.push({
+              source: rel.startNode.properties.id,
+              target: rel.endNode.properties.id,
+              type: rel.type,
+              label: rel.properties.label || rel.type
+            });
+          }
         });
 
-        res.json({ nodes, links });
+        // Convert nodes Set back to array
+        const nodesArray = Array.from(nodes).map(node => JSON.parse(node));
+
+        res.json({ 
+          nodes: nodesArray, 
+          links 
+        });
       } finally {
         await session.close();
       }

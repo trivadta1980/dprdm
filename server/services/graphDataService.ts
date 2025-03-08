@@ -1,7 +1,7 @@
 import { db } from '../db';
 import neo4j, { isNeo4jAvailable, runQuery } from '../neo4j';
 import * as schema from '@shared/schema';
-import { eq, and, or } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 
 export class GraphDataService {
   static isAvailable() {
@@ -15,7 +15,6 @@ export class GraphDataService {
     return neo4j.getSession();
   }
 
-  // Get statistics about dataset nodes and relationships
   static async getDatasetGraphStats(dataSetId: number) {
     if (!this.isAvailable()) {
       throw new Error("Neo4j not available");
@@ -33,7 +32,7 @@ export class GraphDataService {
       throw new Error(`Dataset ${dataSetId} not found`);
     }
 
-    // Query Neo4j for statistics - only count instances and their relationships
+    // Query Neo4j for statistics - count both direct and related relationships
     const statsQuery = `
       MATCH (item:DataItem {dataSetId: $dataSetId})
       OPTIONAL MATCH (item)-[r]-()
@@ -43,7 +42,7 @@ export class GraphDataService {
     `;
 
     const result = await runQuery(statsQuery, { dataSetId: dataSetId.toString() });
-    const stats = result[0].get(0);
+    const stats = result[0];
 
     return {
       totalNodes: stats.get('dataItems').toNumber(),
@@ -53,7 +52,6 @@ export class GraphDataService {
     };
   }
 
-  // Sync dataset instances and their relationships to Neo4j
   static async syncReferenceDataSet(dataSetId: number) {
     if (!this.isAvailable()) {
       console.warn("Neo4j not available, skipping graph sync");
@@ -101,7 +99,7 @@ export class GraphDataService {
       });
     }
 
-    // Find and sync all relationships involving this dataset
+    // Find all relationships where this dataset is either source or target
     const relationships = await db.query.relationships.findMany({
       where: or(
         eq(schema.relationships.sourceDataSetId, dataSetId),
@@ -120,8 +118,12 @@ export class GraphDataService {
       }
     });
 
+    console.log(`Found ${relationships.length} relationships for dataset ${dataSetId}`);
+
     // Create relationship instances with their attributes
     for (const relationship of relationships) {
+      console.log(`Processing relationship ${relationship.id} (${relationship.relationshipType})`);
+
       for (const relValue of relationship.values) {
         // Collect all attribute values for this relationship
         const attributes: Record<string, string> = {};
@@ -134,9 +136,10 @@ export class GraphDataService {
           .map(([key, value]) => `${key}: ${value}`)
           .join('\n');
 
+        // Create the relationship between source and target instances
         const createRelInstanceQuery = `
-          MATCH (source:DataItem {id: $sourceId, dataSetId: $sourceDataSetId})
-          MATCH (target:DataItem {id: $targetId, dataSetId: $targetDataSetId})
+          MATCH (source:DataItem {id: $sourceId})
+          MATCH (target:DataItem {id: $targetId})
           MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {
             relationshipId: $relationshipId
           }]->(target)
@@ -145,15 +148,18 @@ export class GraphDataService {
           RETURN r
         `;
 
-        await runQuery(createRelInstanceQuery, {
-          sourceId: relValue.sourceInstanceId,
-          targetId: relValue.targetInstanceId,
-          sourceDataSetId: relationship.sourceDataSetId.toString(),
-          targetDataSetId: relationship.targetDataSetId.toString(),
-          relationshipId: relationship.id.toString(),
-          label,
-          attributes
-        });
+        try {
+          await runQuery(createRelInstanceQuery, {
+            sourceId: relValue.sourceInstanceId,
+            targetId: relValue.targetInstanceId,
+            relationshipId: relationship.id.toString(),
+            label,
+            attributes
+          });
+          console.log(`Created relationship between ${relValue.sourceInstanceId} and ${relValue.targetInstanceId}`);
+        } catch (error) {
+          console.error(`Error creating relationship: ${error}`);
+        }
       }
     }
 
