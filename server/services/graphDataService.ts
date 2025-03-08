@@ -58,7 +58,7 @@ export class GraphDataService {
       return null;
     }
 
-    // Fetch the reference data set and its instances
+    // Fetch the reference data set
     const dataSet = await db.query.referenceDataSets.findFirst({
       where: eq(schema.referenceDataSets.id, dataSetId)
     });
@@ -66,6 +66,8 @@ export class GraphDataService {
     if (!dataSet) {
       throw new Error(`Reference data set with ID ${dataSetId} not found`);
     }
+
+    console.log(`Syncing dataset ${dataSetId} (${dataSet.name}) to Neo4j`);
 
     // Create nodes for each instance in the dataset
     const data = dataSet.data as Record<string, any>;
@@ -103,64 +105,47 @@ export class GraphDataService {
       });
     }
 
-    // Find all relationships where this dataset is either source or target
+    // Find and sync all relationships where this dataset is either source or target
     const relationships = await db.query.relationships.findMany({
       where: or(
         eq(schema.relationships.sourceDataSetId, dataSetId),
         eq(schema.relationships.targetDataSetId, dataSetId)
-      ),
-      with: {
-        values: {
-          with: {
-            attributeValues: {
-              with: {
-                definition: true
-              }
-            }
-          }
-        }
-      }
+      )
     });
 
     console.log(`Found ${relationships.length} relationships for dataset ${dataSetId}`);
 
-    // Create relationship instances with their attributes
+    // Get relationship values for each relationship
     for (const relationship of relationships) {
       console.log(`Processing relationship ${relationship.id} (${relationship.relationshipType})`);
 
-      for (const relValue of relationship.values) {
-        // Collect all attribute values for this relationship
-        const attributes: Record<string, string> = {};
-        for (const attrValue of relValue.attributeValues) {
-          attributes[attrValue.definition.name] = attrValue.value;
-        }
+      // Fetch relationship values directly
+      const values = await db.query.relationshipValues.findMany({
+        where: eq(schema.relationshipValues.relationshipId, relationship.id)
+      });
 
-        // Create a meaningful label for the relationship from its attributes
-        const label = Object.entries(attributes)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join('\n');
+      console.log(`Found ${values.length} relationship values for relationship ${relationship.id}`);
 
-        // Create the relationship between source and target instances using exact site names
+      // Create relationship instances
+      for (const value of values) {
+        console.log(`Creating relationship between "${value.sourceInstanceId}" and "${value.targetInstanceId}"`);
+
         const createRelInstanceQuery = `
           MATCH (source:DataItem {id: $sourceId})
           MATCH (target:DataItem {id: $targetId})
           MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {
             relationshipId: $relationshipId
           }]->(target)
-          SET r.label = $label,
-              r += $attributes
           RETURN r
         `;
 
         try {
           await runQuery(createRelInstanceQuery, {
-            sourceId: relValue.sourceInstanceId,
-            targetId: relValue.targetInstanceId,
-            relationshipId: relationship.id.toString(),
-            label,
-            attributes
+            sourceId: value.sourceInstanceId,
+            targetId: value.targetInstanceId,
+            relationshipId: relationship.id.toString()
           });
-          console.log(`Created relationship between "${relValue.sourceInstanceId}" and "${relValue.targetInstanceId}"`);
+          console.log(`Successfully created relationship between "${value.sourceInstanceId}" and "${value.targetInstanceId}"`);
         } catch (error) {
           console.error(`Error creating relationship:`, error);
         }
@@ -169,6 +154,7 @@ export class GraphDataService {
 
     return dataSet.id;
   }
+
   // Sync relationship data to Neo4j
   static async syncRelationship(relationshipId: number) {
     if (!this.isAvailable()) {
