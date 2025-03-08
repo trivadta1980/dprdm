@@ -1360,6 +1360,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   //   return colorMap[label] || '#9334E6'; // Default purple
   // }
 
+  // Add after existing routes
+  app.get("/api/graph/dataset/:id", async (req, res) => {
+    console.log('GET /api/graph/dataset/:id - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/graph/dataset/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      const dataSetId = Number(req.params.id);
+
+      // Get the dataset name from storage
+      const dataSet = await storage.getReferenceDataSet(dataSetId);
+      if (!dataSet) {
+        return res.status(404).json({ error: "Dataset not found" });
+      }
+
+      // Query Neo4j for nodes and relationships
+      if (GraphDataService.isAvailable()) {
+        // First sync the dataset if needed
+        await GraphDataService.syncReferenceDataSet(dataSetId);
+
+        // Get statistics about nodes and relationships
+        const stats = await GraphDataService.getDatasetGraphStats(dataSetId);
+        res.json(stats);
+      } else {
+        res.status(503).json({ error: "Neo4j is not available" });
+      }
+    } catch (error) {
+      console.error('GET /api/graph/dataset/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
