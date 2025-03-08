@@ -37,18 +37,7 @@ export default function DatasetGraphPage() {
     dataItems: number;
     relationships: number;
     datasetName: string;
-    visualization: {
-      nodes: Array<{
-        id: string;
-        label: string;
-        type: string;
-      }>;
-      links: Array<{
-        source: string;
-        target: string;
-        type: string;
-      }>;
-    };
+    visualization: GraphData;
   }>({
     queryKey: [`/api/graph/dataset/${id}`],
   });
@@ -66,6 +55,37 @@ export default function DatasetGraphPage() {
       <MainLayout>
         <div className="flex items-center justify-center min-h-[200px]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Early return if no data
+  if (!graphData) {
+    return (
+      <MainLayout>
+        <div className="max-w-6xl mx-auto space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Graph Statistics</CardTitle>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => window.history.back()}>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back
+                </Button>
+                <Button onClick={handleRefresh}>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-gray-500">
+                <p>No graph data available.</p>
+                <p className="text-sm">Click refresh to check for updates.</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </MainLayout>
     );
@@ -90,46 +110,39 @@ export default function DatasetGraphPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {graphData ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Total Nodes</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold">{graphData.totalNodes}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Data Items</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold">{graphData.dataItems}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Relationships</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold">{graphData.relationships}</p>
-                  </CardContent>
-                </Card>
-                <div className="col-span-full">
-                  <h3 className="text-lg font-semibold mb-2">Dataset: {graphData.datasetName}</h3>
-                  <p className="text-gray-500">
-                    These statistics show the current state of your data in the graph database.
-                    Click refresh to update if you've made recent changes.
-                  </p>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Total Nodes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold">{graphData.totalNodes}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Data Items</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold">{graphData.dataItems}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Relationships</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold">{graphData.relationships}</p>
+                </CardContent>
+              </Card>
+              <div className="col-span-full">
+                <h3 className="text-lg font-semibold mb-2">Dataset: {graphData.datasetName}</h3>
+                <p className="text-gray-500">
+                  These statistics show the current state of your data in the graph database.
+                  Click refresh to update if you've made recent changes.
+                </p>
               </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <p>No graph statistics available.</p>
-                <p className="text-sm">Click refresh to check for updates.</p>
-              </div>
-            )}
+            </div>
           </CardContent>
         </Card>
 
@@ -139,7 +152,7 @@ export default function DatasetGraphPage() {
             <CardTitle>Graph Visualization</CardTitle>
           </CardHeader>
           <CardContent>
-            {graphData?.visualization && graphData.visualization.nodes.length > 0 ? (
+            {graphData.visualization && graphData.visualization.nodes.length > 0 ? (
               <div className="h-[600px] border rounded-lg overflow-hidden">
                 <ForceGraph2D
                   graphData={graphData.visualization}
