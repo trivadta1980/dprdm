@@ -108,26 +108,24 @@ export default function RelationshipsPage() {
     queryKey: [`/api/reference-data/${selectedSourceDataset}`],
     enabled: !!selectedSourceDataset,
     onSuccess: (data) => {
-      console.log("Source dataset received:", data);
-      if (data?.data) {
-        // Get all unique fields from all instances
-        const allFields = new Set<string>();
-        Object.values(data.data).forEach(instance => {
-          if (instance) {
-            Object.keys(instance).forEach(field => {
-              if (!field.startsWith('_')) {
-                allFields.add(field);
-              }
-            });
-          }
-        });
-        const fields = Array.from(allFields);
-        console.log("Extracted source fields:", fields);
-        setSourceFields(fields);
-      } else {
+      if (!data?.data) {
         console.log("No data in source dataset");
         setSourceFields([]);
+        return;
       }
+
+      // Get the first instance to check structure
+      const instances = Object.values(data.data);
+      if (instances.length === 0) {
+        setSourceFields([]);
+        return;
+      }
+
+      // Extract all unique fields from the first instance
+      const firstInstance = instances[0];
+      const fields = Object.keys(firstInstance).filter(field => !field.startsWith('_'));
+      console.log("Source dataset fields:", fields);
+      setSourceFields(fields);
     }
   });
 
@@ -135,26 +133,24 @@ export default function RelationshipsPage() {
     queryKey: [`/api/reference-data/${selectedTargetDataset}`],
     enabled: !!selectedTargetDataset,
     onSuccess: (data) => {
-      console.log("Target dataset received:", data);
-      if (data?.data) {
-        // Get all unique fields from all instances
-        const allFields = new Set<string>();
-        Object.values(data.data).forEach(instance => {
-          if (instance) {
-            Object.keys(instance).forEach(field => {
-              if (!field.startsWith('_')) {
-                allFields.add(field);
-              }
-            });
-          }
-        });
-        const fields = Array.from(allFields);
-        console.log("Extracted target fields:", fields);
-        setTargetFields(fields);
-      } else {
+      if (!data?.data) {
         console.log("No data in target dataset");
         setTargetFields([]);
+        return;
       }
+
+      // Get the first instance to check structure
+      const instances = Object.values(data.data);
+      if (instances.length === 0) {
+        setTargetFields([]);
+        return;
+      }
+
+      // Extract all unique fields from the first instance
+      const firstInstance = instances[0];
+      const fields = Object.keys(firstInstance).filter(field => !field.startsWith('_'));
+      console.log("Target dataset fields:", fields);
+      setTargetFields(fields);
     }
   });
 
