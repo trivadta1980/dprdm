@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {Badge} from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Neo4jStats {
   totalNodes: number;
@@ -25,6 +32,8 @@ interface Neo4jStats {
 }
 
 export default function Neo4jInfoPage() {
+  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, any> | null>(null);
+
   // Add debugging for query execution and response
   const { data: stats, isLoading, error } = useQuery<Neo4jStats>({
     queryKey: ['/api/graph/debug'],
@@ -133,13 +142,13 @@ export default function Neo4jInfoPage() {
                             <TableCell>{rel.target}</TableCell>
                             <TableCell>
                               {rel.attributes && Object.keys(rel.attributes).length > 0 ? (
-                                <div className="space-y-1">
-                                  {Object.entries(rel.attributes).map(([key, value]) => (
-                                    <Badge key={key} variant="outline" className="mr-1">
-                                      {key}: {value}
-                                    </Badge>
-                                  ))}
-                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  onClick={() => setSelectedAttributes(rel.attributes)}
+                                  className="text-primary hover:text-primary/80"
+                                >
+                                  View {Object.keys(rel.attributes).length} Attributes
+                                </Button>
                               ) : (
                                 <span className="text-muted-foreground">No attributes</span>
                               )}
@@ -159,6 +168,23 @@ export default function Neo4jInfoPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Attributes Dialog */}
+      <Dialog open={!!selectedAttributes} onOpenChange={() => setSelectedAttributes(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Relationship Attributes</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {selectedAttributes && Object.entries(selectedAttributes).map(([key, value]) => (
+              <div key={key} className="flex justify-between items-center py-2 border-b">
+                <span className="font-medium">{key}</span>
+                <Badge variant="outline">{value}</Badge>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }
