@@ -136,7 +136,7 @@ export default function RelationshipsPage() {
       // Extract all unique fields from the first instance
       const firstInstance = instances[0];
       const fields = Object.keys(firstInstance).filter(field => !field.startsWith('_'));
-      console.log("Source dataset fields extracted:", fields);
+      console.log("Source dataset fields:", fields);
       setSourceFields(fields);
     }
   });
@@ -574,7 +574,7 @@ export default function RelationshipsPage() {
                       />
                     </div>
 
-                    {/* Add API Debug Section */}
+                    {/* Enhanced API Debug Section */}
                     <div className="mt-6 space-y-4">
                       <h3 className="text-sm font-medium">API Response Debug</h3>
                       <div className="grid grid-cols-2 gap-4">
