@@ -148,28 +148,54 @@ export class GraphDataService {
           }
         }
 
-        // Create relationship using site names instead of IDs
-        const createRelInstanceQuery = `
-          MATCH (source:DataItem {name: $sourceId})
-          MATCH (target:DataItem {name: $targetId})
-          MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {
-            relationshipId: $relationshipId
-          }]->(target)
-          SET r += $attributes
-          RETURN r
+        // First verify both nodes exist
+        const verifyNodesQuery = `
+          MATCH (source:DataItem {name: $sourceName})
+          MATCH (target:DataItem {name: $targetName})
+          RETURN source, target
         `;
 
         try {
+          console.log(`Verifying nodes exist for: ${value.sourceInstanceId} -> ${value.targetInstanceId}`);
+          const nodesExist = await runQuery(verifyNodesQuery, {
+            sourceName: value.sourceInstanceId,
+            targetName: value.targetInstanceId
+          });
+
+          if (nodesExist.length === 0) {
+            console.error(`One or both nodes not found: source=${value.sourceInstanceId}, target=${value.targetInstanceId}`);
+            continue;
+          }
+
+          console.log('Nodes found, creating relationship');
+
+          // Create relationship
+          const createRelInstanceQuery = `
+            MATCH (source:DataItem {name: $sourceName})
+            MATCH (target:DataItem {name: $targetName})
+            MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {
+              relationshipId: $relationshipId
+            }]->(target)
+            SET r += $attributes
+            RETURN r
+          `;
+
           await runQuery(createRelInstanceQuery, {
-            sourceId: value.sourceInstanceId,
-            targetId: value.targetInstanceId,
+            sourceName: value.sourceInstanceId,
+            targetName: value.targetInstanceId,
             relationshipId: relationship.id.toString(),
             attributes
           });
 
-          console.log(`Successfully created relationship from "${value.sourceInstanceId}" to "${value.targetInstanceId}" with attributes:`, attributes);
+          console.log(`Successfully created relationship from "${value.sourceInstanceId}" to "${value.targetInstanceId}"`);
         } catch (error) {
           console.error(`Error creating relationship from "${value.sourceInstanceId}" to "${value.targetInstanceId}":`, error);
+          console.error('Query parameters:', {
+            sourceName: value.sourceInstanceId,
+            targetName: value.targetInstanceId,
+            relationshipId: relationship.id.toString(),
+            attributes
+          });
         }
       }
     }
