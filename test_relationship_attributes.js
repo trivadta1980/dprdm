@@ -1,6 +1,10 @@
 
 import neo4j from 'neo4j-driver';
 import dotenv from 'dotenv';
+import { db } from './server/db.js';
+import * as schema from './shared/schema.js';
+import { eq, or } from 'drizzle-orm';
+
 dotenv.config();
 
 /**
@@ -11,68 +15,111 @@ async function syncReferenceDataSet_test(dataSetId, session) {
   console.log(`[TEST] Syncing dataset ${dataSetId} to Neo4j with relationship attributes`);
 
   try {
-    // This would normally query your database for relationships
-    // For this test, we'll create a sample relationship with attributes
-    
-    // Sample relationship for testing
-    const relationship = {
-      id: 3,
-      relationshipType: "ASSOCIATION"
-    };
-    
-    // Sample relationship value
-    const value = {
-      sourceInstanceId: "Catalent Pharma Solutions Inc. - Madison, WI US",
-      targetInstanceId: "BioReliance - Glasgow UK",
-      attributeValues: [
-        { definition: { name: "priority", dataType: "string" }, value: "high" },
-        { definition: { name: "cost", dataType: "number" }, value: "1200.50" },
-        { definition: { name: "active", dataType: "boolean" }, value: "true" }
-      ]
-    };
-
-    // Create properties object with relationship ID
-    const relationshipProperties = {
-      relationshipId: relationship.id.toString()
-    };
-
-    // Add attribute values to properties
-    if (value.attributeValues && value.attributeValues.length > 0) {
-      console.log(`Found ${value.attributeValues.length} attribute values for relationship value`);
-      
-      for (const attr of value.attributeValues) {
-        // Convert value based on data type if needed
-        let convertedValue = attr.value;
-        if (attr.definition.dataType === 'number') {
-          convertedValue = parseFloat(attr.value);
-        } else if (attr.definition.dataType === 'boolean') {
-          convertedValue = attr.value.toLowerCase() === 'true';
+    // Fetch relationships from the database including attribute values
+    console.log(`[TEST] Fetching relationships for dataset ${dataSetId} with attribute values`);
+    const relationships = await db.query.relationships.findMany({
+      where: or(
+        eq(schema.relationships.sourceDataSetId, dataSetId),
+        eq(schema.relationships.targetDataSetId, dataSetId)
+      ),
+      with: {
+        values: {
+          with: {
+            attributeValues: {
+              with: {
+                definition: true
+              }
+            }
+          }
         }
-
-        // Use the attribute name as the property key
-        relationshipProperties[attr.definition.name] = convertedValue;
       }
-    }
-
-    // Create relationship with the properties
-    const createRelQuery = `
-      MATCH (source:DataItem {name: $sourceName})
-      MATCH (target:DataItem {name: $targetName})
-      MERGE (source)-[r:${relationship.relationshipType.toUpperCase()}]->(target)
-      SET r = $properties
-      RETURN r
-    `;
-
-    const result = await session.run(createRelQuery, {
-      sourceName: value.sourceInstanceId,
-      targetName: value.targetInstanceId,
-      properties: relationshipProperties
     });
 
-    console.log(`Created relationship: ${value.sourceInstanceId} -> ${value.targetInstanceId} with properties:`, relationshipProperties);
-    return result;
+    console.log(`[TEST] Found ${relationships.length} relationships for dataset ${dataSetId}`);
+    
+    // Log relationship values and their attributes
+    for (const relationship of relationships) {
+      console.log(`[TEST] Relationship ${relationship.id} (${relationship.relationshipType}) has ${relationship.values.length} values`);
+      
+      for (const value of relationship.values) {
+        if (value.attributeValues && value.attributeValues.length > 0) {
+          console.log(`  [TEST] Value ${value.id} (${value.sourceInstanceId} -> ${value.targetInstanceId}) has ${value.attributeValues.length} attribute values:`);
+          
+          for (const attrValue of value.attributeValues) {
+            console.log(`    - ${attrValue.definition.name} (${attrValue.definition.dataType}): ${attrValue.value}`);
+          }
+        } else {
+          console.log(`  [TEST] Value ${value.id} (${value.sourceInstanceId} -> ${value.targetInstanceId}) has no attribute values`);
+        }
+      }
+
+      // Process a relationship value
+      if (relationship.values.length > 0) {
+        const value = relationship.values[0];
+        
+        // Verify nodes exist in Neo4j
+        const nodesQuery = `
+          MATCH (source:DataItem {name: $sourceName})
+          MATCH (target:DataItem {name: $targetName})
+          RETURN source, target
+        `;
+        
+        const nodesExist = await session.run(nodesQuery, {
+          sourceName: value.sourceInstanceId,
+          targetName: value.targetInstanceId
+        });
+        
+        if (nodesExist.records.length === 0) {
+          console.log(`[TEST] Skipping relationship - One or both nodes not found: source=${value.sourceInstanceId}, target=${value.targetInstanceId}`);
+          continue;
+        }
+        
+        // Create properties object with relationship ID
+        const relationshipProperties = {
+          relationshipId: relationship.id.toString()
+        };
+
+        // Add attribute values to properties
+        if (value.attributeValues && value.attributeValues.length > 0) {
+          console.log(`[TEST] Adding ${value.attributeValues.length} attribute values to Neo4j relationship properties`);
+          
+          for (const attr of value.attributeValues) {
+            // Convert value based on data type if needed
+            let convertedValue = attr.value;
+            if (attr.definition.dataType === 'number') {
+              convertedValue = parseFloat(attr.value);
+            } else if (attr.definition.dataType === 'boolean') {
+              convertedValue = attr.value.toLowerCase() === 'true';
+            }
+
+            // Use the attribute name as the property key
+            relationshipProperties[attr.definition.name] = convertedValue;
+            console.log(`  [TEST] - Added ${attr.definition.name}: ${convertedValue} (${typeof convertedValue})`);
+          }
+        }
+
+        // Create relationship with properties
+        const createRelQuery = `
+          MATCH (source:DataItem {name: $sourceName})
+          MATCH (target:DataItem {name: $targetName})
+          MERGE (source)-[r:${relationship.relationshipType.toUpperCase()}]->(target)
+          SET r = $properties
+          RETURN r
+        `;
+
+        const result = await session.run(createRelQuery, {
+          sourceName: value.sourceInstanceId,
+          targetName: value.targetInstanceId,
+          properties: relationshipProperties
+        });
+
+        console.log(`[TEST] Created relationship: ${value.sourceInstanceId} -> ${value.targetInstanceId} with properties:`, relationshipProperties);
+      }
+    }
+    
+    return { success: true, message: "Relationships synced successfully with attribute values" };
   } catch (error) {
-    console.error(`Error in syncReferenceDataSet_test:`, error);
+    console.error(`[TEST] Error in syncReferenceDataSet_test:`, error);
     throw error;
   }
 }
@@ -107,49 +154,12 @@ async function testRelationshipAttributes() {
     console.log('Found relationship:', relationship.type);
     console.log('Relationship properties:', relationship.properties);
 
-    // Demo how we would add attribute values
-    const attributeValues = [
-      { name: "priority", value: "high", dataType: "string" },
-      { name: "cost", value: "1200.50", dataType: "number" },
-      { name: "active", value: "true", dataType: "boolean" }
-    ];
+    // Run the test implementation
+    console.log('\nTesting syncReferenceDataSet_test implementation with real attribute values...');
+    const result = await syncReferenceDataSet_test(11, session);
+    console.log('Test result:', result);
 
-    // Build properties object that would be used in the actual implementation
-    const relationshipProperties = {
-      relationshipId: '3'
-    };
-
-    // Add attribute values to the properties
-    attributeValues.forEach(attr => {
-      // Convert value based on data type
-      let convertedValue = attr.value;
-      if (attr.dataType === 'number') {
-        convertedValue = parseFloat(attr.value);
-      } else if (attr.dataType === 'boolean') {
-        convertedValue = attr.value.toLowerCase() === 'true';
-      }
-
-      // Use the attribute name as the property key
-      relationshipProperties[attr.name] = convertedValue;
-    });
-
-    console.log('\nRelationship properties for Neo4j:', relationshipProperties);
-
-    // Update the test relationship in Neo4j with these properties
-    const updateRelQuery = `
-      MATCH ()-[r:ASSOCIATION]->()
-      WHERE r.relationshipId = '3'
-      SET r += $properties
-      RETURN r
-    `;
-
-    const updateResult = await session.run(updateRelQuery, {
-      properties: relationshipProperties
-    });
-
-    console.log(`Relationship update result: ${updateResult.records.length > 0 ? 'Success' : 'Failed'}`);
-
-    // Verify the relationship was updated with the attributes
+    // Verify the relationships have been updated with attributes
     const verifyQuery = `
       MATCH ()-[r:ASSOCIATION]->()
       WHERE r.relationshipId = '3'
@@ -159,17 +169,13 @@ async function testRelationshipAttributes() {
     const verifyResult = await session.run(verifyQuery);
 
     if (verifyResult.records.length > 0) {
-      console.log('\nVerification: Relationship properties in Neo4j:');
+      console.log('\nVerification: Relationship properties in Neo4j after test:');
       console.log(verifyResult.records[0].get('props'));
     } else {
-      console.log('\nVerification failed: Relationship not found');
+      console.log('\nVerification failed: Relationship not found after test');
     }
 
-    // Test our implementation function
-    console.log('\nTesting syncReferenceDataSet_test implementation...');
-    await syncReferenceDataSet_test(11, session);
-
-    // Show what code changes would be needed in syncReferenceDataSet
+    // Show what code changes would be needed in GraphDataService.syncReferenceDataSet
     console.log('\n------------------------------------------------------------------------------');
     console.log('Code changes needed in GraphDataService.syncReferenceDataSet():');
     console.log('------------------------------------------------------------------------------');
