@@ -70,8 +70,7 @@ export default function SitePathsPage() {
     const findPaths = (
       currentNode: string,
       path: string[],
-      siteTypes: string[],
-      isNewPath: boolean
+      siteTypes: string[]
     ) => {
       const node = fullGraphData.nodes.find(n => n.id === currentNode);
       if (!node) return;
@@ -80,50 +79,56 @@ export default function SitePathsPage() {
       path.push(currentNode);
       siteTypes.push(node.siteType);
 
-      // Get sequence key for the current path
-      const sequenceKey = path.join('→');
-      console.log('Path found:', {
-        sequence: sequenceKey,
-        length: path.length,
-        types: siteTypes.join('→')
-      });
-
-      // Store the path if it's new or longer than existing path with same sequence
-      if (!paths.has(sequenceKey) || isNewPath) {
-        paths.set(sequenceKey, {
-          sequence: [...path],
-          siteTypes: [...siteTypes],
-          product: selectedProduct,
-          isPrimary: true
-        });
-      }
-
       // Find all relationships for the current node with selected product
       const relationships = fullGraphData.relationships.filter(
         rel => rel.source === currentNode && rel.product === selectedProduct
       );
 
-      console.log('Found relationships:', {
-        node: currentNode,
-        count: relationships.length,
-        relationships: relationships.map(r => `${r.source} -> ${r.target}`)
-      });
+      // Only store paths that have at least two nodes and represent actual connections
+      if (path.length >= 2) {
+        const sequenceKey = path.join('→');
 
-      // Explore each relationship
+        // Only store if this is a valid path (has actual connections between all nodes)
+        const isValidPath = path.every((node, index) => {
+          if (index === path.length - 1) return true;
+          const nextNode = path[index + 1];
+          return relationships.some(rel => 
+            rel.source === node && rel.target === nextNode
+          );
+        });
+
+        if (isValidPath) {
+          paths.set(sequenceKey, {
+            sequence: [...path],
+            siteTypes: [...siteTypes],
+            product: selectedProduct,
+            isPrimary: true
+          });
+        }
+      }
+
+      // Explore each relationship that hasn't been visited
       for (const rel of relationships) {
         if (!visited.has(rel.target)) {
           visited.add(rel.target);
-          findPaths(rel.target, [...path], [...siteTypes], isNewPath);
+          findPaths(rel.target, [...path], [...siteTypes]);
           visited.delete(rel.target);
         }
       }
     };
 
-    // Start path finding from all nodes
-    fullGraphData.nodes.forEach(node => {
-      visited.clear();
-      visited.add(node.id);
-      findPaths(node.id, [], [], true);
+    // Find paths starting from each node that has outgoing relationships
+    fullGraphData.nodes.forEach(startNode => {
+      // Only start from nodes that have outgoing relationships for the selected product
+      const hasRelationships = fullGraphData.relationships.some(
+        rel => rel.source === startNode.id && rel.product === selectedProduct
+      );
+
+      if (hasRelationships) {
+        visited.clear();
+        visited.add(startNode.id);
+        findPaths(startNode.id, [], []);
+      }
     });
 
     return Array.from(paths.values());
