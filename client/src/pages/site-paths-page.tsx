@@ -1,4 +1,3 @@
-```typescript
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
@@ -288,4 +287,3 @@ export default function SitePathsPage() {
     </MainLayout>
   );
 }
-```
