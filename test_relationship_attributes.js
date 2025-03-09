@@ -1,9 +1,9 @@
 
-// Use CommonJS imports instead of ES modules
-const neo4j = require('neo4j-driver');
-const { db } = require('./server/db');
-const schema = require('./shared/schema');
-const { eq, or } = require('drizzle-orm');
+// Use ES modules imports instead of CommonJS
+import neo4j from 'neo4j-driver';
+import { db } from './server/db.js';
+import * as schema from './shared/schema.js';
+import { eq, or } from 'drizzle-orm';
 
 async function testRelationshipAttributes() {
   console.log('Starting relationship attribute test...');
