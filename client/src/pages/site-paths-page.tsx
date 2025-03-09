@@ -82,6 +82,11 @@ export default function SitePathsPage() {
 
       // Get sequence key for the current path
       const sequenceKey = path.join('→');
+      console.log('Path found:', {
+        sequence: sequenceKey,
+        length: path.length,
+        types: siteTypes.join('→')
+      });
 
       // Store the path if it's new or longer than existing path with same sequence
       if (!paths.has(sequenceKey) || isNewPath) {
@@ -97,6 +102,12 @@ export default function SitePathsPage() {
       const relationships = fullGraphData.relationships.filter(
         rel => rel.source === currentNode && rel.product === selectedProduct
       );
+
+      console.log('Found relationships:', {
+        node: currentNode,
+        count: relationships.length,
+        relationships: relationships.map(r => `${r.source} -> ${r.target}`)
+      });
 
       // Explore each relationship
       for (const rel of relationships) {
@@ -399,12 +410,12 @@ export default function SitePathsPage() {
                 <ForceGraph2D
                   graphData={filteredGraphData}
                   nodeLabel={node => `${node.name}\nType: ${node.siteType}\nID: ${node.siteId}`}
-                  nodeColor={node => 
-                    node.siteType === 'API' ? '#4dabf7' : 
-                    node.siteType === 'DP' ? '#ff6b6b' :
-                    node.siteType === 'SD' ? '#51cf66' :
-                    node.siteType === 'PL' ? '#ffd43b' :
-                    '#868e96'
+                  nodeColor={node =>
+                    node.siteType === 'API' ? '#4dabf7' :
+                      node.siteType === 'DP' ? '#ff6b6b' :
+                        node.siteType === 'SD' ? '#51cf66' :
+                          node.siteType === 'PL' ? '#ffd43b' :
+                            '#868e96'
                   }
                   linkColor={link => {
                     const colors = ['#868e96', '#4dabf7', '#ff6b6b', '#51cf66', '#ffd43b'];
@@ -422,12 +433,12 @@ export default function SitePathsPage() {
                     // Draw node circle
                     ctx.beginPath();
                     ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
-                    ctx.fillStyle = 
-                      node.siteType === 'API' ? '#4dabf7' : 
-                      node.siteType === 'DP' ? '#ff6b6b' :
-                      node.siteType === 'SD' ? '#51cf66' :
-                      node.siteType === 'PL' ? '#ffd43b' :
-                      '#868e96';
+                    ctx.fillStyle =
+                      node.siteType === 'API' ? '#4dabf7' :
+                        node.siteType === 'DP' ? '#ff6b6b' :
+                          node.siteType === 'SD' ? '#51cf66' :
+                            node.siteType === 'PL' ? '#ffd43b' :
+                              '#868e96';
                     ctx.fill();
 
                     // Draw node border
