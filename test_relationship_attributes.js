@@ -1,5 +1,7 @@
-const neo4j = require('neo4j-driver');
-require('dotenv').config();
+
+import neo4j from 'neo4j-driver';
+import dotenv from 'dotenv';
+dotenv.config();
 
 async function testRelationshipAttributes() {
   console.log('Starting relationship attribute test...');
