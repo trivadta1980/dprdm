@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
@@ -47,13 +46,6 @@ export default function SitePathsPage() {
     retry: 3,
     retryDelay: 1000,
     staleTime: 300000, // 5 minutes
-    onError: (error) => {
-      console.error("Error fetching sites:", error);
-      if (error.message.includes("401")) {
-        // Redirect to login if unauthorized
-        window.location.href = '/login';
-      }
-    }
   });
 
   // Fetch all products
@@ -62,13 +54,6 @@ export default function SitePathsPage() {
     retry: 3,
     retryDelay: 1000,
     staleTime: 300000, // 5 minutes
-    onError: (error) => {
-      console.error("Error fetching products:", error);
-      if (error.message.includes("401")) {
-        // Redirect to login if unauthorized
-        window.location.href = '/login';
-      }
-    }
   });
 
   // Fetch paths when all required fields are selected
@@ -77,14 +62,14 @@ export default function SitePathsPage() {
     enabled: Boolean(selectedProduct && (sourceLocation || targetLocation)),
     retry: 1,
   });
-  
+
   // Debug logging
   console.log('Sites data:', sites);
   console.log('Sites loading:', sitesLoading, 'Sites error:', sitesError);
-  
+
   console.log('Products data:', products);
   console.log('Products loading:', productsLoading, 'Products error:', productsError);
-  
+
   console.log('Paths data:', paths);
   console.log('Paths loading:', pathsLoading, 'Paths error:', pathsError);
   console.log('Query enabled:', Boolean(selectedProduct && (sourceLocation || targetLocation)));
@@ -104,12 +89,12 @@ export default function SitePathsPage() {
         };
       })
       .filter(node => selectedType === "all" || node.type === selectedType),
-    links: paths.flatMap(path => 
+    links: paths.flatMap((path, pathIndex) => 
       path.nodes.slice(0, -1).map((sourceNode, i) => ({
         source: sourceNode,
         target: path.nodes[i + 1],
         type: path.relationships[i],
-        pathIndex: i // Used for coloring different paths
+        pathIndex // Used for coloring different paths
       }))
     )
   } : { nodes: [], links: [] };
@@ -155,7 +140,7 @@ export default function SitePathsPage() {
       </MainLayout>
     );
   }
-  
+
   // Show warning if no data is found
   if (!sites?.length || !products?.length) {
     return (
