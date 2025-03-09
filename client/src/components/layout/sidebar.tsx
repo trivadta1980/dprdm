@@ -14,6 +14,7 @@ import {
   ArrowRightLeft,
   LogOut,
   Share2,
+  Map,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -24,36 +25,23 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
-  // Force convert roleId to a number to ensure correct comparison
   const isAdmin = user?.roleId === 1 || Number(user?.roleId) === 1;
 
-  console.log('Sidebar Debug:', {
-    user: !!user,
-    roleId: user?.roleId,
-    roleIdType: user ? typeof user.roleId : 'undefined',
-    isAdmin
-  });
-
-  // Define admin menu items separately for clarity
-  const adminMenuItems = [
-    {
-      title: "Manage Users",
-      href: "/manage-users",
-      icon: Users,
-      requiresPermission: true,
-    },
-    {
-      title: "Manage Roles",
-      href: "/roles",
-      icon: UserCog,
-      requiresPermission: true,
-    },
-  ];
-
-  console.log('Admin check before menu creation:', { isAdmin, roleId: user?.roleId });
-
   const menuItems = [
-    ...(isAdmin ? adminMenuItems : []),
+    ...(isAdmin ? [
+      {
+        title: "Manage Users",
+        href: "/manage-users",
+        icon: Users,
+        requiresPermission: true,
+      },
+      {
+        title: "Manage Roles",
+        href: "/roles",
+        icon: UserCog,
+        requiresPermission: true,
+      },
+    ] : []),
     {
       title: "Reference Data Types",
       href: "/reference-types",
@@ -90,13 +78,16 @@ export function Sidebar({ className }: SidebarProps) {
       icon: Share2,
       requiresPermission: true,
     },
+    {
+      title: "Supply Chain Paths",
+      href: "/site-paths",
+      icon: Map,
+      requiresPermission: true,
+    },
   ];
 
   const filteredMenuItems = menuItems.filter(item => {
-    // If no permission required or user is admin, always show the item
     if (!item.requiresPermission || isAdmin) return true;
-
-    // Otherwise check if the user has the route in their routes array
     return Array.isArray(user?.routes) && user.routes.includes(item.href);
   });
 
