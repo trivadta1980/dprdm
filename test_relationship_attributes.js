@@ -3,7 +3,7 @@ import neo4j from 'neo4j-driver';
 import dotenv from 'dotenv';
 import { db } from './server/db.ts';
 import * as schema from './shared/schema.ts';
-import { eq, or } from 'drizzle-orm';
+import { eq, or, sql } from 'drizzle-orm';
 
 dotenv.config();
 
@@ -15,32 +15,60 @@ async function syncReferenceDataSet_test(dataSetId, session) {
   console.log(`[TEST] Syncing dataset ${dataSetId} to Neo4j with relationship attributes`);
 
   try {
-    // Fetch relationships from the database including attribute values
+    // First, fetch basic relationship data
     console.log(`[TEST] Fetching relationships for dataset ${dataSetId} with attribute values`);
     const relationships = await db.query.relationships.findMany({
       where: or(
         eq(schema.relationships.sourceDataSetId, dataSetId),
         eq(schema.relationships.targetDataSetId, dataSetId)
-      ),
-      with: {
-        values: true
-      }
+      )
     });
-
-    // For each relationship value, fetch its attribute values separately
+    
+    // For each relationship, manually fetch values
     for (const relationship of relationships) {
-      if (relationship.values && relationship.values.length > 0) {
-        for (const value of relationship.values) {
-          const attributeValues = await db.query.relationshipAttributeValues.findMany({
-            where: eq(schema.relationshipAttributeValues.relationshipValueId, value.id),
-            with: {
-              definition: true
-            }
-          });
-          
-          // Attach attribute values to the relationship value
-          value.attributeValues = attributeValues;
-        }
+      // Manually fetch relationship values
+      const values = await db.query.relationshipValues.findMany({
+        where: eq(schema.relationshipValues.relationshipId, relationship.id)
+      });
+      
+      // Attach values to relationship
+      relationship.values = values;
+      
+      // For each value, manually fetch attribute values
+      for (const value of values) {
+        // Use a direct SQL query to fetch attribute values with definitions
+        const attributeValuesResult = await db.execute(sql`
+          SELECT 
+            av.id, 
+            av.relationship_value_id as "relationshipValueId", 
+            av.value,
+            av.created_at as "createdAt",
+            av.updated_at as "updatedAt",
+            ad.id as "definitionId",
+            ad.name as "definitionName", 
+            ad.data_type as "dataType"
+          FROM relationship_attribute_values av
+          JOIN relationship_attribute_definitions ad 
+            ON av.attribute_definition_id = ad.id
+          WHERE av.relationship_value_id = ${value.id}
+        `);
+        
+        // Format the attribute values with their definitions
+        const attributeValues = attributeValuesResult.rows.map(row => ({
+          id: row.id,
+          relationshipValueId: row.relationshipValueId,
+          value: row.value,
+          createdAt: row.createdAt,
+          updatedAt: row.updatedAt,
+          definition: {
+            id: row.definitionId,
+            name: row.definitionName,
+            dataType: row.dataType
+          }
+        }));
+        
+        // Attach attribute values to the value
+        value.attributeValues = attributeValues;
       }
     }
 
@@ -194,21 +222,43 @@ const relationships = await db.query.relationships.findMany({
   where: or(
     eq(schema.relationships.sourceDataSetId, dataSetId),
     eq(schema.relationships.targetDataSetId, dataSetId)
-  ),
-  with: {
-    values: {
-      with: {
-        attributeValues: {
-          with: {
-            definition: true
-          }
-        }
-      }
-    }
-  }
+  )
 });
 
-// 2. When creating Neo4j relationships, build properties from attributes:
+// 2. Manually fetch relationship values and attribute values
+for (const relationship of relationships) {
+  // Fetch relationship values
+  const values = await db.query.relationshipValues.findMany({
+    where: eq(schema.relationshipValues.relationshipId, relationship.id)
+  });
+  
+  relationship.values = values;
+  
+  // For each value, fetch attribute values with their definitions
+  for (const value of values) {
+    const attributeValues = await db.execute(sql\`
+      SELECT 
+        av.id, av.value, 
+        ad.id as "definitionId", ad.name as "definitionName", ad.data_type as "dataType"
+      FROM relationship_attribute_values av
+      JOIN relationship_attribute_definitions ad ON av.attribute_definition_id = ad.id
+      WHERE av.relationship_value_id = \${value.id}
+    \`);
+    
+    // Format attribute values
+    value.attributeValues = attributeValues.rows.map(row => ({
+      id: row.id,
+      value: row.value,
+      definition: {
+        id: row.definitionId,
+        name: row.definitionName,
+        dataType: row.dataType
+      }
+    }));
+  }
+}
+
+// 3. When creating Neo4j relationships, build properties from attributes:
 for (const value of relationship.values) {
   // Create properties object with relationship ID
   const relationshipProperties = {
