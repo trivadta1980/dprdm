@@ -1,11 +1,24 @@
 
-// Use ES modules imports instead of CommonJS
+// Use ESM modules imports with TypeScript support for Node.js
 import neo4j from 'neo4j-driver';
-import { db } from './server/db.ts';
-import * as schema from './shared/schema.ts';
-import { eq, or } from 'drizzle-orm';
+import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-async function testRelationshipAttributes() {
+// Set up __dirname equivalent for ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Use this to require TypeScript modules
+const require = createRequire(import.meta.url);
+
+// We'll dynamically import the TypeScript modules using ts-node/esm
+async function runTest() {
+  // Import the db and schema modules using dynamic import
+  const { db } = await import('./server/db.ts');
+  const schema = await import('./shared/schema.ts');
+  const { eq, or } = await import('drizzle-orm');
+
   console.log('Starting relationship attribute test...');
   
   // Create Neo4j driver
@@ -229,4 +242,5 @@ for (const value of relationship.values) {
   }
 }
 
-testRelationshipAttributes().catch(console.error);
+// Run the test
+runTest().catch(console.error);
