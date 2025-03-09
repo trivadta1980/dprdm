@@ -1,9 +1,9 @@
 
-// Use .ts extension in imports and add proper TypeScript handling
-import neo4j from 'neo4j-driver';
-import { db } from './server/db.ts';
-import * as schema from './shared/schema.ts';
-import { eq, or } from 'drizzle-orm';
+// Use CommonJS imports instead of ES modules
+const neo4j = require('neo4j-driver');
+const { db } = require('./server/db');
+const schema = require('./shared/schema');
+const { eq, or } = require('drizzle-orm');
 
 async function testRelationshipAttributes() {
   console.log('Starting relationship attribute test...');
