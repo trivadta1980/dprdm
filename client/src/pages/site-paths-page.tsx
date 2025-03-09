@@ -40,9 +40,9 @@ interface GraphLink {
 export default function SitePathsPage() {
   const [sourceType, setSourceType] = useState<string>("API");
   const [targetType, setTargetType] = useState<string>("DP");
-  const [selectedProduct, setSelectedProduct] = useState<string>("");
-  const [sourceLocation, setSourceLocation] = useState<string>("");
-  const [targetLocation, setTargetLocation] = useState<string>("");
+  const [selectedProduct, setSelectedProduct] = useState<string>("none");
+  const [sourceLocation, setSourceLocation] = useState<string>("none");
+  const [targetLocation, setTargetLocation] = useState<string>("none");
 
   // Fetch all sites
   const { data: sites, isLoading: sitesLoading, error: sitesError } = useQuery<SiteInfo[]>({
@@ -57,7 +57,7 @@ export default function SitePathsPage() {
   // Fetch paths when criteria are selected
   const { data: paths, isLoading: pathsLoading } = useQuery<PathInfo[]>({
     queryKey: ["/api/graph/paths", selectedProduct, sourceLocation, targetLocation],
-    enabled: Boolean(selectedProduct && (sourceLocation || targetLocation)),
+    enabled: Boolean(selectedProduct !== "none" && (sourceLocation !== "none" || targetLocation !== "none")),
   });
 
   // Filter sites by type
@@ -129,7 +129,7 @@ export default function SitePathsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <ScrollArea className="h-[200px]">
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">Select a product</SelectItem>
                       {products?.map(product => (
                         <SelectItem key={product} value={product}>
                           {product}
@@ -148,7 +148,7 @@ export default function SitePathsPage() {
                     <SelectValue placeholder="Select source type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none_type">Select type</SelectItem>
                     {["API", "DP", "SD", "PL"].map(type => (
                       <SelectItem key={type} value={type}>
                         {type}
@@ -167,7 +167,7 @@ export default function SitePathsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <ScrollArea className="h-[200px]">
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">Select a location</SelectItem>
                       {filteredSourceSites.map(site => (
                         <SelectItem key={site.siteId} value={site.name}>
                           {site.name}
@@ -186,7 +186,7 @@ export default function SitePathsPage() {
                     <SelectValue placeholder="Select target type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none_type">Select type</SelectItem>
                     {["API", "DP", "SD", "PL"].map(type => (
                       <SelectItem key={type} value={type}>
                         {type}
@@ -205,7 +205,7 @@ export default function SitePathsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <ScrollArea className="h-[200px]">
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">Select a location</SelectItem>
                       {filteredTargetSites.map(site => (
                         <SelectItem key={site.siteId} value={site.name}>
                           {site.name}
