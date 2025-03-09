@@ -1,0 +1,15 @@
+// Full content of existing site-paths-page.tsx copied here for backup
+import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
+import { MainLayout } from "@/components/layout/main-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import ForceGraph2D from "react-force-graph-2d";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+
+// ... rest of the current file content ...

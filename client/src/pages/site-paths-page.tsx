@@ -4,7 +4,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ForceGraph2D from "react-force-graph-2d";
 import { Badge } from "@/components/ui/badge";
@@ -43,29 +43,21 @@ interface Path {
 }
 
 export default function SitePathsPage() {
-  // State for filters
   const [selectedProduct, setSelectedProduct] = useState<string>("none");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [sourceLocation, setSourceLocation] = useState<string>("none");
   const [targetLocation, setTargetLocation] = useState<string>("none");
 
-  // Fetch the complete graph data
   const { data: fullGraphData, isLoading: graphLoading, error: graphError } = useQuery<GraphData>({
     queryKey: ["/api/graph/full"],
   });
 
-  // Fetch all products for filtering
   const { data: products, isLoading: productsLoading, error: productsError } = useQuery<string[]>({
     queryKey: ["/api/graph/products"],
   });
 
-  // Calculate all possible paths and group them by sequence
   const distinctPaths = useMemo(() => {
     if (!fullGraphData || selectedProduct === "none") return [];
-
-    console.log('Starting path finding for product:', selectedProduct);
-    console.log('Available nodes:', fullGraphData.nodes.length);
-    console.log('Available relationships:', fullGraphData.relationships.length);
 
     const paths = new Map<string, Path>();
     const visited = new Set<string>();
@@ -78,45 +70,19 @@ export default function SitePathsPage() {
       const node = fullGraphData.nodes.find(n => n.id === currentNode);
       if (!node) return;
 
-      // Add current node to path
       path.push(currentNode);
       siteTypes.push(node.siteType);
 
-      console.log('Exploring node:', {
-        node: currentNode,
-        currentPath: path.join('→'),
-        siteTypes: siteTypes.join('→')
-      });
-
-      // Find all relationships for the current node with selected product
-      const relationships = fullGraphData.relationships.filter(
-        rel => rel.source === currentNode && rel.product === selectedProduct
-      );
-
-      console.log('Found relationships:', {
-        node: currentNode,
-        relationshipCount: relationships.length,
-        targets: relationships.map(r => r.target)
-      });
-
-      // Only store paths that have at least two nodes and represent actual connections
       if (path.length >= 2) {
         const sequenceKey = path.join('→');
-
-        // Only store if this is a valid path (has actual connections between all nodes)
         const isValidPath = path.every((node, index) => {
           if (index === path.length - 1) return true;
           const nextNode = path[index + 1];
-          return fullGraphData.relationships.some(rel => 
-            rel.source === node && 
-            rel.target === nextNode && 
+          return fullGraphData.relationships.some(rel =>
+            rel.source === node &&
+            rel.target === nextNode &&
             rel.product === selectedProduct
           );
-        });
-
-        console.log('Path validation:', {
-          sequence: sequenceKey,
-          isValid: isValidPath
         });
 
         if (isValidPath) {
@@ -126,11 +92,13 @@ export default function SitePathsPage() {
             product: selectedProduct,
             isPrimary: true
           });
-          console.log('Added valid path:', sequenceKey);
         }
       }
 
-      // Explore each relationship that hasn't been visited
+      const relationships = fullGraphData.relationships.filter(
+        rel => rel.source === currentNode && rel.product === selectedProduct
+      );
+
       for (const rel of relationships) {
         if (!visited.has(rel.target)) {
           visited.add(rel.target);
@@ -140,17 +108,10 @@ export default function SitePathsPage() {
       }
     };
 
-    // Find paths starting from each node that has outgoing relationships
     fullGraphData.nodes.forEach(startNode => {
-      // Only start from nodes that have outgoing relationships for the selected product
       const hasRelationships = fullGraphData.relationships.some(
         rel => rel.source === startNode.id && rel.product === selectedProduct
       );
-
-      console.log('Checking start node:', {
-        node: startNode.id,
-        hasRelationships
-      });
 
       if (hasRelationships) {
         visited.clear();
@@ -159,19 +120,15 @@ export default function SitePathsPage() {
       }
     });
 
-    const result = Array.from(paths.values());
-    console.log('Final paths found:', result.length);
-    return result;
+    return Array.from(paths.values());
   }, [fullGraphData, selectedProduct]);
 
-  // Apply filters to the full graph data
   const filteredGraphData = useMemo(() => {
     if (!fullGraphData) return { nodes: [], links: [] };
 
     let filteredNodes = [...fullGraphData.nodes];
     let filteredRelationships = [...fullGraphData.relationships];
 
-    // Apply site type filter
     if (selectedType !== "all") {
       filteredNodes = filteredNodes.filter(node => node.siteType === selectedType);
       filteredRelationships = filteredRelationships.filter(rel =>
@@ -180,7 +137,6 @@ export default function SitePathsPage() {
       );
     }
 
-    // Apply product filter
     if (selectedProduct !== "none") {
       filteredRelationships = filteredRelationships.filter(rel => rel.product === selectedProduct);
       const relatedNodeIds = new Set([
@@ -190,7 +146,6 @@ export default function SitePathsPage() {
       filteredNodes = filteredNodes.filter(node => relatedNodeIds.has(node.id));
     }
 
-    // Apply source/target location filters
     if (sourceLocation !== "none" || targetLocation !== "none") {
       filteredRelationships = filteredRelationships.filter(rel => {
         const matchesSource = sourceLocation === "none" || rel.source === sourceLocation;
@@ -204,7 +159,6 @@ export default function SitePathsPage() {
       filteredNodes = filteredNodes.filter(node => relatedNodeIds.has(node.id));
     }
 
-    // Transform to ForceGraph2D format
     return {
       nodes: filteredNodes.map(node => ({
         ...node,
@@ -223,13 +177,14 @@ export default function SitePathsPage() {
     };
   }, [fullGraphData, selectedType, selectedProduct, sourceLocation, targetLocation]);
 
-  // Reset all filters
   const resetFilters = () => {
     setSelectedProduct("none");
     setSelectedType("all");
     setSourceLocation("none");
     setTargetLocation("none");
   };
+
+  const [graphZoom, setGraphZoom] = useState(1);
 
   if (graphLoading || productsLoading) {
     return (
@@ -256,39 +211,29 @@ export default function SitePathsPage() {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto space-y-6 p-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Supply Chain Path Query</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              {/* Product Selection */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Product</label>
+      <div className="p-4 space-y-4">
+        <Card className="w-full">
+          <CardContent className="py-3">
+            <div className="flex items-center gap-4">
+              <div className="flex-1 max-w-xs">
                 <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select product" />
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Select Product" />
                   </SelectTrigger>
                   <SelectContent>
-                    <ScrollArea className="h-[200px]">
-                      <SelectItem value="none">All Products</SelectItem>
-                      {products?.map(product => (
-                        <SelectItem key={product} value={product}>
-                          {product}
-                        </SelectItem>
-                      ))}
-                    </ScrollArea>
+                    <SelectItem value="none">All Products</SelectItem>
+                    {products?.map(product => (
+                      <SelectItem key={product} value={product}>
+                        {product}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* Site Type Filter */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Site Type</label>
+              <div className="flex-1 max-w-xs">
                 <Select value={selectedType} onValueChange={setSelectedType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by type" />
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Filter by Type" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
@@ -300,148 +245,145 @@ export default function SitePathsPage() {
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* Source Location */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Source Location</label>
+              <div className="flex-1 max-w-xs">
                 <Select value={sourceLocation} onValueChange={setSourceLocation}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select source" />
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Source Location" />
                   </SelectTrigger>
                   <SelectContent>
-                    <ScrollArea className="h-[200px]">
-                      <SelectItem value="none">Any Source</SelectItem>
-                      {fullGraphData?.nodes.map(node => (
-                        <SelectItem key={node.id} value={node.id}>
-                          {node.name} ({node.siteType})
-                        </SelectItem>
-                      ))}
-                    </ScrollArea>
+                    <SelectItem value="none">Any Source</SelectItem>
+                    {fullGraphData?.nodes.map(node => (
+                      <SelectItem key={node.id} value={node.id}>
+                        {node.name} ({node.siteType})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* Target Location */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Target Location</label>
+              <div className="flex-1 max-w-xs">
                 <Select value={targetLocation} onValueChange={setTargetLocation}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select target" />
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Target Location" />
                   </SelectTrigger>
                   <SelectContent>
-                    <ScrollArea className="h-[200px]">
-                      <SelectItem value="none">Any Target</SelectItem>
-                      {fullGraphData?.nodes.map(node => (
-                        <SelectItem key={node.id} value={node.id}>
-                          {node.name} ({node.siteType})
-                        </SelectItem>
-                      ))}
-                    </ScrollArea>
+                    <SelectItem value="none">Any Target</SelectItem>
+                    {fullGraphData?.nodes.map(node => (
+                      <SelectItem key={node.id} value={node.id}>
+                        {node.name} ({node.siteType})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* Reset Button */}
-              <div className="space-y-2 flex items-end">
-                <Button
-                  onClick={resetFilters}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Reset Filters
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetFilters}
+                className="whitespace-nowrap"
+              >
+                Reset Filters
+              </Button>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Path Statistics Panel */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
           <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle>Supply Chain Paths</CardTitle>
+            <CardHeader className="py-3">
+              <CardTitle className="text-lg">Supply Chain Paths</CardTitle>
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Badge variant="outline">{distinctPaths.length} Paths</Badge>
+                <Badge variant="outline">{filteredGraphData.nodes.length} Sites</Badge>
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* Path Statistics */}
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Statistics</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Unique Paths:</span>
-                      <Badge variant="outline">{distinctPaths.length}</Badge>
+            <CardContent className="p-0">
+              <div className="px-4 py-2 border-t border-b bg-gray-50">
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { type: 'API', color: '#4dabf7', description: 'Active Pharmaceutical Ingredient' },
+                    { type: 'DP', color: '#ff6b6b', description: 'Drug Product' },
+                    { type: 'SD', color: '#51cf66', description: 'Storage & Distribution' },
+                    { type: 'PL', color: '#ffd43b', description: 'Packaging & Labeling' }
+                  ].map(({ type, color, description }) => (
+                    <div key={type} className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded" style={{ backgroundColor: color }} />
+                      <span className="text-xs font-medium">{type}</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Sites Shown:</span>
-                      <Badge variant="outline">{filteredGraphData.nodes.length}</Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Connections:</span>
-                      <Badge variant="outline">{filteredGraphData.links.length}</Badge>
-                    </div>
-                  </div>
+                  ))}
                 </div>
+              </div>
 
-                <Separator />
-
-                {/* Site Type Legend */}
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Site Types</h3>
-                  <div className="space-y-2">
-                    {[
-                      { type: 'API', color: '#4dabf7', description: 'Active Pharmaceutical Ingredient' },
-                      { type: 'DP', color: '#ff6b6b', description: 'Drug Product' },
-                      { type: 'SD', color: '#51cf66', description: 'Storage & Distribution' },
-                      { type: 'PL', color: '#ffd43b', description: 'Packaging & Labeling' }
-                    ].map(({ type, color, description }) => (
-                      <div key={type} className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded" style={{ backgroundColor: color }} />
-                        <span className="text-sm font-medium">{type}</span>
-                        <span className="text-sm text-gray-500">- {description}</span>
+              {selectedProduct !== "none" && distinctPaths.length > 0 && (
+                <ScrollArea className="h-[calc(100vh-400px)]">
+                  <div className="p-4 space-y-2">
+                    {distinctPaths.map((path, index) => (
+                      <div
+                        key={index}
+                        className="p-3 border rounded hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium">Path {index + 1}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {path.sequence.length} Steps
+                          </Badge>
+                        </div>
+                        <div className="text-sm">
+                          {path.sequence.map((node, i) => (
+                            <span key={i} className="text-gray-600">
+                              {node}
+                              {i < path.sequence.length - 1 && (
+                                <span className="text-gray-400 mx-1">→</span>
+                              )}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="mt-1 flex items-center gap-1">
+                          {path.siteTypes.map((type, i) => (
+                            <span key={i} className="text-xs px-1.5 py-0.5 bg-gray-100 rounded">
+                              {type}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>
-                </div>
-
-                <Separator />
-
-                {/* Distinct Paths List */}
-                {selectedProduct !== "none" && distinctPaths.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Available Paths</h3>
-                    <ScrollArea className="h-[300px]">
-                      <div className="space-y-2">
-                        {distinctPaths.map((path, index) => (
-                          <div key={index} className="p-2 border rounded">
-                            <div className="text-sm font-medium">Path {index + 1}</div>
-                            <div className="text-sm text-gray-500">
-                              {path.sequence.map((node, i) => (
-                                <span key={i}>
-                                  {node}
-                                  {i < path.sequence.length - 1 ? ' → ' : ''}
-                                </span>
-                              ))}
-                            </div>
-                            <div className="text-xs text-gray-400 mt-1">
-                              Types: {path.siteTypes.join(' → ')}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                )}
-              </div>
+                </ScrollArea>
+              )}
             </CardContent>
           </Card>
 
-          {/* Graph Visualization */}
           <Card className="lg:col-span-3">
-            <CardHeader>
-              <CardTitle>Supply Chain Visualization</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[600px] border rounded-lg overflow-hidden">
+            <CardContent className="p-4">
+              <div className="relative h-[calc(100vh-250px)] border rounded-lg overflow-hidden">
+                <div className="absolute top-4 right-4 z-10 bg-white rounded-lg shadow-lg border p-1">
+                  <div className="flex flex-col gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setGraphZoom(z => z * 1.2)}
+                      className="p-1.5"
+                    >
+                      <ZoomIn className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setGraphZoom(z => z / 1.2)}
+                      className="p-1.5"
+                    >
+                      <ZoomOut className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setGraphZoom(1)}
+                      className="p-1.5"
+                    >
+                      <RotateCw className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
                 <ForceGraph2D
                   graphData={filteredGraphData}
                   nodeLabel={node => `${node.name}\nType: ${node.siteType}\nID: ${node.siteId}`}
@@ -460,12 +402,12 @@ export default function SitePathsPage() {
                   linkDirectionalArrowRelPos={1}
                   linkCurvature={0.2}
                   linkLabel={link => `Type: ${link.type}\nProduct: ${link.product || 'N/A'}\nProtocol: ${link.protocol || 'N/A'}`}
+                  zoom={graphZoom}
                   nodeCanvasObject={(node: any, ctx, globalScale) => {
                     const label = node.name.split(' - ')[0];
                     const fontSize = 12 / globalScale;
                     const size = 8 / globalScale;
 
-                    // Draw node circle
                     ctx.beginPath();
                     ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
                     ctx.fillStyle =
@@ -476,12 +418,10 @@ export default function SitePathsPage() {
                               '#868e96';
                     ctx.fill();
 
-                    // Draw node border
                     ctx.strokeStyle = '#ffffff';
                     ctx.lineWidth = 2 / globalScale;
                     ctx.stroke();
 
-                    // Draw label
                     ctx.font = `${fontSize}px Sans-Serif`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
