@@ -42,6 +42,17 @@ interface Path {
   isPrimary: boolean;
 }
 
+// Helper function to check if path A is a subset of path B
+const isPathSubset = (shorterPath: string[], longerPath: string[]): boolean => {
+  if (shorterPath.length >= longerPath.length) return false;
+
+  // Check if shorter path appears at the start of longer path
+  for (let i = 0; i < shorterPath.length; i++) {
+    if (shorterPath[i] !== longerPath[i]) return false;
+  }
+  return true;
+};
+
 export default function SitePathsPage() {
   const [selectedProduct, setSelectedProduct] = useState<string>("none");
   const [selectedType, setSelectedType] = useState<string>("all");
@@ -73,6 +84,7 @@ export default function SitePathsPage() {
       path.push(currentNode);
       siteTypes.push(node.siteType);
 
+      // Only consider paths with 2 or more nodes
       if (path.length >= 2) {
         const sequenceKey = path.join('→');
         const isValidPath = path.every((node, index) => {
@@ -108,6 +120,7 @@ export default function SitePathsPage() {
       }
     };
 
+    // Find all possible paths
     fullGraphData.nodes.forEach(startNode => {
       const hasRelationships = fullGraphData.relationships.some(
         rel => rel.source === startNode.id && rel.product === selectedProduct
@@ -120,7 +133,20 @@ export default function SitePathsPage() {
       }
     });
 
-    return Array.from(paths.values());
+    // Sort paths by length (longest first) and filter out subset paths
+    const allPaths = Array.from(paths.values())
+      .sort((a, b) => b.sequence.length - a.sequence.length);
+
+    // Filter out paths that are subsets of longer paths
+    return allPaths.filter((path, index) => {
+      // Check if this path is a subset of any longer path
+      const isSubset = allPaths.some((longerPath, longerIndex) => {
+        if (longerIndex >= index) return false; // Only check against longer paths
+        return isPathSubset(path.sequence, longerPath.sequence);
+      });
+      return !isSubset; // Keep only if not a subset
+    });
+
   }, [fullGraphData, selectedProduct]);
 
   const filteredGraphData = useMemo(() => {

@@ -1,0 +1,2 @@
+import { useQuery } from "@tanstack/react-query";
+// ... [copying entire current content of site-paths-page.tsx]
