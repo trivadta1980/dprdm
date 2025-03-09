@@ -25,20 +25,31 @@ export default function SitePathsPage() {
   const [selectedType, setSelectedType] = useState<string>("all");
 
   // Fetch all sites
-  const { data: sites, isLoading: sitesLoading } = useQuery<SiteInfo[]>({
+  const { data: sites, isLoading: sitesLoading, error: sitesError } = useQuery<SiteInfo[]>({
     queryKey: ["/api/graph/sites"],
   });
 
   // Fetch all products
-  const { data: products, isLoading: productsLoading } = useQuery<string[]>({
+  const { data: products, isLoading: productsLoading, error: productsError } = useQuery<string[]>({
     queryKey: ["/api/graph/products"],
   });
 
   // Fetch paths when all required fields are selected
-  const { data: paths, isLoading: pathsLoading } = useQuery<PathInfo[]>({
+  const { data: paths, isLoading: pathsLoading, error: pathsError } = useQuery<PathInfo[]>({
     queryKey: ["/api/graph/paths", selectedProduct, sourceLocation, targetLocation],
     enabled: Boolean(selectedProduct && (sourceLocation || targetLocation)),
   });
+  
+  // Debug logging
+  console.log('Sites loading:', sitesLoading, 'Sites error:', sitesError);
+  console.log('Sites data:', sites);
+  
+  console.log('Products loading:', productsLoading, 'Products error:', productsError);
+  console.log('Products data:', products);
+  
+  console.log('Paths loading:', pathsLoading, 'Paths error:', pathsError);
+  console.log('Paths data:', paths);
+  console.log('Query enabled:', Boolean(selectedProduct && (sourceLocation || targetLocation)));
 
   // Transform paths data into graph format
   const graphData = paths ? {
@@ -68,11 +79,40 @@ export default function SitePathsPage() {
   // Get unique site types for filtering
   const siteTypes = sites ? Array.from(new Set(sites.map(s => s.siteType))).sort() : [];
 
+  // Show any API errors
+  if (sitesError || productsError) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col items-center justify-center min-h-[200px] p-4 space-y-4">
+          <div className="text-red-600 font-semibold text-lg">Error loading data</div>
+          {sitesError && <div className="bg-red-100 p-3 rounded-md">{sitesError.toString()}</div>}
+          {productsError && <div className="bg-red-100 p-3 rounded-md">{productsError.toString()}</div>}
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Show loading indicator
   if (sitesLoading || productsLoading) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-[200px]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </MainLayout>
+    );
+  }
+  
+  // Show warning if no data is found
+  if (!sites?.length || !products?.length) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col items-center justify-center min-h-[200px] p-4">
+          <div className="text-amber-600 font-semibold text-lg">No data available</div>
+          <div className="mt-2 text-center">
+            {!sites?.length && <div>No sites found in the database.</div>}
+            {!products?.length && <div>No products found in the database.</div>}
+          </div>
         </div>
       </MainLayout>
     );
