@@ -1,7 +1,7 @@
 import { db } from '../db';
 import neo4j, { isNeo4jAvailable, runQuery } from '../neo4j';
 import * as schema from '@shared/schema';
-import { eq, or } from 'drizzle-orm';
+import { eq, or, sql } from 'drizzle-orm';
 
 export class GraphDataService {
   static isAvailable() {
@@ -153,18 +153,61 @@ export class GraphDataService {
         where: or(
           eq(schema.relationships.sourceDataSetId, dataSetId),
           eq(schema.relationships.targetDataSetId, dataSetId)
-        ),
-        with: {
-          values: true
-        }
+        )
       });
-
+      
       console.log(`Found ${relationships.length} relationships for dataset ${dataSetId}`);
 
-      // Create relationships between nodes
+      // Process each relationship independently to avoid Drizzle ORM issues with nested queries
       for (const relationship of relationships) {
         console.log(`Processing relationship ${relationship.id} (${relationship.relationshipType})`);
 
+        // Manually fetch relationship values
+        const values = await db.query.relationshipValues.findMany({
+          where: eq(schema.relationshipValues.relationshipId, relationship.id)
+        });
+        
+        // Attach values to relationship
+        relationship.values = values;
+        
+        // For each value, manually fetch attribute values with their definitions
+        for (const value of values) {
+          // Use a direct SQL query to fetch attribute values with definitions
+          const attributeValuesResult = await db.execute(sql`
+            SELECT 
+              av.id, 
+              av.relationship_value_id as "relationshipValueId", 
+              av.value,
+              av.created_at as "createdAt",
+              av.updated_at as "updatedAt",
+              ad.id as "definitionId",
+              ad.name as "definitionName", 
+              ad.data_type as "dataType"
+            FROM relationship_attribute_values av
+            JOIN relationship_attribute_definitions ad 
+              ON av.attribute_definition_id = ad.id
+            WHERE av.relationship_value_id = ${value.id}
+          `);
+          
+          // Format the attribute values with their definitions
+          const attributeValues = attributeValuesResult.rows.map(row => ({
+            id: row.id,
+            relationshipValueId: row.relationshipValueId,
+            value: row.value,
+            createdAt: row.createdAt,
+            updatedAt: row.updatedAt,
+            definition: {
+              id: row.definitionId,
+              name: row.definitionName,
+              dataType: row.dataType
+            }
+          }));
+          
+          // Attach attribute values to the value
+          value.attributeValues = attributeValues;
+        }
+
+        // Create relationships between nodes with their attribute values
         for (const value of relationship.values) {
           // First verify both nodes exist
           const verifyNodesQuery = `
@@ -184,20 +227,43 @@ export class GraphDataService {
               continue;
             }
 
-            // Create relationship
+            // Create properties object with relationship ID
+            const relationshipProperties = {
+              relationshipId: relationship.id.toString()
+            };
+
+            // Add attribute values to properties if they exist
+            if (value.attributeValues && value.attributeValues.length > 0) {
+              console.log(`Adding ${value.attributeValues.length} attribute values to Neo4j relationship properties`);
+              
+              for (const attr of value.attributeValues) {
+                // Convert value based on data type if needed
+                let convertedValue = attr.value;
+                if (attr.definition.dataType === 'number') {
+                  convertedValue = parseFloat(attr.value);
+                } else if (attr.definition.dataType === 'boolean') {
+                  convertedValue = attr.value.toLowerCase() === 'true';
+                }
+
+                // Use the attribute name as the property key
+                relationshipProperties[attr.definition.name] = convertedValue;
+                console.log(`Added attribute ${attr.definition.name}: ${convertedValue} (${typeof convertedValue})`);
+              }
+            }
+
+            // Create relationship with all properties at once
             const createRelQuery = `
               MATCH (source:DataItem {name: $sourceName})
               MATCH (target:DataItem {name: $targetName})
-              MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {
-                relationshipId: $relationshipId
-              }]->(target)
+              MERGE (source)-[r:${relationship.relationshipType.toUpperCase()}]->(target)
+              SET r = $properties
               RETURN r
             `;
 
             await runQuery(createRelQuery, {
               sourceName: value.sourceInstanceId,
               targetName: value.targetInstanceId,
-              relationshipId: relationship.id.toString()
+              properties: relationshipProperties
             });
 
             console.log(`Created relationship: ${value.sourceInstanceId} -> ${value.targetInstanceId}`);
