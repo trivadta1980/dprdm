@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, AlertCircle } from "lucide-react";
@@ -130,6 +129,7 @@ export default function SitePathsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <ScrollArea className="h-[200px]">
+                      <SelectItem value="">None</SelectItem>
                       {products?.map(product => (
                         <SelectItem key={product} value={product}>
                           {product}
@@ -148,6 +148,7 @@ export default function SitePathsPage() {
                     <SelectValue placeholder="Select source type" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="">None</SelectItem>
                     {["API", "DP", "SD", "PL"].map(type => (
                       <SelectItem key={type} value={type}>
                         {type}
@@ -166,6 +167,7 @@ export default function SitePathsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <ScrollArea className="h-[200px]">
+                      <SelectItem value="">None</SelectItem>
                       {filteredSourceSites.map(site => (
                         <SelectItem key={site.siteId} value={site.name}>
                           {site.name}
@@ -184,6 +186,7 @@ export default function SitePathsPage() {
                     <SelectValue placeholder="Select target type" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="">None</SelectItem>
                     {["API", "DP", "SD", "PL"].map(type => (
                       <SelectItem key={type} value={type}>
                         {type}
@@ -202,6 +205,7 @@ export default function SitePathsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <ScrollArea className="h-[200px]">
+                      <SelectItem value="">None</SelectItem>
                       {filteredTargetSites.map(site => (
                         <SelectItem key={site.siteId} value={site.name}>
                           {site.name}
