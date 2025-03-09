@@ -142,7 +142,7 @@ for (const value of relationship.values) {
   const createRelQuery = \`
     MATCH (source:DataItem {name: $sourceName})
     MATCH (target:DataItem {name: $targetName})
-    MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} ]->(target)
+    MERGE (source)-[r:${relationship.relationshipType ? relationship.relationshipType.toUpperCase() : 'ASSOCIATION'} ]->(target)
     SET r = $properties
     RETURN r
   \`;
