@@ -1,0 +1,31 @@
+Database connection established successfully
+Starting relationship attribute test...
+Connecting to Neo4j...
+Found relationship: ASSOCIATION
+Relationship properties: { cost: 1200.5, active: true, relationshipId: '3', priority: 'high' }
+
+Testing syncReferenceDataSet_test implementation with real attribute values...
+[TEST] Syncing dataset 11 to Neo4j with relationship attributes
+[TEST] Fetching relationships for dataset 11 with attribute values
+[TEST] Error in syncReferenceDataSet_test: TypeError: Cannot read properties of undefined (reading 'referencedTable')
+    at normalizeRelation (/home/runner/workspace/node_modules/src/relations.ts:571:74)
+    at PgDialect.buildRelationalQueryWithoutPK (/home/runner/workspace/node_modules/src/pg-core/dialect.ts:1282:32)
+    at QueryPromise._getQuery (/home/runner/workspace/node_modules/src/pg-core/query-builders/query.ts:117:23)
+    at QueryPromise._toSQL (/home/runner/workspace/node_modules/src/pg-core/query-builders/query.ts:134:22)
+    at <anonymous> (/home/runner/workspace/node_modules/src/pg-core/query-builders/query.ts:92:39)
+    at Object.startActiveSpan (/home/runner/workspace/node_modules/src/tracing.ts:27:11)
+    at QueryPromise._prepare (/home/runner/workspace/node_modules/src/pg-core/query-builders/query.ts:91:17)
+    at <anonymous> (/home/runner/workspace/node_modules/src/pg-core/query-builders/query.ts:154:16)
+    at Object.startActiveSpan (/home/runner/workspace/node_modules/src/tracing.ts:27:11)
+    at QueryPromise.execute (/home/runner/workspace/node_modules/src/pg-core/query-builders/query.ts:153:17)
+Error: TypeError: Cannot read properties of undefined (reading 'referencedTable')
+    at normalizeRelation (/home/runner/workspace/node_modules/src/relations.ts:571:74)
+    at PgDialect.buildRelationalQueryWithoutPK (/home/runner/workspace/node_modules/src/pg-core/dialect.ts:1282:32)
+    at QueryPromise._getQuery (/home/runner/workspace/node_modules/src/pg-core/query-builders/query.ts:117:23)
+    at QueryPromise._toSQL (/home/runner/workspace/node_modules/src/pg-core/query-builders/query.ts:134:22)
+    at <anonymous> (/home/runner/workspace/node_modules/src/pg-core/query-builders/query.ts:92:39)
+    at Object.startActiveSpan (/home/runner/workspace/node_modules/src/tracing.ts:27:11)
+    at QueryPromise._prepare (/home/runner/workspace/node_modules/src/pg-core/query-builders/query.ts:91:17)
+    at <anonymous> (/home/runner/workspace/node_modules/src/pg-core/query-builders/query.ts:154:16)
+    at Object.startActiveSpan (/home/runner/workspace/node_modules/src/tracing.ts:27:11)
+    at QueryPromise.execute (/home/runner/workspace/node_modules/src/pg-core/query-builders/query.ts:153:17)
