@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import ForceGraph2D from "react-force-graph-2d";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 interface SiteInfo {
   id: string;
@@ -34,6 +35,13 @@ interface GraphData {
   relationships: RelationshipInfo[];
 }
 
+interface Path {
+  nodes: string[];
+  siteTypes: string[];
+  product: string;
+  isPrimary: boolean;
+}
+
 export default function SitePathsPage() {
   // State for filters
   const [selectedProduct, setSelectedProduct] = useState<string>("none");
@@ -50,6 +58,51 @@ export default function SitePathsPage() {
   const { data: products, isLoading: productsLoading, error: productsError } = useQuery<string[]>({
     queryKey: ["/api/graph/products"],
   });
+
+  // Calculate distinct paths for selected product
+  const distinctPaths = useMemo(() => {
+    if (!fullGraphData || selectedProduct === "none") return [];
+
+    const paths: Path[] = [];
+    const visited = new Set<string>();
+
+    const findPaths = (currentNode: string, targetType: string, path: string[], siteTypes: string[]) => {
+      const node = fullGraphData.nodes.find(n => n.id === currentNode);
+      if (!node) return;
+
+      path.push(currentNode);
+      siteTypes.push(node.siteType);
+
+      if (node.siteType === targetType) {
+        paths.push({
+          nodes: [...path],
+          siteTypes: [...siteTypes],
+          product: selectedProduct,
+          isPrimary: true // You can set this based on relationship data
+        });
+      }
+
+      const relationships = fullGraphData.relationships.filter(
+        rel => rel.source === currentNode && rel.product === selectedProduct
+      );
+
+      for (const rel of relationships) {
+        if (!visited.has(rel.target)) {
+          visited.add(rel.target);
+          findPaths(rel.target, targetType, [...path], [...siteTypes]);
+          visited.delete(rel.target);
+        }
+      }
+    };
+
+    // Find paths from API to DP
+    const apiNodes = fullGraphData.nodes.filter(n => n.siteType === "API");
+    for (const apiNode of apiNodes) {
+      findPaths(apiNode.id, "DP", [], []);
+    }
+
+    return paths;
+  }, [fullGraphData, selectedProduct]);
 
   // Apply filters to the full graph data
   const filteredGraphData = useMemo(() => {
@@ -146,10 +199,10 @@ export default function SitePathsPage() {
       <div className="max-w-7xl mx-auto space-y-6 p-4">
         <Card>
           <CardHeader>
-            <CardTitle>Supply Chain Path Analysis</CardTitle>
+            <CardTitle>Supply Chain Path Query</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               {/* Product Selection */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Product</label>
@@ -242,60 +295,144 @@ export default function SitePathsPage() {
           </CardContent>
         </Card>
 
-        {/* Graph Visualization */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Supply Chain Visualization</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm font-medium">Showing:</span>
-                <Badge variant="outline">
-                  {filteredGraphData.nodes.length} Sites
-                </Badge>
-                <Badge variant="outline">
-                  {filteredGraphData.links.length} Connections
-                </Badge>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Path Statistics Panel */}
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle>Supply Chain Paths</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Path Statistics */}
+                <div>
+                  <h3 className="text-sm font-medium mb-2">Statistics</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Total Paths:</span>
+                      <Badge variant="outline">{distinctPaths.length}</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Sites Shown:</span>
+                      <Badge variant="outline">{filteredGraphData.nodes.length}</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Connections:</span>
+                      <Badge variant="outline">{filteredGraphData.links.length}</Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Site Type Legend */}
+                <div>
+                  <h3 className="text-sm font-medium mb-2">Site Types</h3>
+                  <div className="space-y-2">
+                    {[
+                      { type: 'API', color: '#4dabf7', description: 'Active Pharmaceutical Ingredient' },
+                      { type: 'DP', color: '#ff6b6b', description: 'Drug Product' },
+                      { type: 'SD', color: '#51cf66', description: 'Storage & Distribution' },
+                      { type: 'PL', color: '#ffd43b', description: 'Packaging & Labeling' }
+                    ].map(({ type, color, description }) => (
+                      <div key={type} className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded" style={{ backgroundColor: color }} />
+                        <span className="text-sm font-medium">{type}</span>
+                        <span className="text-sm text-gray-500">- {description}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Distinct Paths List */}
+                {selectedProduct !== "none" && distinctPaths.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Available Paths</h3>
+                    <ScrollArea className="h-[300px]">
+                      <div className="space-y-2">
+                        {distinctPaths.map((path, index) => (
+                          <div key={index} className="p-2 border rounded">
+                            <div className="text-sm font-medium">Path {index + 1}</div>
+                            <div className="text-sm text-gray-500">
+                              {path.nodes.map((node, i) => (
+                                <span key={i}>
+                                  {node}
+                                  {i < path.nodes.length - 1 ? ' → ' : ''}
+                                </span>
+                              ))}
+                            </div>
+                            <div className="text-xs text-gray-400 mt-1">
+                              Types: {path.siteTypes.join(' → ')}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                )}
               </div>
-            </div>
-            <div className="h-[600px] border rounded-lg overflow-hidden">
-              <ForceGraph2D
-                graphData={filteredGraphData}
-                nodeLabel={node => `${node.name}\nType: ${node.siteType}\nID: ${node.siteId}`}
-                nodeColor={node => 
-                  node.siteType === 'API' ? '#4dabf7' : 
-                  node.siteType === 'DP' ? '#ff6b6b' :
-                  node.siteType === 'SD' ? '#51cf66' :
-                  node.siteType === 'PL' ? '#ffd43b' :
-                  '#868e96'
-                }
-                linkColor={link => {
-                  const colors = ['#868e96', '#4dabf7', '#ff6b6b', '#51cf66', '#ffd43b'];
-                  return colors[link.pathIndex % colors.length];
-                }}
-                linkDirectionalArrowLength={6}
-                linkDirectionalArrowRelPos={1}
-                linkCurvature={0.2}
-                linkLabel={link => `Type: ${link.type}\nProduct: ${link.product || 'N/A'}\nProtocol: ${link.protocol || 'N/A'}`}
-                nodeCanvasObject={(node: any, ctx, globalScale) => {
-                  const label = node.name.split(' - ')[0];
-                  const fontSize = 12 / globalScale;
-                  ctx.font = `${fontSize}px Sans-Serif`;
-                  ctx.textAlign = 'center';
-                  ctx.textBaseline = 'middle';
-                  ctx.fillStyle = 
+            </CardContent>
+          </Card>
+
+          {/* Graph Visualization */}
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle>Supply Chain Visualization</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[600px] border rounded-lg overflow-hidden">
+                <ForceGraph2D
+                  graphData={filteredGraphData}
+                  nodeLabel={node => `${node.name}\nType: ${node.siteType}\nID: ${node.siteId}`}
+                  nodeColor={node => 
                     node.siteType === 'API' ? '#4dabf7' : 
                     node.siteType === 'DP' ? '#ff6b6b' :
                     node.siteType === 'SD' ? '#51cf66' :
                     node.siteType === 'PL' ? '#ffd43b' :
-                    '#868e96';
-                  ctx.fillText(label, node.x, node.y);
-                }}
-              />
-            </div>
-          </CardContent>
-        </Card>
+                    '#868e96'
+                  }
+                  linkColor={link => {
+                    const colors = ['#868e96', '#4dabf7', '#ff6b6b', '#51cf66', '#ffd43b'];
+                    return colors[link.pathIndex % colors.length];
+                  }}
+                  linkDirectionalArrowLength={6}
+                  linkDirectionalArrowRelPos={1}
+                  linkCurvature={0.2}
+                  linkLabel={link => `Type: ${link.type}\nProduct: ${link.product || 'N/A'}\nProtocol: ${link.protocol || 'N/A'}`}
+                  nodeCanvasObject={(node: any, ctx, globalScale) => {
+                    const label = node.name.split(' - ')[0];
+                    const fontSize = 12 / globalScale;
+                    const size = 8 / globalScale;
+
+                    // Draw node circle
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
+                    ctx.fillStyle = 
+                      node.siteType === 'API' ? '#4dabf7' : 
+                      node.siteType === 'DP' ? '#ff6b6b' :
+                      node.siteType === 'SD' ? '#51cf66' :
+                      node.siteType === 'PL' ? '#ffd43b' :
+                      '#868e96';
+                    ctx.fill();
+
+                    // Draw node border
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2 / globalScale;
+                    ctx.stroke();
+
+                    // Draw label
+                    ctx.font = `${fontSize}px Sans-Serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#000000';
+                    ctx.fillText(label, node.x, node.y + size + fontSize);
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </MainLayout>
   );
