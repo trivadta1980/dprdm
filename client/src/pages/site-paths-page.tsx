@@ -63,10 +63,13 @@ export default function SitePathsPage() {
   const distinctPaths = useMemo(() => {
     if (!fullGraphData || selectedProduct === "none") return [];
 
+    console.log('Starting path finding for product:', selectedProduct);
+    console.log('Available nodes:', fullGraphData.nodes.length);
+    console.log('Available relationships:', fullGraphData.relationships.length);
+
     const paths = new Map<string, Path>();
     const visited = new Set<string>();
 
-    // Helper function to find all possible paths from a starting node
     const findPaths = (
       currentNode: string,
       path: string[],
@@ -79,10 +82,22 @@ export default function SitePathsPage() {
       path.push(currentNode);
       siteTypes.push(node.siteType);
 
+      console.log('Exploring node:', {
+        node: currentNode,
+        currentPath: path.join('→'),
+        siteTypes: siteTypes.join('→')
+      });
+
       // Find all relationships for the current node with selected product
       const relationships = fullGraphData.relationships.filter(
         rel => rel.source === currentNode && rel.product === selectedProduct
       );
+
+      console.log('Found relationships:', {
+        node: currentNode,
+        relationshipCount: relationships.length,
+        targets: relationships.map(r => r.target)
+      });
 
       // Only store paths that have at least two nodes and represent actual connections
       if (path.length >= 2) {
@@ -92,9 +107,16 @@ export default function SitePathsPage() {
         const isValidPath = path.every((node, index) => {
           if (index === path.length - 1) return true;
           const nextNode = path[index + 1];
-          return relationships.some(rel => 
-            rel.source === node && rel.target === nextNode
+          return fullGraphData.relationships.some(rel => 
+            rel.source === node && 
+            rel.target === nextNode && 
+            rel.product === selectedProduct
           );
+        });
+
+        console.log('Path validation:', {
+          sequence: sequenceKey,
+          isValid: isValidPath
         });
 
         if (isValidPath) {
@@ -104,6 +126,7 @@ export default function SitePathsPage() {
             product: selectedProduct,
             isPrimary: true
           });
+          console.log('Added valid path:', sequenceKey);
         }
       }
 
@@ -124,6 +147,11 @@ export default function SitePathsPage() {
         rel => rel.source === startNode.id && rel.product === selectedProduct
       );
 
+      console.log('Checking start node:', {
+        node: startNode.id,
+        hasRelationships
+      });
+
       if (hasRelationships) {
         visited.clear();
         visited.add(startNode.id);
@@ -131,7 +159,9 @@ export default function SitePathsPage() {
       }
     });
 
-    return Array.from(paths.values());
+    const result = Array.from(paths.values());
+    console.log('Final paths found:', result.length);
+    return result;
   }, [fullGraphData, selectedProduct]);
 
   // Apply filters to the full graph data
