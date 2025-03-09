@@ -1,8 +1,8 @@
 
 // Use ES modules imports instead of CommonJS
 import neo4j from 'neo4j-driver';
-import { db } from './server/db.js';
-import * as schema from './shared/schema.js';
+import { db } from './server/db.ts';
+import * as schema from './shared/schema.ts';
 import { eq, or } from 'drizzle-orm';
 
 async function testRelationshipAttributes() {
