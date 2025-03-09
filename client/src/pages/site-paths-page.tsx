@@ -36,7 +36,7 @@ interface GraphData {
 }
 
 interface Path {
-  nodes: string[];
+  sequence: string[];
   siteTypes: string[];
   product: string;
   isPrimary: boolean;
@@ -59,49 +59,63 @@ export default function SitePathsPage() {
     queryKey: ["/api/graph/products"],
   });
 
-  // Calculate distinct paths for selected product
+  // Calculate all possible paths and group them by sequence
   const distinctPaths = useMemo(() => {
     if (!fullGraphData || selectedProduct === "none") return [];
 
-    const paths: Path[] = [];
+    const paths = new Map<string, Path>();
     const visited = new Set<string>();
 
-    const findPaths = (currentNode: string, targetType: string, path: string[], siteTypes: string[]) => {
+    // Helper function to find all possible paths from a starting node
+    const findPaths = (
+      currentNode: string,
+      path: string[],
+      siteTypes: string[],
+      isNewPath: boolean
+    ) => {
       const node = fullGraphData.nodes.find(n => n.id === currentNode);
       if (!node) return;
 
+      // Add current node to path
       path.push(currentNode);
       siteTypes.push(node.siteType);
 
-      if (node.siteType === targetType) {
-        paths.push({
-          nodes: [...path],
+      // Get sequence key for the current path
+      const sequenceKey = path.join('→');
+
+      // Store the path if it's new or longer than existing path with same sequence
+      if (!paths.has(sequenceKey) || isNewPath) {
+        paths.set(sequenceKey, {
+          sequence: [...path],
           siteTypes: [...siteTypes],
           product: selectedProduct,
-          isPrimary: true // You can set this based on relationship data
+          isPrimary: true
         });
       }
 
+      // Find all relationships for the current node with selected product
       const relationships = fullGraphData.relationships.filter(
         rel => rel.source === currentNode && rel.product === selectedProduct
       );
 
+      // Explore each relationship
       for (const rel of relationships) {
         if (!visited.has(rel.target)) {
           visited.add(rel.target);
-          findPaths(rel.target, targetType, [...path], [...siteTypes]);
+          findPaths(rel.target, [...path], [...siteTypes], isNewPath);
           visited.delete(rel.target);
         }
       }
     };
 
-    // Find paths from API to DP
-    const apiNodes = fullGraphData.nodes.filter(n => n.siteType === "API");
-    for (const apiNode of apiNodes) {
-      findPaths(apiNode.id, "DP", [], []);
-    }
+    // Start path finding from all nodes
+    fullGraphData.nodes.forEach(node => {
+      visited.clear();
+      visited.add(node.id);
+      findPaths(node.id, [], [], true);
+    });
 
-    return paths;
+    return Array.from(paths.values());
   }, [fullGraphData, selectedProduct]);
 
   // Apply filters to the full graph data
@@ -308,7 +322,7 @@ export default function SitePathsPage() {
                   <h3 className="text-sm font-medium mb-2">Statistics</h3>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm">Total Paths:</span>
+                      <span className="text-sm">Unique Paths:</span>
                       <Badge variant="outline">{distinctPaths.length}</Badge>
                     </div>
                     <div className="flex justify-between items-center">
@@ -355,10 +369,10 @@ export default function SitePathsPage() {
                           <div key={index} className="p-2 border rounded">
                             <div className="text-sm font-medium">Path {index + 1}</div>
                             <div className="text-sm text-gray-500">
-                              {path.nodes.map((node, i) => (
+                              {path.sequence.map((node, i) => (
                                 <span key={i}>
                                   {node}
-                                  {i < path.nodes.length - 1 ? ' → ' : ''}
+                                  {i < path.sequence.length - 1 ? ' → ' : ''}
                                 </span>
                               ))}
                             </div>
