@@ -23,17 +23,26 @@ async function syncReferenceDataSet_test(dataSetId, session) {
         eq(schema.relationships.targetDataSetId, dataSetId)
       ),
       with: {
-        values: {
-          with: {
-            attributeValues: {
-              with: {
-                definition: true
-              }
-            }
-          }
-        }
+        values: true
       }
     });
+
+    // For each relationship value, fetch its attribute values separately
+    for (const relationship of relationships) {
+      if (relationship.values && relationship.values.length > 0) {
+        for (const value of relationship.values) {
+          const attributeValues = await db.query.relationshipAttributeValues.findMany({
+            where: eq(schema.relationshipAttributeValues.relationshipValueId, value.id),
+            with: {
+              definition: true
+            }
+          });
+          
+          // Attach attribute values to the relationship value
+          value.attributeValues = attributeValues;
+        }
+      }
+    }
 
     console.log(`[TEST] Found ${relationships.length} relationships for dataset ${dataSetId}`);
     
