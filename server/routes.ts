@@ -1591,6 +1591,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add the new route before the last line (return httpServer)
+  app.get("/api/graph/full", async (req, res) => {
+    console.log('GET /api/graph/full - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/graph/full - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const graphData = await GraphDataService.getFullSupplyChainGraph();
+      console.log('GET /api/graph/full - Graph data fetched successfully');
+      res.json(graphData);
+    } catch (error) {
+      console.error('GET /api/graph/full - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

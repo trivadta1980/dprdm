@@ -1,94 +1,124 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import ForceGraph2D from "react-force-graph-2d";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SiteInfo {
+  id: string;
   name: string;
   siteType: string;
   siteId: string;
 }
 
-interface PathInfo {
-  nodes: string[];
-  relationships: string[];
-  length: number;
-}
-
-interface GraphNode {
-  id: string;
-  name: string;
-  type: string;
-  siteId: string;
-  x?: number;
-  y?: number;
-}
-
-interface GraphLink {
+interface RelationshipInfo {
   source: string;
   target: string;
   type: string;
-  pathIndex: number;
+  protocol?: string;
+  product?: string;
+  is_primary?: boolean;
+  MAH?: string;
+  manufacturer?: string;
+  comment?: string;
+}
+
+interface GraphData {
+  nodes: SiteInfo[];
+  relationships: RelationshipInfo[];
 }
 
 export default function SitePathsPage() {
-  const [sourceType, setSourceType] = useState<string>("API");
-  const [targetType, setTargetType] = useState<string>("DP");
+  // State for filters
   const [selectedProduct, setSelectedProduct] = useState<string>("none");
+  const [selectedType, setSelectedType] = useState<string>("all");
   const [sourceLocation, setSourceLocation] = useState<string>("none");
   const [targetLocation, setTargetLocation] = useState<string>("none");
 
-  // Fetch all sites
-  const { data: sites, isLoading: sitesLoading, error: sitesError } = useQuery<SiteInfo[]>({
-    queryKey: ["/api/graph/sites"],
+  // Fetch the complete graph data
+  const { data: fullGraphData, isLoading: graphLoading, error: graphError } = useQuery<GraphData>({
+    queryKey: ["/api/graph/full"],
   });
 
-  // Fetch all products
+  // Fetch all products for filtering
   const { data: products, isLoading: productsLoading, error: productsError } = useQuery<string[]>({
     queryKey: ["/api/graph/products"],
   });
 
-  // Fetch paths when criteria are selected
-  const { data: paths, isLoading: pathsLoading } = useQuery<PathInfo[]>({
-    queryKey: ["/api/graph/paths", selectedProduct, sourceLocation, targetLocation],
-    enabled: Boolean(selectedProduct !== "none" && (sourceLocation !== "none" || targetLocation !== "none")),
-  });
+  // Apply filters to the full graph data
+  const filteredGraphData = useMemo(() => {
+    if (!fullGraphData) return { nodes: [], links: [] };
 
-  // Filter sites by type
-  const filteredSourceSites = sites?.filter(site => site.siteType === sourceType) || [];
-  const filteredTargetSites = sites?.filter(site => site.siteType === targetType) || [];
+    let filteredNodes = [...fullGraphData.nodes];
+    let filteredRelationships = [...fullGraphData.relationships];
 
-  // Transform paths data for visualization with error handling
-  const graphData = paths && paths.length > 0 ? {
-    nodes: Array.from(new Set(paths.flatMap(p => p.nodes)))
-      .map(nodeName => {
-        const siteInfo = sites?.find(s => s.name === nodeName);
-        return {
-          id: nodeName,
-          name: nodeName,
-          type: siteInfo?.siteType || "unknown",
-          siteId: siteInfo?.siteId || "unknown",
-          x: Math.random() * 1000,
-          y: Math.random() * 1000
-        };
-      }),
-    links: paths.flatMap((path, pathIndex) => 
-      path.nodes.slice(0, -1).map((source, i) => ({
-        source,
-        target: path.nodes[i + 1],
-        type: path.relationships[i],
-        pathIndex
+    // Apply site type filter
+    if (selectedType !== "all") {
+      filteredNodes = filteredNodes.filter(node => node.siteType === selectedType);
+      filteredRelationships = filteredRelationships.filter(rel =>
+        filteredNodes.some(node => node.id === rel.source) &&
+        filteredNodes.some(node => node.id === rel.target)
+      );
+    }
+
+    // Apply product filter
+    if (selectedProduct !== "none") {
+      filteredRelationships = filteredRelationships.filter(rel => rel.product === selectedProduct);
+      const relatedNodeIds = new Set([
+        ...filteredRelationships.map(rel => rel.source),
+        ...filteredRelationships.map(rel => rel.target)
+      ]);
+      filteredNodes = filteredNodes.filter(node => relatedNodeIds.has(node.id));
+    }
+
+    // Apply source/target location filters
+    if (sourceLocation !== "none" || targetLocation !== "none") {
+      filteredRelationships = filteredRelationships.filter(rel => {
+        const matchesSource = sourceLocation === "none" || rel.source === sourceLocation;
+        const matchesTarget = targetLocation === "none" || rel.target === targetLocation;
+        return matchesSource && matchesTarget;
+      });
+      const relatedNodeIds = new Set([
+        ...filteredRelationships.map(rel => rel.source),
+        ...filteredRelationships.map(rel => rel.target)
+      ]);
+      filteredNodes = filteredNodes.filter(node => relatedNodeIds.has(node.id));
+    }
+
+    // Transform to ForceGraph2D format
+    return {
+      nodes: filteredNodes.map(node => ({
+        ...node,
+        x: Math.random() * 1000,
+        y: Math.random() * 1000
+      })),
+      links: filteredRelationships.map((rel, index) => ({
+        source: rel.source,
+        target: rel.target,
+        type: rel.type,
+        protocol: rel.protocol,
+        product: rel.product,
+        is_primary: rel.is_primary,
+        pathIndex: index
       }))
-    )
-  } : { nodes: [], links: [] };
+    };
+  }, [fullGraphData, selectedType, selectedProduct, sourceLocation, targetLocation]);
 
-  if (sitesLoading || productsLoading) {
+  // Reset all filters
+  const resetFilters = () => {
+    setSelectedProduct("none");
+    setSelectedType("all");
+    setSourceLocation("none");
+    setTargetLocation("none");
+  };
+
+  if (graphLoading || productsLoading) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-screen">
@@ -98,7 +128,7 @@ export default function SitePathsPage() {
     );
   }
 
-  if (sitesError || productsError) {
+  if (graphError || productsError) {
     return (
       <MainLayout>
         <Alert variant="destructive">
@@ -129,7 +159,7 @@ export default function SitePathsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <ScrollArea className="h-[200px]">
-                      <SelectItem value="none">Select a product</SelectItem>
+                      <SelectItem value="none">All Products</SelectItem>
                       {products?.map(product => (
                         <SelectItem key={product} value={product}>
                           {product}
@@ -140,15 +170,15 @@ export default function SitePathsPage() {
                 </Select>
               </div>
 
-              {/* Source Type Selection */}
+              {/* Site Type Filter */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Source Type</label>
-                <Select value={sourceType} onValueChange={setSourceType}>
+                <label className="text-sm font-medium">Site Type</label>
+                <Select value={selectedType} onValueChange={setSelectedType}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select source type" />
+                    <SelectValue placeholder="Filter by type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none_type">Select type</SelectItem>
+                    <SelectItem value="all">All Types</SelectItem>
                     {["API", "DP", "SD", "PL"].map(type => (
                       <SelectItem key={type} value={type}>
                         {type}
@@ -163,35 +193,17 @@ export default function SitePathsPage() {
                 <label className="text-sm font-medium">Source Location</label>
                 <Select value={sourceLocation} onValueChange={setSourceLocation}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select source site" />
+                    <SelectValue placeholder="Select source" />
                   </SelectTrigger>
                   <SelectContent>
                     <ScrollArea className="h-[200px]">
-                      <SelectItem value="none">Select a location</SelectItem>
-                      {filteredSourceSites.map(site => (
-                        <SelectItem key={site.siteId} value={site.name}>
-                          {site.name}
+                      <SelectItem value="none">Any Source</SelectItem>
+                      {fullGraphData?.nodes.map(node => (
+                        <SelectItem key={node.id} value={node.id}>
+                          {node.name} ({node.siteType})
                         </SelectItem>
                       ))}
                     </ScrollArea>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Target Type Selection */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Target Type</label>
-                <Select value={targetType} onValueChange={setTargetType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select target type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none_type">Select type</SelectItem>
-                    {["API", "DP", "SD", "PL"].map(type => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -201,90 +213,87 @@ export default function SitePathsPage() {
                 <label className="text-sm font-medium">Target Location</label>
                 <Select value={targetLocation} onValueChange={setTargetLocation}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select target site" />
+                    <SelectValue placeholder="Select target" />
                   </SelectTrigger>
                   <SelectContent>
                     <ScrollArea className="h-[200px]">
-                      <SelectItem value="none">Select a location</SelectItem>
-                      {filteredTargetSites.map(site => (
-                        <SelectItem key={site.siteId} value={site.name}>
-                          {site.name}
+                      <SelectItem value="none">Any Target</SelectItem>
+                      {fullGraphData?.nodes.map(node => (
+                        <SelectItem key={node.id} value={node.id}>
+                          {node.name} ({node.siteType})
                         </SelectItem>
                       ))}
                     </ScrollArea>
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Reset Button */}
+              <div className="space-y-2 flex items-end">
+                <Button
+                  onClick={resetFilters}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Reset Filters
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Results Display */}
+        {/* Graph Visualization */}
         <Card>
           <CardHeader>
             <CardTitle>Supply Chain Visualization</CardTitle>
           </CardHeader>
           <CardContent>
-            {pathsLoading ? (
-              <div className="flex items-center justify-center h-[400px]">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm font-medium">Showing:</span>
+                <Badge variant="outline">
+                  {filteredGraphData.nodes.length} Sites
+                </Badge>
+                <Badge variant="outline">
+                  {filteredGraphData.links.length} Connections
+                </Badge>
               </div>
-            ) : paths && paths.length > 0 ? (
-              <>
-                <div className="mb-4 space-y-2">
-                  <h3 className="text-sm font-medium">Found Paths: {paths.length}</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {paths.map((path, index) => (
-                      <Badge key={index} variant="outline">
-                        Path {index + 1}: {path.length} steps
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                <div className="h-[600px] border rounded-lg overflow-hidden">
-                  <ForceGraph2D
-                    graphData={graphData}
-                    nodeLabel={node => `${node.name}\nType: ${node.type}\nID: ${node.siteId}`}
-                    nodeColor={node => 
-                      node.type === 'API' ? '#4dabf7' : 
-                      node.type === 'DP' ? '#ff6b6b' :
-                      node.type === 'SD' ? '#51cf66' :
-                      node.type === 'PL' ? '#ffd43b' :
-                      '#868e96'
-                    }
-                    linkColor={link => {
-                      const colors = ['#868e96', '#4dabf7', '#ff6b6b', '#51cf66', '#ffd43b'];
-                      return colors[link.pathIndex % colors.length];
-                    }}
-                    linkDirectionalArrowLength={6}
-                    linkDirectionalArrowRelPos={1}
-                    linkCurvature={0.2}
-                    linkLabel={link => `Type: ${link.type}`}
-                    nodeCanvasObject={(node: any, ctx, globalScale) => {
-                      const label = node.name.split(' - ')[0]; // Show shortened label
-                      const fontSize = 12 / globalScale;
-                      ctx.font = `${fontSize}px Sans-Serif`;
-                      ctx.textAlign = 'center';
-                      ctx.textBaseline = 'middle';
-                      ctx.fillStyle = 
-                        node.type === 'API' ? '#4dabf7' : 
-                        node.type === 'DP' ? '#ff6b6b' :
-                        node.type === 'SD' ? '#51cf66' :
-                        node.type === 'PL' ? '#ffd43b' :
-                        '#868e96';
-                      ctx.fillText(label, node.x, node.y);
-                    }}
-                  />
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <p>Select a product and source/target locations to see supply chain paths.</p>
-                <p className="text-sm mt-2">
-                  Tip: Start with API sites as source and DP sites as target to see manufacturing routes.
-                </p>
-              </div>
-            )}
+            </div>
+            <div className="h-[600px] border rounded-lg overflow-hidden">
+              <ForceGraph2D
+                graphData={filteredGraphData}
+                nodeLabel={node => `${node.name}\nType: ${node.siteType}\nID: ${node.siteId}`}
+                nodeColor={node => 
+                  node.siteType === 'API' ? '#4dabf7' : 
+                  node.siteType === 'DP' ? '#ff6b6b' :
+                  node.siteType === 'SD' ? '#51cf66' :
+                  node.siteType === 'PL' ? '#ffd43b' :
+                  '#868e96'
+                }
+                linkColor={link => {
+                  const colors = ['#868e96', '#4dabf7', '#ff6b6b', '#51cf66', '#ffd43b'];
+                  return colors[link.pathIndex % colors.length];
+                }}
+                linkDirectionalArrowLength={6}
+                linkDirectionalArrowRelPos={1}
+                linkCurvature={0.2}
+                linkLabel={link => `Type: ${link.type}\nProduct: ${link.product || 'N/A'}\nProtocol: ${link.protocol || 'N/A'}`}
+                nodeCanvasObject={(node: any, ctx, globalScale) => {
+                  const label = node.name.split(' - ')[0];
+                  const fontSize = 12 / globalScale;
+                  ctx.font = `${fontSize}px Sans-Serif`;
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'middle';
+                  ctx.fillStyle = 
+                    node.siteType === 'API' ? '#4dabf7' : 
+                    node.siteType === 'DP' ? '#ff6b6b' :
+                    node.siteType === 'SD' ? '#51cf66' :
+                    node.siteType === 'PL' ? '#ffd43b' :
+                    '#868e96';
+                  ctx.fillText(label, node.x, node.y);
+                }}
+              />
+            </div>
           </CardContent>
         </Card>
       </div>

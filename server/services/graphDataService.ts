@@ -539,6 +539,52 @@ export class GraphDataService {
     const result = await runQuery(query);
     return result.map(record => record.get('productId'));
   }
+    static async getFullSupplyChainGraph() {
+    if (!this.isAvailable()) {
+      throw new Error("Neo4j not available");
+    }
+
+    const query = `
+      MATCH (source:DataItem)-[r:ASSOCIATION]->(target:DataItem)
+      RETURN 
+        collect(DISTINCT {
+          id: source.name,
+          name: source.name,
+          siteType: source.Site_Type,
+          siteId: source.Site_ID
+        }) + collect(DISTINCT {
+          id: target.name,
+          name: target.name,
+          siteType: target.Site_Type,
+          siteId: target.Site_ID
+        }) as nodes,
+        collect({
+          source: source.name,
+          target: target.name,
+          type: type(r),
+          protocol: r.protocol,
+          product: r.product,
+          is_primary: r.is_primary,
+          MAH: r.MAH,
+          manufacturer: r.manufacturer,
+          comment: r.comment
+        }) as relationships
+    `;
+
+    const result = await runQuery(query);
+    const graphData = result[0].get('nodes');
+    const relationships = result[0].get('relationships');
+
+    // Remove duplicate nodes
+    const uniqueNodes = Array.from(
+      new Map(graphData.map((node: any) => [node.id, node])).values()
+    );
+
+    return {
+      nodes: uniqueNodes,
+      relationships: relationships
+    };
+  }
 }
 
 export default GraphDataService;
