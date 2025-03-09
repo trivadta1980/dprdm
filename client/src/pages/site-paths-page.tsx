@@ -1,10 +1,13 @@
+
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import ForceGraph2D from "react-force-graph-2d";
+import { apiRequest } from "@/lib/api";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface SiteInfo {
   name: string;
@@ -23,32 +26,51 @@ export default function SitePathsPage() {
   const [targetLocation, setTargetLocation] = useState<string>("");
   const [selectedProduct, setSelectedProduct] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("all");
+  const [apiAvailable, setApiAvailable] = useState<boolean>(true);
+
+  // Check if Neo4j is available
+  useEffect(() => {
+    apiRequest("GET", "/api/status")
+      .then(response => {
+        console.log("API Status:", response);
+        setApiAvailable(response.graphDbAvailable || false);
+      })
+      .catch(error => {
+        console.error("Failed to check API status:", error);
+        setApiAvailable(false);
+      });
+  }, []);
 
   // Fetch all sites
   const { data: sites, isLoading: sitesLoading, error: sitesError } = useQuery<SiteInfo[]>({
     queryKey: ["/api/graph/sites"],
+    retry: 1,
+    staleTime: 300000, // 5 minutes
   });
 
   // Fetch all products
   const { data: products, isLoading: productsLoading, error: productsError } = useQuery<string[]>({
     queryKey: ["/api/graph/products"],
+    retry: 1,
+    staleTime: 300000, // 5 minutes
   });
 
   // Fetch paths when all required fields are selected
   const { data: paths, isLoading: pathsLoading, error: pathsError } = useQuery<PathInfo[]>({
     queryKey: ["/api/graph/paths", selectedProduct, sourceLocation, targetLocation],
     enabled: Boolean(selectedProduct && (sourceLocation || targetLocation)),
+    retry: 1,
   });
   
   // Debug logging
-  console.log('Sites loading:', sitesLoading, 'Sites error:', sitesError);
   console.log('Sites data:', sites);
+  console.log('Sites loading:', sitesLoading, 'Sites error:', sitesError);
   
-  console.log('Products loading:', productsLoading, 'Products error:', productsError);
   console.log('Products data:', products);
+  console.log('Products loading:', productsLoading, 'Products error:', productsError);
   
-  console.log('Paths loading:', pathsLoading, 'Paths error:', pathsError);
   console.log('Paths data:', paths);
+  console.log('Paths loading:', pathsLoading, 'Paths error:', pathsError);
   console.log('Query enabled:', Boolean(selectedProduct && (sourceLocation || targetLocation)));
 
   // Transform paths data into graph format
@@ -78,6 +100,21 @@ export default function SitePathsPage() {
 
   // Get unique site types for filtering
   const siteTypes = sites ? Array.from(new Set(sites.map(s => s.siteType))).sort() : [];
+
+  // Show Neo4j not available error
+  if (!apiAvailable) {
+    return (
+      <MainLayout>
+        <Alert variant="destructive" className="mb-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Service Unavailable</AlertTitle>
+          <AlertDescription>
+            The Neo4j graph database is currently not available. Please contact your administrator.
+          </AlertDescription>
+        </Alert>
+      </MainLayout>
+    );
+  }
 
   // Show any API errors
   if (sitesError || productsError) {
@@ -112,6 +149,9 @@ export default function SitePathsPage() {
           <div className="mt-2 text-center">
             {!sites?.length && <div>No sites found in the database.</div>}
             {!products?.length && <div>No products found in the database.</div>}
+            <div className="mt-4">
+              Please make sure you have created site data and product associations in the database.
+            </div>
           </div>
         </div>
       </MainLayout>
@@ -167,6 +207,7 @@ export default function SitePathsPage() {
                     <SelectValue placeholder="Select source site" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="">Any Source</SelectItem>
                     {sites?.filter(site => 
                       selectedType === "all" || site.siteType === selectedType
                     ).map(site => (
@@ -185,6 +226,7 @@ export default function SitePathsPage() {
                     <SelectValue placeholder="Select target site" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="">Any Target</SelectItem>
                     {sites?.filter(site => 
                       selectedType === "all" || site.siteType === selectedType
                     ).map(site => (
@@ -195,6 +237,14 @@ export default function SitePathsPage() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="mt-4">
+              <p className="text-sm text-gray-500">
+                Select a product and at least one location (source or target) to visualize supply chain paths.
+                If you select only a source, all possible paths from that source will be shown.
+                If you select only a target, all possible paths to that target will be shown.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -207,6 +257,17 @@ export default function SitePathsPage() {
             {pathsLoading ? (
               <div className="flex items-center justify-center h-[400px]">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : pathsError ? (
+              <div className="flex flex-col items-center justify-center h-[400px]">
+                <AlertTriangle className="h-8 w-8 text-amber-500 mb-2" />
+                <div className="text-amber-500 font-medium">Error loading path data</div>
+                <div className="mt-2 text-sm text-gray-500">{pathsError.toString()}</div>
+              </div>
+            ) : selectedProduct && (sourceLocation || targetLocation) && graphData.nodes.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-[400px] text-gray-500">
+                <p>No paths found for the selected criteria.</p>
+                <p className="mt-2 text-sm">Try different source/target locations or select a different product.</p>
               </div>
             ) : graphData.nodes.length > 0 ? (
               <div className="h-[600px] border rounded-lg overflow-hidden">
