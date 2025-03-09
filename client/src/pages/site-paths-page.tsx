@@ -2,9 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
 import ForceGraph2D from "react-force-graph-2d";
 
@@ -41,16 +39,18 @@ export default function SitePathsPage() {
     enabled: Boolean(selectedProduct && (sourceLocation || targetLocation)),
   });
 
-  // Transform path data for visualization
+  // Transform paths data into graph format
   const graphData = paths ? {
-    nodes: Array.from(new Set(paths.flatMap(p => p.nodes))).map(name => ({
-      id: name,
-      name,
-      type: sites?.find(s => s.name === name)?.siteType || "unknown"
+    nodes: Array.from(new Set(paths.flatMap(p => p.nodes))).map(nodeName => ({
+      id: nodeName,
+      name: nodeName,
+      type: sites?.find(s => s.name === nodeName)?.siteType || "unknown",
+      x: Math.random() * 1000, // Give initial positions
+      y: Math.random() * 1000
     })),
     links: paths.flatMap(path => 
-      path.nodes.slice(0, -1).map((source, i) => ({
-        source,
+      path.nodes.slice(0, -1).map((sourceNode, i) => ({
+        source: sourceNode,
         target: path.nodes[i + 1],
         type: path.relationships[i]
       }))
@@ -141,7 +141,11 @@ export default function SitePathsPage() {
                 <ForceGraph2D
                   graphData={graphData}
                   nodeLabel="name"
-                  nodeColor={node => node.type === 'API' ? '#4dabf7' : node.type === 'DP' ? '#ff6b6b' : '#868e96'}
+                  nodeColor={node => 
+                    node.type === 'API' ? '#4dabf7' : 
+                    node.type === 'DP' ? '#ff6b6b' : 
+                    '#868e96'
+                  }
                   linkColor={() => '#868e96'}
                   linkDirectionalArrowLength={6}
                   linkDirectionalArrowRelPos={1}
@@ -152,7 +156,10 @@ export default function SitePathsPage() {
                     ctx.font = `${fontSize}px Sans-Serif`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillStyle = node.type === 'API' ? '#4dabf7' : node.type === 'DP' ? '#ff6b6b' : '#868e96';
+                    ctx.fillStyle = 
+                      node.type === 'API' ? '#4dabf7' : 
+                      node.type === 'DP' ? '#ff6b6b' : 
+                      '#868e96';
                     ctx.fillText(label, node.x, node.y);
                   }}
                 />
