@@ -44,15 +44,31 @@ export default function SitePathsPage() {
   // Fetch all sites
   const { data: sites, isLoading: sitesLoading, error: sitesError } = useQuery<SiteInfo[]>({
     queryKey: ["/api/graph/sites"],
-    retry: 1,
+    retry: 3,
+    retryDelay: 1000,
     staleTime: 300000, // 5 minutes
+    onError: (error) => {
+      console.error("Error fetching sites:", error);
+      if (error.message.includes("401")) {
+        // Redirect to login if unauthorized
+        window.location.href = '/login';
+      }
+    }
   });
 
   // Fetch all products
   const { data: products, isLoading: productsLoading, error: productsError } = useQuery<string[]>({
     queryKey: ["/api/graph/products"],
-    retry: 1,
+    retry: 3,
+    retryDelay: 1000,
     staleTime: 300000, // 5 minutes
+    onError: (error) => {
+      console.error("Error fetching products:", error);
+      if (error.message.includes("401")) {
+        // Redirect to login if unauthorized
+        window.location.href = '/login';
+      }
+    }
   });
 
   // Fetch paths when all required fields are selected
