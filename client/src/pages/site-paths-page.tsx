@@ -22,6 +22,7 @@ export default function SitePathsPage() {
   const [sourceLocation, setSourceLocation] = useState<string>("");
   const [targetLocation, setTargetLocation] = useState<string>("");
   const [selectedProduct, setSelectedProduct] = useState<string>("");
+  const [selectedType, setSelectedType] = useState<string>("all");
 
   // Fetch all sites
   const { data: sites, isLoading: sitesLoading } = useQuery<SiteInfo[]>({
@@ -41,21 +42,31 @@ export default function SitePathsPage() {
 
   // Transform paths data into graph format
   const graphData = paths ? {
-    nodes: Array.from(new Set(paths.flatMap(p => p.nodes))).map(nodeName => ({
-      id: nodeName,
-      name: nodeName,
-      type: sites?.find(s => s.name === nodeName)?.siteType || "unknown",
-      x: Math.random() * 1000, // Give initial positions
-      y: Math.random() * 1000
-    })),
+    nodes: Array.from(new Set(paths.flatMap(p => p.nodes)))
+      .map(nodeName => {
+        const siteInfo = sites?.find(s => s.name === nodeName);
+        return {
+          id: nodeName,
+          name: nodeName,
+          type: siteInfo?.siteType || "unknown",
+          siteId: siteInfo?.siteId,
+          x: Math.random() * 1000,
+          y: Math.random() * 1000
+        };
+      })
+      .filter(node => selectedType === "all" || node.type === selectedType),
     links: paths.flatMap(path => 
       path.nodes.slice(0, -1).map((sourceNode, i) => ({
         source: sourceNode,
         target: path.nodes[i + 1],
-        type: path.relationships[i]
+        type: path.relationships[i],
+        pathIndex: i // Used for coloring different paths
       }))
     )
   } : { nodes: [], links: [] };
+
+  // Get unique site types for filtering
+  const siteTypes = sites ? Array.from(new Set(sites.map(s => s.siteType))).sort() : [];
 
   if (sitesLoading || productsLoading) {
     return (
@@ -72,10 +83,10 @@ export default function SitePathsPage() {
       <div className="max-w-6xl mx-auto space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Site Paths Query</CardTitle>
+            <CardTitle>Supply Chain Path Query</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Product</label>
                 <Select value={selectedProduct} onValueChange={setSelectedProduct}>
@@ -93,13 +104,32 @@ export default function SitePathsPage() {
               </div>
 
               <div className="space-y-2">
+                <label className="text-sm font-medium">Site Type Filter</label>
+                <Select value={selectedType} onValueChange={setSelectedType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filter by site type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    {siteTypes.map(type => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <label className="text-sm font-medium">Source Location</label>
                 <Select value={sourceLocation} onValueChange={setSourceLocation}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select source site" />
                   </SelectTrigger>
                   <SelectContent>
-                    {sites?.map(site => (
+                    {sites?.filter(site => 
+                      selectedType === "all" || site.siteType === selectedType
+                    ).map(site => (
                       <SelectItem key={site.name} value={site.name}>
                         {site.name} ({site.siteType})
                       </SelectItem>
@@ -115,7 +145,9 @@ export default function SitePathsPage() {
                     <SelectValue placeholder="Select target site" />
                   </SelectTrigger>
                   <SelectContent>
-                    {sites?.map(site => (
+                    {sites?.filter(site => 
+                      selectedType === "all" || site.siteType === selectedType
+                    ).map(site => (
                       <SelectItem key={site.name} value={site.name}>
                         {site.name} ({site.siteType})
                       </SelectItem>
@@ -129,7 +161,7 @@ export default function SitePathsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Path Visualization</CardTitle>
+            <CardTitle>Supply Chain Visualization</CardTitle>
           </CardHeader>
           <CardContent>
             {pathsLoading ? (
@@ -140,16 +172,23 @@ export default function SitePathsPage() {
               <div className="h-[600px] border rounded-lg overflow-hidden">
                 <ForceGraph2D
                   graphData={graphData}
-                  nodeLabel="name"
+                  nodeLabel={node => `${node.name}\nType: ${node.type}\nID: ${node.siteId}`}
                   nodeColor={node => 
                     node.type === 'API' ? '#4dabf7' : 
-                    node.type === 'DP' ? '#ff6b6b' : 
+                    node.type === 'DP' ? '#ff6b6b' :
+                    node.type === 'SD' ? '#51cf66' :
+                    node.type === 'PL' ? '#ffd43b' :
                     '#868e96'
                   }
-                  linkColor={() => '#868e96'}
+                  linkColor={link => {
+                    // Color each path differently
+                    const colors = ['#868e96', '#4dabf7', '#ff6b6b', '#51cf66', '#ffd43b'];
+                    return colors[link.pathIndex % colors.length];
+                  }}
                   linkDirectionalArrowLength={6}
                   linkDirectionalArrowRelPos={1}
                   linkCurvature={0.2}
+                  linkLabel={link => `Type: ${link.type}`}
                   nodeCanvasObject={(node: any, ctx, globalScale) => {
                     const label = node.name;
                     const fontSize = 12 / globalScale;
@@ -158,7 +197,9 @@ export default function SitePathsPage() {
                     ctx.textBaseline = 'middle';
                     ctx.fillStyle = 
                       node.type === 'API' ? '#4dabf7' : 
-                      node.type === 'DP' ? '#ff6b6b' : 
+                      node.type === 'DP' ? '#ff6b6b' :
+                      node.type === 'SD' ? '#51cf66' :
+                      node.type === 'PL' ? '#ffd43b' :
                       '#868e96';
                     ctx.fillText(label, node.x, node.y);
                   }}
@@ -166,7 +207,7 @@ export default function SitePathsPage() {
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
-                <p>Select a product and optionally source/target locations to see paths.</p>
+                <p>Select a product and optionally source/target locations to see supply chain paths.</p>
               </div>
             )}
           </CardContent>
