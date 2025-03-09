@@ -155,7 +155,7 @@ export class GraphDataService {
           eq(schema.relationships.targetDataSetId, dataSetId)
         )
       });
-      
+
       console.log(`Found ${relationships.length} relationships for dataset ${dataSetId}`);
 
       // Process each relationship independently to avoid Drizzle ORM issues with nested queries
@@ -166,10 +166,10 @@ export class GraphDataService {
         const values = await db.query.relationshipValues.findMany({
           where: eq(schema.relationshipValues.relationshipId, relationship.id)
         });
-        
+
         // Attach values to relationship
         relationship.values = values;
-        
+
         // For each value, manually fetch attribute values with their definitions
         for (const value of values) {
           // Use a direct SQL query to fetch attribute values with definitions
@@ -188,7 +188,7 @@ export class GraphDataService {
               ON av.attribute_definition_id = ad.id
             WHERE av.relationship_value_id = ${value.id}
           `);
-          
+
           // Format the attribute values with their definitions
           const attributeValues = attributeValuesResult.rows.map(row => ({
             id: row.id,
@@ -202,7 +202,7 @@ export class GraphDataService {
               dataType: row.dataType
             }
           }));
-          
+
           // Attach attribute values to the value
           value.attributeValues = attributeValues;
         }
@@ -235,7 +235,7 @@ export class GraphDataService {
             // Add attribute values to properties if they exist
             if (value.attributeValues && value.attributeValues.length > 0) {
               console.log(`Adding ${value.attributeValues.length} attribute values to Neo4j relationship properties`);
-              
+
               for (const attr of value.attributeValues) {
                 // Convert value based on data type if needed
                 let convertedValue = attr.value;
@@ -504,6 +504,40 @@ export class GraphDataService {
       relationships: record.get('relationshipTypes'),
       length: record.get('pathLength').toNumber()
     }));
+  }
+
+  static async getAllSites() {
+    if (!this.isAvailable()) {
+      throw new Error("Neo4j not available");
+    }
+
+    const query = `
+      MATCH (n:DataItem)
+      RETURN n.name as name, n.Site_Type as siteType, n.Site_ID as siteId
+      ORDER BY n.name
+    `;
+
+    const result = await runQuery(query);
+    return result.map(record => ({
+      name: record.get('name'),
+      siteType: record.get('siteType'),
+      siteId: record.get('siteId')
+    }));
+  }
+
+  static async getUniqueProducts() {
+    if (!this.isAvailable()) {
+      throw new Error("Neo4j not available");
+    }
+
+    const query = `
+      MATCH ()-[r:ASSOCIATION]->()
+      RETURN DISTINCT r.product as productId
+      ORDER BY r.product
+    `;
+
+    const result = await runQuery(query);
+    return result.map(record => record.get('productId'));
   }
 }
 

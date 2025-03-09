@@ -10,23 +10,59 @@ async function debugVisualization() {
   const session = driver.session();
 
   try {
-    console.log('\nListing all nodes in Neo4j...');
-    const countQuery = `
-      MATCH (n) 
-      RETURN count(n) as total
+    // First check total nodes and relationships
+    console.log('\nChecking database statistics...');
+    const statsQuery = `
+      MATCH (n)
+      OPTIONAL MATCH (n)-[r]->()
+      RETURN count(DISTINCT n) as nodes, count(DISTINCT r) as relationships,
+             collect(DISTINCT labels(n)) as nodeTypes,
+             collect(DISTINCT type(r)) as relationshipTypes
     `;
-    const countResult = await session.run(countQuery);
-    console.log('Total nodes:', countResult.records[0].get('total').toNumber());
-
-    const nodeQuery = `
-      MATCH (n) 
-      RETURN n.name as name
-      LIMIT 100
-    `;
-    const nodeResult = await session.run(nodeQuery);
-    nodeResult.records.forEach(record => {
-      console.log('Node name:', record.get('name'));
+    const statsResult = await session.run(statsQuery);
+    const stats = statsResult.records[0];
+    console.log('Database stats:', {
+      nodes: stats.get('nodes').toNumber(),
+      relationships: stats.get('relationships').toNumber(),
+      nodeTypes: stats.get('nodeTypes'),
+      relationshipTypes: stats.get('relationshipTypes')
     });
+
+    // Check relationship properties
+    console.log('\nChecking relationship properties...');
+    const propsQuery = `
+      MATCH ()-[r]->()
+      RETURN DISTINCT type(r) as type, 
+             keys(r) as properties,
+             count(r) as count
+    `;
+    const propsResult = await session.run(propsQuery);
+    console.log('Relationship types and properties:');
+    propsResult.records.forEach(record => {
+      console.log({
+        type: record.get('type'),
+        properties: record.get('properties'),
+        count: record.get('count').toNumber()
+      });
+    });
+
+    // Sample a few paths
+    console.log('\nSampling some paths...');
+    const pathsQuery = `
+      MATCH path = (start:DataItem)-[*1..3]->(end:DataItem)
+      WHERE start.Site_Type = 'API' AND end.Site_Type = 'DP'
+      RETURN path
+      LIMIT 3
+    `;
+    const pathsResult = await session.run(pathsQuery);
+    console.log('Sample paths:', pathsResult.records.map(record => {
+      const path = record.get('path');
+      return path.segments.map(segment => ({
+        start: segment.start.properties.name,
+        relationship: segment.relationship.type,
+        end: segment.end.properties.name
+      }));
+    }));
 
   } catch (error) {
     console.error('Error:', error);

@@ -28,7 +28,8 @@ const ChangePasswordPage = lazy(() => import("@/pages/change-password"));
 const ApiTestPage = lazy(() => import("@/pages/api-test-page"));
 const ResetPasswordPage = lazy(() => import("@/pages/reset-password-page"));
 const GraphVisualizationPage = lazy(() => import("@/pages/graph-visualization-page"));
-const Neo4jInfoPage = lazy(() => import("@/pages/neo4j-info-page")); // Add Neo4j info page import
+const Neo4jInfoPage = lazy(() => import("@/pages/neo4j-info-page"));
+const SitePathsPage = lazy(() => import("@/pages/site-paths-page")); // Add import for new page
 
 export default function App() {
   return (
@@ -124,6 +125,12 @@ export default function App() {
               <Route path="/neo4j-info">
                 <ProtectedRoute>
                   <Neo4jInfoPage />
+                </ProtectedRoute>
+              </Route>
+              {/* Add new route for site paths page */}
+              <Route path="/site-paths">
+                <ProtectedRoute>
+                  <SitePathsPage />
                 </ProtectedRoute>
               </Route>
             </Router>

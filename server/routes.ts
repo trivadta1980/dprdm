@@ -1534,6 +1534,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add new graph-related routes
+  app.get("/api/graph/sites", async (req, res) => {
+    console.log('GET /api/graph/sites - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/graph/sites - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const sites = await GraphDataService.getAllSites();
+      console.log('GET /api/graph/sites - Sites fetched successfully');
+      res.json(sites);
+    } catch (error) {
+      console.error('GET /api/graph/sites - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.get("/api/graph/products", async (req, res) => {
+    console.log('GET /api/graph/products - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/graph/products - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const products = await GraphDataService.getUniqueProducts();
+      console.log('GET /api/graph/products - Products fetched successfully');
+      res.json(products);
+    } catch (error) {
+      console.error('GET /apiapi/graph/products - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.get("/api/graph/paths", async (req, res) => {
+    console.log('GET /api/graph/paths - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/graph/paths - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const { product, source, target } = req.query;
+      if (!product) {
+        return res.status(400).json({ error: "Product ID is required" });
+      }
+      const paths = await GraphDataService.findProductShippingPaths(
+        product as string,
+        source as string,
+        target as string
+      );
+      console.log('GET /api/graph/paths - Paths fetched successfully');
+      res.json(paths);
+    } catch (error) {
+      console.error('GET /api/graph/paths - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
