@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
 import ForceGraph2D from "react-force-graph-2d";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface SiteInfo {
   name: string;
@@ -25,7 +24,6 @@ export default function SitePathsPage() {
   const [sourceLocation, setSourceLocation] = useState<string>("");
   const [targetLocation, setTargetLocation] = useState<string>("");
   const [selectedProduct, setSelectedProduct] = useState<string>("");
-  const [showDebug, setShowDebug] = useState(false);
 
   // Fetch all sites
   const { data: sites, isLoading: sitesLoading } = useQuery<SiteInfo[]>({
@@ -131,12 +129,7 @@ export default function SitePathsPage() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Path Visualization</CardTitle>
-              <Button variant="outline" onClick={() => setShowDebug(!showDebug)}>
-                {showDebug ? "Hide Debug" : "Show Debug"}
-              </Button>
-            </div>
+            <CardTitle>Path Visualization</CardTitle>
           </CardHeader>
           <CardContent>
             {pathsLoading ? (
@@ -144,62 +137,26 @@ export default function SitePathsPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : graphData.nodes.length > 0 ? (
-              <>
-                <div className="h-[600px] border rounded-lg overflow-hidden">
-                  <ForceGraph2D
-                    graphData={graphData}
-                    nodeLabel="name"
-                    nodeColor={node => node.type === 'API' ? '#4dabf7' : node.type === 'DP' ? '#ff6b6b' : '#868e96'}
-                    linkColor={() => '#868e96'}
-                    linkDirectionalArrowLength={6}
-                    linkDirectionalArrowRelPos={1}
-                    linkCurvature={0.2}
-                    nodeCanvasObject={(node: any, ctx, globalScale) => {
-                      const label = node.name;
-                      const fontSize = 12 / globalScale;
-                      ctx.font = `${fontSize}px Sans-Serif`;
-                      ctx.textAlign = 'center';
-                      ctx.textBaseline = 'middle';
-                      ctx.fillStyle = node.type === 'API' ? '#4dabf7' : node.type === 'DP' ? '#ff6b6b' : '#868e96';
-                      ctx.fillText(label, node.x, node.y);
-                    }}
-                  />
-                </div>
-
-                {showDebug && (
-                  <div className="mt-4 space-y-4">
-                    <Alert>
-                      <AlertTitle>Debug Information</AlertTitle>
-                      <AlertDescription>
-                        <div className="space-y-2">
-                          <div>
-                            <strong>Query Parameters:</strong>
-                            <pre className="mt-2 p-2 bg-gray-100 rounded">
-                              {JSON.stringify({
-                                product: selectedProduct,
-                                source: sourceLocation,
-                                target: targetLocation
-                              }, null, 2)}
-                            </pre>
-                          </div>
-                          <div>
-                            <strong>Graph Data:</strong>
-                            <pre className="mt-2 p-2 bg-gray-100 rounded">
-                              {JSON.stringify(graphData, null, 2)}
-                            </pre>
-                          </div>
-                          <div>
-                            <strong>Raw Paths Data:</strong>
-                            <pre className="mt-2 p-2 bg-gray-100 rounded">
-                              {JSON.stringify(paths, null, 2)}
-                            </pre>
-                          </div>
-                        </div>
-                      </AlertDescription>
-                    </Alert>
-                  </div>
-                )}
-              </>
+              <div className="h-[600px] border rounded-lg overflow-hidden">
+                <ForceGraph2D
+                  graphData={graphData}
+                  nodeLabel="name"
+                  nodeColor={node => node.type === 'API' ? '#4dabf7' : node.type === 'DP' ? '#ff6b6b' : '#868e96'}
+                  linkColor={() => '#868e96'}
+                  linkDirectionalArrowLength={6}
+                  linkDirectionalArrowRelPos={1}
+                  linkCurvature={0.2}
+                  nodeCanvasObject={(node: any, ctx, globalScale) => {
+                    const label = node.name;
+                    const fontSize = 12 / globalScale;
+                    ctx.font = `${fontSize}px Sans-Serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = node.type === 'API' ? '#4dabf7' : node.type === 'DP' ? '#ff6b6b' : '#868e96';
+                    ctx.fillText(label, node.x, node.y);
+                  }}
+                />
+              </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <p>Select a product and optionally source/target locations to see paths.</p>

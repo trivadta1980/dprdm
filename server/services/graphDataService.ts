@@ -498,33 +498,12 @@ export class GraphDataService {
       `;
     }
 
-    console.log('Executing Neo4j query for product paths:', {
-      query,
-      parameters: params
-    });
-
     const result = await runQuery(query, params);
-    console.log('Neo4j query result:', {
-      recordCount: result.length,
-      sampleRecord: result[0] ? {
-        nodeNames: result[0].get('nodeNames'),
-        relationshipTypes: result[0].get('relationshipTypes'),
-        pathLength: result[0].get('pathLength').toNumber()
-      } : null
-    });
-
-    const paths = result.map(record => ({
+    return result.map(record => ({
       nodes: record.get('nodeNames'),
       relationships: record.get('relationshipTypes'),
       length: record.get('pathLength').toNumber()
     }));
-
-    console.log('Transformed paths data:', {
-      pathCount: paths.length,
-      samplePath: paths[0]
-    });
-
-    return paths;
   }
 
   static async getAllSites() {
