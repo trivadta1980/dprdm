@@ -41,7 +41,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async (credentials: LoginData) => {
       console.log('Login attempt with:', { username: credentials.username });
       try {
-        const res = await apiRequest("POST", "/api/login", credentials);
+        const res = await apiRequest("/login", {
+          method: "POST",
+          data: credentials
+        });
         console.log('Login response status:', res.status);
         const data = await res.json();
         console.log('Login response data:', data);
@@ -68,15 +71,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const registerMutation = useMutation({
     mutationFn: async (credentials: InsertUser) => {
       console.log('Registration attempt with:', { username: credentials.username, email: credentials.email });
-      const res = await apiRequest("POST", "/api/register", credentials);
+      const res = await apiRequest("/register", {
+        method: "POST",
+        data: credentials
+      });
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
-      console.log('Registration successful, updating user data:', user);
       queryClient.setQueryData(["/api/user"], user);
+      toast({
+        title: "Success",
+        description: "Registration successful"
+      });
     },
     onError: (error: Error) => {
-      console.error('Registration error:', error);
       toast({
         title: "Registration failed",
         description: error.message,
@@ -87,15 +95,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      console.log('Logout attempt');
-      await apiRequest("POST", "/api/logout");
+      await apiRequest("/logout", { method: "POST" });
     },
     onSuccess: () => {
-      console.log('Logout successful');
       queryClient.setQueryData(["/api/user"], null);
     },
     onError: (error: Error) => {
-      console.error('Logout error:', error);
       toast({
         title: "Logout failed",
         description: error.message,
@@ -106,10 +111,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const requestResetMutation = useMutation({
     mutationFn: async (data: { email: string }) => {
-      const res = await apiRequest("POST", "/api/reset-password/request", data);
-      if (process.env.NODE_ENV === "development") {
-        return await res.json();
-      }
+      const res = await apiRequest("/reset-password/request", {
+        method: "POST",
+        data
+      });
+      return await res.json();
     },
     onSuccess: () => {
       toast({
@@ -118,7 +124,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
-      console.error('Password reset request error:', error);
       toast({
         title: "Failed to send reset email",
         description: error.message,
@@ -129,7 +134,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const resetPasswordMutation = useMutation({
     mutationFn: async (data: z.infer<typeof resetPasswordSchema>) => {
-      await apiRequest("POST", "/api/reset-password", data);
+      await apiRequest("/reset-password", {
+        method: "POST",
+        data
+      });
     },
     onSuccess: () => {
       toast({
@@ -138,7 +146,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
-      console.error('Password reset error:', error);
       toast({
         title: "Password reset failed",
         description: error.message,
@@ -150,23 +157,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = user?.roleId === 1 || Number(user?.roleId) === 1;
 
   const changePassword = async (currentPassword: string, newPassword: string) => {
-    console.log('Password change attempt');
     try {
-      const response = await fetch("/api/auth/change-password", {
+      const response = await apiRequest("/auth/change-password", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ currentPassword, newPassword }),
+        data: { currentPassword, newPassword }
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        console.error('Password change error:', error);
-        throw new Error(error.message || "Failed to change password");
-      }
-
-      console.log('Password change successful');
       return await response.json();
     } catch (error) {
       console.error('Password change error:', error);
