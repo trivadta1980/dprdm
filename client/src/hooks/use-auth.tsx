@@ -18,8 +18,8 @@ type AuthContextType = {
   registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
   requestResetMutation: UseMutationResult<void, Error, { email: string }>;
   resetPasswordMutation: UseMutationResult<void, Error, z.infer<typeof resetPasswordSchema>>;
-  isAdmin: boolean; // Added isAdmin property
-  changePassword: (currentPassword: string, newPassword: string) => Promise<any>; // Added changePassword function
+  isAdmin: boolean;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<any>;
 };
 
 type LoginData = Pick<InsertUser, "username" | "password">;
@@ -39,13 +39,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
+      console.log('Login attempt with:', { username: credentials.username });
+      try {
+        const res = await apiRequest("POST", "/api/login", credentials);
+        console.log('Login response status:', res.status);
+        const data = await res.json();
+        console.log('Login response data:', data);
+        return data;
+      } catch (error) {
+        console.error('Login error:', error);
+        throw error;
+      }
     },
     onSuccess: (user: SelectUser) => {
+      console.log('Login successful, updating user data:', user);
       queryClient.setQueryData(["/api/user"], user);
     },
     onError: (error: Error) => {
+      console.error('Login mutation error:', error);
       toast({
         title: "Login failed",
         description: error.message,
@@ -56,13 +67,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation({
     mutationFn: async (credentials: InsertUser) => {
+      console.log('Registration attempt with:', { username: credentials.username, email: credentials.email });
       const res = await apiRequest("POST", "/api/register", credentials);
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
+      console.log('Registration successful, updating user data:', user);
       queryClient.setQueryData(["/api/user"], user);
     },
     onError: (error: Error) => {
+      console.error('Registration error:', error);
       toast({
         title: "Registration failed",
         description: error.message,
@@ -73,12 +87,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
+      console.log('Logout attempt');
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
+      console.log('Logout successful');
       queryClient.setQueryData(["/api/user"], null);
     },
     onError: (error: Error) => {
+      console.error('Logout error:', error);
       toast({
         title: "Logout failed",
         description: error.message,
@@ -101,6 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
+      console.error('Password reset request error:', error);
       toast({
         title: "Failed to send reset email",
         description: error.message,
@@ -120,6 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
+      console.error('Password reset error:', error);
       toast({
         title: "Password reset failed",
         description: error.message,
@@ -128,26 +147,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  // Force convert roleId to a number to ensure correct comparison
   const isAdmin = user?.roleId === 1 || Number(user?.roleId) === 1;
 
   const changePassword = async (currentPassword: string, newPassword: string) => {
-    const response = await fetch("/api/auth/change-password", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ currentPassword, newPassword }),
-    });
+    console.log('Password change attempt');
+    try {
+      const response = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Failed to change password");
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Password change error:', error);
+        throw new Error(error.message || "Failed to change password");
+      }
+
+      console.log('Password change successful');
+      return await response.json();
+    } catch (error) {
+      console.error('Password change error:', error);
+      throw error;
     }
-
-    return await response.json();
   };
-
 
   return (
     <AuthContext.Provider
@@ -160,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         registerMutation,
         requestResetMutation,
         resetPasswordMutation,
-        isAdmin, // Pass isAdmin to the context
+        isAdmin,
         changePassword,
       }}
     >

@@ -51,7 +51,9 @@ export default function AuthPage() {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('AuthPage: User state changed:', user);
     if (user) {
+      console.log('AuthPage: Redirecting to home');
       setLocation("/");
     }
   }, [user, setLocation]);
@@ -72,14 +74,15 @@ export default function AuthPage() {
   });
 
   function onLogin(data: LoginData) {
+    console.log('AuthPage: Login attempt with:', { username: data.username });
     loginMutation.mutate(data);
   }
 
   function onRegister(data: InsertUser) {
-    console.log('Registration data:', data); // Add logging
+    console.log('AuthPage: Registration attempt with:', { username: data.username, email: data.email });
     registerMutation.mutate(data, {
       onError: (error) => {
-        console.error('Registration error:', error);
+        console.error('AuthPage: Registration error:', error);
         toast({
           title: "Registration Failed",
           description: error.message || "Failed to create user account",
@@ -87,7 +90,7 @@ export default function AuthPage() {
         });
       },
       onSuccess: (response) => {
-        console.log('Registration successful:', response);
+        console.log('AuthPage: Registration successful:', response);
         toast({
           title: "Success",
           description: "User account created successfully",
@@ -127,7 +130,11 @@ export default function AuthPage() {
               <TabsContent value="login">
                 <Form {...loginForm}>
                   <form
-                    onSubmit={loginForm.handleSubmit(onLogin)}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      console.log('AuthPage: Login form submitted');
+                      loginForm.handleSubmit(onLogin)(e);
+                    }}
                     className="space-y-4"
                   >
                     <FormField
@@ -217,7 +224,11 @@ export default function AuthPage() {
               <TabsContent value="register">
                 <Form {...registerForm}>
                   <form
-                    onSubmit={registerForm.handleSubmit(onRegister)}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      console.log('AuthPage: Registration form submitted');
+                      registerForm.handleSubmit(onRegister)(e);
+                    }}
                     className="space-y-4"
                   >
                     <FormField
