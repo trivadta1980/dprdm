@@ -398,14 +398,14 @@ export default function RelationshipsPage() {
     return dataSets.find(ds => ds.id === id)?.name || "Unknown Dataset";
   };
 
-  // Modified dataset selection handler
+  // Update the handleSourceDatasetChange function
   const handleSourceDatasetChange = async (value: string) => {
     console.log("Source Dataset selected:", value);
     form.setValue("sourceDataSetId", value);
 
     try {
       console.log("Fetching source dataset fields:", value);
-      const response = await apiRequest(`/api/reference-data/${value}`, {
+      const response = await apiRequest(`/reference-data/${value}`, {
         method: 'GET'
       });
       const data = await response.json();
@@ -439,19 +439,19 @@ export default function RelationshipsPage() {
       setSourceFields([]);
       setApiDebugData(prev => ({
         ...prev,
-        source: { error: error.message }
+        source: { error: error instanceof Error ? error.message : "Failed to fetch dataset" }
       }));
     }
   };
 
-  // Modified dataset selection handler for target dataset
+  // Update the handleTargetDatasetChange function
   const handleTargetDatasetChange = async (value: string) => {
     console.log("Target Dataset selected:", value);
     form.setValue("targetDataSetId", value);
 
     try {
       console.log("Fetching target dataset fields:", value);
-      const response = await apiRequest(`/api/reference-data/${value}`, {
+      const response = await apiRequest(`/reference-data/${value}`, {
         method: 'GET'
       });
       const data = await response.json();
@@ -485,7 +485,7 @@ export default function RelationshipsPage() {
       setTargetFields([]);
       setApiDebugData(prev => ({
         ...prev,
-        target: { error: error.message }
+        target: { error: error instanceof Error ? error.message : "Failed to fetch dataset" }
       }));
     }
   };
