@@ -462,6 +462,12 @@ export class GraphDataService {
         RETURN path, 
                [node IN nodes(path) | node.name] as nodeNames,
                [rel IN relationships(path) | type(rel)] as relationshipTypes,
+               [rel IN relationships(path) | {
+                 type: type(rel),
+                 product: rel.product,
+                 protocol: rel.protocol,
+                 is_primary: rel.is_primary
+               }] as relationshipDetails,
                length(path) as pathLength
         ORDER BY pathLength
       `;
@@ -475,6 +481,12 @@ export class GraphDataService {
         RETURN path,
                [node IN nodes(path) | node.name] as nodeNames,
                [rel IN relationships(path) | type(rel)] as relationshipTypes,
+               [rel IN relationships(path) | {
+                 type: type(rel),
+                 product: rel.product,
+                 protocol: rel.protocol,
+                 is_primary: rel.is_primary
+               }] as relationshipDetails,
                length(path) as pathLength
         ORDER BY pathLength
       `;
@@ -487,6 +499,12 @@ export class GraphDataService {
         RETURN path,
                [node IN nodes(path) | node.name] as nodeNames,
                [rel IN relationships(path) | type(rel)] as relationshipTypes,
+               [rel IN relationships(path) | {
+                 type: type(rel),
+                 product: rel.product,
+                 protocol: rel.protocol,
+                 is_primary: rel.is_primary
+               }] as relationshipDetails,
                length(path) as pathLength
         ORDER BY pathLength
       `;
@@ -496,6 +514,7 @@ export class GraphDataService {
     return result.map(record => ({
       nodes: record.get('nodeNames'),
       relationships: record.get('relationshipTypes'),
+      relationshipDetails: record.get('relationshipDetails'),
       length: record.get('pathLength').toNumber()
     }));
   }
