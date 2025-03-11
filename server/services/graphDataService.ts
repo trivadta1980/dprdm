@@ -228,42 +228,36 @@ export class GraphDataService {
             }
 
             // Create properties object with relationship ID
-            const relationshipProperties = {
-              relationshipId: relationship.id.toString()
-            };
+            const attributes = value.attributeValues.reduce((acc, cur) => ({...acc, [cur.definition.name]: cur.value}), {});
 
-            // Add attribute values to properties if they exist
-            if (value.attributeValues && value.attributeValues.length > 0) {
-              console.log(`Adding ${value.attributeValues.length} attribute values to Neo4j relationship properties`);
+            // Extract product and protocol from attributes
+            const product = attributes.product || null;
+            const protocol = attributes.protocol || null;
+            const otherAttributes = { ...attributes };
+            delete otherAttributes.product;
+            delete otherAttributes.protocol;
 
-              for (const attr of value.attributeValues) {
-                // Convert value based on data type if needed
-                let convertedValue = attr.value;
-                if (attr.definition.dataType === 'number') {
-                  convertedValue = parseFloat(attr.value);
-                } else if (attr.definition.dataType === 'boolean') {
-                  convertedValue = attr.value.toLowerCase() === 'true';
-                }
-
-                // Use the attribute name as the property key
-                relationshipProperties[attr.definition.name] = convertedValue;
-                console.log(`Added attribute ${attr.definition.name}: ${convertedValue} (${typeof convertedValue})`);
-              }
-            }
 
             // Create relationship with all properties at once
-            const createRelQuery = `
+            const createRelInstanceQuery = `
               MATCH (source:DataItem {name: $sourceName})
               MATCH (target:DataItem {name: $targetName})
-              MERGE (source)-[r:${relationship.relationshipType.toUpperCase()}]->(target)
-              SET r = $properties
+              MERGE (source)-[r:${relationship.relationshipType.toUpperCase()} {
+                relationshipId: $relationshipId,
+                product: $product,
+                protocol: $protocol
+              }]->(target)
+              SET r += $otherAttributes
               RETURN r
             `;
 
-            await runQuery(createRelQuery, {
+            await runQuery(createRelInstanceQuery, {
               sourceName: value.sourceInstanceId,
               targetName: value.targetInstanceId,
-              properties: relationshipProperties
+              relationshipId: relationship.id.toString(),
+              product,
+              protocol,
+              otherAttributes
             });
 
             console.log(`Created relationship: ${value.sourceInstanceId} -> ${value.targetInstanceId}`);
