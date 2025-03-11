@@ -246,6 +246,31 @@ export default function RelationshipValuesPage() {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [valueToDelete, setValueToDelete] = useState<number | null>(null);
+  const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
+
+  // Add new mutation for deleting all values
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest(`/api/relationships/${id}/values`, {
+        method: "DELETE"
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
+      toast({
+        title: "Success",
+        description: "All relationship values deleted successfully",
+      });
+      setDeleteAllDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete relationship values",
+        variant: "destructive",
+      });
+    },
+  });
 
   function handleDelete(valueId: number) {
     setValueToDelete(valueId);
@@ -258,6 +283,10 @@ export default function RelationshipValuesPage() {
       setDeleteDialogOpen(false);
       setValueToDelete(null);
     }
+  }
+
+  function confirmDeleteAll() {
+    deleteAllMutation.mutate();
   }
 
   function getInstanceDisplayValue(
@@ -335,6 +364,43 @@ export default function RelationshipValuesPage() {
                 <FileDown className="h-4 w-4 mr-2" />
                 Export Template
               </Button>
+
+              <Dialog
+                open={deleteAllDialogOpen}
+                onOpenChange={setDeleteAllDialogOpen}
+              >
+                <DialogTrigger asChild>
+                  <Button variant="destructive">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete All Values
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Delete All Relationship Values</DialogTitle>
+                    <DialogDescription>
+                      Are you sure you want to delete all relationship values?
+                      This will also delete all associated attribute values.
+                      This action cannot be undone.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setDeleteAllDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={confirmDeleteAll}
+                      disabled={deleteAllMutation.isPending}
+                    >
+                      {deleteAllMutation.isPending ? "Deleting..." : "Delete All"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
 
               <Dialog
                 open={isImportDialogOpen}

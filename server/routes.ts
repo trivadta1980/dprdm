@@ -1359,19 +1359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Helper function to assign colors based on node type
-  //This function is no longer needed as node colors are handled in the visualization endpoint.
-  // function getNodeColor(label) {
-  //   const colorMap = {
-  //     'DataSet': '#4285F4',       // Blue
-  //     'DataItem': '#34A853',      // Green
-  //     'RelationshipType': '#FBBC05', // Yellow/Orange
-  //     'CrosswalkMapping': '#EA4335' // Red
-  //   };
-  //   return colorMap[label] || '#9334E6'; // Default purple
-  // }
-
-  // Add after existing routes
+  // Add this route after the existing graph routes
   app.get("/api/graph/dataset/:id", async (req, res) => {
     console.log('GET /api/graph/dataset/:id - Request received');
     if (!req.isAuthenticated()) {
@@ -1615,6 +1603,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(graphData);
     } catch (error) {
       console.error('GET /api/graph/full - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+  // Add new route after existing relationship values routes
+  app.delete("/api/relationships/:id/values", async (req, res) => {
+    console.log('DELETE /api/relationships/:id/values - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('DELETE /api/relationships/:id/values - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const relationshipId = Number(req.params.id);
+
+      // Use SQL transaction to ensure data consistency
+      await db.transaction(async (tx) => {
+        // First delete all attribute values for this relationship's values
+        await tx.execute(sql`
+          DELETE FROM relationship_attribute_values 
+          WHERE relationship_value_id IN (
+            SELECT id FROM relationship_values 
+            WHERE relationship_id = ${relationshipId}
+          )
+        `);
+
+        // Then delete all relationship values
+        await tx.execute(sql`
+          DELETE FROM relationship_values 
+          WHERE relationship_id = ${relationshipId}
+        `);
+      });
+
+      console.log('DELETE /api/relationships/:id/values - All values deleted successfully');
+      res.sendStatus(200);
+    } catch (error) {
+      console.error('DELETE /api/relationships/:id/values - Error:', error);
       res.status(500).json({ error: String(error) });
     }
   });
