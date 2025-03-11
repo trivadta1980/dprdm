@@ -635,14 +635,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(401);
     }
     try {
-      const success = await storage.deleteRelationshipValue(Number(req.params.valueId));
-      if (success) {
-        console.log('DELETE /api/relationships/:id/values/:valueId - Value deleted successfully');
-        res.sendStatus(200);
-      } else {
-        console.log('DELETE /api/relationships/:id/values/:valueId - Value not found');
-        res.sendStatus(404);
-      }
+      const valueId = Number(req.params.valueId);
+
+      // Use SQL transaction to ensure data consistency
+      await db.transaction(async (tx) => {
+        // First delete related attribute values
+        await tx.execute(sql`
+          DELETE FROM relationship_attribute_values 
+          WHERE relationship_value_id = ${valueId}
+        `);
+
+        // Then delete the relationship value
+        await tx.execute(sql`
+          DELETE FROM relationship_values 
+          WHERE id = ${valueId}
+        `);
+      });
+
+      console.log('DELETE /api/relationships/:id/values/:valueId - Value deleted successfully');
+      res.sendStatus(200);
     } catch (error) {
       console.error('DELETE /api/relationships/:id/values/:valueId - Error:', error);
       res.status(500).json({ error: String(error) });
@@ -749,7 +760,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               relationshipValueId: relationshipValue.id,
               attributeDefinitionId: Number(attributeId),
               value: String(record[columnName])
-            });
+                        });
           }
         }
       }

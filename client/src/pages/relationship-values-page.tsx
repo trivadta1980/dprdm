@@ -17,6 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -242,9 +244,19 @@ export default function RelationshipValuesPage() {
     },
   });
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [valueToDelete, setValueToDelete] = useState<number | null>(null);
+
   function handleDelete(valueId: number) {
-    if (window.confirm("Are you sure you want to delete this relationship value?")) {
-      deleteMutation.mutate(valueId);
+    setValueToDelete(valueId);
+    setDeleteDialogOpen(true);
+  }
+
+  function confirmDelete() {
+    if (valueToDelete) {
+      deleteMutation.mutate(valueToDelete);
+      setDeleteDialogOpen(false);
+      setValueToDelete(null);
     }
   }
 
@@ -630,6 +642,34 @@ export default function RelationshipValuesPage() {
             )}
           </CardContent>
         </Card>
+        {/* Add confirmation dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Relationship Value</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this relationship value?
+                This will also delete all associated attribute values.
+                This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDelete}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );

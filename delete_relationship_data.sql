@@ -2,7 +2,7 @@
 WITH rel AS (
   SELECT "id" 
   FROM "relationships" 
-  WHERE "relationship_name" = 'Test Relationship'
+  WHERE "relationship_name" = 'Site to Site'
 )
 -- Delete attribute values first (to maintain referential integrity)
 DELETE FROM "relationship_attribute_values" 
@@ -16,7 +16,7 @@ WHERE "relationship_value_id" IN (
 WITH rel AS (
   SELECT "id" 
   FROM "relationships" 
-  WHERE "relationship_name" = 'Test Relationship'
+  WHERE "relationship_name" = 'Site to Site'
 )
 DELETE FROM "relationship_values" 
 WHERE "relationship_id" = (SELECT id FROM rel);
