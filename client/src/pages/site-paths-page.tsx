@@ -42,11 +42,6 @@ interface Path {
   isPrimary: boolean;
 }
 
-interface FilteredPath {
-  nodes: string[];
-  relationshipDetails: { is_primary: boolean; protocol?: string }[];
-}
-
 // Helper function to check if path A is a subset of path B
 const isPathSubset = (shorterPath: string[], longerPath: string[]): boolean => {
   if (shorterPath.length >= longerPath.length) return false;
@@ -72,66 +67,141 @@ export default function SitePathsPage() {
     queryKey: ["/api/graph/products"],
   });
 
-  // New query for filtered paths
-  const { data: filteredPaths, isLoading: pathsLoading } = useQuery<FilteredPath[]>({
-    queryKey: ["/api/graph/paths", selectedProduct, sourceLocation, targetLocation],
-    enabled: selectedProduct !== "none" &&
-      ((sourceLocation !== "none" && targetLocation !== "none") ||
-        sourceLocation !== "none"),
-  });
-
   const distinctPaths = useMemo(() => {
-    if (!filteredPaths || selectedProduct === "none") return [];
+    if (!fullGraphData || selectedProduct === "none") return [];
 
-    return filteredPaths.map((path, index) => ({
-      sequence: path.nodes,
-      siteTypes: path.nodes.map(nodeName => {
-        const node = fullGraphData?.nodes.find(n => n.id === nodeName);
-        return node?.siteType || '';
-      }),
-      product: selectedProduct,
-      isPrimary: path.relationshipDetails.every(rel => rel.is_primary),
-      protocols: path.relationshipDetails.map(rel => rel.protocol).filter(Boolean)
-    }));
-  }, [filteredPaths, selectedProduct, fullGraphData]);
+    const paths = new Map<string, Path>();
+    const visited = new Set<string>();
 
-  const filteredGraphData = useMemo(() => {
-    if (!fullGraphData || !distinctPaths.length) return { nodes: [], links: [] };
+    const findPaths = (
+      currentNode: string,
+      path: string[],
+      siteTypes: string[]
+    ) => {
+      const node = fullGraphData.nodes.find(n => n.id === currentNode);
+      if (!node) return;
 
-    // Get all node names involved in the filtered paths
-    const nodeNames = new Set<string>();
-    distinctPaths.forEach(path => {
-      path.sequence.forEach(nodeName => nodeNames.add(nodeName));
-    });
+      path.push(currentNode);
+      siteTypes.push(node.siteType);
 
-    // Filter nodes to only those in the paths
-    const filteredNodes = fullGraphData.nodes
-      .filter(node => nodeNames.has(node.id))
-      .map(node => ({
-        ...node,
-        x: Math.random() * 1000,
-        y: Math.random() * 1000
-      }));
-
-    // Create links based on the path sequences
-    const links: any[] = [];
-    distinctPaths.forEach((path, pathIndex) => {
-      for (let i = 0; i < path.sequence.length - 1; i++) {
-        links.push({
-          source: path.sequence[i],
-          target: path.sequence[i + 1],
-          type: 'ASSOCIATION',
-          product: selectedProduct,
-          pathIndex
+      // Only consider paths with 2 or more nodes
+      if (path.length >= 2) {
+        const sequenceKey = path.join('→');
+        const isValidPath = path.every((node, index) => {
+          if (index === path.length - 1) return true;
+          const nextNode = path[index + 1];
+          return fullGraphData.relationships.some(rel =>
+            rel.source === node &&
+            rel.target === nextNode &&
+            rel.product === selectedProduct
+          );
         });
+
+        if (isValidPath) {
+          paths.set(sequenceKey, {
+            sequence: [...path],
+            siteTypes: [...siteTypes],
+            product: selectedProduct,
+            isPrimary: true
+          });
+        }
+      }
+
+      const relationships = fullGraphData.relationships.filter(
+        rel => rel.source === currentNode && rel.product === selectedProduct
+      );
+
+      for (const rel of relationships) {
+        if (!visited.has(rel.target)) {
+          visited.add(rel.target);
+          findPaths(rel.target, [...path], [...siteTypes]);
+          visited.delete(rel.target);
+        }
+      }
+    };
+
+    // Find all possible paths
+    fullGraphData.nodes.forEach(startNode => {
+      const hasRelationships = fullGraphData.relationships.some(
+        rel => rel.source === startNode.id && rel.product === selectedProduct
+      );
+
+      if (hasRelationships) {
+        visited.clear();
+        visited.add(startNode.id);
+        findPaths(startNode.id, [], []);
       }
     });
 
+    // Sort paths by length (longest first) and filter out subset paths
+    const allPaths = Array.from(paths.values())
+      .sort((a, b) => b.sequence.length - a.sequence.length);
+
+    // Filter out paths that are subsets of longer paths
+    return allPaths.filter((path, index) => {
+      // Check if this path is a subset of any longer path
+      const isSubset = allPaths.some((longerPath, longerIndex) => {
+        if (longerIndex >= index) return false; // Only check against longer paths
+        return isPathSubset(path.sequence, longerPath.sequence);
+      });
+      return !isSubset; // Keep only if not a subset
+    });
+
+  }, [fullGraphData, selectedProduct]);
+
+  const filteredGraphData = useMemo(() => {
+    if (!fullGraphData) return { nodes: [], links: [] };
+
+    let filteredNodes = [...fullGraphData.nodes];
+    let filteredRelationships = [...fullGraphData.relationships];
+
+    if (selectedType !== "all") {
+      filteredNodes = filteredNodes.filter(node => node.siteType === selectedType);
+      filteredRelationships = filteredRelationships.filter(rel =>
+        filteredNodes.some(node => node.id === rel.source) &&
+        filteredNodes.some(node => node.id === rel.target)
+      );
+    }
+
+    if (selectedProduct !== "none") {
+      filteredRelationships = filteredRelationships.filter(rel => rel.product === selectedProduct);
+      const relatedNodeIds = new Set([
+        ...filteredRelationships.map(rel => rel.source),
+        ...filteredRelationships.map(rel => rel.target)
+      ]);
+      filteredNodes = filteredNodes.filter(node => relatedNodeIds.has(node.id));
+    }
+
+    if (sourceLocation !== "none" || targetLocation !== "none") {
+      filteredRelationships = filteredRelationships.filter(rel => {
+        const matchesSource = sourceLocation === "none" || rel.source === sourceLocation;
+        const matchesTarget = targetLocation === "none" || rel.target === targetLocation;
+        return matchesSource && matchesTarget;
+      });
+      const relatedNodeIds = new Set([
+        ...filteredRelationships.map(rel => rel.source),
+        ...filteredRelationships.map(rel => rel.target)
+      ]);
+      filteredNodes = filteredNodes.filter(node => relatedNodeIds.has(node.id));
+    }
+
     return {
-      nodes: filteredNodes,
-      links
+      nodes: filteredNodes.map(node => ({
+        ...node,
+        x: Math.random() * 1000,
+        y: Math.random() * 1000
+      })),
+      links: filteredRelationships.map((rel, index) => ({
+        source: rel.source,
+        target: rel.target,
+        type: rel.type,
+        protocol: rel.protocol,
+        product: rel.product,
+        is_primary: rel.is_primary,
+        pathIndex: index
+      }))
     };
-  }, [fullGraphData, distinctPaths, selectedProduct]);
+  }, [fullGraphData, selectedType, selectedProduct, sourceLocation, targetLocation]);
 
   const resetFilters = () => {
     setSelectedProduct("none");
@@ -142,7 +212,7 @@ export default function SitePathsPage() {
 
   const [graphZoom, setGraphZoom] = useState(1);
 
-  if (graphLoading || productsLoading || pathsLoading) {
+  if (graphLoading || productsLoading) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-screen">
@@ -293,18 +363,13 @@ export default function SitePathsPage() {
                             </span>
                           ))}
                         </div>
-                        <div className="mt-1 flex flex-wrap items-center gap-1">
+                        <div className="mt-1 flex items-center gap-1">
                           {path.siteTypes.map((type, i) => (
                             <span key={i} className="text-xs px-1.5 py-0.5 bg-gray-100 rounded">
                               {type}
                             </span>
                           ))}
                         </div>
-                        {path.protocols.length > 0 && (
-                          <div className="mt-1 text-xs text-gray-500">
-                            Protocols: {path.protocols.join(', ')}
-                          </div>
-                        )}
                       </div>
                     ))}
                   </div>
