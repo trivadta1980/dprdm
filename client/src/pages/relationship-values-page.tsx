@@ -251,15 +251,16 @@ export default function RelationshipValuesPage() {
   // Add new mutation for deleting all values
   const deleteAllMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest(`/api/relationships/${id}/values`, {
+      const response = await apiRequest(`/api/relationships/${id}/values`, {
         method: "DELETE"
       });
+      return response;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
       toast({
         title: "Success",
-        description: "All relationship values deleted successfully",
+        description: data?.message || "All relationship values deleted successfully",
       });
       setDeleteAllDialogOpen(false);
     },

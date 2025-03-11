@@ -1615,10 +1615,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     try {
       const relationshipId = Number(req.params.id);
+      
+      // Verify relationship exists
+      const relationship = await storage.getRelationship(relationshipId);
+      if (!relationship) {
+        console.log(`DELETE /api/relationships/:id/values - Relationship ${relationshipId} not found`);
+        return res.status(404).json({ error: "Relationship not found" });
+      }
 
+      let deletedCount = 0;
+      
       // Use SQL transaction to ensure data consistency
       await db.transaction(async (tx) => {
-        // First delete all attribute values for this relationship's values
+        // First count how many records we'll delete for reporting
+        const countResult = await tx.execute(sql`
+          SELECT COUNT(*) as count FROM relationship_values 
+          WHERE relationship_id = ${relationshipId}
+        `);
+        deletedCount = countResult.rows[0]?.count || 0;
+        
+        // Delete all attribute values for this relationship's values
         await tx.execute(sql`
           DELETE FROM relationship_attribute_values 
           WHERE relationship_value_id IN (
@@ -1634,8 +1650,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `);
       });
 
-      console.log('DELETE /api/relationships/:id/values - All values deleted successfully');
-      res.sendStatus(200);
+      // Sync with Neo4j if available
+      if (GraphDataService.isAvailable()) {
+        try {
+          await GraphDataService.syncRelationship(relationshipId);
+        } catch (graphError) {
+          console.error('Error syncing relationship to graph database after deletion:', graphError);
+          // Continue with the response even if graph sync fails
+        }
+      }
+
+      console.log(`DELETE /api/relationships/:id/values - ${deletedCount} values deleted successfully`);
+      res.status(200).json({ message: `${deletedCount} relationship values deleted successfully` });
     } catch (error) {
       console.error('DELETE /api/relationships/:id/values - Error:', error);
       res.status(500).json({ error: String(error) });
