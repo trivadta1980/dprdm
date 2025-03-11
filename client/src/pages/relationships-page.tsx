@@ -369,6 +369,8 @@ export default function RelationshipsPage() {
 
   function handleEdit(relationship: Relationship) {
     setEditingRelationship(relationship);
+
+    // First set all the form values
     form.reset({
       name: relationship.name,
       sourceDataSetId: relationship.sourceDataSetId.toString(),
@@ -378,6 +380,12 @@ export default function RelationshipsPage() {
       sourceField: relationship.sourceField,
       targetField: relationship.targetField,
     });
+
+    // Then trigger the field population
+    handleSourceDatasetChange(relationship.sourceDataSetId.toString());
+    handleTargetDatasetChange(relationship.targetDataSetId.toString());
+
+    // Finally open the dialog
     setIsDialogOpen(true);
   }
 
