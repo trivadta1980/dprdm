@@ -291,11 +291,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // New route to get sample data template
+  // Template download route
   app.get("/api/reference-data/:id/template", async (req, res) => {
-    console.log('GET /api/reference-data/:id/template - Request received'); //Added logging
+    console.log('GET /api/reference-data/:id/template - Request received');
     if (!req.isAuthenticated()) {
-      console.log('GET /api/reference-data/:id/template - Unauthorized access'); //Added logging
+      console.log('GET /api/reference-data/:id/template - Unauthorized access');
       return res.sendStatus(401);
     }
     try {
@@ -303,7 +303,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dataSet = await storage.getReferenceDataSet(dataSetId);
 
       if (!dataSet) {
-        console.log('GET /api/reference-data/:id/template - Dataset not found'); //Added logging
+        console.log('GET /api/reference-data/:id/template - Dataset not found');
         return res.status(404).json({ error: "Reference Data Set not found" });
       }
 
@@ -318,12 +318,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.setHeader('Content-Disposition', `attachment; filename=${dataSet.name}_template.csv`);
       res.send(headers);
     } catch (error) {
-      console.error('GET /api/reference-data/:id/template - Error generating template:', error); //Added logging
+      console.error('GET /api/reference-data/:id/template - Error generating template:', error);
       res.status(500).json({ error: String(error) });
     }
   });
 
-  // Update the bulk upload route to handle the data structure correctly
   app.post("/api/reference-data/:id/bulk-upload", upload.single("file"), async (req, res) => {
     console.log('POST /api/reference-data/:id/bulk-upload - Request received');
     if (!req.isAuthenticated()) {
@@ -760,7 +759,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               relationshipValueId: relationshipValue.id,
               attributeDefinitionId: Number(attributeId),
               value: String(record[columnName])
-                        });
+            });
           }
         }
       }
@@ -1425,7 +1424,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               collect(DISTINCT item) as items,
               collect(DISTINCT target) as relatedItems,
               collect(DISTINCT r) as rels
-          `, { dataSetId: dataSetId.toString() });
+            `, { dataSetId: dataSetId.toString() });
 
         const record = result.records[0];
         const nodes = new Set();
@@ -1569,7 +1568,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/graph/paths", async (req, res) => {
     console.log('GET /api/graph/paths - Request received');
     if (!req.isAuthenticated()) {
-      console.log('GET /api/graph/paths - Unauthorized access');
+      console.log('GET /api/graph/paths- Unauthorized access');
       return res.sendStatus(401);
     }
     try {
