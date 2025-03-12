@@ -6,8 +6,8 @@ async function downloadTemplate(dataSetId) {
 
   try {
     // First, authenticate using username/password
-    const username = process.env.USERNAME || 'admin';
-    const password = process.env.PASSWORD || 'admin';
+    const username = 'admin';
+    const password = 'Admin123!';
 
     console.log("Attempting to authenticate with username:", username); //Added logging
 
@@ -25,13 +25,19 @@ async function downloadTemplate(dataSetId) {
       throw new Error('Authentication failed. Please check your credentials.');
     }
 
+    // Extract cookies from login response
+    const cookies = loginResponse.headers.raw()['set-cookie'] || [];
+    const cookieHeader = cookies.map(cookie => cookie.split(';')[0]).join('; ');
+
+    console.log("Authentication successful!"); //Added logging
+
     // Now make the template download request
     const response = await fetch(`http://localhost:5000/api/reference-data/${dataSetId}/template`, {
       method: 'GET',
       headers: {
         'Accept': 'text/csv',
-      },
-      credentials: 'include'
+        'Cookie': cookieHeader
+      }
     });
 
     if (response.status === 401) {

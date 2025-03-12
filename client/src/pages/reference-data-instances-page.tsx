@@ -45,14 +45,16 @@ export interface ExtendedReferenceDataInstance extends ReferenceDataInstance {
   createdAt?: string;
   lastModifiedBy?: string;
   lastModifiedAt?: string;
+  _history?: HistoryEntry[];
+  [key: string]: string | InstanceStatus | HistoryEntry[] | undefined; 
 }
 
 export default function ReferenceDataInstancesPage() {
   const { user } = useSession();
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
-  const params = useParams<{ id: string }>("/reference-data/:id/instances");
-  const dataSetId = params ? Number(params.id) : null;
+  const { id } = useParams(); 
+  const dataSetId = id ? Number(id) : null;
   const [editingDataSet, setEditingDataSet] = useState<ExtendedReferenceDataInstance | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
@@ -502,11 +504,11 @@ export default function ReferenceDataInstancesPage() {
     }
   }
 
-  const handleEdit = (instance: { id: string } & ExtendedReferenceDataInstance) => {
+  const handleEdit = (instance: ExtendedReferenceDataInstance) => {
     setEditingDataSet(instance);
     Object.entries(instance).forEach(([key, value]) => {
-      if (key !== 'id' && key !== '_history') {
-        form.setValue(key, String(value));
+      if (key !== 'id' && key !== '_history' && typeof value === 'string') {
+        form.setValue(key as keyof InstanceFormData, value);
       }
     });
     setIsDialogOpen(true);
@@ -518,7 +520,7 @@ export default function ReferenceDataInstancesPage() {
     }
   }
 
-  const handleShowHistory = (instance: { id: string } & ExtendedReferenceDataInstance) => {
+  const handleShowHistory = (instance: ExtendedReferenceDataInstance) => {
     setSelectedInstanceHistory({
       id: instance.id,
       history: instance._history || []
