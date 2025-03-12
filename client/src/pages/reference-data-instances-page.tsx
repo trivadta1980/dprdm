@@ -511,6 +511,7 @@ export default function ReferenceDataInstancesPage() {
         method: 'GET',
         headers: {
           'Accept': 'text/csv',
+          'Content-Type': 'text/csv',
         },
         credentials: 'include'
       });
@@ -531,25 +532,35 @@ export default function ReferenceDataInstancesPage() {
       }
       console.log("Template content received:", content);
 
-      // Convert the text content to a blob
-      const blob = new Blob([content], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${dataSet?.name || 'reference_data'}_template.csv`;
+      // Create file name
+      const filename = `${dataSet?.name || 'reference_data'}_template.csv`;
 
-      // Trigger download
-      document.body.appendChild(a);
-      a.click();
+      // Create blob with proper MIME type
+      const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
 
-      // Cleanup
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      // Create download link
+      if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+        // For IE
+        window.navigator.msSaveOrOpenBlob(blob, filename);
+      } else {
+        // For other browsers
+        const link = document.createElement('a');
+        const url = window.URL.createObjectURL(blob);
+
+        link.href = url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+
+        // Cleanup
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }
 
       console.log("Download completed successfully");
       toast({
         title: "Success",
-        description: `Template downloaded successfully`,
+        description: `Template downloaded successfully as ${filename}`,
       });
     } catch (error) {
       console.error('Error downloading template:', error);
