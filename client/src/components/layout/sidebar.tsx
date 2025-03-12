@@ -15,6 +15,7 @@ import {
   LogOut,
   Share2,
   Map,
+  CheckSquare,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -22,10 +23,10 @@ interface SidebarProps {
   className?: string;
 }
 
-// Role-based permission mapping
+// Role-based permission mapping - exactly matching the href values in menuItems
 const rolePermissions: Record<number, string[]> = {
   1: ['/manage-users', '/roles', '/reference-types', '/reference-data', '/relationships', '/crosswalks', '/api-test', '/graph-visualization', '/site-paths'], // Admin
-  2: ['/reference-types', '/reference-data', '/relationships', '/crosswalks', '/approvals'], // Approver
+  2: ['/approvals', '/reference-types', '/reference-data', '/relationships', '/crosswalks'], // Approver
   3: ['/reference-data', '/relationships'], // Basic User
 };
 
@@ -33,8 +34,10 @@ export function Sidebar({ className }: SidebarProps) {
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
   const isAdmin = user?.roleId === 1;
+  const isApprover = user?.roleId === 2;
 
   const menuItems = [
+    // Admin-only items
     ...(isAdmin ? [
       {
         title: "Manage Users",
@@ -49,6 +52,16 @@ export function Sidebar({ className }: SidebarProps) {
         requiresPermission: true,
       },
     ] : []),
+    // Approver-specific items
+    ...(isApprover ? [
+      {
+        title: "Approvals Dashboard",
+        href: "/approvals",
+        icon: CheckSquare,
+        requiresPermission: true,
+      },
+    ] : []),
+    // Common items based on permissions
     {
       title: "Reference Data Types",
       href: "/reference-types",
@@ -73,31 +86,44 @@ export function Sidebar({ className }: SidebarProps) {
       icon: ArrowRightLeft,
       requiresPermission: true,
     },
-    {
-      title: "API Testing",
-      href: "/api-test",
-      icon: TestTube2,
-      requiresPermission: true,
-    },
-    {
-      title: "Graph Visualization",
-      href: "/graph-visualization",
-      icon: Share2,
-      requiresPermission: true,
-    },
-    {
-      title: "Supply Chain Paths",
-      href: "/site-paths",
-      icon: Map,
-      requiresPermission: true,
-    },
+    ...(isAdmin ? [
+      {
+        title: "API Testing",
+        href: "/api-test",
+        icon: TestTube2,
+        requiresPermission: true,
+      },
+      {
+        title: "Graph Visualization",
+        href: "/graph-visualization",
+        icon: Share2,
+        requiresPermission: true,
+      },
+      {
+        title: "Supply Chain Paths",
+        href: "/site-paths",
+        icon: Map,
+        requiresPermission: true,
+      },
+    ] : []),
   ];
 
   // Filter menu items based on user's role permissions
   const filteredMenuItems = menuItems.filter(item => {
-    if (!item.requiresPermission || isAdmin) return true;
+    if (!item.requiresPermission) return true;
+    if (isAdmin) return true;
+
     const userRolePermissions = rolePermissions[user?.roleId || 3] || [];
-    return userRolePermissions.includes(item.href);
+    const hasPermission = userRolePermissions.includes(item.href);
+
+    // Debug logging
+    console.log(`Checking permission for ${item.href}:`, {
+      roleId: user?.roleId,
+      permissions: userRolePermissions,
+      hasPermission
+    });
+
+    return hasPermission;
   });
 
   return (
