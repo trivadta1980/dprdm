@@ -153,7 +153,7 @@ export default function ApprovalsDashboard() {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
           },
-          credentials: 'include'
+          credentials: 'include' // Ensure credentials are included
         });
 
         let responseData;
