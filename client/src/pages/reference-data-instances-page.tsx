@@ -27,8 +27,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { format } from "date-fns";
+
+type ReferenceDataTypeSchema = {
+  name: string;
+  type: string;
+};
 
 export default function ReferenceDataInstancesPage() {
   const [_, setLocation] = useLocation();
@@ -70,10 +75,13 @@ export default function ReferenceDataInstancesPage() {
 
   const form = useForm<InstanceFormData>({
     resolver: zodResolver(instanceSchema),
-    defaultValues: schemaFields.reduce((acc, field) => ({
-      ...acc,
-      [field.name]: ""
-    }), {})
+    defaultValues: useMemo(() => 
+      schemaFields.reduce((acc, field) => ({
+        ...acc,
+        [field.name]: editingDataSet?.[field.name] || ""
+      }), {}),
+      [schemaFields, editingDataSet]
+    )
   });
 
   // Process instances for tabular display
