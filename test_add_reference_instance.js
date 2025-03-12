@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 
 async function loginAndGetCookie() {
-  const loginResponse = await fetch('http://localhost:5000/api/auth/login', {
+  const loginResponse = await fetch('http://0.0.0.0:5000/api/auth/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -13,6 +13,9 @@ async function loginAndGetCookie() {
   });
 
   if (!loginResponse.ok) {
+    const errorText = await loginResponse.text();
+    console.error('Login failed with status:', loginResponse.status);
+    console.error('Response:', errorText);
     throw new Error('Login failed');
   }
 
@@ -26,7 +29,7 @@ async function addReferenceInstance() {
     console.log('Successfully logged in');
 
     // Get the reference data set first
-    const getResponse = await fetch('http://localhost:5000/api/reference-data', {
+    const getResponse = await fetch('http://0.0.0.0:5000/api/reference-data', {
       headers: {
         'Cookie': cookie
       }
@@ -81,7 +84,7 @@ async function addReferenceInstance() {
     };
 
     // Make the PATCH request
-    const updateResponse = await fetch(`http://localhost:5000/api/reference-data/${sfdcCountries.id}`, {
+    const updateResponse = await fetch(`http://0.0.0.0:5000/api/reference-data/${sfdcCountries.id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
