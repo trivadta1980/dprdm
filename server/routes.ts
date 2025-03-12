@@ -339,6 +339,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const dataSetId = Number(req.params.id);
       const file = req.file;
+      const timestamp = new Date().toISOString();
 
       console.log('POST /api/reference-data/:id/bulk-upload - Received upload request for dataset:', dataSetId);
       console.log('POST /api/reference-data/:id/bulk-upload - File received:', file ? 'yes' : 'no');
@@ -390,7 +391,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
             // Only add valid records
             if (Object.keys(validRecord).length === schemaNames.length) {
-              records.push(validRecord);
+              // Add metadata to each record
+              records.push({
+                ...validRecord,
+                status: "DRAFT",
+                createdBy: req.user?.username || "system",
+                createdAt: timestamp,
+                lastModifiedBy: req.user?.username || "system",
+                lastModifiedAt: timestamp,
+                _history: [{
+                  timestamp,
+                  changes: Object.entries(validRecord).map(([field, value]) => ({
+                    field,
+                    oldValue: "",
+                    newValue: value
+                  }))
+                }]
+              });
             }
           }
         });
@@ -416,7 +433,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('POST /api/reference-data/:id/bulk-upload - Updating dataset with records count:', records.length);
 
-      // Update data set with new instances
+      // Update data set with new instances including metadata
       const updatedDataSet = await storage.updateReferenceDataSet(dataSetId, {
         data: records.reduce((acc, record, index) => {
           acc[`instance_${index + 1}`] = record;
@@ -741,8 +758,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
 
         parser.on('end', () => {
-          resolve();
-        });
+          resolve();        });
 
         parser.write(file.buffer);
         parser.end();
