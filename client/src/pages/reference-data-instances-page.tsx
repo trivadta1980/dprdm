@@ -139,7 +139,7 @@ export default function ReferenceDataInstancesPage() {
         }
       };
 
-      return await apiRequest({
+      await apiRequest({
         method: "PATCH",
         url: `/api/reference-data/${dataSetId}`,
         data: { data: updatedData }
@@ -190,7 +190,7 @@ export default function ReferenceDataInstancesPage() {
         }
       };
 
-      return await apiRequest({
+      await apiRequest({
         method: "PATCH",
         url: `/api/reference-data/${dataSetId}`,
         data: { data: updatedData }
@@ -244,13 +244,12 @@ export default function ReferenceDataInstancesPage() {
           }
         };
 
-        return await apiRequest({
+        await apiRequest({
           method: "PATCH",
           url: `/api/reference-data/${dataSetId}`,
           data: { data: updatedData }
         });
       }
-      return null;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
@@ -276,7 +275,7 @@ export default function ReferenceDataInstancesPage() {
       const currentData = { ...dataSet?.data };
       delete currentData[instanceId];
 
-      return await apiRequest({
+      await apiRequest({
         method: "PATCH",
         url: `/api/reference-data/${dataSetId}`,
         data: { data: currentData }
@@ -379,7 +378,7 @@ export default function ReferenceDataInstancesPage() {
     setEditingDataSet(instance);
     Object.entries(instance).forEach(([key, value]) => {
       if (key !== 'id' && key !== '_history') {
-        form.setValue(key, value);
+        form.setValue(key, String(value));
       }
     });
     setIsDialogOpen(true);
