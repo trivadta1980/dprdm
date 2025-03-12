@@ -139,11 +139,8 @@ export default function ReferenceDataInstancesPage() {
         }
       };
 
-      await apiRequest({
-        method: "PATCH",
-        url: `/api/reference-data/${dataSetId}`,
-        data: { data: updatedData }
-      });
+      // Fix the apiRequest call to use the correct parameter format
+      return apiRequest("PATCH", `/api/reference-data/${dataSetId}`, { data: updatedData });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });

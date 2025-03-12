@@ -63,6 +63,7 @@ async function addReferenceInstance() {
     }
 
     console.log("Found SFDC Countries dataset with ID:", sfdcCountries.id);
+    console.log("Current data before update:", JSON.stringify(sfdcCountries.data, null, 2));
 
     // Prepare new instance data
     const timestamp = new Date().toISOString();
@@ -97,6 +98,8 @@ async function addReferenceInstance() {
       }
     };
 
+    console.log("Attempting to update with data:", JSON.stringify(updatedData, null, 2));
+
     // Make the PATCH request
     const updateResponse = await fetch(`http://0.0.0.0:5000/api/reference-data/${sfdcCountries.id}`, {
       method: 'PATCH',
@@ -115,7 +118,23 @@ async function addReferenceInstance() {
     }
 
     const result = await updateResponse.json();
-    console.log('Successfully added new instance:', result);
+    console.log('Update response:', JSON.stringify(result, null, 2));
+
+    // Verify the update by fetching the data again
+    const verifyResponse = await fetch('http://0.0.0.0:5000/api/reference-data', {
+      headers: {
+        'Cookie': cookie,
+        'Accept': 'application/json'
+      },
+      credentials: 'include'
+    });
+
+    if (verifyResponse.ok) {
+      const verifyData = await verifyResponse.json();
+      const updatedDataset = verifyData.find(ds => ds.name === "SFDC Countries");
+      console.log('Verified data after update:', JSON.stringify(updatedDataset.data, null, 2));
+    }
+
   } catch (error) {
     console.error('Error:', error.message);
   }
