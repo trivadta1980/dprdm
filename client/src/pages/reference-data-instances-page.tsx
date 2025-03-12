@@ -461,9 +461,13 @@ export default function ReferenceDataInstancesPage() {
         credentials: 'include'
       });
 
+      if (response.status === 401) {
+        throw new Error("Authentication required. Please log in again.");
+      }
+
       if (!response.ok) {
         console.error("Template download failed:", response.status, response.statusText);
-        throw new Error("Failed to download template");
+        throw new Error(`Failed to download template: ${response.statusText}`);
       }
 
       const blob = await response.blob();
@@ -484,7 +488,7 @@ export default function ReferenceDataInstancesPage() {
       console.error("Error downloading template:", error);
       toast({
         title: "Error",
-        description: "Failed to download template. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to download template. Please try again.",
         variant: "destructive",
       });
     }
