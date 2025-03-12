@@ -4,23 +4,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Check, X, History } from "lucide-react";
+import { Loader2, Check, X, History, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { ReferenceDataSet } from "@shared/schema";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { useState } from "react";
 
 interface PendingApproval {
   dataSetId: number;
   dataSetName: string;
   instanceId: string;
+  instanceName: string;
   data: Record<string, any>;
   history: Array<{
     timestamp: string;
@@ -96,11 +100,30 @@ export default function ApprovalsDashboard() {
     },
   });
 
+  // Helper function to format instance data for display
+  const formatInstanceData = (data: Record<string, any>) => {
+    // Filter out internal fields and format for display
+    const displayData = Object.entries(data).filter(([key]) => 
+      !['_history', 'status', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key)
+    );
+    return displayData;
+  };
+
   if (isLoading) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-[200px]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="text-center py-8 text-destructive">
+          Error loading approvals: {error instanceof Error ? error.message : 'Unknown error'}
         </div>
       </MainLayout>
     );
@@ -123,6 +146,7 @@ export default function ApprovalsDashboard() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Dataset</TableHead>
+                    <TableHead>Instance Name</TableHead>
                     <TableHead>Instance ID</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Changes</TableHead>
@@ -133,7 +157,43 @@ export default function ApprovalsDashboard() {
                   {pendingApprovals?.map((item) => (
                     <TableRow key={`${item.dataSetId}-${item.instanceId}`}>
                       <TableCell>{item.dataSetName}</TableCell>
-                      <TableCell>{item.instanceId}</TableCell>
+                      <TableCell>{item.instanceName}</TableCell>
+                      <TableCell>
+                        <HoverCard>
+                          <HoverCardTrigger asChild>
+                            <Button variant="link" className="p-0">
+                              <FileText className="h-4 w-4 mr-2" />
+                              {item.instanceId}
+                            </Button>
+                          </HoverCardTrigger>
+                          <HoverCardContent className="w-96">
+                            <div className="space-y-4">
+                              <div>
+                                <h4 className="text-sm font-semibold mb-1">Instance Details</h4>
+                                <p className="text-xs text-muted-foreground">
+                                  Dataset: {item.dataSetName}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Name: {item.instanceName}
+                                </p>
+                              </div>
+                              <div className="border rounded-lg p-3 bg-muted/50">
+                                <div className="grid grid-cols-2 gap-3">
+                                  {formatInstanceData(item.data).map(([key, value]) => (
+                                    <div key={key} className="contents">
+                                      <span className="text-sm font-medium">{key}:</span>
+                                      <span className="text-sm truncate">{String(value)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                Last modified: {new Date(item.data.lastModifiedAt).toLocaleString()} by {item.data.lastModifiedBy}
+                              </div>
+                            </div>
+                          </HoverCardContent>
+                        </HoverCard>
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline">Pending Approval</Badge>
                       </TableCell>

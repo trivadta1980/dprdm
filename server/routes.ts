@@ -4,8 +4,8 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import multer from "multer";
 import { parse } from "csv-parse";
-import { 
-  insertRelationshipSchema, 
+import {
+  insertRelationshipSchema,
   insertCrosswalkMappingSchema,
   insertRelationshipAttributeDefinitionSchema,
   insertRelationshipAttributeValueSchema
@@ -28,32 +28,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin-only routes for user management
   app.get("/api/users", async (req, res) => {
-    console.log('GET /api/users - Request received'); 
+    console.log('GET /api/users - Request received');
     if (!req.isAuthenticated() || req.user.roleId !== 1) {
-      console.log('GET /api/users - Unauthorized access'); 
+      console.log('GET /api/users - Unauthorized access');
       return res.sendStatus(403);
     }
     const users = await storage.getAllUsers();
-    console.log('GET /api/users - Users fetched successfully'); 
+    console.log('GET /api/users - Users fetched successfully');
     res.json(users);
   });
 
   // Update user route
   app.patch("/api/users/:id", async (req, res) => {
-    console.log('PATCH /api/users/:id - Request received for user ID:', req.params.id); 
-    console.log('PATCH /api/users/:id - Update data:', req.body); 
+    console.log('PATCH /api/users/:id - Request received for user ID:', req.params.id);
+    console.log('PATCH /api/users/:id - Update data:', req.body);
 
     if (!req.isAuthenticated()) {
-      console.log('PATCH /api/users/:id - User not authenticated'); 
+      console.log('PATCH /api/users/:id - User not authenticated');
       return res.sendStatus(401);
     }
 
     const userId = Number(req.params.id);
-    console.log('PATCH /api/users/:id - Authenticated user ID:', req.user.id, 'Role ID:', req.user.roleId); 
+    console.log('PATCH /api/users/:id - Authenticated user ID:', req.user.id, 'Role ID:', req.user.roleId);
 
     // Only allow users to update their own profile unless they're an admin
     if (req.user.id !== userId && req.user.roleId !== 1) {
-      console.log('PATCH /api/users/:id - Permission denied: User cannot edit this profile'); 
+      console.log('PATCH /api/users/:id - Permission denied: User cannot edit this profile');
       return res.sendStatus(403);
     }
 
@@ -66,31 +66,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = await storage.updateUser(userId, req.body);
-      console.log('PATCH /api/users/:id - Update result:', user); 
+      console.log('PATCH /api/users/:id - Update result:', user);
       if (user) {
         res.json(user);
       } else {
-        console.log('PATCH /api/users/:id - User not found'); 
+        console.log('PATCH /api/users/:id - User not found');
         res.sendStatus(404);
       }
     } catch (error) {
-      console.error('PATCH /api/users/:id - Error updating user:', error); 
+      console.error('PATCH /api/users/:id - Error updating user:', error);
       res.status(500).json({ error: String(error) });
     }
   });
 
   // Delete user route
   app.delete("/api/users/:id", async (req, res) => {
-    console.log('DELETE /api/users/:id - Request received for user ID:', req.params.id); 
+    console.log('DELETE /api/users/:id - Request received for user ID:', req.params.id);
 
     if (!req.isAuthenticated()) {
-      console.log('DELETE /api/users/:id - User not authenticated'); 
+      console.log('DELETE /api/users/:id - User not authenticated');
       return res.sendStatus(401);
     }
 
     // Only admin can delete users
     if (req.user.roleId !== 1) {
-      console.log('DELETE /api/users/:id - Permission denied: User is not admin'); 
+      console.log('DELETE /api/users/:id - Permission denied: User is not admin');
       return res.sendStatus(403);
     }
 
@@ -98,7 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     // Prevent deleting the admin user (assuming user with ID 1 is the main admin)
     if (userId === 1) {
-      console.log('DELETE /api/users/:id - Cannot delete main admin user'); 
+      console.log('DELETE /api/users/:id - Cannot delete main admin user');
       return res.status(403).json({ error: "Cannot delete the main admin user" });
     }
 
@@ -106,14 +106,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const success = await storage.deleteUser(userId);
 
       if (success) {
-        console.log('DELETE /api/users/:id - User deleted successfully'); 
+        console.log('DELETE /api/users/:id - User deleted successfully');
         res.sendStatus(200);
       } else {
-        console.log('DELETE /api/users/:id - User not found'); 
+        console.log('DELETE /api/users/:id - User not found');
         res.sendStatus(404);
       }
     } catch (error) {
-      console.error('DELETE /api/users/:id - Error deleting user:', error); 
+      console.error('DELETE /api/users/:id - Error deleting user:', error);
       res.status(500).json({ error: String(error) });
     }
   });
@@ -753,7 +753,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
 
         parser.on('error', (error) => {
-          console.error('CSV parsing error:', error);
+          console.error('POST /api/relationships/:id/values/import - CSV parsing error:', error);
           reject(error);
         });
 
@@ -1651,10 +1651,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         for (const [instanceId, instanceData] of Object.entries(instances)) {
           // Check if instance has PENDING APPROVAL status
           if (instanceData.status === "PENDING APPROVAL") {
+            // Get the primary field value as instance name
+            // For example, if it's a State dataset, use the "State" field
+            const schemas = await storage.getReferenceDataTypeSchemas(dataSet.typeId);
+            const primaryField = schemas[0]?.name; // Use first schema field as primary
+            const instanceName = primaryField ? instanceData[primaryField] : instanceId;
+
             pendingApprovals.push({
               dataSetId: dataSet.id,
               dataSetName: dataSet.name,
               instanceId,
+              instanceName, // Add instance name to response
               data: instanceData,
               history: instanceData._history || []
             });
@@ -1669,6 +1676,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: String(error) });
     }
   });
+
   // Add new route after existing relationship values routes
   app.delete("/api/relationships/:id/values", async (req, res) => {
     console.log('DELETE /api/relationships/:id/values - Request received');
