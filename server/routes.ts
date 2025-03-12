@@ -291,7 +291,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Template download route
   app.get("/api/reference-data/:id/template", async (req, res) => {
     console.log('GET /api/reference-data/:id/template - Request received');
     if (!req.isAuthenticated()) {

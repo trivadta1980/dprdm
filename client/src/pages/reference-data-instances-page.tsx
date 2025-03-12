@@ -470,7 +470,7 @@ export default function ReferenceDataInstancesPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `template_${dataSet?.name || "reference_data"}.csv`;
+      a.download = `${dataSet?.name || "reference_data"}_template.csv`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
