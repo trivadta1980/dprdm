@@ -45,6 +45,22 @@ interface DebugInfo {
   sessionValid: boolean | null;
   user: string | null;
   authStatus?: { isAuthenticated: boolean; status: number; statusText: string };
+  beforeApproval?: {
+    instanceData: any;
+    datasetId: number;
+    instanceId: string;
+  };
+  afterApproval?: {
+    instanceData: any;
+    datasetId: number;
+    instanceId: string;
+  };
+  serverPayload?: {
+    instanceId: string;
+    oldStatus: string;
+    newStatus: string;
+    timestamp: string;
+  };
 }
 
 export default function ApprovalsDashboard() {
@@ -72,6 +88,17 @@ export default function ApprovalsDashboard() {
       console.log(`Approving instance ${approval.instanceId} in dataset ${approval.dataSetId}`);
 
       try {
+        // Fetch the dataset to get the current state before approval
+        const beforeDataResponse = await fetch(`/api/reference-data/${approval.dataSetId}`, {
+          method: 'GET',
+          credentials: 'include'
+        });
+        
+        let beforeData;
+        if (beforeDataResponse.ok) {
+          beforeData = await beforeDataResponse.json();
+        }
+
         // First, check if we're authenticated by using a status check
         const authCheckResponse = await fetch('/api/status', {
           method: 'GET',
@@ -84,6 +111,9 @@ export default function ApprovalsDashboard() {
           statusText: authCheckResponse.statusText
         };
 
+        // Get current instance state
+        const currentInstanceState = beforeData?.data?.[approval.instanceId] || null;
+
         setDebugInfo(prev => ({ 
           ...prev, 
           authStatus,
@@ -92,6 +122,11 @@ export default function ApprovalsDashboard() {
             url,
             method: 'POST',
             credentials: 'include'
+          },
+          beforeApproval: {
+            instanceData: currentInstanceState,
+            datasetId: approval.dataSetId,
+            instanceId: approval.instanceId
           }
         }));
 
@@ -121,13 +156,41 @@ export default function ApprovalsDashboard() {
         } catch (textError) {
           responseText = 'Failed to read response body';
         }
+        
+        // If successful, fetch the updated data
+        let afterData;
+        if (response.ok) {
+          const afterDataResponse = await fetch(`/api/reference-data/${approval.dataSetId}`, {
+            method: 'GET',
+            credentials: 'include'
+          });
+          
+          if (afterDataResponse.ok) {
+            afterData = await afterDataResponse.json();
+          }
+        }
+        
+        // Get updated instance state
+        const updatedInstanceState = afterData?.data?.[approval.instanceId] || null;
 
         // Update debug info with response details
         setDebugInfo(prev => ({ 
           ...prev, 
           apiResponse: responseData,
           rawResponse: responseText,
-          error: !response.ok ? `${response.status} ${response.statusText}` : undefined
+          error: !response.ok ? `${response.status} ${response.statusText}` : undefined,
+          afterApproval: {
+            instanceData: updatedInstanceState,
+            datasetId: approval.dataSetId,
+            instanceId: approval.instanceId
+          },
+          // Show the payload that would be sent by the server (based on routes.ts)
+          serverPayload: {
+            instanceId: approval.instanceId,
+            oldStatus: currentInstanceState?.status,
+            newStatus: "APPROVED",
+            timestamp: new Date().toISOString()
+          }
         }));
 
         if (!response.ok) {
@@ -397,6 +460,37 @@ export default function ApprovalsDashboard() {
                   <p>isAuthenticated: {debugInfo.authStatus.isAuthenticated ? 'true' : 'false'}</p>
                   <p>Status: {debugInfo.authStatus.status}</p>
                   <p>Status Text: {debugInfo.authStatus.statusText}</p>
+                </div>
+              )}
+              
+              {debugInfo.serverPayload && (
+                <div className="mt-4 border-t pt-4">
+                  <p className="font-bold text-blue-600">Server Approval Payload:</p>
+                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto">
+                    {JSON.stringify(debugInfo.serverPayload, null, 2)}
+                  </pre>
+                </div>
+              )}
+              
+              {debugInfo.beforeApproval && (
+                <div className="mt-4 border-t pt-4">
+                  <p className="font-bold text-orange-600">Database Value Before Approval:</p>
+                  <p className="text-xs">Dataset ID: {debugInfo.beforeApproval.datasetId}, Instance ID: {debugInfo.beforeApproval.instanceId}</p>
+                  <p className="text-xs font-semibold mt-1">Status: {debugInfo.beforeApproval.instanceData?.status || 'N/A'}</p>
+                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto">
+                    {JSON.stringify(debugInfo.beforeApproval.instanceData, null, 2)}
+                  </pre>
+                </div>
+              )}
+              
+              {debugInfo.afterApproval && (
+                <div className="mt-4 border-t pt-4">
+                  <p className="font-bold text-green-600">Database Value After Approval:</p>
+                  <p className="text-xs">Dataset ID: {debugInfo.afterApproval.datasetId}, Instance ID: {debugInfo.afterApproval.instanceId}</p>
+                  <p className="text-xs font-semibold mt-1">Status: {debugInfo.afterApproval.instanceData?.status || 'N/A'}</p>
+                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto">
+                    {JSON.stringify(debugInfo.afterApproval.instanceData, null, 2)}
+                  </pre>
                 </div>
               )}
             </CardContent>
