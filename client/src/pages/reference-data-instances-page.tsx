@@ -46,14 +46,14 @@ export interface ExtendedReferenceDataInstance extends ReferenceDataInstance {
   lastModifiedBy?: string;
   lastModifiedAt?: string;
   _history?: HistoryEntry[];
-  [key: string]: string | InstanceStatus | HistoryEntry[] | undefined; 
+  [key: string]: string | InstanceStatus | HistoryEntry[] | undefined;
 }
 
 export default function ReferenceDataInstancesPage() {
   const { user } = useSession();
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
-  const { id } = useParams(); 
+  const { id } = useParams();
   const dataSetId = id ? Number(id) : null;
   const [editingDataSet, setEditingDataSet] = useState<ExtendedReferenceDataInstance | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -62,6 +62,7 @@ export default function ReferenceDataInstancesPage() {
   const [isBulkUploadDialogOpen, setIsBulkUploadDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [statusFilter, setStatusFilter] = useState<InstanceStatus | "ALL">("ALL");
+  const [isDownloading, setIsDownloading] = useState(false); // Added state for download
 
   const { data: dataSet, isLoading: isLoadingDataSet } = useQuery<ReferenceDataSet>({
     queryKey: [`/api/reference-data/${dataSetId}`],
@@ -498,7 +499,13 @@ export default function ReferenceDataInstancesPage() {
 
   const handleDownloadTemplate = async () => {
     try {
-      console.log(`Attempting to download template for dataset ID: ${dataSetId}`);
+      setIsDownloading(true);
+      console.log(`Starting template download for dataset ID: ${dataSetId}`);
+
+      toast({
+        title: "Download Started",
+        description: "Preparing your template for download...",
+      });
 
       const response = await fetch(`/api/reference-data/${dataSetId}/template`, {
         method: 'GET',
@@ -527,11 +534,14 @@ export default function ReferenceDataInstancesPage() {
         }
       }
 
-      console.log("Downloading template as:", filename);
+      console.log("Preparing to download as:", filename);
 
       // Get the raw CSV content first to verify it's not empty
       const content = await response.text();
-      console.log("Template content:", content);
+      if (!content.trim()) {
+        throw new Error("Downloaded template is empty");
+      }
+      console.log("Template content received:", content);
 
       // Convert the text content to a blob
       const blob = new Blob([content], { type: 'text/csv' });
@@ -548,17 +558,20 @@ export default function ReferenceDataInstancesPage() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
+      console.log("Download completed successfully");
       toast({
         title: "Success",
-        description: "Template downloaded successfully",
+        description: `Template '${filename}' downloaded successfully`,
       });
     } catch (error) {
       console.error('Error downloading template:', error);
       toast({
-        title: "Error",
+        title: "Download Failed",
         description: error instanceof Error ? error.message : "Failed to download template",
         variant: "destructive",
       });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -591,9 +604,14 @@ export default function ReferenceDataInstancesPage() {
               variant="outline"
               onClick={handleDownloadTemplate}
               className="bg-white hover:bg-blue-50"
+              disabled={isDownloading}
             >
-              <Download className="h-4 w-4 mr-2" />
-              Download Template
+              {isDownloading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 mr-2" />
+              )}
+              {isDownloading ? "Downloading..." : "Download Template"}
             </Button>
 
             <Button
@@ -607,8 +625,8 @@ export default function ReferenceDataInstancesPage() {
 
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="bg-white hover:bg-red-50 border-red-200 text-red-600"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
