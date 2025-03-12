@@ -47,14 +47,18 @@ interface DebugInfo {
   authStatus?: { isAuthenticated: boolean; status: number; statusText: string };
   beforeApproval?: {
     instanceData: any;
+    statusBefore?: string;
     datasetId: number;
     instanceId: string;
   };
   afterApproval?: {
     instanceData: any;
+    statusAfter?: string;
     datasetId: number;
     instanceId: string;
+    time?: string;
   };
+  responseStatus?: { ok: boolean; status: number; statusText: string };
   serverPayload?: {
     instanceId: string;
     oldStatus: string;
@@ -93,7 +97,7 @@ export default function ApprovalsDashboard() {
           method: 'GET',
           credentials: 'include'
         });
-        
+
         let beforeData;
         if (beforeDataResponse.ok) {
           beforeData = await beforeDataResponse.json();
@@ -114,6 +118,7 @@ export default function ApprovalsDashboard() {
         // Get current instance state
         const currentInstanceState = beforeData?.data?.[approval.instanceId] || null;
 
+        // Update debug panel with all this information
         setDebugInfo(prev => ({ 
           ...prev, 
           authStatus,
@@ -125,6 +130,7 @@ export default function ApprovalsDashboard() {
           },
           beforeApproval: {
             instanceData: currentInstanceState,
+            statusBefore: currentInstanceState?.status,
             datasetId: approval.dataSetId,
             instanceId: approval.instanceId
           }
@@ -156,7 +162,7 @@ export default function ApprovalsDashboard() {
         } catch (textError) {
           responseText = 'Failed to read response body';
         }
-        
+
         // If successful, fetch the updated data
         let afterData;
         if (response.ok) {
@@ -164,12 +170,12 @@ export default function ApprovalsDashboard() {
             method: 'GET',
             credentials: 'include'
           });
-          
+
           if (afterDataResponse.ok) {
             afterData = await afterDataResponse.json();
           }
         }
-        
+
         // Get updated instance state
         const updatedInstanceState = afterData?.data?.[approval.instanceId] || null;
 
@@ -181,8 +187,15 @@ export default function ApprovalsDashboard() {
           error: !response.ok ? `${response.status} ${response.statusText}` : undefined,
           afterApproval: {
             instanceData: updatedInstanceState,
+            statusAfter: updatedInstanceState?.status,
             datasetId: approval.dataSetId,
-            instanceId: approval.instanceId
+            instanceId: approval.instanceId,
+            time: new Date().toISOString()
+          },
+          responseStatus: {
+            ok: response.ok,
+            status: response.status,
+            statusText: response.statusText
           },
           // Show the payload that would be sent by the server (based on routes.ts)
           serverPayload: {
@@ -424,10 +437,52 @@ export default function ApprovalsDashboard() {
               {debugInfo.error && (
                 <div className="text-red-500 mt-2">Error: {debugInfo.error}</div>
               )}
+              {debugInfo.authStatus && (
+                <div className="mt-2">
+                  <p className="font-bold">Authentication Status:</p>
+                  <p>isAuthenticated: {debugInfo.authStatus.isAuthenticated ? 'true' : 'false'}</p>
+                  <p>Status: {debugInfo.authStatus.status}</p>
+                  <p>Status Text: {debugInfo.authStatus.statusText}</p>
+                </div>
+              )}
+
+              {debugInfo.beforeApproval && (
+                <div className="mt-2 p-2 bg-gray-100 rounded-md">
+                  <p className="font-bold">Before Approval:</p>
+                  <p>Dataset ID: {debugInfo.beforeApproval.datasetId}</p>
+                  <p>Instance ID: {debugInfo.beforeApproval.instanceId}</p>
+                  <p className="text-orange-600 font-semibold">
+                    Status before: {debugInfo.beforeApproval.statusBefore || 'N/A'}
+                  </p>
+                </div>
+              )}
+
+              {debugInfo.responseStatus && (
+                <div className="mt-2 p-2 bg-gray-100 rounded-md">
+                  <p className="font-bold">API Response:</p>
+                  <p>Status: {debugInfo.responseStatus.status} ({debugInfo.responseStatus.statusText})</p>
+                  <p>Success: {debugInfo.responseStatus.ok ? 'true' : 'false'}</p>
+                </div>
+              )}
+
+              {debugInfo.afterApproval && (
+                <div className="mt-2 p-2 bg-gray-100 rounded-md">
+                  <p className="font-bold">After Approval:</p>
+                  <p className="text-green-600 font-semibold">
+                    Status after: {debugInfo.afterApproval.statusAfter || 'N/A'}
+                  </p>
+                  <p>Time: {debugInfo.afterApproval.time}</p>
+                </div>
+              )}
+
               {debugInfo.rawResponse && (
                 <div className="mt-2">
-                  <p className="font-bold">Raw Response:</p>
-                  <pre>{debugInfo.rawResponse}</pre>
+                  <details>
+                    <summary className="font-bold cursor-pointer">Raw Server Response:</summary>
+                    <pre className="text-xs mt-1 p-2 bg-gray-100 rounded overflow-auto max-h-40">
+                      {debugInfo.rawResponse}
+                    </pre>
+                  </details>
                 </div>
               )}
               {debugInfo.apiResponse && (
@@ -454,15 +509,6 @@ export default function ApprovalsDashboard() {
                   <p>{debugInfo.user}</p>
                 </div>
               )}
-              {debugInfo.authStatus && (
-                <div className="mt-2">
-                  <p className="font-bold">Authentication Status:</p>
-                  <p>isAuthenticated: {debugInfo.authStatus.isAuthenticated ? 'true' : 'false'}</p>
-                  <p>Status: {debugInfo.authStatus.status}</p>
-                  <p>Status Text: {debugInfo.authStatus.statusText}</p>
-                </div>
-              )}
-              
               {debugInfo.serverPayload && (
                 <div className="mt-4 border-t pt-4">
                   <p className="font-bold text-blue-600">Server Approval Payload:</p>
@@ -471,7 +517,7 @@ export default function ApprovalsDashboard() {
                   </pre>
                 </div>
               )}
-              
+
               {debugInfo.beforeApproval && (
                 <div className="mt-4 border-t pt-4">
                   <p className="font-bold text-orange-600">Database Value Before Approval:</p>
@@ -482,7 +528,7 @@ export default function ApprovalsDashboard() {
                   </pre>
                 </div>
               )}
-              
+
               {debugInfo.afterApproval && (
                 <div className="mt-4 border-t pt-4">
                   <p className="font-bold text-green-600">Database Value After Approval:</p>
