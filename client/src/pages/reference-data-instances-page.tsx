@@ -139,10 +139,17 @@ export default function ReferenceDataInstancesPage() {
         }
       };
 
-      // Fix the apiRequest call to use the correct parameter format
-      return apiRequest("PATCH", `/api/reference-data/${dataSetId}`, { data: updatedData });
+      console.log("Adding new instance with data:", {
+        instanceId: newInstanceId,
+        data: updatedData[newInstanceId]
+      });
+
+      const response = await apiRequest("PATCH", `/api/reference-data/${dataSetId}`, { data: updatedData });
+      console.log("API Response:", response);
+      return response;
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      console.log("Mutation successful, response:", response);
       queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
       toast({
         title: "Success",
@@ -152,6 +159,7 @@ export default function ReferenceDataInstancesPage() {
       setIsDialogOpen(false);
     },
     onError: (error: Error) => {
+      console.error("Mutation failed:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to add instance",
