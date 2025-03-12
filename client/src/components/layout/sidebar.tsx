@@ -36,6 +36,14 @@ export function Sidebar({ className }: SidebarProps) {
   const isAdmin = user?.roleId === 1;
   const isApprover = user?.roleId === 2;
 
+  // Debug logging for user information
+  console.log('Sidebar Component - User Info:', {
+    username: user?.username,
+    roleId: user?.roleId,
+    isAdmin,
+    isApprover
+  });
+
   const menuItems = [
     // Admin-only items
     ...(isAdmin ? [
@@ -108,23 +116,37 @@ export function Sidebar({ className }: SidebarProps) {
     ] : []),
   ];
 
+  // Debug logging for menu items before filtering
+  console.log('Menu Items before filtering:', menuItems.map(item => ({
+    title: item.title,
+    href: item.href,
+    requiresPermission: item.requiresPermission
+  })));
+
   // Filter menu items based on user's role permissions
   const filteredMenuItems = menuItems.filter(item => {
     if (!item.requiresPermission) return true;
-    if (isAdmin) return true;
 
     const userRolePermissions = rolePermissions[user?.roleId || 3] || [];
     const hasPermission = userRolePermissions.includes(item.href);
 
-    // Debug logging
-    console.log(`Checking permission for ${item.href}:`, {
+    // Debug logging for each menu item permission check
+    console.log(`Permission check for ${item.title}:`, {
+      href: item.href,
       roleId: user?.roleId,
-      permissions: userRolePermissions,
-      hasPermission
+      userPermissions: userRolePermissions,
+      hasPermission,
+      requiresPermission: item.requiresPermission
     });
 
     return hasPermission;
   });
+
+  // Debug logging for final filtered menu items
+  console.log('Filtered Menu Items:', filteredMenuItems.map(item => ({
+    title: item.title,
+    href: item.href
+  })));
 
   return (
     <div className={cn("pb-12 border-r bg-sidebar h-screen flex flex-col", className)}>
