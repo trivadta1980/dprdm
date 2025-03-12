@@ -19,7 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, ArrowLeft, Plus, Pencil, Trash2, History, Database, Upload, Download, CheckCircle } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Pencil, Trash2, History, Database, Upload, Download } from "lucide-react";
 import type { ReferenceDataSet, ReferenceDataInstance, HistoryEntry } from "@shared/schema";
 import { useLocation, useParams } from "wouter";
 import { useForm } from "react-hook-form";
@@ -41,8 +41,6 @@ export default function ReferenceDataInstancesPage() {
   const [selectedInstanceHistory, setSelectedInstanceHistory] = useState<{ id: string; history: HistoryEntry[] } | null>(null);
   const [isBulkUploadDialogOpen, setIsBulkUploadDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [statusFilter, setStatusFilter] = useState<"ALL" | "DRAFT" | "PENDING_APPROVAL">("ALL");
-
 
   // Fetch the reference data set
   const { data: dataSet, isLoading: isLoadingDataSet } = useQuery<ReferenceDataSet>({
@@ -83,15 +81,10 @@ export default function ReferenceDataInstancesPage() {
     }
 
     try {
-      const processedInstances = Object.entries(dataSet.data)
-        .map(([id, data]) => ({
-          id,
-          ...data as ReferenceDataInstance
-        }))
-        .filter(instance => 
-          statusFilter === "ALL" || 
-          instance.status === statusFilter
-        );
+      const processedInstances = Object.entries(dataSet.data).map(([id, data]) => ({
+        id,
+        ...data as ReferenceDataInstance
+      }));
       return processedInstances;
     } catch (error) {
       console.error('Error processing instance data:', error);
@@ -104,18 +97,12 @@ export default function ReferenceDataInstancesPage() {
     mutationFn: async (data: InstanceFormData) => {
       const currentData = { ...dataSet?.data } || {};
       const newInstanceId = `instance_${Object.keys(currentData).length + 1}`;
-      const now = new Date().toISOString();
       const updatedData = {
         ...currentData,
         [newInstanceId]: {
           ...data,
-          status: "DRAFT",
-          createdBy: "system", // TODO: Replace with actual user
-          createdAt: now,
-          lastModifiedBy: "system", // TODO: Replace with actual user
-          lastModifiedAt: now,
           _history: [{
-            timestamp: now,
+            timestamp: new Date().toISOString(),
             changes: Object.entries(data).map(([field, value]) => ({
               field,
               oldValue: '',
@@ -154,16 +141,16 @@ export default function ReferenceDataInstancesPage() {
     mutationFn: async ({ id, data }: { id: string; data: InstanceFormData }) => {
       const currentData = { ...dataSet?.data };
       const currentInstance = currentData[id] as ReferenceDataInstance;
-      const now = new Date().toISOString();
       const changes = Object.entries(data).map(([field, newValue]) => ({
         field,
         oldValue: currentInstance[field] || '',
         newValue
       })).filter(change => change.oldValue !== change.newValue);
 
+      // Only update history if there are actual changes
       if (changes.length > 0) {
         const historyEntry: HistoryEntry = {
-          timestamp: now,
+          timestamp: new Date().toISOString(),
           changes
         };
 
@@ -171,11 +158,6 @@ export default function ReferenceDataInstancesPage() {
           ...currentData,
           [id]: {
             ...data,
-            status: currentInstance.status || "DRAFT",
-            createdBy: currentInstance.createdBy || "system",
-            createdAt: currentInstance.createdAt || now,
-            lastModifiedBy: "system", // TODO: Replace with actual user
-            lastModifiedAt: now,
             _history: [...(currentInstance._history || []), historyEntry]
           }
         };
@@ -267,53 +249,6 @@ export default function ReferenceDataInstancesPage() {
     },
   });
 
-  const submitForApprovalMutation = useMutation({
-    mutationFn: async (instanceId: string) => {
-      const currentData = { ...dataSet?.data };
-      const currentInstance = currentData[instanceId] as ReferenceDataInstance;
-      const now = new Date().toISOString();
-
-      const updatedData = {
-        ...currentData,
-        [instanceId]: {
-          ...currentInstance,
-          status: "PENDING_APPROVAL",
-          lastModifiedBy: "system", // TODO: Replace with actual user
-          lastModifiedAt: now,
-          _history: [...(currentInstance._history || []), {
-            timestamp: now,
-            changes: [{
-              field: "status",
-              oldValue: currentInstance.status || "DRAFT",
-              newValue: "PENDING_APPROVAL"
-            }]
-          }]
-        }
-      };
-
-      const res = await apiRequest(
-        "PATCH",
-        `/api/reference-data/${dataSetId}`,
-        { data: updatedData }
-      );
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
-      toast({
-        title: "Success",
-        description: "Instance submitted for approval",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit for approval",
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -393,25 +328,6 @@ export default function ReferenceDataInstancesPage() {
     }
     setIsDialogOpen(open);
   }
-
-  const StatusBadge = ({ status }: { status: string }) => {
-    const getStatusColor = () => {
-      switch (status) {
-        case "DRAFT":
-          return "bg-yellow-100 text-yellow-800";
-        case "PENDING_APPROVAL":
-          return "bg-blue-100 text-blue-800";
-        default:
-          return "bg-gray-100 text-gray-800";
-      }
-    };
-
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor()}`}>
-        {status}
-      </span>
-    );
-  };
 
   if (isLoadingDataSet || isLoadingSchema) {
     return (
@@ -556,7 +472,6 @@ export default function ReferenceDataInstancesPage() {
                 <TableHeader>
                   <TableRow className="bg-gray-50">
                     <TableHead className="text-sm font-semibold text-gray-700">Instance ID</TableHead>
-                    <TableHead className="text-sm font-semibold text-gray-700">Status</TableHead>
                     {schemaFields.map((field) => (
                       <TableHead key={field.name} className="text-sm font-semibold text-gray-700">
                         {field.name}
@@ -569,26 +484,12 @@ export default function ReferenceDataInstancesPage() {
                   {instances.map((instance) => (
                     <TableRow key={instance.id} className="hover:bg-gray-50 transition-colors">
                       <TableCell className="font-medium text-gray-900">{instance.id}</TableCell>
-                      <TableCell>
-                        <StatusBadge status={instance.status || "DRAFT"} />
-                      </TableCell>
                       {schemaFields.map((field) => (
                         <TableCell key={field.name} className="text-gray-700">
                           {instance[field.name]}
                         </TableCell>
                       ))}
                       <TableCell className="text-right space-x-1">
-                        {instance.status === "DRAFT" && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => submitForApprovalMutation.mutate(instance.id)}
-                            className="hover:bg-blue-50"
-                            title="Submit for Approval"
-                          >
-                            <CheckCircle className="h-4 w-4 text-blue-600" />
-                          </Button>
-                        )}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -598,26 +499,22 @@ export default function ReferenceDataInstancesPage() {
                         >
                           <History className="h-4 w-4 text-blue-600" />
                         </Button>
-                        {instance.status === "DRAFT" && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(instance)}
-                              className="hover:bg-green-50"
-                            >
-                              <Pencil className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(instance.id)}
-                              className="hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4 text-red-600" />
-                            </Button>
-                          </>
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(instance)}
+                          className="hover:bg-green-50"
+                        >
+                          <Pencil className="h-4 w-4 text-green-600" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(instance.id)}
+                          className="hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
