@@ -22,10 +22,17 @@ interface SidebarProps {
   className?: string;
 }
 
+// Role-based permission mapping
+const rolePermissions: Record<number, string[]> = {
+  1: ['/manage-users', '/roles', '/reference-types', '/reference-data', '/relationships', '/crosswalks', '/api-test', '/graph-visualization', '/site-paths'], // Admin
+  2: ['/reference-types', '/reference-data', '/relationships', '/crosswalks', '/approvals'], // Approver
+  3: ['/reference-data', '/relationships'], // Basic User
+};
+
 export function Sidebar({ className }: SidebarProps) {
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
-  const isAdmin = user?.roleId === 1 || Number(user?.roleId) === 1;
+  const isAdmin = user?.roleId === 1;
 
   const menuItems = [
     ...(isAdmin ? [
@@ -86,9 +93,11 @@ export function Sidebar({ className }: SidebarProps) {
     },
   ];
 
+  // Filter menu items based on user's role permissions
   const filteredMenuItems = menuItems.filter(item => {
     if (!item.requiresPermission || isAdmin) return true;
-    return Array.isArray(user?.routes) && user.routes.includes(item.href);
+    const userRolePermissions = rolePermissions[user?.roleId || 3] || [];
+    return userRolePermissions.includes(item.href);
   });
 
   return (
