@@ -26,7 +26,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 import { useState, useRef } from "react";
 import { format } from "date-fns";
 import { useSession } from "@/hooks/use-session";
@@ -152,19 +152,49 @@ export default function ReferenceDataInstancesPage() {
       });
 
       // Make the PATCH request
-      const response = await apiRequest("PATCH", `/api/reference-data/${dataSetId}`, { data: updatedData });
-      console.log("PATCH response:", response);
+      const response = await fetch(`/api/reference-data/${dataSetId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ data: updatedData })
+      });
+
+      if (!response.ok) {
+        console.error('PATCH request failed:', response.status, response.statusText);
+        throw new Error(`Failed to update data: ${response.statusText}`);
+      }
+
+      console.log("PATCH response:", await response.json());
 
       // Verify the update was successful
-      const verifyResponse = await apiRequest("GET", `/api/reference-data/${dataSetId}`);
-      console.log("Verification GET response:", verifyResponse);
+      const verifyResponse = await fetch(`/api/reference-data/${dataSetId}`, {
+        headers: {
+          'Accept': 'application/json'
+        },
+        credentials: 'include'
+      });
 
-      // Only return success if we can verify the data was actually updated
-      if (!verifyResponse?.data || !verifyResponse.data[newInstanceId]) {
+      if (!verifyResponse.ok) {
         throw new Error("Failed to verify data update");
       }
 
-      return response;
+      const verifyData = await verifyResponse.json();
+      console.log("Verification GET response:", verifyData);
+
+      // Check if our new instance exists in the verified data
+      const verifiedInstance = verifyData.data?.[newInstanceId];
+      if (!verifiedInstance) {
+        console.error("Instance not found in verification data:", {
+          newInstanceId,
+          verifiedData: verifyData.data
+        });
+        throw new Error("Failed to verify instance creation");
+      }
+
+      return verifyData;
     },
     onSuccess: (response) => {
       console.log("Mutation successful, response:", response);
@@ -213,10 +243,14 @@ export default function ReferenceDataInstancesPage() {
         }
       };
 
-      await apiRequest({
+      await fetch(`/api/reference-data/${dataSetId}`, {
         method: "PATCH",
-        url: `/api/reference-data/${dataSetId}`,
-        data: { data: updatedData }
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ data: updatedData })
       });
     },
     onSuccess: () => {
@@ -267,10 +301,14 @@ export default function ReferenceDataInstancesPage() {
           }
         };
 
-        await apiRequest({
+        await fetch(`/api/reference-data/${dataSetId}`, {
           method: "PATCH",
-          url: `/api/reference-data/${dataSetId}`,
-          data: { data: updatedData }
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({ data: updatedData })
         });
       }
     },
@@ -298,10 +336,14 @@ export default function ReferenceDataInstancesPage() {
       const currentData = { ...dataSet?.data };
       delete currentData[instanceId];
 
-      await apiRequest({
+      await fetch(`/api/reference-data/${dataSetId}`, {
         method: "PATCH",
-        url: `/api/reference-data/${dataSetId}`,
-        data: { data: currentData }
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ data: currentData })
       });
     },
     onSuccess: () => {
