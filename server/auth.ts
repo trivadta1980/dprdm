@@ -51,6 +51,71 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  passport.use(
+    new LocalStrategy(async (username, password, done) => {
+      console.log(`Login attempt for username: ${username}`);
+      try {
+        const user = await storage.getUserByUsername(username);
+        console.log(`User found:`, user ? { id: user.id, username: user.username, isActive: user.isActive } : 'Not found');
+
+        if (!user) {
+          console.log('Login failed: User not found');
+          return done(null, false, { message: "Invalid username or password" });
+        }
+
+        if (!user.isActive) {
+          console.log('Login failed: Account inactive');
+          return done(null, false, { message: "Account is inactive" });
+        }
+
+        const passwordMatch = await comparePasswords(password, user.password);
+        console.log(`Password match result: ${passwordMatch}`);
+
+        if (!passwordMatch) {
+          console.log('Login failed: Password mismatch');
+          return done(null, false, { message: "Invalid username or password" });
+        }
+
+        console.log('Login successful');
+        return done(null, user);
+      } catch (error) {
+        console.error('Login error:', error);
+        return done(error);
+      }
+    }),
+  );
+
+  passport.serializeUser((user, done) => done(null, user.id));
+  passport.deserializeUser(async (id: number, done) => {
+    try {
+      const user = await storage.getUser(id);
+      done(null, user);
+    } catch (error) {
+      done(error);
+    }
+  });
+
+  app.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err, user, info) => {
+      if (err) {
+        console.error('Authentication error:', err);
+        return next(err);
+      }
+      if (!user) {
+        console.log('Authentication failed:', info?.message);
+        return res.status(401).json({ message: info?.message || "Authentication failed" });
+      }
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error('Login error:', err);
+          return next(err);
+        }
+        console.log('User logged in successfully:', user.username);
+        res.status(200).json(user);
+      });
+    })(req, res, next);
+  });
+
   app.use("/api", (req: Request, res: Response, next: NextFunction) => {
     if (req.path === "/login" || req.path === "/register" || req.path === "/reset-password/request" || req.path === "/reset-password") {
       return next();
@@ -61,23 +126,6 @@ export function setupAuth(app: Express) {
       return res.sendStatus(401);
     }
     next();
-  });
-
-  passport.use(
-    new LocalStrategy(async (username, password, done) => {
-      const user = await storage.getUserByUsername(username);
-      if (!user || !user.isActive || !(await comparePasswords(password, user.password))) {
-        return done(null, false);
-      } else {
-        return done(null, user);
-      }
-    }),
-  );
-
-  passport.serializeUser((user, done) => done(null, user.id));
-  passport.deserializeUser(async (id: number, done) => {
-    const user = await storage.getUser(id);
-    done(null, user);
   });
 
   app.post("/api/register", async (req, res, next) => {
@@ -107,9 +155,6 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
-  });
 
   app.post("/api/logout", (req, res, next) => {
     req.logout((err) => {
