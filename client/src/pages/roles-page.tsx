@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 import type { Role } from "@shared/schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -72,10 +72,21 @@ export default function RolesPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertRole) => {
-      const response = await apiRequest("/api/roles", {
-        method: "POST",
-        data,
+      const response = await fetch('/api/roles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(data),
+        credentials: 'include'
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to create role: ${errorText}`);
+      }
+
       return response.json();
     },
     onSuccess: () => {
@@ -83,14 +94,14 @@ export default function RolesPage() {
       setDialogOpen(false);
       form.reset();
       toast({
-        title: "Role created",
-        description: "The role has been successfully created.",
+        title: "Success",
+        description: "Role created successfully",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to create role",
-        description: error.message,
+        title: "Error",
+        description: error.message || "Failed to create role",
         variant: "destructive",
       });
     },
@@ -98,10 +109,21 @@ export default function RolesPage() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: InsertRole }) => {
-      const response = await apiRequest(`/api/roles/${id}`, {
-        method: "PATCH",
-        data,
+      const response = await fetch(`/api/roles/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(data),
+        credentials: 'include'
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update role: ${errorText}`);
+      }
+
       return response.json();
     },
     onSuccess: () => {
@@ -110,14 +132,14 @@ export default function RolesPage() {
       setEditingRole(null);
       form.reset();
       toast({
-        title: "Role updated",
-        description: "The role has been successfully updated.",
+        title: "Success",
+        description: "Role updated successfully",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to update role",
-        description: error.message,
+        title: "Error",
+        description: error.message || "Failed to update role",
         variant: "destructive",
       });
     },
@@ -125,21 +147,30 @@ export default function RolesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest(`/api/roles/${id}`, {
-        method: "DELETE",
+      const response = await fetch(`/api/roles/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json'
+        },
+        credentials: 'include'
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to delete role: ${errorText}`);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
       toast({
-        title: "Role deleted",
-        description: "The role has been successfully deleted.",
+        title: "Success",
+        description: "Role deleted successfully",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to delete role",
-        description: error.message,
+        title: "Error",
+        description: error.message || "Failed to delete role",
         variant: "destructive",
       });
     },

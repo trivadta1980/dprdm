@@ -2,24 +2,36 @@ import fetch from 'node-fetch';
 
 async function login() {
   try {
-    const loginResponse = await fetch('http://localhost:5000/api/auth/login', {
+    const loginResponse = await fetch('http://0.0.0.0:5000/api/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify({
         username: "admin",
         password: "Admin123!"
       }),
-      credentials: 'include'
+      redirect: 'manual'
     });
 
     if (!loginResponse.ok) {
-      throw new Error(`Login failed: ${await loginResponse.text()}`);
+      const errorText = await loginResponse.text();
+      console.error('Login failed with status:', loginResponse.status);
+      console.error('Response:', errorText);
+      console.error('Request details:', {
+        url: loginResponse.url,
+        headers: loginResponse.headers.raw(),
+        payload: {
+          username: 'admin',
+          password: 'Admin123!'
+        }
+      });
+      throw new Error('Login failed');
     }
 
     const cookies = loginResponse.headers.get('set-cookie');
-    console.log('Login successful');
+    console.log('Login successful, received cookies');
     return cookies;
   } catch (error) {
     console.error('Login error:', error.message);
@@ -35,7 +47,7 @@ async function createRole(sessionCookie) {
       routes: ["/approvals", "/reference-data"]
     };
 
-    const response = await fetch('http://localhost:5000/api/roles', {
+    const response = await fetch('http://0.0.0.0:5000/api/roles', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
