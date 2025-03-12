@@ -1141,6 +1141,144 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     try {
       const success = await storage.deleteCrosswalkMapping(Number(req.params.id));
+
+  // Add endpoints for approving/rejecting reference data instances
+  app.post("/api/reference-data/:id/instances/:instanceId/approve", async (req, res) => {
+    console.log('POST /api/reference-data/:id/instances/:instanceId/approve - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/reference-data/:id/instances/:instanceId/approve - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const dataSetId = Number(req.params.id);
+      const instanceId = req.params.instanceId;
+      const timestamp = new Date().toISOString();
+      
+      // Get the current dataset
+      const dataSet = await storage.getReferenceDataSet(dataSetId);
+      if (!dataSet) {
+        console.log('POST /api/reference-data/:id/instances/:instanceId/approve - Dataset not found');
+        return res.status(404).json({ error: "Reference data set not found" });
+      }
+      
+      const currentData = { ...dataSet.data };
+      const currentInstance = currentData[instanceId];
+      
+      if (!currentInstance) {
+        console.log('POST /api/reference-data/:id/instances/:instanceId/approve - Instance not found');
+        return res.status(404).json({ error: "Instance not found" });
+      }
+      
+      if (currentInstance.status !== "PENDING_APPROVAL") {
+        console.log('POST /api/reference-data/:id/instances/:instanceId/approve - Instance not pending approval');
+        return res.status(400).json({ error: "Only pending instances can be approved" });
+      }
+      
+      // Update the instance status
+      const updatedData = {
+        ...currentData,
+        [instanceId]: {
+          ...currentInstance,
+          status: "APPROVED",
+          lastModifiedBy: req.user?.username || "system",
+          lastModifiedAt: timestamp,
+          _history: [
+            ...(currentInstance._history || []),
+            {
+              timestamp,
+              changes: [{
+                field: "status",
+                oldValue: "PENDING_APPROVAL",
+                newValue: "APPROVED"
+              }]
+            }
+          ]
+        }
+      };
+      
+      // Save the updated dataset
+      const updatedDataSet = await storage.updateReferenceDataSet(dataSetId, {
+        data: updatedData
+      });
+      
+      console.log('POST /api/reference-data/:id/instances/:instanceId/approve - Instance approved successfully');
+      res.json(updatedDataSet);
+      
+    } catch (error) {
+      console.error('POST /api/reference-data/:id/instances/:instanceId/approve - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+  
+  app.post("/api/reference-data/:id/instances/:instanceId/reject", async (req, res) => {
+    console.log('POST /api/reference-data/:id/instances/:instanceId/reject - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/reference-data/:id/instances/:instanceId/reject - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const dataSetId = Number(req.params.id);
+      const instanceId = req.params.instanceId;
+      const timestamp = new Date().toISOString();
+      
+      // Get the current dataset
+      const dataSet = await storage.getReferenceDataSet(dataSetId);
+      if (!dataSet) {
+        console.log('POST /api/reference-data/:id/instances/:instanceId/reject - Dataset not found');
+        return res.status(404).json({ error: "Reference data set not found" });
+      }
+      
+      const currentData = { ...dataSet.data };
+      const currentInstance = currentData[instanceId];
+      
+      if (!currentInstance) {
+        console.log('POST /api/reference-data/:id/instances/:instanceId/reject - Instance not found');
+        return res.status(404).json({ error: "Instance not found" });
+      }
+      
+      if (currentInstance.status !== "PENDING_APPROVAL") {
+        console.log('POST /api/reference-data/:id/instances/:instanceId/reject - Instance not pending approval');
+        return res.status(400).json({ error: "Only pending instances can be rejected" });
+      }
+      
+      // Update the instance status
+      const updatedData = {
+        ...currentData,
+        [instanceId]: {
+          ...currentInstance,
+          status: "DRAFT",
+          lastModifiedBy: req.user?.username || "system",
+          lastModifiedAt: timestamp,
+          _history: [
+            ...(currentInstance._history || []),
+            {
+              timestamp,
+              changes: [{
+                field: "status",
+                oldValue: "PENDING_APPROVAL",
+                newValue: "DRAFT"
+              }]
+            }
+          ]
+        }
+      };
+      
+      // Save the updated dataset
+      const updatedDataSet = await storage.updateReferenceDataSet(dataSetId, {
+        data: updatedData
+      });
+      
+      console.log('POST /api/reference-data/:id/instances/:instanceId/reject - Instance rejected successfully');
+      res.json(updatedDataSet);
+      
+    } catch (error) {
+      console.error('POST /api/reference-data/:id/instances/:instanceId/reject - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
       if (success) {
         console.log('DELETE /api/crosswalks/:id - Mapping deleted successfully');
         res.sendStatus(200);

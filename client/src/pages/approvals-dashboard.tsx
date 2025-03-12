@@ -55,7 +55,8 @@ export default function ApprovalsDashboard() {
   // Mutation for handling approvals
   const approveMutation = useMutation({
     mutationFn: async ({ dataSetId, instanceId }: { dataSetId: number; instanceId: string }) => {
-      const response = await apiRequest(`/api/reference-data/${dataSetId}/instances/${instanceId}/approve`, {
+      console.log(`Approving instance ${instanceId} in dataset ${dataSetId}`);
+      const response = await apiRequest(`reference-data/${dataSetId}/instances/${instanceId}/approve`, {
         method: "POST",
       });
       return response.json();
@@ -68,9 +69,10 @@ export default function ApprovalsDashboard() {
       });
     },
     onError: (error: Error) => {
+      console.error("Approval error:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to approve the instance",
         variant: "destructive",
       });
     },
@@ -79,7 +81,8 @@ export default function ApprovalsDashboard() {
   // Mutation for handling rejections
   const rejectMutation = useMutation({
     mutationFn: async ({ dataSetId, instanceId }: { dataSetId: number; instanceId: string }) => {
-      const response = await apiRequest(`/api/reference-data/${dataSetId}/instances/${instanceId}/reject`, {
+      console.log(`Rejecting instance ${instanceId} in dataset ${dataSetId}`);
+      const response = await apiRequest(`reference-data/${dataSetId}/instances/${instanceId}/reject`, {
         method: "POST",
       });
       return response.json();
@@ -92,9 +95,10 @@ export default function ApprovalsDashboard() {
       });
     },
     onError: (error: Error) => {
+      console.error("Rejection error:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to reject the instance",
         variant: "destructive",
       });
     },
