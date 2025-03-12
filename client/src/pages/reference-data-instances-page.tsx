@@ -29,17 +29,30 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState, useRef } from "react";
 import { format } from "date-fns";
-import { useSession } from "@/hooks/use-session"; // Add this import for user info
+import { useSession } from "@/hooks/use-session";
+
+interface ReferenceDataTypeSchema {
+  name: string;
+  dataType: string;
+}
 
 export type InstanceStatus = "DRAFT" | "PENDING_APPROVAL" | "APPROVED";
 
+export interface ExtendedReferenceDataInstance extends ReferenceDataInstance {
+  status?: InstanceStatus;
+  createdBy?: string;
+  createdAt?: string;
+  lastModifiedBy?: string;
+  lastModifiedAt?: string;
+}
+
 export default function ReferenceDataInstancesPage() {
-  const { user } = useSession(); // Add this to get current user info
+  const { user } = useSession();
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
-  const params = useParams("/reference-data/:id/instances");
+  const params = useParams<{ id: string }>("/reference-data/:id/instances");
   const dataSetId = params ? Number(params.id) : null;
-  const [editingDataSet, setEditingDataSet] = useState<ReferenceDataInstance | null>(null);
+  const [editingDataSet, setEditingDataSet] = useState<ExtendedReferenceDataInstance | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
   const [selectedInstanceHistory, setSelectedInstanceHistory] = useState<{ id: string; history: HistoryEntry[] } | null>(null);
@@ -47,21 +60,17 @@ export default function ReferenceDataInstancesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [statusFilter, setStatusFilter] = useState<InstanceStatus | "ALL">("ALL");
 
-  // Fetch the reference data set
   const { data: dataSet, isLoading: isLoadingDataSet } = useQuery<ReferenceDataSet>({
     queryKey: [`/api/reference-data/${dataSetId}`],
     enabled: !!dataSetId && !isNaN(dataSetId),
     refetchOnWindowFocus: false
   });
 
-  // Fetch schema fields for the reference type
   const { data: schemaFields = [], isLoading: isLoadingSchema } = useQuery<ReferenceDataTypeSchema[]>({
     queryKey: [`/api/reference-types/${dataSet?.typeId}/schemas`],
     enabled: !!dataSet?.typeId,
   });
 
-
-  // Create a dynamic schema based on the schema fields
   const instanceSchema = z.object(
     schemaFields.reduce((acc, field) => ({
       ...acc,
@@ -79,7 +88,6 @@ export default function ReferenceDataInstancesPage() {
     }), {})
   });
 
-  // Process instances for tabular display
   const filteredInstances = (() => {
     const instances = (() => {
       if (!dataSet?.data) {
@@ -89,7 +97,7 @@ export default function ReferenceDataInstancesPage() {
       try {
         const processedInstances = Object.entries(dataSet.data).map(([id, data]) => ({
           id,
-          ...data as ReferenceDataInstance
+          ...(data as ExtendedReferenceDataInstance)
         }));
         return processedInstances;
       } catch (error) {
@@ -105,7 +113,6 @@ export default function ReferenceDataInstancesPage() {
     return instances.filter(instance => instance.status === statusFilter);
   })();
 
-  // Mutations for CRUD operations
   const addMutation = useMutation({
     mutationFn: async (data: InstanceFormData) => {
       const currentData = { ...dataSet?.data } || {};
@@ -132,12 +139,11 @@ export default function ReferenceDataInstancesPage() {
         }
       };
 
-      const res = await apiRequest(
-        "PATCH",
-        `/api/reference-data/${dataSetId}`,
-        { data: updatedData }
-      );
-      return res.json();
+      return await apiRequest({
+        method: "PATCH",
+        url: `/api/reference-data/${dataSetId}`,
+        data: { data: updatedData }
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
@@ -160,7 +166,7 @@ export default function ReferenceDataInstancesPage() {
   const submitForApprovalMutation = useMutation({
     mutationFn: async (instanceId: string) => {
       const currentData = { ...dataSet?.data };
-      const currentInstance = currentData[instanceId];
+      const currentInstance = currentData[instanceId] as ExtendedReferenceDataInstance;
       const timestamp = new Date().toISOString();
 
       const updatedData = {
@@ -176,7 +182,7 @@ export default function ReferenceDataInstancesPage() {
               timestamp,
               changes: [{
                 field: "status",
-                oldValue: "DRAFT",
+                oldValue: currentInstance.status || "DRAFT",
                 newValue: "PENDING_APPROVAL"
               }]
             }
@@ -184,12 +190,11 @@ export default function ReferenceDataInstancesPage() {
         }
       };
 
-      const res = await apiRequest(
-        "PATCH",
-        `/api/reference-data/${dataSetId}`,
-        { data: updatedData }
-      );
-      return res.json();
+      return await apiRequest({
+        method: "PATCH",
+        url: `/api/reference-data/${dataSetId}`,
+        data: { data: updatedData }
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
@@ -210,7 +215,7 @@ export default function ReferenceDataInstancesPage() {
   const editMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: InstanceFormData }) => {
       const currentData = { ...dataSet?.data };
-      const currentInstance = currentData[id];
+      const currentInstance = currentData[id] as ExtendedReferenceDataInstance;
       const timestamp = new Date().toISOString();
 
       const changes = Object.entries(data).map(([field, newValue]) => ({
@@ -239,12 +244,11 @@ export default function ReferenceDataInstancesPage() {
           }
         };
 
-        const res = await apiRequest(
-          "PATCH",
-          `/api/reference-data/${dataSetId}`,
-          { data: updatedData }
-        );
-        return res.json();
+        return await apiRequest({
+          method: "PATCH",
+          url: `/api/reference-data/${dataSetId}`,
+          data: { data: updatedData }
+        });
       }
       return null;
     },
@@ -272,12 +276,11 @@ export default function ReferenceDataInstancesPage() {
       const currentData = { ...dataSet?.data };
       delete currentData[instanceId];
 
-      const res = await apiRequest(
-        "PATCH",
-        `/api/reference-data/${dataSetId}`,
-        { data: currentData }
-      );
-      return res.json();
+      return await apiRequest({
+        method: "PATCH",
+        url: `/api/reference-data/${dataSetId}`,
+        data: { data: currentData }
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
@@ -295,7 +298,6 @@ export default function ReferenceDataInstancesPage() {
     },
   });
 
-  // Add bulk upload mutation
   const bulkUploadMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
@@ -373,9 +375,8 @@ export default function ReferenceDataInstancesPage() {
     }
   }
 
-  const handleEdit = (instance: { id: string } & ReferenceDataInstance) => {
+  const handleEdit = (instance: { id: string } & ExtendedReferenceDataInstance) => {
     setEditingDataSet(instance);
-    // Pre-fill form with instance data
     Object.entries(instance).forEach(([key, value]) => {
       if (key !== 'id' && key !== '_history') {
         form.setValue(key, value);
@@ -390,7 +391,7 @@ export default function ReferenceDataInstancesPage() {
     }
   }
 
-  const handleShowHistory = (instance: { id: string } & ReferenceDataInstance) => {
+  const handleShowHistory = (instance: { id: string } & ExtendedReferenceDataInstance) => {
     setSelectedInstanceHistory({
       id: instance.id,
       history: instance._history || []
@@ -507,7 +508,6 @@ export default function ReferenceDataInstancesPage() {
           </div>
         </div>
 
-        {/* Add status filter */}
         <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm">
           <span className="text-sm font-medium text-gray-700">Filter by Status:</span>
           <div className="flex gap-2">
@@ -525,7 +525,6 @@ export default function ReferenceDataInstancesPage() {
           </div>
         </div>
 
-        {/* Add Bulk Upload Dialog */}
         <Dialog open={isBulkUploadDialogOpen} onOpenChange={setIsBulkUploadDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
@@ -594,8 +593,8 @@ export default function ReferenceDataInstancesPage() {
                       <TableCell>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           instance.status === "DRAFT" ? "bg-yellow-100 text-yellow-800" :
-                          instance.status === "PENDING_APPROVAL" ? "bg-blue-100 text-blue-800" :
-                          "bg-green-100 text-green-800"
+                            instance.status === "PENDING_APPROVAL" ? "bg-blue-100 text-blue-800" :
+                              "bg-green-100 text-green-800"
                         }`}>
                           {instance.status || "DRAFT"}
                         </span>
@@ -652,7 +651,6 @@ export default function ReferenceDataInstancesPage() {
           </CardContent>
         </Card>
 
-        {/* History Dialog with improved styling */}
         <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
