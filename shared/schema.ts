@@ -10,13 +10,13 @@ export const sessions = pgTable("session", {
   expire: timestamp("expire", { mode: "date" }).notNull(),
 });
 
-// Keep all existing table definitions
-// Add routes type and array
+// Update the availableRoutes array
 const availableRoutes = [
   "/reference-types",
   "/reference-data",
   "/relationships",
   "/crosswalks",
+  "/approvals", // Add new approvals route
 ] as const;
 
 export type AvailableRoute = typeof availableRoutes[number];

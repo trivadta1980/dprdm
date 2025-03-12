@@ -29,7 +29,8 @@ const ApiTestPage = lazy(() => import("@/pages/api-test-page"));
 const ResetPasswordPage = lazy(() => import("@/pages/reset-password-page"));
 const GraphVisualizationPage = lazy(() => import("@/pages/graph-visualization-page"));
 const Neo4jInfoPage = lazy(() => import("@/pages/neo4j-info-page"));
-const SitePathsPage = lazy(() => import("@/pages/site-paths-page")); // Add import for new page
+const SitePathsPage = lazy(() => import("@/pages/site-paths-page"));
+const ApprovalsDashboard = lazy(() => import("@/pages/approvals-dashboard")); // Add import for approvals dashboard
 
 export default function App() {
   return (
@@ -127,10 +128,15 @@ export default function App() {
                   <Neo4jInfoPage />
                 </ProtectedRoute>
               </Route>
-              {/* Add new route for site paths page */}
               <Route path="/site-paths">
                 <ProtectedRoute>
                   <SitePathsPage />
+                </ProtectedRoute>
+              </Route>
+              {/* Add new route for approvals dashboard */}
+              <Route path="/approvals">
+                <ProtectedRoute>
+                  <ApprovalsDashboard />
                 </ProtectedRoute>
               </Route>
             </Router>

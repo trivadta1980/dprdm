@@ -48,6 +48,10 @@ const availableRoutes = [
     value: "/crosswalks",
     label: "Crosswalks",
   },
+  {
+    value: "/approvals",
+    label: "Approvals Dashboard",
+  },
 ];
 
 export default function RolesPage() {
