@@ -36,10 +36,16 @@ interface PendingApproval {
   }>;
 }
 
+interface DebugInfo {
+  actions: string[];
+  error?: string;
+}
+
 export default function ApprovalsDashboard() {
   const { toast } = useToast();
   const [selectedInstance, setSelectedInstance] = useState<PendingApproval | null>(null);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<DebugInfo>({ actions: [] });
 
   // Add debug logging to the query
   const { data: pendingApprovals, isLoading, error } = useQuery<PendingApproval[]>({
@@ -49,6 +55,7 @@ export default function ApprovalsDashboard() {
     },
     onError: (err) => {
       console.error("Error fetching pending approvals:", err);
+      setDebugInfo(prev => ({...prev, error: err instanceof Error ? err.message : String(err)}))
     }
   });
 
@@ -56,10 +63,19 @@ export default function ApprovalsDashboard() {
   const approveMutation = useMutation({
     mutationFn: async ({ dataSetId, instanceId }: { dataSetId: number; instanceId: string }) => {
       console.log(`Approving instance ${instanceId} in dataset ${dataSetId}`);
+      setDebugInfo(prev => ({
+        ...prev,
+        actions: [...prev.actions, `${new Date().toISOString()} - Approving instance ${instanceId} in dataset ${dataSetId}`]
+      }));
       const response = await apiRequest(`reference-data/${dataSetId}/instances/${instanceId}/approve`, {
         method: "POST",
       });
-      return response.json();
+      const responseData = await response.json();
+      setDebugInfo(prev => ({
+        ...prev,
+        actions: [...prev.actions, `${new Date().toISOString()} - Approval API response: ${JSON.stringify(responseData)}`]
+      }));
+      return responseData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
@@ -70,6 +86,11 @@ export default function ApprovalsDashboard() {
     },
     onError: (error: Error) => {
       console.error("Approval error:", error);
+      setDebugInfo(prev => ({
+        ...prev,
+        error: error.message,
+        actions: [...prev.actions, `${new Date().toISOString()} - Error approving instance: ${error.message}`]
+      }));
       toast({
         title: "Error",
         description: error.message || "Failed to approve the instance",
@@ -82,10 +103,19 @@ export default function ApprovalsDashboard() {
   const rejectMutation = useMutation({
     mutationFn: async ({ dataSetId, instanceId }: { dataSetId: number; instanceId: string }) => {
       console.log(`Rejecting instance ${instanceId} in dataset ${dataSetId}`);
+      setDebugInfo(prev => ({
+        ...prev,
+        actions: [...prev.actions, `${new Date().toISOString()} - Rejecting instance ${instanceId} in dataset ${dataSetId}`]
+      }));
       const response = await apiRequest(`reference-data/${dataSetId}/instances/${instanceId}/reject`, {
         method: "POST",
       });
-      return response.json();
+      const responseData = await response.json();
+      setDebugInfo(prev => ({
+        ...prev,
+        actions: [...prev.actions, `${new Date().toISOString()} - Rejection API response: ${JSON.stringify(responseData)}`]
+      }));
+      return responseData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
@@ -96,6 +126,11 @@ export default function ApprovalsDashboard() {
     },
     onError: (error: Error) => {
       console.error("Rejection error:", error);
+      setDebugInfo(prev => ({
+        ...prev,
+        error: error.message,
+        actions: [...prev.actions, `${new Date().toISOString()} - Error rejecting instance: ${error.message}`]
+      }));
       toast({
         title: "Error",
         description: error.message || "Failed to reject the instance",
@@ -247,6 +282,24 @@ export default function ApprovalsDashboard() {
             )}
           </CardContent>
         </Card>
+
+        <div className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Debug Panel</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul>
+                {debugInfo.actions.map((action, index) => (
+                  <li key={index}>{action}</li>
+                ))}
+              </ul>
+              {debugInfo.error && (
+                <div className="text-red-500 mt-2">Error: {debugInfo.error}</div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         <Dialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen}>
           <DialogContent>
