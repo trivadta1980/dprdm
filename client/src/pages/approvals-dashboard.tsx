@@ -136,7 +136,18 @@ export default function ApprovalsDashboard() {
           }
         }));
 
-        const response = await fetch(url, {
+        // Prepare request for debugging
+        const approvalUrl = `/api/reference-data/${approval.dataSetId}/instances/${approval.instanceId}/approve`;
+        setDebugInfo(prev => ({
+          ...prev,
+          requestDetails: {
+            method: 'POST',
+            url: approvalUrl,
+            withCredentials: true
+          }
+        }));
+
+        const response = await fetch(approvalUrl, {
           method: "POST",
           headers: {
             'Content-Type': 'application/json',
@@ -439,10 +450,9 @@ export default function ApprovalsDashboard() {
               )}
               {debugInfo.authStatus && (
                 <div className="mt-2">
-                  <p className="font-bold">Authentication Status:</p>
-                  <p>isAuthenticated: {debugInfo.authStatus.isAuthenticated ? 'true' : 'false'}</p>
-                  <p>Status: {debugInfo.authStatus.status}</p>
-                  <p>Status Text: {debugInfo.authStatus.statusText}</p>
+                  <p className="font-bold">Authentication Status Check:</p>
+                  <p className="text-xs">Is Authenticated: <span className={debugInfo.authStatus.isAuthenticated ? "text-green-600" : "text-red-600"}>{debugInfo.authStatus.isAuthenticated ? "Yes" : "No"}</span></p>
+                  <p className="text-xs">Status: {debugInfo.authStatus.status} {debugInfo.authStatus.statusText}</p>
                 </div>
               )}
 
