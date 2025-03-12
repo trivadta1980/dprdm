@@ -1149,32 +1149,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('POST /api/reference-data/:id/instances/:instanceId/approve - Unauthorized access');
       return res.sendStatus(401);
     }
-    
+
     try {
       const dataSetId = Number(req.params.id);
       const instanceId = req.params.instanceId;
       const timestamp = new Date().toISOString();
-      
+
       // Get the current dataset
       const dataSet = await storage.getReferenceDataSet(dataSetId);
       if (!dataSet) {
         console.log('POST /api/reference-data/:id/instances/:instanceId/approve - Dataset not found');
         return res.status(404).json({ error: "Reference data set not found" });
       }
-      
+
       const currentData = { ...dataSet.data };
       const currentInstance = currentData[instanceId];
-      
+
       if (!currentInstance) {
         console.log('POST /api/reference-data/:id/instances/:instanceId/approve - Instance not found');
         return res.status(404).json({ error: "Instance not found" });
       }
-      
+
       if (currentInstance.status !== "PENDING_APPROVAL") {
         console.log('POST /api/reference-data/:id/instances/:instanceId/approve - Instance not pending approval');
         return res.status(400).json({ error: "Only pending instances can be approved" });
       }
-      
+
       // Update the instance status
       const updatedData = {
         ...currentData,
@@ -1196,53 +1196,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ]
         }
       };
-      
+
       // Save the updated dataset
       const updatedDataSet = await storage.updateReferenceDataSet(dataSetId, {
         data: updatedData
       });
-      
+
       console.log('POST /api/reference-data/:id/instances/:instanceId/approve - Instance approved successfully');
       res.json(updatedDataSet);
-      
+
     } catch (error) {
       console.error('POST /api/reference-data/:id/instances/:instanceId/approve - Error:', error);
       res.status(500).json({ error: String(error) });
     }
   });
-  
+
   app.post("/api/reference-data/:id/instances/:instanceId/reject", async (req, res) => {
     console.log('POST /api/reference-data/:id/instances/:instanceId/reject - Request received');
     if (!req.isAuthenticated()) {
       console.log('POST /api/reference-data/:id/instances/:instanceId/reject - Unauthorized access');
       return res.sendStatus(401);
     }
-    
+
     try {
       const dataSetId = Number(req.params.id);
       const instanceId = req.params.instanceId;
       const timestamp = new Date().toISOString();
-      
+
       // Get the current dataset
       const dataSet = await storage.getReferenceDataSet(dataSetId);
       if (!dataSet) {
         console.log('POST /api/reference-data/:id/instances/:instanceId/reject - Dataset not found');
         return res.status(404).json({ error: "Reference data set not found" });
       }
-      
+
       const currentData = { ...dataSet.data };
       const currentInstance = currentData[instanceId];
-      
+
       if (!currentInstance) {
         console.log('POST /api/reference-data/:id/instances/:instanceId/reject - Instance not found');
         return res.status(404).json({ error: "Instance not found" });
       }
-      
+
       if (currentInstance.status !== "PENDING_APPROVAL") {
         console.log('POST /api/reference-data/:id/instances/:instanceId/reject - Instance not pending approval');
         return res.status(400).json({ error: "Only pending instances can be rejected" });
       }
-      
+
       // Update the instance status
       const updatedData = {
         ...currentData,
@@ -1264,15 +1264,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ]
         }
       };
-      
+
       // Save the updated dataset
       const updatedDataSet = await storage.updateReferenceDataSet(dataSetId, {
         data: updatedData
       });
-      
+
       console.log('POST /api/reference-data/:id/instances/:instanceId/reject - Instance rejected successfully');
       res.json(updatedDataSet);
-      
+
     } catch (error) {
       console.error('POST /api/reference-data/:id/instances/:instanceId/reject - Error:', error);
       res.status(500).json({ error: String(error) });
@@ -1787,8 +1787,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Iterate through each instance in the dataset
         for (const [instanceId, instanceData] of Object.entries(instances)) {
-          // Check if instance has PENDING APPROVAL status
-          if (instanceData.status === "PENDING APPROVAL") {
+          // Check if instance has PENDING_APPROVAL status
+          if (instanceData.status === "PENDING_APPROVAL") {
             // Get the primary field value as instance name
             // For example, if it's a State dataset, use the "State" field
             const schemas = await storage.getReferenceDataTypeSchemas(dataSet.typeId);
@@ -1824,7 +1824,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     try {
       const relationshipId = Number(req.params.id);
-      
+
       // Verify relationship exists
       const relationship = await storage.getRelationship(relationshipId);
       if (!relationship) {
@@ -1833,7 +1833,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       let deletedCount = 0;
-      
+
       // Use SQL transaction to ensure data consistency
       await db.transaction(async (tx) => {
         // First count how many records we'll delete for reporting
@@ -1842,7 +1842,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           WHERE relationship_id = ${relationshipId}
         `);
         deletedCount = countResult.rows[0]?.count || 0;
-        
+
         // Delete all attribute values for this relationship's values
         await tx.execute(sql`
           DELETE FROM relationship_attribute_values 
