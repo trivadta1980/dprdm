@@ -460,7 +460,7 @@ export default function ReferenceDataInstancesPage() {
         headers: {
           'Accept': 'text/csv',
         },
-        credentials: 'include'
+        credentials: 'include'  // This is needed for browser fetch to include cookies
       });
 
       if (response.status === 401) {
@@ -472,11 +472,21 @@ export default function ReferenceDataInstancesPage() {
         throw new Error(`Failed to download template: ${response.statusText}`);
       }
 
+      // Get the filename from content disposition or use default
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `${dataSet?.name || "reference_data"}_template.csv`;
+      if (contentDisposition) {
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+        if (matches != null && matches[1]) {
+          filename = matches[1].replace(/['"]/g, '');
+        }
+      }
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${dataSet?.name || "reference_data"}_template.csv`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -484,7 +494,7 @@ export default function ReferenceDataInstancesPage() {
 
       toast({
         title: "Success",
-        description: "Template downloaded successfully.  Authentication successful!",
+        description: "Template downloaded successfully",
       });
     } catch (error) {
       console.error("Error downloading template:", error);
