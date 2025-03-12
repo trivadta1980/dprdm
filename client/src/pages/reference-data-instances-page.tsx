@@ -482,7 +482,7 @@ export default function ReferenceDataInstancesPage() {
 
       toast({
         title: "Success",
-        description: "Template downloaded successfully",
+        description: "Template downloaded successfully.  Authentication successful!",
       });
     } catch (error) {
       console.error("Error downloading template:", error);
