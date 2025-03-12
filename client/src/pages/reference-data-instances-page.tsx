@@ -19,7 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, ArrowLeft, Plus, Pencil, Trash2, History, Database, Upload, Download } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Pencil, Trash2, History, Database, Upload, Download, ArrowUpCircle } from "lucide-react";
 import type { ReferenceDataSet, ReferenceDataInstance, HistoryEntry } from "@shared/schema";
 import { useLocation, useParams } from "wouter";
 import { useForm } from "react-hook-form";
@@ -29,8 +29,12 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState, useRef } from "react";
 import { format } from "date-fns";
+import { useSession } from "@/hooks/use-session"; // Add this import for user info
+
+export type InstanceStatus = "DRAFT" | "PENDING_APPROVAL" | "APPROVED";
 
 export default function ReferenceDataInstancesPage() {
+  const { user } = useSession(); // Add this to get current user info
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
   const params = useParams("/reference-data/:id/instances");
@@ -41,6 +45,7 @@ export default function ReferenceDataInstancesPage() {
   const [selectedInstanceHistory, setSelectedInstanceHistory] = useState<{ id: string; history: HistoryEntry[] } | null>(null);
   const [isBulkUploadDialogOpen, setIsBulkUploadDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [statusFilter, setStatusFilter] = useState<InstanceStatus | "ALL">("ALL");
 
   // Fetch the reference data set
   const { data: dataSet, isLoading: isLoadingDataSet } = useQuery<ReferenceDataSet>({
@@ -75,21 +80,29 @@ export default function ReferenceDataInstancesPage() {
   });
 
   // Process instances for tabular display
-  const instances = (() => {
-    if (!dataSet?.data) {
-      return [];
+  const filteredInstances = (() => {
+    const instances = (() => {
+      if (!dataSet?.data) {
+        return [];
+      }
+
+      try {
+        const processedInstances = Object.entries(dataSet.data).map(([id, data]) => ({
+          id,
+          ...data as ReferenceDataInstance
+        }));
+        return processedInstances;
+      } catch (error) {
+        console.error('Error processing instance data:', error);
+        return [];
+      }
+    })();
+
+    if (statusFilter === "ALL") {
+      return instances;
     }
 
-    try {
-      const processedInstances = Object.entries(dataSet.data).map(([id, data]) => ({
-        id,
-        ...data as ReferenceDataInstance
-      }));
-      return processedInstances;
-    } catch (error) {
-      console.error('Error processing instance data:', error);
-      return [];
-    }
+    return instances.filter(instance => instance.status === statusFilter);
   })();
 
   // Mutations for CRUD operations
@@ -97,12 +110,19 @@ export default function ReferenceDataInstancesPage() {
     mutationFn: async (data: InstanceFormData) => {
       const currentData = { ...dataSet?.data } || {};
       const newInstanceId = `instance_${Object.keys(currentData).length + 1}`;
+      const timestamp = new Date().toISOString();
+
       const updatedData = {
         ...currentData,
         [newInstanceId]: {
           ...data,
+          status: "DRAFT" as InstanceStatus,
+          createdBy: user?.username || "system",
+          createdAt: timestamp,
+          lastModifiedBy: user?.username || "system",
+          lastModifiedAt: timestamp,
           _history: [{
-            timestamp: new Date().toISOString(),
+            timestamp,
             changes: Object.entries(data).map(([field, value]) => ({
               field,
               oldValue: '',
@@ -137,28 +157,85 @@ export default function ReferenceDataInstancesPage() {
     },
   });
 
+  const submitForApprovalMutation = useMutation({
+    mutationFn: async (instanceId: string) => {
+      const currentData = { ...dataSet?.data };
+      const currentInstance = currentData[instanceId];
+      const timestamp = new Date().toISOString();
+
+      const updatedData = {
+        ...currentData,
+        [instanceId]: {
+          ...currentInstance,
+          status: "PENDING_APPROVAL" as InstanceStatus,
+          lastModifiedBy: user?.username || "system",
+          lastModifiedAt: timestamp,
+          _history: [
+            ...(currentInstance._history || []),
+            {
+              timestamp,
+              changes: [{
+                field: "status",
+                oldValue: "DRAFT",
+                newValue: "PENDING_APPROVAL"
+              }]
+            }
+          ]
+        }
+      };
+
+      const res = await apiRequest(
+        "PATCH",
+        `/api/reference-data/${dataSetId}`,
+        { data: updatedData }
+      );
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
+      toast({
+        title: "Success",
+        description: "Instance submitted for approval",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit for approval",
+        variant: "destructive",
+      });
+    },
+  });
+
   const editMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: InstanceFormData }) => {
       const currentData = { ...dataSet?.data };
-      const currentInstance = currentData[id] as ReferenceDataInstance;
+      const currentInstance = currentData[id];
+      const timestamp = new Date().toISOString();
+
       const changes = Object.entries(data).map(([field, newValue]) => ({
         field,
         oldValue: currentInstance[field] || '',
         newValue
       })).filter(change => change.oldValue !== change.newValue);
 
-      // Only update history if there are actual changes
       if (changes.length > 0) {
-        const historyEntry: HistoryEntry = {
-          timestamp: new Date().toISOString(),
-          changes
-        };
-
         const updatedData = {
           ...currentData,
           [id]: {
             ...data,
-            _history: [...(currentInstance._history || []), historyEntry]
+            status: currentInstance.status || "DRAFT",
+            lastModifiedBy: user?.username || "system",
+            lastModifiedAt: timestamp,
+            createdBy: currentInstance.createdBy || "system",
+            createdAt: currentInstance.createdAt || timestamp,
+            _history: [
+              ...(currentInstance._history || []),
+              {
+                timestamp,
+                changes
+              }
+            ]
           }
         };
 
@@ -329,6 +406,12 @@ export default function ReferenceDataInstancesPage() {
     setIsDialogOpen(open);
   }
 
+  const handleSubmitForApproval = (instanceId: string) => {
+    if (window.confirm("Are you sure you want to submit this instance for approval?")) {
+      submitForApprovalMutation.mutate(instanceId);
+    }
+  };
+
   if (isLoadingDataSet || isLoadingSchema) {
     return (
       <MainLayout>
@@ -424,6 +507,24 @@ export default function ReferenceDataInstancesPage() {
           </div>
         </div>
 
+        {/* Add status filter */}
+        <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm">
+          <span className="text-sm font-medium text-gray-700">Filter by Status:</span>
+          <div className="flex gap-2">
+            {["ALL", "DRAFT", "PENDING_APPROVAL", "APPROVED"].map((status) => (
+              <Button
+                key={status}
+                variant={statusFilter === status ? "default" : "outline"}
+                size="sm"
+                onClick={() => setStatusFilter(status as typeof statusFilter)}
+                className={statusFilter === status ? "bg-primary text-white" : ""}
+              >
+                {status}
+              </Button>
+            ))}
+          </div>
+        </div>
+
         {/* Add Bulk Upload Dialog */}
         <Dialog open={isBulkUploadDialogOpen} onOpenChange={setIsBulkUploadDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
@@ -467,7 +568,7 @@ export default function ReferenceDataInstancesPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            {instances.length > 0 ? (
+            {filteredInstances.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50">
@@ -477,11 +578,12 @@ export default function ReferenceDataInstancesPage() {
                         {field.name}
                       </TableHead>
                     ))}
+                    <TableHead className="text-sm font-semibold text-gray-700">Status</TableHead>
                     <TableHead className="text-right text-sm font-semibold text-gray-700">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {instances.map((instance) => (
+                  {filteredInstances.map((instance) => (
                     <TableRow key={instance.id} className="hover:bg-gray-50 transition-colors">
                       <TableCell className="font-medium text-gray-900">{instance.id}</TableCell>
                       {schemaFields.map((field) => (
@@ -489,6 +591,15 @@ export default function ReferenceDataInstancesPage() {
                           {instance[field.name]}
                         </TableCell>
                       ))}
+                      <TableCell>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          instance.status === "DRAFT" ? "bg-yellow-100 text-yellow-800" :
+                          instance.status === "PENDING_APPROVAL" ? "bg-blue-100 text-blue-800" :
+                          "bg-green-100 text-green-800"
+                        }`}>
+                          {instance.status || "DRAFT"}
+                        </span>
+                      </TableCell>
                       <TableCell className="text-right space-x-1">
                         <Button
                           variant="ghost"
@@ -515,6 +626,17 @@ export default function ReferenceDataInstancesPage() {
                         >
                           <Trash2 className="h-4 w-4 text-red-600" />
                         </Button>
+                        {instance.status === "DRAFT" && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSubmitForApproval(instance.id)}
+                            className="hover:bg-blue-50"
+                            title="Submit for Approval"
+                          >
+                            <ArrowUpCircle className="h-4 w-4 text-blue-600" />
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
