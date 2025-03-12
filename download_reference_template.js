@@ -5,59 +5,41 @@ async function downloadTemplate(dataSetId) {
   console.log(`Attempting to download template for dataset ID: ${dataSetId}`);
 
   try {
-    // Read cookies from file if it exists
-    let cookies = '';
-    try {
-      cookies = fs.readFileSync('cookies.txt', 'utf8').trim();
-      console.log('Found cookies file. Raw content:', cookies);
+    // First, authenticate using username/password
+    const username = process.env.USERNAME || 'admin';
+    const password = process.env.PASSWORD || 'admin';
 
-      // Sanitize cookie string - remove any quotes, brackets and extra whitespace
-      cookies = cookies.replace(/[\[\]"']/g, '').trim();
-      console.log('Sanitized cookie string:', cookies);
+    console.log("Attempting to authenticate with username:", username); //Added logging
 
-      // Split into lines and filter out comments
-      const cookieLines = cookies.split('\n')
-        .filter(line => !line.startsWith('#') && line.trim().length > 0);
+    // Make the login request first
+    const loginResponse = await fetch('http://localhost:5000/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ username, password })
+    });
 
-      if (cookieLines.length === 0) {
-        console.log('No valid cookies found after filtering.');
-      } else {
-        console.log('Found valid cookie lines:', cookieLines.length);
-      }
-
-      cookies = cookieLines.map(line => {
-        const parts = line.split('\t');
-        // Last two parts are typically name and value in Netscape format
-        if (parts.length >= 2) {
-          return `${parts[parts.length - 2]}=${parts[parts.length - 1]}`;
-        }
-        return null;
-      })
-      .filter(Boolean)
-      .join('; ');
-
-      if (!cookies) {
-        console.log('No valid cookies found after sanitization.');
-      }
-    } catch (err) {
-      console.log('No cookies file found. Authentication may fail.');
+    if (!loginResponse.ok) {
+      throw new Error('Authentication failed. Please check your credentials.');
     }
 
-    // Make the request to download template
+    // Now make the template download request
     const response = await fetch(`http://localhost:5000/api/reference-data/${dataSetId}/template`, {
       method: 'GET',
       headers: {
         'Accept': 'text/csv',
-        ...(cookies && { 'Cookie': cookies })
-      }
+      },
+      credentials: 'include'
     });
 
     if (response.status === 401) {
-      console.error('Authentication failed. Please ensure you are logged in.');
-      process.exit(1);
+      throw new Error("Authentication required. Please log in again.");
     }
 
     if (!response.ok) {
+      console.error("Template download failed:", response.status, response.statusText);
       throw new Error(`Failed to download template: ${response.statusText}`);
     }
 
