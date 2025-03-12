@@ -4,22 +4,34 @@ async function loginAndGetCookie() {
   const loginResponse = await fetch('http://0.0.0.0:5000/api/auth/login', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
     },
     body: JSON.stringify({
-      username: 'admin',
+      email: 'jitender.nankani@gmail.com',
       password: 'Admin123!'
-    })
+    }),
+    credentials: 'include'
   });
 
   if (!loginResponse.ok) {
     const errorText = await loginResponse.text();
     console.error('Login failed with status:', loginResponse.status);
     console.error('Response:', errorText);
+    console.error('Request details:', {
+      url: loginResponse.url,
+      headers: loginResponse.headers.raw(),
+      payload: {
+        email: 'jitender.nankani@gmail.com',
+        password: 'Admin123!'
+      }
+    });
     throw new Error('Login failed');
   }
 
-  return loginResponse.headers.get('set-cookie');
+  const cookies = loginResponse.headers.get('set-cookie');
+  console.log('Login successful, received cookies');
+  return cookies;
 }
 
 async function addReferenceInstance() {
@@ -31,8 +43,10 @@ async function addReferenceInstance() {
     // Get the reference data set first
     const getResponse = await fetch('http://0.0.0.0:5000/api/reference-data', {
       headers: {
-        'Cookie': cookie
-      }
+        'Cookie': cookie,
+        'Accept': 'application/json'
+      },
+      credentials: 'include'
     });
 
     if (!getResponse.ok) {
@@ -88,8 +102,10 @@ async function addReferenceInstance() {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        'Cookie': cookie
+        'Cookie': cookie,
+        'Accept': 'application/json'
       },
+      credentials: 'include',
       body: JSON.stringify({ data: updatedData })
     });
 
