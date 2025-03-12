@@ -1,4 +1,19 @@
+import dotenv from 'dotenv';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import ws from 'ws';
+import { scrypt, randomBytes } from 'crypto';
+import { promisify } from 'util';
 import fetch from 'node-fetch';
+
+dotenv.config();
+neonConfig.webSocketConstructor = ws;
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = await scryptAsync(password, salt, 64);
+  return `${buf.toString("hex")}.${salt}`;
+}
 
 async function login() {
   try {
@@ -39,56 +54,37 @@ async function login() {
   }
 }
 
-async function resetUserPassword(sessionCookie, targetUsername) {
+async function resetUserPassword(targetUsername) {
+  // Create a new database connection
+  const pool = new Pool({ 
+    connectionString: process.env.DATABASE_URL 
+  });
+
   try {
-    // First get user id from username
-    const usersResponse = await fetch('http://0.0.0.0:5000/api/users', {
-      headers: {
-        'Cookie': sessionCookie,
-        'Accept': 'application/json'
-      },
-      credentials: 'include'
-    });
+    // Set new password
+    const newPassword = "Admin123!";
+    const hashedPassword = await hashPassword(newPassword);
 
-    if (!usersResponse.ok) {
-      throw new Error(`Failed to get users list: ${await usersResponse.text()}`);
+    // Update the user's password
+    const result = await pool.query(
+      'UPDATE users SET password = $1, reset_token = NULL, reset_token_expiry = NULL WHERE username = $2',
+      [hashedPassword, targetUsername]
+    );
+
+    if (result.rowCount > 0) {
+      console.log(`Password reset successfully for user: ${targetUsername}`);
+      console.log(`New password is: ${newPassword}`);
+    } else {
+      console.log('User not found');
     }
-
-    const users = await usersResponse.json();
-    const targetUser = users.find(user => user.username === targetUsername);
-    
-    if (!targetUser) {
-      throw new Error(`User ${targetUsername} not found`);
-    }
-
-    console.log(`Found user ${targetUsername} with ID: ${targetUser.id}`);
-
-    // Now reset the password
-    const response = await fetch(`http://0.0.0.0:5000/api/users/${targetUser.id}/reset-password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': sessionCookie,
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        newPassword: "Admin123!"
-      }),
-      credentials: 'include'
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to reset password: ${errorText}`);
-    }
-
-    console.log(`Successfully reset password for user ${targetUsername}`);
   } catch (error) {
-    console.error('Error resetting password:', error.message);
+    console.error('Error resetting password:', error);
+  } finally {
+    await pool.end();
   }
 }
 
-// Execute the functions
+// Execute the function
 async function main() {
   try {
     if (process.argv.length < 3) {
@@ -99,9 +95,8 @@ async function main() {
 
     const targetUsername = process.argv[2];
     console.log(`Attempting to reset password for user: ${targetUsername}`);
-    
-    const sessionCookie = await login();
-    await resetUserPassword(sessionCookie, targetUsername);
+
+    await resetUserPassword(targetUsername);
   } catch (error) {
     console.error('Script failed:', error.message);
   }

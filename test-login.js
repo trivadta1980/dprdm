@@ -1,4 +1,3 @@
-
 import dotenv from 'dotenv';
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import ws from 'ws';
@@ -22,33 +21,33 @@ async function testLogin() {
   });
 
   try {
-    // Test login with admin/Admin123!
-    const username = 'admin';
+    // Get username from command line args or default to 'jnankani'
+    const username = process.argv[2] || 'jnankani';
     const password = 'Admin123!';
-    
+
     console.log(`Testing login for user: ${username}`);
-    
+
     const userResult = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
-    
+
     if (userResult.rows.length === 0) {
       console.log(`User "${username}" not found in database.`);
       return;
     }
-    
+
     const user = userResult.rows[0];
     console.log(`User found: ${user.username} (ID: ${user.id})`);
-    
+
     // Check if account is active
     console.log(`Account active status: ${user.is_active}`);
     if (!user.is_active) {
-      console.log('Account is inactive - but continuing with password check anyway for testing purposes.');
-      // Continue with testing instead of returning
+      console.log('Account is inactive');
+      return;
     }
-    
+
     // Verify password
     const passwordCorrect = await comparePasswords(password, user.password);
     console.log(`Password verification result: ${passwordCorrect ? 'CORRECT' : 'INCORRECT'}`);
-    
+
     if (passwordCorrect) {
       console.log('Login would be successful with these credentials!');
     } else {
