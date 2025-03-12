@@ -1,17 +1,17 @@
 import fetch from 'node-fetch';
 
 async function loginAndGetCookie() {
-  const loginResponse = await fetch('http://0.0.0.0:5000/api/auth/login', {
+  const loginResponse = await fetch('http://0.0.0.0:5000/api/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json'
     },
     body: JSON.stringify({
-      email: 'jitender.nankani@gmail.com',
+      username: 'admin',
       password: 'Admin123!'
     }),
-    credentials: 'include'
+    redirect: 'manual'
   });
 
   if (!loginResponse.ok) {
@@ -22,7 +22,7 @@ async function loginAndGetCookie() {
       url: loginResponse.url,
       headers: loginResponse.headers.raw(),
       payload: {
-        email: 'jitender.nankani@gmail.com',
+        username: 'admin',
         password: 'Admin123!'
       }
     });
