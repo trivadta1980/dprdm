@@ -72,9 +72,8 @@ export default function RolesPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertRole) => {
-      const response = await apiRequest({
+      const response = await apiRequest("/api/roles", {
         method: "POST",
-        url: "/api/roles",
         data,
       });
       return response.json();
@@ -99,9 +98,8 @@ export default function RolesPage() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: InsertRole }) => {
-      const response = await apiRequest({
+      const response = await apiRequest(`/api/roles/${id}`, {
         method: "PATCH",
-        url: `/api/roles/${id}`,
         data,
       });
       return response.json();
@@ -127,9 +125,8 @@ export default function RolesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest({
+      await apiRequest(`/api/roles/${id}`, {
         method: "DELETE",
-        url: `/api/roles/${id}`,
       });
     },
     onSuccess: () => {
