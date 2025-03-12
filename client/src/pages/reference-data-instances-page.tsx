@@ -151,13 +151,18 @@ export default function ReferenceDataInstancesPage() {
         fullData: updatedData
       });
 
+      // Make the PATCH request
       const response = await apiRequest("PATCH", `/api/reference-data/${dataSetId}`, { data: updatedData });
-
       console.log("PATCH response:", response);
 
       // Verify the update was successful
       const verifyResponse = await apiRequest("GET", `/api/reference-data/${dataSetId}`);
       console.log("Verification GET response:", verifyResponse);
+
+      // Only return success if we can verify the data was actually updated
+      if (!verifyResponse?.data || !verifyResponse.data[newInstanceId]) {
+        throw new Error("Failed to verify data update");
+      }
 
       return response;
     },
