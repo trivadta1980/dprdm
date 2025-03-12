@@ -72,8 +72,12 @@ export default function RolesPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertRole) => {
-      const res = await apiRequest("POST", "/api/roles", data);
-      return res.json();
+      const response = await apiRequest({
+        method: "POST",
+        url: "/api/roles",
+        data,
+      });
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
@@ -95,8 +99,12 @@ export default function RolesPage() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: InsertRole }) => {
-      const res = await apiRequest("PATCH", `/api/roles/${id}`, data);
-      return res.json();
+      const response = await apiRequest({
+        method: "PATCH",
+        url: `/api/roles/${id}`,
+        data,
+      });
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
@@ -119,7 +127,10 @@ export default function RolesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/roles/${id}`);
+      await apiRequest({
+        method: "DELETE",
+        url: `/api/roles/${id}`,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
