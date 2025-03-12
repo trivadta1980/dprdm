@@ -1627,6 +1627,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: String(error) });
     }
   });
+  // Add new endpoint for pending approvals
+  app.get("/api/approvals/pending", async (req, res) => {
+    console.log('GET /api/approvals/pending - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/approvals/pending - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      // Get all reference data sets
+      const dataSets = await storage.getAllReferenceDataSets();
+      const pendingApprovals = [];
+
+      // Iterate through each dataset
+      for (const dataSet of dataSets) {
+        const instances = dataSet.data;
+
+        // Skip if no data
+        if (!instances) continue;
+
+        // Iterate through each instance in the dataset
+        for (const [instanceId, instanceData] of Object.entries(instances)) {
+          // Check if instance has PENDING APPROVAL status
+          if (instanceData.status === "PENDING APPROVAL") {
+            pendingApprovals.push({
+              dataSetId: dataSet.id,
+              dataSetName: dataSet.name,
+              instanceId,
+              data: instanceData,
+              history: instanceData._history || []
+            });
+          }
+        }
+      }
+
+      console.log('GET /api/approvals/pending - Found pending approvals:', pendingApprovals.length);
+      res.json(pendingApprovals);
+    } catch (error) {
+      console.error('GET /api/approvals/pending - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
   // Add new route after existing relationship values routes
   app.delete("/api/relationships/:id/values", async (req, res) => {
     console.log('DELETE /api/relationships/:id/values - Request received');

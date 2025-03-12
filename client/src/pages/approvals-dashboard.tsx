@@ -37,9 +37,15 @@ export default function ApprovalsDashboard() {
   const [selectedInstance, setSelectedInstance] = useState<PendingApproval | null>(null);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
 
-  // Fetch all reference data sets with pending approvals
-  const { data: pendingApprovals, isLoading } = useQuery<PendingApproval[]>({
+  // Add debug logging to the query
+  const { data: pendingApprovals, isLoading, error } = useQuery<PendingApproval[]>({
     queryKey: ["/api/approvals/pending"],
+    onSuccess: (data) => {
+      console.log("Received pending approvals data:", data);
+    },
+    onError: (err) => {
+      console.error("Error fetching pending approvals:", err);
+    }
   });
 
   // Mutation for handling approvals
