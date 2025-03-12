@@ -524,18 +524,6 @@ export default function ReferenceDataInstancesPage() {
         throw new Error(`Failed to download template: ${response.statusText}`);
       }
 
-      // Get the filename from content disposition or use default
-      const contentDisposition = response.headers.get('content-disposition');
-      let filename = `${dataSet?.name || 'reference_data'}_template.csv`;
-      if (contentDisposition) {
-        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
-        if (matches != null && matches[1]) {
-          filename = matches[1].replace(/['"]/g, '');
-        }
-      }
-
-      console.log("Preparing to download as:", filename);
-
       // Get the raw CSV content first to verify it's not empty
       const content = await response.text();
       if (!content.trim()) {
@@ -548,7 +536,7 @@ export default function ReferenceDataInstancesPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = filename;
+      a.download = `${dataSet?.name || 'reference_data'}_template.csv`;
 
       // Trigger download
       document.body.appendChild(a);
@@ -561,7 +549,7 @@ export default function ReferenceDataInstancesPage() {
       console.log("Download completed successfully");
       toast({
         title: "Success",
-        description: `Template '${filename}' downloaded successfully`,
+        description: `Template downloaded successfully`,
       });
     } catch (error) {
       console.error('Error downloading template:', error);
