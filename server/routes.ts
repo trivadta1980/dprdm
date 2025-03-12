@@ -300,8 +300,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     try {
       const dataSetId = Number(req.params.id);
-      const dataSet = await storage.getReferenceDataSet(dataSetId);
+      console.log('GET /api/reference-data/:id/template - Fetching dataset:', dataSetId);
 
+      const dataSet = await storage.getReferenceDataSet(dataSetId);
       if (!dataSet) {
         console.log('GET /api/reference-data/:id/template - Dataset not found');
         return res.status(404).json({ error: "Reference Data Set not found" });
@@ -309,13 +310,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get schemas to know the structure
       const schemas = await storage.getReferenceDataTypeSchemas(dataSet.typeId);
+      console.log('GET /api/reference-data/:id/template - Retrieved schemas:', schemas.map(s => s.name));
 
-      // Create CSV content with just headers for the template
-      const headers = schemas.map(s => s.name).join(",");
+      // Create CSV content with headers
+      const headers = schemas.map(s => s.name).join(",") + "\n";
 
-      // Send as CSV file with just the headers
+      // Set response headers to prevent caching and force download
       res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', `attachment; filename=${dataSet.name}_template.csv`);
+      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(dataSet.name)}_template.csv"`);
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+
+      console.log('GET /api/reference-data/:id/template - Sending template with headers:', headers.trim());
       res.send(headers);
     } catch (error) {
       console.error('GET /api/reference-data/:id/template - Error generating template:', error);
@@ -1557,7 +1564,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     try {
       const products = await GraphDataService.getUniqueProducts();
-      console.log('GET /api/graph/products - Products fetched successfully');
+      console.log('GET /apiapi/graph/products - Products fetched successfully');
       res.json(products);
     } catch (error) {
       console.error('GET /apiapi/graph/products - Error:', error);
