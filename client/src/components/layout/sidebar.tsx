@@ -28,13 +28,14 @@ const rolePermissions: Record<number, string[]> = {
   1: ['/manage-users', '/roles', '/reference-types', '/reference-data', '/relationships', '/crosswalks', '/api-test', '/graph-visualization', '/site-paths'], // Admin
   2: ['/approvals', '/reference-types', '/reference-data', '/relationships', '/crosswalks'], // Approver
   3: ['/reference-data', '/relationships'], // Basic User
+  10: ['/approvals', '/reference-types', '/reference-data', '/relationships', '/crosswalks'], // Custom Approver Role
 };
 
 export function Sidebar({ className }: SidebarProps) {
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
   const isAdmin = user?.roleId === 1;
-  const isApprover = user?.roleId === 2;
+  const isApprover = user?.roleId === 2 || user?.roleId === 10;
 
   // Debug logging for user information
   console.log('Sidebar Component - User Info:', {
