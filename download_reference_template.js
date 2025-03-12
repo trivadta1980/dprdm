@@ -5,13 +5,51 @@ async function downloadTemplate(dataSetId) {
   console.log(`Attempting to download template for dataset ID: ${dataSetId}`);
 
   try {
+    // Read cookies from file if it exists
+    let cookies = '';
+    try {
+      cookies = fs.readFileSync('cookies.txt', 'utf8').trim();
+      console.log('Found cookies file. Raw content:', cookies);
+
+      // Sanitize cookie string - remove any quotes, brackets and extra whitespace
+      cookies = cookies.replace(/[\[\]"']/g, '').trim();
+      console.log('Sanitized cookie string:', cookies);
+
+      // Split into lines and filter out comments
+      const cookieLines = cookies.split('\n')
+        .filter(line => !line.startsWith('#') && line.trim().length > 0);
+
+      if (cookieLines.length === 0) {
+        console.log('No valid cookies found after filtering.');
+      } else {
+        console.log('Found valid cookie lines:', cookieLines.length);
+      }
+
+      cookies = cookieLines.map(line => {
+        const parts = line.split('\t');
+        // Last two parts are typically name and value in Netscape format
+        if (parts.length >= 2) {
+          return `${parts[parts.length - 2]}=${parts[parts.length - 1]}`;
+        }
+        return null;
+      })
+      .filter(Boolean)
+      .join('; ');
+
+      if (!cookies) {
+        console.log('No valid cookies found after sanitization.');
+      }
+    } catch (err) {
+      console.log('No cookies file found. Authentication may fail.');
+    }
+
     // Make the request to download template
     const response = await fetch(`http://localhost:5000/api/reference-data/${dataSetId}/template`, {
       method: 'GET',
       headers: {
         'Accept': 'text/csv',
-      },
-      credentials: 'include'
+        ...(cookies && { 'Cookie': cookies })
+      }
     });
 
     if (response.status === 401) {
