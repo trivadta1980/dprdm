@@ -451,10 +451,21 @@ export default function ReferenceDataInstancesPage() {
 
   const handleDownloadTemplate = async () => {
     try {
-      const response = await fetch(`/api/reference-data/${dataSetId}/template`);
+      console.log("Downloading template for dataset:", dataSetId);
+
+      const response = await fetch(`/api/reference-data/${dataSetId}/template`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/csv',
+        },
+        credentials: 'include'
+      });
+
       if (!response.ok) {
+        console.error("Template download failed:", response.status, response.statusText);
         throw new Error("Failed to download template");
       }
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -464,10 +475,16 @@ export default function ReferenceDataInstancesPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+
+      toast({
+        title: "Success",
+        description: "Template downloaded successfully",
+      });
     } catch (error) {
+      console.error("Error downloading template:", error);
       toast({
         title: "Error",
-        description: "Failed to download template",
+        description: "Failed to download template. Please try again.",
         variant: "destructive",
       });
     }
