@@ -19,7 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, ArrowLeft, Plus, Pencil, Trash2, History, Database, Upload, ArrowUpCircle } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Pencil, Trash2, History, Database, Upload, Download, ArrowUpCircle } from "lucide-react";
 import type { ReferenceDataSet, ReferenceDataInstance, HistoryEntry } from "@shared/schema";
 import { useLocation, useParams } from "wouter";
 import { useForm } from "react-hook-form";
@@ -496,6 +496,55 @@ export default function ReferenceDataInstancesPage() {
     }
   };
 
+  const handleDownloadTemplate = async () => {
+    try {
+      const response = await fetch(`/api/reference-data/${dataSetId}/template`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/csv',
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to download template: ${response.statusText}`);
+      }
+
+      // Get the filename from content disposition or use default
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `${dataSet?.name || 'reference_data'}_template.csv`;
+      if (contentDisposition) {
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+        if (matches != null && matches[1]) {
+          filename = matches[1].replace(/['"]/g, '');
+        }
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Success",
+        description: "Template downloaded successfully",
+      });
+    } catch (error) {
+      console.error('Error downloading template:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to download template",
+        variant: "destructive",
+      });
+    }
+  };
+
+
   if (isLoadingDataSet || isLoadingSchema) {
     return (
       <MainLayout>
@@ -520,6 +569,15 @@ export default function ReferenceDataInstancesPage() {
           </Button>
 
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleDownloadTemplate}
+              className="bg-white hover:bg-blue-50"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download Template
+            </Button>
+
             <Button
               variant="outline"
               onClick={() => setIsBulkUploadDialogOpen(true)}
