@@ -119,33 +119,46 @@ export default function ReferenceDataInstancesPage() {
       const newInstanceId = `instance_${Object.keys(currentData).length + 1}`;
       const timestamp = new Date().toISOString();
 
-      const updatedData = {
-        ...currentData,
-        [newInstanceId]: {
-          ...data,
-          status: "DRAFT" as InstanceStatus,
-          createdBy: user?.username || "system",
-          createdAt: timestamp,
-          lastModifiedBy: user?.username || "system",
-          lastModifiedAt: timestamp,
-          _history: [{
-            timestamp,
-            changes: Object.entries(data).map(([field, value]) => ({
-              field,
-              oldValue: '',
-              newValue: value
-            }))
-          }]
-        }
+      console.log("Current dataset data:", currentData);
+      console.log("Form data to be added:", data);
+
+      const newInstance = {
+        ...data,
+        status: "DRAFT" as InstanceStatus,
+        createdBy: user?.username || "system",
+        createdAt: timestamp,
+        lastModifiedBy: user?.username || "system",
+        lastModifiedAt: timestamp,
+        _history: [{
+          timestamp,
+          changes: Object.entries(data).map(([field, value]) => ({
+            field,
+            oldValue: '',
+            newValue: value
+          }))
+        }]
       };
 
-      console.log("Adding new instance with data:", {
-        instanceId: newInstanceId,
-        data: updatedData[newInstanceId]
+      const updatedData = {
+        ...currentData,
+        [newInstanceId]: newInstance
+      };
+
+      console.log("Sending PATCH request with data:", {
+        endpoint: `/api/reference-data/${dataSetId}`,
+        newInstanceId,
+        newInstance,
+        fullData: updatedData
       });
 
       const response = await apiRequest("PATCH", `/api/reference-data/${dataSetId}`, { data: updatedData });
-      console.log("API Response:", response);
+
+      console.log("PATCH response:", response);
+
+      // Verify the update was successful
+      const verifyResponse = await apiRequest("GET", `/api/reference-data/${dataSetId}`);
+      console.log("Verification GET response:", verifyResponse);
+
       return response;
     },
     onSuccess: (response) => {
