@@ -371,8 +371,16 @@ export type HistoryEntry = {
   }[];
 };
 
+// Define status type
+export type ReferenceDataStatus = "DRAFT" | "PENDING_APPROVAL";
+
 export type ReferenceDataInstance = {
-  [key: string]: string | HistoryEntry[] | undefined;
+  [key: string]: string | HistoryEntry[] | ReferenceDataStatus | undefined;
+  status: ReferenceDataStatus;
+  createdBy: string;
+  createdAt: string;
+  lastModifiedBy: string;
+  lastModifiedAt: string;
   _history?: HistoryEntry[];
 };
 
@@ -386,7 +394,7 @@ export type InsertReferenceDataSet = z.infer<typeof insertReferenceDataSetSchema
 export type InsertRelationship = z.infer<typeof insertRelationshipSchema>;
 export type Relationship = typeof relationships.$inferSelect;
 
-// Update the ReferenceDataSet type
+// Update the ReferenceDataSet type to use the improved ReferenceDataInstance type
 export type ReferenceDataSet = typeof referenceDataSets.$inferSelect & {
   data: Record<string, ReferenceDataInstance>;
 };
