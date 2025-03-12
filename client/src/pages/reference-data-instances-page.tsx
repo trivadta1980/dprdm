@@ -373,11 +373,72 @@ export default function ReferenceDataInstancesPage() {
       const res = await fetch(`/api/reference-data/${dataSetId}/bulk-upload`, {
         method: "POST",
         body: formData,
+        credentials: 'include'
       });
       if (!res.ok) {
         throw new Error("Failed to upload file");
       }
-      return res.json();
+
+      // Get current data to properly merge new instances
+      const currentDataResponse = await fetch(`/api/reference-data/${dataSetId}`, {
+        credentials: 'include'
+      });
+      const currentDataset = await currentDataResponse.json();
+      const currentData = currentDataset.data || {};
+
+      // Process CSV content
+      const csvContent = await res.text();
+      const rows = csvContent.split('\n').filter(row => row.trim());
+      const headers = rows[0].split(',');
+
+      const timestamp = new Date().toISOString();
+      const newData = { ...currentData };
+
+      // Start from index 1 to skip headers
+      for(let i = 1; i < rows.length; i++) {
+        const values = rows[i].split(',');
+        const instanceData = {};
+        headers.forEach((header, index) => {
+          instanceData[header.trim()] = values[index]?.trim() || '';
+        });
+
+        const instanceId = `instance_${Object.keys(newData).length + 1}`;
+
+        // Add metadata matching manual instance creation
+        newData[instanceId] = {
+          ...instanceData,
+          status: "DRAFT" as InstanceStatus,
+          createdBy: user?.username || "system",
+          createdAt: timestamp,
+          lastModifiedBy: user?.username || "system",
+          lastModifiedAt: timestamp,
+          _history: [{
+            timestamp,
+            changes: Object.entries(instanceData).map(([field, value]) => ({
+              field,
+              oldValue: '',
+              newValue: value
+            }))
+          }]
+        };
+      }
+
+      // Update the dataset with new instances
+      const updateResponse = await fetch(`/api/reference-data/${dataSetId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ data: newData })
+      });
+
+      if (!updateResponse.ok) {
+        throw new Error("Failed to update instances");
+      }
+
+      return await updateResponse.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
