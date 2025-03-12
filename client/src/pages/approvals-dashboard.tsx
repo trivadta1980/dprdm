@@ -39,13 +39,18 @@ interface PendingApproval {
 interface DebugInfo {
   actions: string[];
   error?: string;
+  apiResponse: any;
+  rawResponse: string | null;
+  requestDetails: any;
+  sessionValid: boolean | null;
+  user: string | null;
 }
 
 export default function ApprovalsDashboard() {
   const { toast } = useToast();
   const [selectedInstance, setSelectedInstance] = useState<PendingApproval | null>(null);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<DebugInfo>({ actions: [] });
+  const [debugInfo, setDebugInfo] = useState<DebugInfo>({ actions: [], error: null, apiResponse: null, rawResponse: null, requestDetails: null, sessionValid: null, user: null });
 
   // Add debug logging to the query
   const { data: pendingApprovals, isLoading, error } = useQuery<PendingApproval[]>({
@@ -296,6 +301,36 @@ export default function ApprovalsDashboard() {
               </ul>
               {debugInfo.error && (
                 <div className="text-red-500 mt-2">Error: {debugInfo.error}</div>
+              )}
+              {debugInfo.rawResponse && (
+                <div className="mt-2">
+                  <p className="font-bold">Raw Response:</p>
+                  <pre>{debugInfo.rawResponse}</pre>
+                </div>
+              )}
+              {debugInfo.apiResponse && (
+                <div className="mt-2">
+                  <p className="font-bold">Parsed API Response:</p>
+                  <pre>{JSON.stringify(debugInfo.apiResponse, null, 2)}</pre>
+                </div>
+              )}
+              {debugInfo.requestDetails && (
+                <div className="mt-2">
+                  <p className="font-bold">Request Details:</p>
+                  <pre>{JSON.stringify(debugInfo.requestDetails, null, 2)}</pre>
+                </div>
+              )}
+              {debugInfo.sessionValid !== null && (
+                <div className="mt-2">
+                  <p className="font-bold">Session Valid:</p>
+                  <p>{debugInfo.sessionValid ? 'Yes' : 'No'}</p>
+                </div>
+              )}
+              {debugInfo.user && (
+                <div className="mt-2">
+                  <p className="font-bold">User:</p>
+                  <p>{debugInfo.user}</p>
+                </div>
               )}
             </CardContent>
           </Card>
