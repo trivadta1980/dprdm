@@ -44,6 +44,7 @@ interface DebugInfo {
   requestDetails: any;
   sessionValid: boolean | null;
   user: string | null;
+  authStatus?: { isAuthenticated: boolean; status: number; statusText: string };
 }
 
 export default function ApprovalsDashboard() {
@@ -66,21 +67,82 @@ export default function ApprovalsDashboard() {
 
   // Mutation for handling approvals
   const approveMutation = useMutation({
-    mutationFn: async ({ dataSetId, instanceId }: { dataSetId: number; instanceId: string }) => {
-      console.log(`Approving instance ${instanceId} in dataset ${dataSetId}`);
-      setDebugInfo(prev => ({
-        ...prev,
-        actions: [...prev.actions, `${new Date().toISOString()} - Approving instance ${instanceId} in dataset ${dataSetId}`]
-      }));
-      const response = await apiRequest(`reference-data/${dataSetId}/instances/${instanceId}/approve`, {
-        method: "POST",
-      });
-      const responseData = await response.json();
-      setDebugInfo(prev => ({
-        ...prev,
-        actions: [...prev.actions, `${new Date().toISOString()} - Approval API response: ${JSON.stringify(responseData)}`]
-      }));
-      return responseData;
+    mutationFn: async (approval: PendingApproval) => {
+      const url = `/api/reference-data/${approval.dataSetId}/instances/${approval.instanceId}/approve`;
+      console.log(`Approving instance ${approval.instanceId} in dataset ${approval.dataSetId}`);
+
+      try {
+        // First, check if we're authenticated by using a status check
+        const authCheckResponse = await fetch('/api/status', {
+          method: 'GET',
+          credentials: 'include'
+        });
+
+        const authStatus = {
+          isAuthenticated: authCheckResponse.ok,
+          status: authCheckResponse.status,
+          statusText: authCheckResponse.statusText
+        };
+
+        setDebugInfo(prev => ({ 
+          ...prev, 
+          authStatus,
+          sessionValid: authCheckResponse.ok,
+          requestDetails: {
+            url,
+            method: 'POST',
+            credentials: 'include'
+          }
+        }));
+
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          credentials: 'include'
+        });
+
+        let responseData;
+        let responseText = '';
+
+        try {
+          // Try to get response as text first
+          responseText = await response.text();
+
+          // Then try to parse as JSON if possible
+          try {
+            responseData = JSON.parse(responseText);
+          } catch (parseError) {
+            // If it's not valid JSON, keep as text
+            responseData = null;
+          }
+        } catch (textError) {
+          responseText = 'Failed to read response body';
+        }
+
+        // Update debug info with response details
+        setDebugInfo(prev => ({ 
+          ...prev, 
+          apiResponse: responseData,
+          rawResponse: responseText,
+          error: !response.ok ? `${response.status} ${response.statusText}` : undefined
+        }));
+
+        if (!response.ok) {
+          throw new Error(`Error approving instance: ${response.statusText}`);
+        }
+
+        return responseData;
+      } catch (error) {
+        console.log('Approval error:', error);
+        setDebugInfo(prev => ({ 
+          ...prev, 
+          error: error.message || String(error)
+        }));
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
@@ -258,10 +320,7 @@ export default function ApprovalsDashboard() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => approveMutation.mutate({
-                            dataSetId: item.dataSetId,
-                            instanceId: item.instanceId,
-                          })}
+                          onClick={() => approveMutation.mutate(item)}
                           disabled={approveMutation.isPending}
                         >
                           <Check className="h-4 w-4 mr-2" />
@@ -330,6 +389,14 @@ export default function ApprovalsDashboard() {
                 <div className="mt-2">
                   <p className="font-bold">User:</p>
                   <p>{debugInfo.user}</p>
+                </div>
+              )}
+              {debugInfo.authStatus && (
+                <div className="mt-2">
+                  <p className="font-bold">Authentication Status:</p>
+                  <p>isAuthenticated: {debugInfo.authStatus.isAuthenticated ? 'true' : 'false'}</p>
+                  <p>Status: {debugInfo.authStatus.status}</p>
+                  <p>Status Text: {debugInfo.authStatus.statusText}</p>
                 </div>
               )}
             </CardContent>
