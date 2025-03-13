@@ -115,39 +115,8 @@ export default function ApprovalsDashboard() {
           statusText: authCheckResponse.statusText
         };
 
-        // Get current instance state
-        const currentInstanceState = beforeData?.data?.[approval.instanceId] || null;
 
-        // Update debug panel with all this information
-        setDebugInfo(prev => ({ 
-          ...prev, 
-          authStatus,
-          sessionValid: authCheckResponse.ok,
-          requestDetails: {
-            url,
-            method: 'POST',
-            credentials: 'include'
-          },
-          beforeApproval: {
-            instanceData: currentInstanceState,
-            statusBefore: currentInstanceState?.status,
-            datasetId: approval.dataSetId,
-            instanceId: approval.instanceId
-          }
-        }));
-
-        // Prepare request for debugging
-        const approvalUrl = `/api/reference-data/${approval.dataSetId}/instances/${approval.instanceId}/approve`;
-        setDebugInfo(prev => ({
-          ...prev,
-          requestDetails: {
-            method: 'POST',
-            url: approvalUrl,
-            withCredentials: true
-          }
-        }));
-
-        const response = await fetch(approvalUrl, {
+        const response = await fetch(url, {
           method: "POST",
           headers: {
             'Content-Type': 'application/json',
@@ -174,7 +143,7 @@ export default function ApprovalsDashboard() {
           responseText = 'Failed to read response body';
         }
 
-        // If successful, fetch the updated data
+
         let afterData;
         if (response.ok) {
           const afterDataResponse = await fetch(`/api/reference-data/${approval.dataSetId}`, {
@@ -189,33 +158,6 @@ export default function ApprovalsDashboard() {
 
         // Get updated instance state
         const updatedInstanceState = afterData?.data?.[approval.instanceId] || null;
-
-        // Update debug info with response details
-        setDebugInfo(prev => ({ 
-          ...prev, 
-          apiResponse: responseData,
-          rawResponse: responseText,
-          error: !response.ok ? `${response.status} ${response.statusText}` : undefined,
-          afterApproval: {
-            instanceData: updatedInstanceState,
-            statusAfter: updatedInstanceState?.status,
-            datasetId: approval.dataSetId,
-            instanceId: approval.instanceId,
-            time: new Date().toISOString()
-          },
-          responseStatus: {
-            ok: response.ok,
-            status: response.status,
-            statusText: response.statusText
-          },
-          // Show the payload that would be sent by the server (based on routes.ts)
-          serverPayload: {
-            instanceId: approval.instanceId,
-            oldStatus: currentInstanceState?.status,
-            newStatus: "APPROVED",
-            timestamp: new Date().toISOString()
-          }
-        }));
 
         if (!response.ok) {
           throw new Error(`Error approving instance: ${response.statusText}`);
@@ -433,125 +375,6 @@ export default function ApprovalsDashboard() {
             )}
           </CardContent>
         </Card>
-
-        <div className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Debug Panel</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul>
-                {debugInfo.actions.map((action, index) => (
-                  <li key={index}>{action}</li>
-                ))}
-              </ul>
-              {debugInfo.error && (
-                <div className="text-red-500 mt-2">Error: {debugInfo.error}</div>
-              )}
-              {debugInfo.authStatus && (
-                <div className="mt-2">
-                  <p className="font-bold">Authentication Status Check:</p>
-                  <p className="text-xs">Is Authenticated: <span className={debugInfo.authStatus.isAuthenticated ? "text-green-600" : "text-red-600"}>{debugInfo.authStatus.isAuthenticated ? "Yes" : "No"}</span></p>
-                  <p className="text-xs">Status: {debugInfo.authStatus.status} {debugInfo.authStatus.statusText}</p>
-                </div>
-              )}
-
-              {debugInfo.beforeApproval && (
-                <div className="mt-2 p-2 bg-gray-100 rounded-md">
-                  <p className="font-bold">Before Approval:</p>
-                  <p>Dataset ID: {debugInfo.beforeApproval.datasetId}</p>
-                  <p>Instance ID: {debugInfo.beforeApproval.instanceId}</p>
-                  <p className="text-orange-600 font-semibold">
-                    Status before: {debugInfo.beforeApproval.statusBefore || 'N/A'}
-                  </p>
-                </div>
-              )}
-
-              {debugInfo.responseStatus && (
-                <div className="mt-2 p-2 bg-gray-100 rounded-md">
-                  <p className="font-bold">API Response:</p>
-                  <p>Status: {debugInfo.responseStatus.status} ({debugInfo.responseStatus.statusText})</p>
-                  <p>Success: {debugInfo.responseStatus.ok ? 'true' : 'false'}</p>
-                </div>
-              )}
-
-              {debugInfo.afterApproval && (
-                <div className="mt-2 p-2 bg-gray-100 rounded-md">
-                  <p className="font-bold">After Approval:</p>
-                  <p className="text-green-600 font-semibold">
-                    Status after: {debugInfo.afterApproval.statusAfter || 'N/A'}
-                  </p>
-                  <p>Time: {debugInfo.afterApproval.time}</p>
-                </div>
-              )}
-
-              {debugInfo.rawResponse && (
-                <div className="mt-2">
-                  <details>
-                    <summary className="font-bold cursor-pointer">Raw Server Response:</summary>
-                    <pre className="text-xs mt-1 p-2 bg-gray-100 rounded overflow-auto max-h-40">
-                      {debugInfo.rawResponse}
-                    </pre>
-                  </details>
-                </div>
-              )}
-              {debugInfo.apiResponse && (
-                <div className="mt-2">
-                  <p className="font-bold">Parsed API Response:</p>
-                  <pre>{JSON.stringify(debugInfo.apiResponse, null, 2)}</pre>
-                </div>
-              )}
-              {debugInfo.requestDetails && (
-                <div className="mt-2">
-                  <p className="font-bold">Request Details:</p>
-                  <pre>{JSON.stringify(debugInfo.requestDetails, null, 2)}</pre>
-                </div>
-              )}
-              {debugInfo.sessionValid !== null && (
-                <div className="mt-2">
-                  <p className="font-bold">Session Valid:</p>
-                  <p>{debugInfo.sessionValid ? 'Yes' : 'No'}</p>
-                </div>
-              )}
-              {debugInfo.user && (
-                <div className="mt-2">
-                  <p className="font-bold">User:</p>
-                  <p>{debugInfo.user}</p>
-                </div>
-              )}
-              {debugInfo.serverPayload && (
-                <div className="mt-4 border-t pt-4">
-                  <p className="font-bold text-blue-600">Server Approval Payload:</p>
-                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto">
-                    {JSON.stringify(debugInfo.serverPayload, null, 2)}
-                  </pre>
-                </div>
-              )}
-
-              {debugInfo.beforeApproval && (
-                <div className="mt-4 border-t pt-4">
-                  <p className="font-bold text-orange-600">Database Value Before Approval:</p>
-                  <p className="text-xs">Dataset ID: {debugInfo.beforeApproval.datasetId}, Instance ID: {debugInfo.beforeApproval.instanceId}</p>
-                  <p className="text-xs font-semibold mt-1">Status: {debugInfo.beforeApproval.instanceData?.status || 'N/A'}</p>
-                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto">
-                    {JSON.stringify(debugInfo.beforeApproval.instanceData, null, 2)}
-                  </pre>
-                </div>
-              )}
-
-              {debugInfo.afterApproval && (
-                <div className="mt-4 border-t pt-4">
-                  <p className="font-bold text-green-600">Database Value After Approval:</p>
-                  <p className="text-xs">Dataset ID: {debugInfo.afterApproval.datasetId}, Instance ID: {debugInfo.afterApproval.instanceId}</p>
-                  <p className="text-xs font-semibold mt-1">Status: {debugInfo.afterApproval.instanceData?.status || 'N/A'}</p>
-                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto">
-                    {JSON.stringify(debugInfo.afterApproval.instanceData, null, 2)}
-                  </pre>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
 
         <Dialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen}>
           <DialogContent>
