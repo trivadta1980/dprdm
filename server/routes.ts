@@ -1141,6 +1141,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     try {
       const success = await storage.deleteCrosswalkMapping(Number(req.params.id));
+      if (success) {
+        console.log('DELETE /api/crosswalks/:id - Mapping deleted successfully');
+        res.sendStatus(200);
+      } else {
+        console.log('DELETE /api/crosswalks/:id - Mapping not found');
+        res.sendStatus(404);
+      }
+    } catch (error) {
+      console.error('DELETE /api/crosswalks/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
 
   // Add endpoints for approving/rejecting reference data instances
   app.post("/api/reference-data/:id/instances/:instanceId/approve", async (req, res) => {
@@ -1275,19 +1287,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error('POST /api/reference-data/:id/instances/:instanceId/reject - Error:', error);
-      res.status(500).json({ error: String(error) });
-    }
-  });
-
-      if (success) {
-        console.log('DELETE /api/crosswalks/:id - Mapping deleted successfully');
-        res.sendStatus(200);
-      } else {
-        console.log('DELETE /api/crosswalks/:id - Mapping not found');
-        res.sendStatus(404);
-      }
-    } catch (error) {
-      console.error('DELETE /api/crosswalks/:id - Error:', error);
       res.status(500).json({ error: String(error) });
     }
   });
