@@ -286,11 +286,25 @@ export default function ReferenceDataInstancesPage() {
       })).filter(change => change.oldValue !== change.newValue);
 
       if (changes.length > 0) {
+        // Determine status - if instance was APPROVED and there are changes, set back to DRAFT
+        let newStatus = currentInstance.status || "DRAFT";
+        let statusChange = null;
+        
+        // Check if instance is being modified from APPROVED state
+        if (currentInstance.status === "APPROVED") {
+          newStatus = "DRAFT";
+          statusChange = {
+            field: "status",
+            oldValue: "APPROVED",
+            newValue: "DRAFT"
+          };
+        }
+        
         const updatedData = {
           ...currentData,
           [id]: {
             ...data,
-            status: currentInstance.status || "DRAFT",
+            status: newStatus,
             lastModifiedBy: user?.username || "system",
             lastModifiedAt: timestamp,
             createdBy: currentInstance.createdBy || "system",
@@ -299,7 +313,7 @@ export default function ReferenceDataInstancesPage() {
               ...(currentInstance._history || []),
               {
                 timestamp,
-                changes
+                changes: statusChange ? [...changes, statusChange] : changes
               }
             ]
           }
