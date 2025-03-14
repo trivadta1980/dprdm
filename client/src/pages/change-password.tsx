@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
