@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Check, X, History, FileText } from "lucide-react";
+import { Loader2, Check, X, History, FileText, CheckSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -71,7 +72,8 @@ export default function ApprovalsDashboard() {
   const { toast } = useToast();
   const [selectedInstance, setSelectedInstance] = useState<PendingApproval | null>(null);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<DebugInfo>({ actions: [], error: null, apiResponse: null, rawResponse: null, requestDetails: null, sessionValid: null, user: null });
+  const [selectedInstances, setSelectedInstances] = useState<Set<string>>(new Set());
+  const [debugInfo, setDebugInfo] = useState<DebugInfo>({ actions: [], error: "", apiResponse: null, rawResponse: null, requestDetails: null, sessionValid: null, user: null });
 
   // Add debug logging to the query
   const { data: pendingApprovals, isLoading, error } = useQuery<PendingApproval[]>({
@@ -235,6 +237,48 @@ export default function ApprovalsDashboard() {
     },
   });
 
+  // New bulk approval mutation
+  const bulkApproveMutation = useMutation({
+    mutationFn: async (approvals: PendingApproval[]) => {
+      const results = await Promise.all(
+        approvals.map(async (approval) => {
+          const url = `/api/reference-data/${approval.dataSetId}/instances/${approval.instanceId}/approve`;
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            credentials: 'include'
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to approve instance ${approval.instanceId}`);
+          }
+
+          return response.json();
+        })
+      );
+      return results;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
+      toast({
+        title: "Bulk Approval Success",
+        description: "Selected instances have been approved successfully.",
+      });
+      setSelectedInstances(new Set());
+    },
+    onError: (error: Error) => {
+      console.error("Bulk approval error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to approve selected instances",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Helper function to format instance data for display
   const formatInstanceData = (data: Record<string, any>) => {
     // Filter out internal fields and format for display
@@ -242,6 +286,45 @@ export default function ApprovalsDashboard() {
       !['_history', 'status', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key)
     );
     return displayData;
+  };
+
+  // Handle select all checkbox
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = pendingApprovals?.map(item => `${item.dataSetId}-${item.instanceId}`) || [];
+      setSelectedInstances(new Set(allIds));
+    } else {
+      setSelectedInstances(new Set());
+    }
+  };
+
+  // Handle individual checkbox selection
+  const handleSelectInstance = (id: string, checked: boolean) => {
+    const newSelected = new Set(selectedInstances);
+    if (checked) {
+      newSelected.add(id);
+    } else {
+      newSelected.delete(id);
+    }
+    setSelectedInstances(newSelected);
+  };
+
+  // Handle bulk approve action
+  const handleBulkApprove = () => {
+    if (selectedInstances.size === 0) {
+      toast({
+        title: "No Selections",
+        description: "Please select instances to approve",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const selectedApprovals = pendingApprovals?.filter(
+      item => selectedInstances.has(`${item.dataSetId}-${item.instanceId}`)
+    ) || [];
+
+    bulkApproveMutation.mutate(selectedApprovals);
   };
 
   if (isLoading) {
@@ -268,8 +351,22 @@ export default function ApprovalsDashboard() {
     <MainLayout>
       <div className="container mx-auto p-6">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Pending Approvals</CardTitle>
+            {pendingApprovals?.length > 0 && (
+              <Button
+                onClick={handleBulkApprove}
+                disabled={selectedInstances.size === 0 || bulkApproveMutation.isPending}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {bulkApproveMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                )}
+                Approve Selected ({selectedInstances.size})
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             {pendingApprovals?.length === 0 ? (
@@ -280,6 +377,12 @@ export default function ApprovalsDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[50px]">
+                      <Checkbox
+                        checked={selectedInstances.size === pendingApprovals?.length}
+                        onCheckedChange={handleSelectAll}
+                      />
+                    </TableHead>
                     <TableHead>Dataset</TableHead>
                     <TableHead>Instance Name</TableHead>
                     <TableHead>Instance ID</TableHead>
@@ -291,6 +394,14 @@ export default function ApprovalsDashboard() {
                 <TableBody>
                   {pendingApprovals?.map((item) => (
                     <TableRow key={`${item.dataSetId}-${item.instanceId}`}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedInstances.has(`${item.dataSetId}-${item.instanceId}`)}
+                          onCheckedChange={(checked) => 
+                            handleSelectInstance(`${item.dataSetId}-${item.instanceId}`, checked)
+                          }
+                        />
+                      </TableCell>
                       <TableCell>{item.dataSetName}</TableCell>
                       <TableCell>{item.instanceName}</TableCell>
                       <TableCell>
