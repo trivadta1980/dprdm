@@ -240,9 +240,30 @@ export default function ApprovalsDashboard() {
   // New bulk approval mutation
   const bulkApproveMutation = useMutation({
     mutationFn: async (approvals: PendingApproval[]) => {
+      console.log('Starting bulk approval process');
+      console.log('Pending approvals to process:', approvals.length, approvals);
+
+      //Moved auth check outside the loop
+      const authCheckResponse = await fetch('/api/status', {
+        method: 'GET',
+        credentials: 'include'
+      });
+      const authStatus = {
+        isAuthenticated: authCheckResponse.ok,
+        status: authCheckResponse.status,
+        statusText: authCheckResponse.statusText
+      };
+      console.log('Auth status:', authStatus);
+
+
       const results = await Promise.all(
         approvals.map(async (approval) => {
           const url = `/api/reference-data/${approval.dataSetId}/instances/${approval.instanceId}/approve`;
+          console.log('Processing approval for:', {
+            dataSetId: approval.dataSetId,
+            instanceId: approval.instanceId,
+            url: url
+          });
           const response = await fetch(url, {
             method: "POST",
             headers: {
@@ -253,10 +274,13 @@ export default function ApprovalsDashboard() {
           });
 
           if (!response.ok) {
-            throw new Error(`Failed to approve instance ${approval.instanceId}`);
+            console.error(`Failed to approve instance ${approval.instanceId}:`, response);
+            throw new Error(`Failed to approve instance ${approval.instanceId}: ${response.statusText}`);
           }
 
-          return response.json();
+          const data = await response.json();
+          console.log(`Successfully approved instance ${approval.instanceId}:`, data);
+          return data;
         })
       );
       return results;
