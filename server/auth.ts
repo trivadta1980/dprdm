@@ -169,7 +169,7 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/reset-password/request", async (req, res) => {
-    const result = resetPasswordRequestSchema.safeParse(req.body);
+    /* const result = resetPasswordRequestSchema.safeParse(req.body);
     if (!result.success) {
       return res.status(400).json(result.error);
     }
@@ -219,7 +219,7 @@ export function setupAuth(app: Express) {
       } else {
         res.status(500).json({ message: "Failed to send reset email" });
       }
-    }
+    }*/
   });
 
   app.post("/api/reset-password", async (req, res) => {
