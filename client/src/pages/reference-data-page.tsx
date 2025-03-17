@@ -96,7 +96,7 @@ export default function ReferenceDataPage() {
       <div className="max-w-6xl mx-auto space-y-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Reference Data Management</CardTitle>
+            <CardTitle>Reference Data Sets</CardTitle>
             <Button onClick={handleCreateNew}>
               <Plus className="h-4 w-4 mr-2" />
               New Data Set
