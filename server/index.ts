@@ -14,6 +14,13 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Add JSON content type header for all /api routes
+app.use('/api', (req, res, next) => {
+  res.setHeader('Content-Type', 'application/json');
+  next();
+});
+
+// Add request logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -47,17 +54,25 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  // Add JSON error handler for API routes
+  app.use('/api', (err: any, req: Request, res: Response, next: NextFunction) => {
+    console.error('API Error:', err);
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
     res.status(status).json({ message });
-    throw err;
+  });
+
+  // Add general error handler for non-API routes
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    console.error('General Error:', err);
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+    res.status(status).send(message);
   });
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
+  // doesn't interfere with the API routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
@@ -76,7 +91,7 @@ app.use((req, res, next) => {
 
     const PORT = tryPorts[portIndex];
     server.listen(PORT, "0.0.0.0")
-      .on("error", (err) => {
+      .on("error", (err: NodeJS.ErrnoException) => {
         if (err.code === "EADDRINUSE") {
           console.log(`Port ${PORT} is in use, trying next port...`);
           startServer(portIndex + 1);
@@ -102,10 +117,7 @@ const cleanup = async () => {
     await closeDriver();
   }
 
-  server.close(() => {
-    console.log('HTTP server closed');
-    process.exit(0);
-  });
+  process.exit(0);
 };
 
 process.on('SIGINT', cleanup);

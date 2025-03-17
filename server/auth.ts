@@ -95,7 +95,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", (req, res, next) => {
+  app.post("api/login", (req, res, next) => {
     // Set JSON content type and prevent it from being overridden
     res.set({
       'Content-Type': 'application/json',
