@@ -58,24 +58,45 @@ export default function AuthPage() {
     }
   }, [user, setLocation]);
 
+  // Initialize form with empty strings to prevent uncontrolled to controlled warnings
   const loginForm = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: ""
+    }
   });
 
   const registerForm = useForm<InsertUser>({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
+      email: "",
+      username: "",
+      password: "",
+      confirmPassword: "",
       roleId: 2, // Default to regular user role
     }
   });
 
   const resetForm = useForm<{ email: string }>({
     resolver: zodResolver(resetPasswordRequestSchema),
+    defaultValues: {
+      email: ""
+    }
   });
 
   function onLogin(data: LoginData) {
     console.log('AuthPage: Login attempt with:', { username: data.username });
-    loginMutation.mutate(data);
+    loginMutation.mutate(data, {
+      onError: (error: Error) => {
+        console.error('Login error:', error);
+        toast({
+          title: "Login Failed",
+          description: error.message || "Invalid credentials or server error",
+          variant: "destructive",
+        });
+      }
+    });
   }
 
   function onRegister(data: InsertUser) {

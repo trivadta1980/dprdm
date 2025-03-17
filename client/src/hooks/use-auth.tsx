@@ -45,24 +45,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           method: "POST",
           data: credentials
         });
-        console.log('Login response status:', res.status);
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || 'Login failed');
+        }
+
         const data = await res.json();
         console.log('Login response data:', data);
         return data;
       } catch (error) {
         console.error('Login error:', error);
-        throw error;
+        // Ensure we always throw an Error object with a message
+        throw error instanceof Error ? error : new Error('Authentication failed');
       }
     },
     onSuccess: (user: SelectUser) => {
       console.log('Login successful, updating user data:', user);
       queryClient.setQueryData(["/api/user"], user);
+      toast({
+        title: "Success",
+        description: "Logged in successfully",
+      });
     },
     onError: (error: Error) => {
       console.error('Login mutation error:', error);
       toast({
         title: "Login failed",
-        description: error.message,
+        description: error.message || "Invalid credentials",
         variant: "destructive",
       });
     },
