@@ -17,8 +17,9 @@ export async function apiRequest(
   url: string,
   options: { method?: string; data?: unknown } = {}
 ): Promise<Response> {
-  // Make sure URL starts with /api/
-  const apiUrl = url.startsWith('/') ? `/api${url}` : `/api/${url}`;
+  // Remove any duplicate /api prefixes and ensure a single /api prefix
+  const cleanUrl = url.replace(/^\/?(api\/?)+/, '');
+  const apiUrl = `/api/${cleanUrl}`;
 
   const res = await fetch(apiUrl, {
     method: options.method || 'GET',
@@ -46,8 +47,9 @@ export const getQueryFn: <T>(options: {
       throw new Error('Query key must be a string URL');
     }
 
-    // Make sure URL starts with /api/
-    const apiUrl = url.startsWith('/') ? url : `/api/${url}`;
+    // Clean up URL to prevent duplicate /api prefixes
+    const cleanUrl = url.replace(/^\/?(api\/?)+/, '');
+    const apiUrl = `/api/${cleanUrl}`;
 
     const res = await fetch(apiUrl, {
       credentials: "include",
