@@ -269,12 +269,29 @@ export class DatabaseStorage implements IStorage {
     return role;
   }
 
-  async deleteRole(id: number): Promise<boolean> {
+  async deleteRole(id: number): Promise<{success: boolean; message?: string}> {
+    // First check if any users have this role
+    const linkedUsers = await db
+      .select()
+      .from(users)
+      .where(eq(users.roleId, id));
+
+    if (linkedUsers.length > 0) {
+      return {
+        success: false,
+        message: "This role cannot be deleted because it is currently assigned to users. Please reassign or delete the users first."
+      };
+    }
+
+    // If no users are linked, proceed with deletion
     const [role] = await db
       .delete(roles)
       .where(eq(roles.id, id))
       .returning();
-    return !!role;
+      
+    return {
+      success: !!role
+    };
   }
 
   async createReferenceDataType(data: InsertReferenceDataType): Promise<ReferenceDataType> {

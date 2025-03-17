@@ -362,12 +362,17 @@ export function setupAuth(app: Express) {
       return res.status(403).send("Cannot delete admin role");
     }
 
-    const success = await storage.deleteRole(roleId);
-    if (success) {
-      res.sendStatus(200);
-    } else {
-      res.sendStatus(404);
+    const result = await storage.deleteRole(roleId);
+    if (!result.success) {
+      if (result.message) {
+        console.log('DELETE /api/roles/:id - Cannot delete role:', result.message);
+        return res.status(400).json({ error: result.message });
+      }
+      console.log('DELETE /api/roles/:id - Role not found');
+      return res.sendStatus(404);
     }
+    console.log('DELETE /api/roles/:id - Role deleted successfully');
+    res.sendStatus(200);
   });
 }
 
