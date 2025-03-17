@@ -96,7 +96,17 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    res.setHeader('Content-Type', 'application/json');
+    // Set JSON content type and prevent it from being overridden
+    res.set({
+      'Content-Type': 'application/json',
+      'X-Content-Type-Options': 'nosniff'
+    });
+
+    console.log('Login request received:', {
+      path: req.path,
+      method: req.method,
+      headers: req.headers
+    });
 
     passport.authenticate("local", (err, user, info) => {
       if (err) {
