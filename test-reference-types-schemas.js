@@ -1,4 +1,3 @@
-
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import { Pool, neonConfig } from '@neondatabase/serverless';
@@ -33,7 +32,7 @@ async function login() {
       }),
       redirect: 'manual'
     });
-    
+
     const cookies = response.headers.get('set-cookie');
     console.log('Login response status:', response.status);
     return cookies;

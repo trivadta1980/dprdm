@@ -68,7 +68,6 @@ async function createRole(sessionCookie) {
   }
 }
 
-// Execute the functions
 async function main() {
   try {
     const sessionCookie = await login();
