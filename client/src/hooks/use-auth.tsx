@@ -39,29 +39,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      console.log('Login attempt with:', { username: credentials.username });
+      console.log('Login mutation started with:', { username: credentials.username });
       try {
+        console.log('Sending login request...');
         const res = await apiRequest("/login", {
           method: "POST",
           data: credentials
         });
 
+        console.log('Login response received:', {
+          status: res.status,
+          statusText: res.statusText,
+          headers: Object.fromEntries(res.headers.entries())
+        });
+
         if (!res.ok) {
           const errorData = await res.json();
+          console.error('Login response not OK:', errorData);
           throw new Error(errorData.message || 'Login failed');
         }
 
         const data = await res.json();
-        console.log('Login response data:', data);
+        console.log('Login successful, parsed response:', data);
         return data;
       } catch (error) {
-        console.error('Login error:', error);
-        // Ensure we always throw an Error object with a message
+        console.error('Login error details:', {
+          error,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
+        });
         throw error instanceof Error ? error : new Error('Authentication failed');
       }
     },
     onSuccess: (user: SelectUser) => {
-      console.log('Login successful, updating user data:', user);
+      console.log('Login mutation success - updating user data:', user);
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Success",
@@ -69,7 +80,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
-      console.error('Login mutation error:', error);
+      console.error('Login mutation error:', {
+        error,
+        message: error.message,
+        stack: error.stack
+      });
       toast({
         title: "Login failed",
         description: error.message || "Invalid credentials",

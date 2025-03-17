@@ -51,9 +51,12 @@ export default function AuthPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    console.log('AuthPage: User state changed:', user);
+    console.log('AuthPage: User state changed:', {
+      user,
+      timestamp: new Date().toISOString()
+    });
     if (user) {
-      console.log('AuthPage: Redirecting to home');
+      console.log('AuthPage: Redirecting to home, user authenticated');
       setLocation("/");
     }
   }, [user, setLocation]);
@@ -86,14 +89,27 @@ export default function AuthPage() {
   });
 
   function onLogin(data: LoginData) {
-    console.log('AuthPage: Login attempt with:', { username: data.username });
+    console.log('AuthPage: Login form submitted', {
+      username: data.username,
+      timestamp: new Date().toISOString()
+    });
+
     loginMutation.mutate(data, {
       onError: (error: Error) => {
-        console.error('Login error:', error);
+        console.error('AuthPage: Login error:', {
+          error,
+          message: error.message,
+          timestamp: new Date().toISOString()
+        });
         toast({
           title: "Login Failed",
           description: error.message || "Invalid credentials or server error",
           variant: "destructive",
+        });
+      },
+      onSuccess: () => {
+        console.log('AuthPage: Login mutation completed successfully', {
+          timestamp: new Date().toISOString()
         });
       }
     });
