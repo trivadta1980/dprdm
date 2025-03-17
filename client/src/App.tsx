@@ -18,6 +18,7 @@ const RolesPage = lazy(() => import("@/pages/roles-page"));
 const ReferenceTypesPage = lazy(() => import("@/pages/reference-types-page"));
 const ReferenceDataPage = lazy(() => import("@/pages/reference-data-page"));
 const ReferenceDataCreatePage = lazy(() => import("@/pages/reference-data-create-page"));
+const ReferenceDataEditPage = lazy(() => import("@/pages/reference-data-edit-page"));
 const ReferenceDataInstancesPage = lazy(() => import("@/pages/reference-data-instances-page"));
 const DatasetGraphPage = lazy(() => import("@/pages/dataset-graph-page"));
 const RelationshipsPage = lazy(() => import("@/pages/relationships-page"));
@@ -74,6 +75,11 @@ export default function App() {
               <Route path="/reference-data/create">
                 <ProtectedRoute>
                   <ReferenceDataCreatePage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/reference-data/:id/edit">
+                <ProtectedRoute>
+                  <ReferenceDataEditPage />
                 </ProtectedRoute>
               </Route>
               <Route path="/reference-data/:id/instances">
@@ -133,7 +139,6 @@ export default function App() {
                   <SitePathsPage />
                 </ProtectedRoute>
               </Route>
-              {/* Add new route for approvals dashboard */}
               <Route path="/approvals">
                 <ProtectedRoute>
                   <ApprovalsDashboard />
