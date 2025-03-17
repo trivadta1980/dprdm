@@ -365,8 +365,8 @@ export function setupAuth(app: Express) {
     const result = await storage.deleteRole(roleId);
     if (!result.success) {
       if (result.message) {
-        console.log('DELETE /api/roles/:id - Info:', result.message);
-        return res.status(200).json({ info: result.message });
+        console.log('DELETE /api/roles/:id - Cannot delete role:', result.message);
+        return res.status(409).json({ error: result.message });
       }
       console.log('DELETE /api/roles/:id - Role not found');
       return res.sendStatus(404);
