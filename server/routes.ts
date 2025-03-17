@@ -538,7 +538,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/relationships", async (req, res) => {
-    console.log('POST /api/relationships - Request received');
+    console.log('POST /api/relationships - Request received with payload:', req.body);
     if (!req.isAuthenticated()) {
       console.log('POST /api/relationships - Unauthorized access');
       return res.sendStatus(401);
@@ -550,8 +550,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json(result.error);
       }
 
+      console.log('POST /api/relationships - Validated data:', result.data);
       const relationship = await storage.createRelationship(result.data);
-      console.log('POST /api/relationships - Relationship created successfully');
+      console.log('POST /api/relationships - Relationship created successfully:', relationship);
+
       // Sync with Neo4j if available
       if (GraphDataService.isAvailable()) {
         try {
@@ -563,7 +565,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.status(201).json(relationship);
     } catch (error) {
-      console.error('POST /api/relationships - Error:', error);
+      console.error('POST /api/relationships - Error creating relationship:', error);
       res.status(500).json({ error: String(error) });
     }
   });
