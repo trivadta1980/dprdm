@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Login mutation started with:', { username: credentials.username });
       try {
         console.log('Sending login request...');
-        const res = await apiRequest("/login", {
+        const res = await apiRequest("login", {
           method: "POST",
           data: credentials
         });
