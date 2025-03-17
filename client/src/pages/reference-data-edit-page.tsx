@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -23,13 +22,34 @@ export default function ReferenceDataEditPage() {
   const { toast } = useToast();
   const dataSetId = id ? Number(id) : null;
 
-  const { data: dataSet, isLoading: isLoadingDataSet } = useQuery<ReferenceDataSet>({
+  console.log('[DEBUG] ReferenceDataEditPage - Component mounted, id:', id);
+
+  const { data: dataSet, isLoading: isLoadingDataSet, error: dataSetError } = useQuery<ReferenceDataSet>({
     queryKey: [`/api/reference-data/${dataSetId}`],
     enabled: !!dataSetId,
+    onError: (error) => {
+      console.error('[DEBUG] ReferenceDataEditPage - Data fetch error:', error);
+      if (error instanceof Error) {
+        console.log('[DEBUG] Error response:', error.message);
+        if ('response' in error) {
+          // @ts-ignore
+          console.log('[DEBUG] Response details:', error.response?.data);
+        }
+      }
+    },
+    onSuccess: (data) => {
+      console.log('[DEBUG] ReferenceDataEditPage - Data fetch success:', data);
+    }
   });
 
-  const { data: types = [], isLoading: isLoadingTypes } = useQuery<ReferenceDataType[]>({
+  const { data: types = [], isLoading: isLoadingTypes, error: typesError } = useQuery<ReferenceDataType[]>({
     queryKey: ["/api/reference-types"],
+    onError: (error) => {
+      console.error('[DEBUG] ReferenceDataEditPage - Types fetch error:', error);
+    },
+    onSuccess: (data) => {
+      console.log('[DEBUG] ReferenceDataEditPage - Types fetch success:', data);
+    }
   });
 
   const form = useForm<InsertReferenceDataSet>({
@@ -44,6 +64,7 @@ export default function ReferenceDataEditPage() {
 
   useEffect(() => {
     if (dataSet) {
+      console.log('[DEBUG] ReferenceDataEditPage - Setting form values with dataset:', dataSet);
       form.reset({
         name: dataSet.name,
         description: dataSet.description || "",
@@ -55,21 +76,31 @@ export default function ReferenceDataEditPage() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: InsertReferenceDataSet) => {
+      console.log('[DEBUG] ReferenceDataEditPage - Starting update mutation with data:', data);
       const response = await fetch(`/api/reference-data/${dataSetId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
+        credentials: 'include', // Important for sending cookies
       });
-      
+
       if (!response.ok) {
-        throw new Error("Failed to update reference data set");
+        const errorText = await response.text();
+        console.error('[DEBUG] Update mutation failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText,
+          headers: Object.fromEntries(response.headers.entries())
+        });
+        throw new Error(`Failed to update reference data set: ${errorText}`);
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
+      console.log('[DEBUG] ReferenceDataEditPage - Update mutation succeeded');
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       toast({
         title: "Success",
@@ -78,6 +109,7 @@ export default function ReferenceDataEditPage() {
       setLocation("/reference-data");
     },
     onError: (error: Error) => {
+      console.error('[DEBUG] ReferenceDataEditPage - Update mutation failed:', error);
       toast({
         title: "Error",
         description: error.message,
@@ -99,6 +131,7 @@ export default function ReferenceDataEditPage() {
   }
 
   if (!dataSet) {
+    console.log('[DEBUG] ReferenceDataEditPage - No dataset found');
     return (
       <MainLayout>
         <div className="container mx-auto py-10">
@@ -119,7 +152,10 @@ export default function ReferenceDataEditPage() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit((data) => updateMutation.mutate(data))} className="space-y-6">
+              <form onSubmit={form.handleSubmit((data) => {
+                console.log('[DEBUG] ReferenceDataEditPage - Form submitted with data:', data);
+                updateMutation.mutate(data);
+              })} className="space-y-6">
                 <FormField
                   control={form.control}
                   name="name"

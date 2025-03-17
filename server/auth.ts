@@ -53,33 +53,37 @@ export function setupAuth(app: Express) {
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
-      console.log(`Login attempt for username: ${username}`);
+      console.log(`[DEBUG Login] Login attempt for username: ${username}`);
       try {
         const user = await storage.getUserByUsername(username);
-        console.log(`User found:`, user ? { id: user.id, username: user.username, isActive: user.isActive } : 'Not found');
+        console.log(`[DEBUG Login] User found:`, user ? { 
+          id: user.id, 
+          username: user.username, 
+          isActive: user.isActive 
+        } : 'Not found');
 
         if (!user) {
-          console.log('Login failed: User not found');
+          console.log('[DEBUG Login] Login failed: User not found');
           return done(null, false, { message: "Invalid username or password" });
         }
 
         if (!user.isActive) {
-          console.log('Login failed: Account inactive');
+          console.log('[DEBUG Login] Login failed: Account inactive');
           return done(null, false, { message: "Account is inactive" });
         }
 
         const passwordMatch = await comparePasswords(password, user.password);
-        console.log(`Password match result: ${passwordMatch}`);
+        console.log(`[DEBUG Login] Password match result: ${passwordMatch}`);
 
         if (!passwordMatch) {
-          console.log('Login failed: Password mismatch');
+          console.log('[DEBUG Login] Login failed: Password mismatch');
           return done(null, false, { message: "Invalid username or password" });
         }
 
-        console.log('Login successful');
+        console.log('[DEBUG Login] Login successful');
         return done(null, user);
       } catch (error) {
-        console.error('Login error:', error);
+        console.error('[DEBUG Login] Login error:', error);
         return done(error);
       }
     }),
@@ -96,13 +100,12 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    // Set JSON content type and prevent it from being overridden
     res.set({
       'Content-Type': 'application/json',
       'X-Content-Type-Options': 'nosniff'
     });
 
-    console.log('Login request received:', {
+    console.log('[DEBUG Login Route] Login request received:', {
       path: req.path,
       method: req.method,
       headers: req.headers
@@ -110,31 +113,46 @@ export function setupAuth(app: Express) {
 
     passport.authenticate("local", (err, user, info) => {
       if (err) {
-        console.error('Authentication error:', err);
+        console.error('[DEBUG Login Route] Authentication error:', err);
         return res.status(500).json({ message: err.message || "Internal server error" });
       }
       if (!user) {
-        console.log('Authentication failed:', info?.message);
+        console.log('[DEBUG Login Route] Authentication failed:', info?.message);
         return res.status(401).json({ message: info?.message || "Authentication failed" });
       }
       req.logIn(user, (err) => {
         if (err) {
-          console.error('Login error:', err);
+          console.error('[DEBUG Login Route] Login error:', err);
           return res.status(500).json({ message: err.message || "Failed to establish session" });
         }
-        console.log('User logged in successfully:', user.username);
+        console.log('[DEBUG Login Route] User logged in successfully:', user.username);
         res.status(200).json(user);
       });
     })(req, res, next);
   });
 
   app.use("/api", (req: Request, res: Response, next: NextFunction) => {
+    console.log('[DEBUG Auth Middleware]', {
+      path: req.path,
+      method: req.method,
+      isAuthenticated: req.isAuthenticated(),
+      sessionID: req.sessionID,
+      headers: {
+        cookie: req.headers.cookie,
+        authorization: req.headers.authorization
+      }
+    });
+
     if (req.path === "/login" || req.path === "/register" || req.path === "/reset-password/request" || req.path === "/reset-password") {
+      console.log('[DEBUG Auth Middleware] Skipping auth check for public route:', req.path);
       return next();
     }
 
     if (!req.isAuthenticated()) {
-      console.log('Unauthorized access attempt to:', req.path);
+      console.log('[DEBUG Auth Middleware] Unauthorized access attempt:', {
+        path: req.path,
+        sessionID: req.sessionID
+      });
       return res.sendStatus(401);
     }
     next();
@@ -377,7 +395,14 @@ export function setupAuth(app: Express) {
 }
 
 export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+  console.log('[DEBUG RequireAuth]', {
+    path: req.path,
+    isAuthenticated: req.isAuthenticated(),
+    sessionID: req.sessionID
+  });
+
   if (!req.isAuthenticated()) {
+    console.log('[DEBUG RequireAuth] Unauthorized access blocked');
     return res.sendStatus(401);
   }
   next();
