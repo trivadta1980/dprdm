@@ -513,11 +513,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteRelationship(id: number): Promise<boolean> {
-    const [relationship] = await db
-      .delete(relationships)
-      .where(eq(relationships.id, id))
-      .returning();
-    return !!relationship;
+    return await db.transaction(async (tx) => {
+      // First delete all relationship values associated with this relationship
+      await tx
+        .delete(relationshipValues)
+        .where(eq(relationshipValues.relationshipId, id));
+
+      // Then delete the relationship itself
+      const [relationship] = await tx
+        .delete(relationships)
+        .where(eq(relationships.id, id))
+        .returning();
+
+      return !!relationship;
+    });
   }
 
   // Implement relationship value methods
