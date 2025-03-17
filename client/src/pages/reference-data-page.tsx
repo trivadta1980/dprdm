@@ -50,11 +50,7 @@ export default function ReferenceDataPage() {
   });
 
   function handleEdit(dataSet: ReferenceDataSet) {
-    // TODO: Add edit functionality in a separate page
-    toast({
-      title: "Coming Soon",
-      description: "Edit functionality will be available soon.",
-    });
+    setLocation(`/reference-data/${dataSet.id}/edit`);
   }
 
   function handleDelete(dataSet: ReferenceDataSet) {
