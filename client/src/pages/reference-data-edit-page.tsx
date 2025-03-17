@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import type { ReferenceDataType, ReferenceDataSet, InsertReferenceDataSet } from "@shared/schema";
 import { insertReferenceDataSetSchema } from "@shared/schema";
 
@@ -44,12 +46,12 @@ export default function ReferenceDataEditPage() {
     if (dataSet) {
       form.reset({
         name: dataSet.name,
-        description: dataSet.description,
+        description: dataSet.description || "",
         typeId: dataSet.typeId,
         data: dataSet.data,
       });
     }
-  }, [dataSet]);
+  }, [dataSet, form]);
 
   const updateMutation = useMutation({
     mutationFn: async (data: InsertReferenceDataSet) => {
@@ -87,8 +89,22 @@ export default function ReferenceDataEditPage() {
   if (isLoadingDataSet || isLoadingTypes) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center h-screen">
-          <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="container mx-auto py-10">
+          <div className="flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (!dataSet) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto py-10">
+          <div className="text-center">
+            Reference Data Set not found
+          </div>
         </div>
       </MainLayout>
     );
@@ -103,7 +119,7 @@ export default function ReferenceDataEditPage() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit((data) => updateMutation.mutate(data))} className="space-y-8">
+              <form onSubmit={form.handleSubmit((data) => updateMutation.mutate(data))} className="space-y-6">
                 <FormField
                   control={form.control}
                   name="name"
@@ -111,7 +127,7 @@ export default function ReferenceDataEditPage() {
                     <FormItem>
                       <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter name" {...field} />
+                        <Input {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -125,7 +141,7 @@ export default function ReferenceDataEditPage() {
                     <FormItem>
                       <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter description" {...field} />
+                        <Textarea {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -138,21 +154,24 @@ export default function ReferenceDataEditPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Type</FormLabel>
-                      <FormControl>
-                        <select
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-                          {...field}
-                          value={field.value}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
-                        >
-                          <option value="">Select a type</option>
+                      <Select
+                        value={field.value?.toString()}
+                        onValueChange={(value) => field.onChange(Number(value))}
+                        disabled
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
                           {types.map((type) => (
-                            <option key={type.id} value={type.id}>
+                            <SelectItem key={type.id} value={type.id.toString()}>
                               {type.name}
-                            </option>
+                            </SelectItem>
                           ))}
-                        </select>
-                      </FormControl>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
