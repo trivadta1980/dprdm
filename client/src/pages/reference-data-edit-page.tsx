@@ -101,7 +101,9 @@ export default function ReferenceDataEditPage() {
     },
     onSuccess: () => {
       console.log('[DEBUG] ReferenceDataEditPage - Update mutation succeeded');
+      // Invalidate both list and detail view caches
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
       toast({
         title: "Success",
         description: "Reference Data Set updated successfully",
