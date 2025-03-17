@@ -99,7 +99,7 @@ export function setupAuth(app: Express) {
     passport.authenticate("local", (err, user, info) => {
       if (err) {
         console.error('Authentication error:', err);
-        return next(err);
+        return res.status(500).json({ message: err.message || "Internal server error" });
       }
       if (!user) {
         console.log('Authentication failed:', info?.message);
@@ -108,7 +108,7 @@ export function setupAuth(app: Express) {
       req.logIn(user, (err) => {
         if (err) {
           console.error('Login error:', err);
-          return next(err);
+          return res.status(500).json({ message: err.message || "Failed to establish session" });
         }
         console.log('User logged in successfully:', user.username);
         res.status(200).json(user);
