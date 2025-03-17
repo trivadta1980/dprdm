@@ -176,6 +176,35 @@ export default function RolesPage() {
     },
   });
 
+  const handleDelete = async (role: Role) => {
+    try {
+      const response = await fetch(`/api/roles/${role.id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete role');
+      }
+
+      toast({
+        title: "Role deleted successfully"
+      });
+
+      // Refresh the roles list
+      queryClient.invalidateQueries({ queryKey: ['/api/roles'] });
+    } catch (error) {
+      console.error('Error deleting role:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to delete role"
+      });
+    }
+  };
+
+
   function onSubmit(data: InsertRole) {
     if (editingRole) {
       updateMutation.mutate({ id: editingRole.id, data });
@@ -194,11 +223,6 @@ export default function RolesPage() {
     setDialogOpen(true);
   }
 
-  function handleDelete(role: Role) {
-    if (window.confirm(`Are you sure you want to delete the role "${role.name}"?`)) {
-      deleteMutation.mutate(role.id);
-    }
-  }
 
   function handleCreateNew() {
     setEditingRole(null);
