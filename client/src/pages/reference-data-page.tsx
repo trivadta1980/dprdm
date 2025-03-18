@@ -6,6 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Plus, Pencil, Trash2, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type {
   ReferenceDataType,
   ReferenceDataSet,
@@ -16,8 +26,9 @@ import { useState } from "react";
 
 export default function ReferenceDataPage() {
   const { toast } = useToast();
-  const [editingDataSet, setEditingDataSet] = useState<ReferenceDataSet | null>(null);
   const [_, setLocation] = useLocation();
+  const [dataSetToDelete, setDataSetToDelete] = useState<ReferenceDataSet | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Fetch reference types
   const { data: types = [] } = useQuery<ReferenceDataType[]>({
@@ -27,6 +38,12 @@ export default function ReferenceDataPage() {
   // Fetch reference data sets
   const { data: dataSets = [], isLoading } = useQuery<ReferenceDataSet[]>({
     queryKey: ["/api/reference-data"],
+  });
+
+  // Fetch dependencies when dialog is shown
+  const { data: dependencies, isLoading: loadingDependencies } = useQuery({
+    queryKey: [`/api/reference-data/${dataSetToDelete?.id}/dependencies`],
+    enabled: !!dataSetToDelete,
   });
 
   const deleteMutation = useMutation({
@@ -39,6 +56,8 @@ export default function ReferenceDataPage() {
         title: "Success",
         description: "Reference Data Set has been deleted.",
       });
+      setShowDeleteDialog(false);
+      setDataSetToDelete(null);
     },
     onError: (error: Error) => {
       toast({
@@ -46,6 +65,8 @@ export default function ReferenceDataPage() {
         description: error.message || "Failed to delete Reference Data Set.",
         variant: "destructive",
       });
+      setShowDeleteDialog(false);
+      setDataSetToDelete(null);
     },
   });
 
@@ -54,8 +75,13 @@ export default function ReferenceDataPage() {
   }
 
   function handleDelete(dataSet: ReferenceDataSet) {
-    if (window.confirm(`Are you sure you want to delete "${dataSet.name}"?`)) {
-      deleteMutation.mutate(dataSet.id);
+    setDataSetToDelete(dataSet);
+    setShowDeleteDialog(true);
+  }
+
+  function handleConfirmDelete() {
+    if (dataSetToDelete) {
+      deleteMutation.mutate(dataSetToDelete.id);
     }
   }
 
@@ -64,15 +90,8 @@ export default function ReferenceDataPage() {
   }
 
   function handleManageInstances(dataSet: ReferenceDataSet) {
-    console.log('Navigation Debug:', {
-      dataSetId: dataSet.id,
-      dataSetName: dataSet.name,
-      targetUrl: `/reference-data/${dataSet.id}/instances`
-    });
-
     setLocation(`/reference-data/${dataSet.id}/instances`);
   }
-
 
   if (isLoading) {
     return (
@@ -148,6 +167,56 @@ export default function ReferenceDataPage() {
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete this reference data set?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {loadingDependencies ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Checking dependencies...
+                </div>
+              ) : dependencies ? (
+                <div className="space-y-2">
+                  <p>This action cannot be undone.</p>
+                  {dependencies.relationships.length > 0 && (
+                    <p>⚠️ This dataset is used in {dependencies.relationships.length} relationship(s)</p>
+                  )}
+                  {dependencies.crosswalks.length > 0 && (
+                    <p>⚠️ This dataset is used in {dependencies.crosswalks.length} crosswalk mapping(s)</p>
+                  )}
+                  {dependencies.canDelete ? (
+                    <p>No blocking dependencies found. You can safely delete this dataset.</p>
+                  ) : (
+                    <p className="text-red-500">
+                      This dataset cannot be deleted because it is referenced by other items.
+                      Please remove the relationships and crosswalks first.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                "Failed to check dependencies"
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowDeleteDialog(false);
+              setDataSetToDelete(null);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={dependencies && !dependencies.canDelete}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MainLayout>
   );
 }

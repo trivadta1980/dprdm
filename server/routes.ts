@@ -450,6 +450,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/reference-data/:id/dependencies", async (req, res) => {
+    console.log('GET /api/reference-data/:id/dependencies - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/reference-data/:id/dependencies - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      const dataSetId = Number(req.params.id);
+
+      // Get relationships where this dataset is used
+      const relationships = await db
+        .select()
+        .from(relationships)
+        .where(
+          or(
+            eq(relationships.sourceDataSetId, dataSetId),
+            eq(relationships.targetDataSetId, dataSetId)
+          )
+        );
+
+      // Get crosswalk mappings where this dataset is used
+      const crosswalks = await db
+        .select()
+        .from(crosswalkMappings)
+        .where(
+          or(
+            eq(crosswalkMappings.sourceDataSetId, dataSetId),
+            eq(crosswalkMappings.targetDataSetId, dataSetId)
+          )
+        );
+
+      console.log('GET /api/reference-data/:id/dependencies - Dependencies found:', {
+        relationships: relationships.length,
+        crosswalks: crosswalks.length
+      });
+
+      res.json({
+        relationships,
+        crosswalks,
+        canDelete: relationships.length === 0 && crosswalks.length === 0
+      });
+    } catch (error) {
+      console.error('GET /api/reference-data/:id/dependencies - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+
   app.patch("/api/reference-data/:id", async (req, res) => {
     console.log('PATCH /api/reference-data/:id - Request received'); //Added logging
     if (!req.isAuthenticated()) {
