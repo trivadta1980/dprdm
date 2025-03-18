@@ -80,6 +80,7 @@ export default function ReferenceDataPage() {
   }
 
   function handleConfirmDelete() {
+    console.log('handleConfirmDelete called with dataset:', dataSetToDelete);
     if (dataSetToDelete) {
       deleteMutation.mutate(dataSetToDelete.id);
     }
