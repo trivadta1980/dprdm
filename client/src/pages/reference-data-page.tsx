@@ -210,7 +210,12 @@ export default function ReferenceDataPage() {
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleConfirmDelete}
+              onClick={() => {
+                console.log('Delete button clicked');
+                console.log('Current dataset:', dataSetToDelete);
+                console.log('Dependencies:', dependencies);
+                handleConfirmDelete();
+              }}
               disabled={dependencies && !dependencies.canDelete}
             >
               Delete
