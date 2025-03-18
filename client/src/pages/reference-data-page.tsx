@@ -48,7 +48,17 @@ export default function ReferenceDataPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/reference-data/${id}`);
+      const response = await fetch(`/api/reference-data/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete reference data set');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
@@ -60,6 +70,7 @@ export default function ReferenceDataPage() {
       setDataSetToDelete(null);
     },
     onError: (error: Error) => {
+      console.error('Delete error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to delete Reference Data Set.",
