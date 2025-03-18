@@ -459,9 +459,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const dataSetId = Number(req.params.id);
+      console.log(`Checking dependencies for dataset ID: ${dataSetId}`);
+
+      // Import required operators
+      const { eq, or } = await import('drizzle-orm');
 
       // Get relationships where this dataset is used
-      const relationships = await db
+      const relationshipResults = await db
         .select()
         .from(relationships)
         .where(
@@ -472,29 +476,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
 
       // Get crosswalk mappings where this dataset is used
-      const crosswalks = await db
+      const crosswalkResults = await db
         .select()
         .from(crosswalkMappings)
         .where(
           or(
-            eq(crosswalkMappings.sourceDataSetId, dataSetId),
-            eq(crosswalkMappings.targetDataSetId, dataSetId)
+            eq(crosswalkMappings.sourceSystemId, dataSetId),
+            eq(crosswalkMappings.targetSystemId, dataSetId)
           )
         );
 
-      console.log('GET /api/reference-data/:id/dependencies - Dependencies found:', {
-        relationships: relationships.length,
-        crosswalks: crosswalks.length
+      console.log('Dependencies check results:', {
+        dataSetId,
+        relationshipCount: relationshipResults.length,
+        crosswalkCount: crosswalkResults.length,
+        relationshipIds: relationshipResults.map(r => r.id),
+        crosswalkIds: crosswalkResults.map(c => c.id)
       });
 
       res.json({
-        relationships,
-        crosswalks,
-        canDelete: relationships.length === 0 && crosswalks.length === 0
+        relationships: relationshipResults,
+        crosswalks: crosswalkResults,
+        canDelete: relationshipResults.length === 0 && crosswalkResults.length === 0
       });
     } catch (error) {
-      console.error('GET /api/reference-data/:id/dependencies - Error:', error);
-      res.status(500).json({ error: String(error) });
+      console.error('Dependency check failed:', {
+        error: error.message,
+        stack: error.stack,
+        type: error.constructor.name
+      });
+      res.status(500).json({ 
+        error: "Failed to check dependencies",
+        details: error.message
+      });
     }
   });
 
