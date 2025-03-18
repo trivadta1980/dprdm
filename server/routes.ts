@@ -8,7 +8,9 @@ import {
   insertRelationshipSchema,
   insertCrosswalkMappingSchema,
   insertRelationshipAttributeDefinitionSchema,
-  insertRelationshipAttributeValueSchema
+  insertRelationshipAttributeValueSchema,
+  relationships,
+  crosswalkMappings
 } from "@shared/schema";
 import { sql } from "drizzle-orm";
 import { scrypt, randomBytes } from "crypto";
