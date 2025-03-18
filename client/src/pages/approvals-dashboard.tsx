@@ -256,33 +256,36 @@ export default function ApprovalsDashboard() {
       console.log('Auth status:', authStatus);
 
 
-      const results = await Promise.all(
-        approvals.map(async (approval) => {
-          const url = `/api/reference-data/${approval.dataSetId}/instances/${approval.instanceId}/approve`;
-          console.log('Processing approval for:', {
-            dataSetId: approval.dataSetId,
-            instanceId: approval.instanceId,
-            url: url
-          });
-          const response = await fetch(url, {
-            method: "POST",
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            credentials: 'include'
-          });
+      const results = [];
+      for (const approval of approvals) {
+        const url = `/api/reference-data/${approval.dataSetId}/instances/${approval.instanceId}/approve`;
+        console.log('Processing approval for:', {
+          dataSetId: approval.dataSetId,
+          instanceId: approval.instanceId,
+          url: url
+        });
+        
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          credentials: 'include'
+        });
 
-          if (!response.ok) {
-            console.error(`Failed to approve instance ${approval.instanceId}:`, response);
-            throw new Error(`Failed to approve instance ${approval.instanceId}: ${response.statusText}`);
-          }
+        if (!response.ok) {
+          console.error(`Failed to approve instance ${approval.instanceId}:`, response);
+          throw new Error(`Failed to approve instance ${approval.instanceId}: ${response.statusText}`);
+        }
 
           const data = await response.json();
-          console.log(`Successfully approved instance ${approval.instanceId}:`, data);
-          return data;
-        })
-      );
+        console.log(`Successfully approved instance ${approval.instanceId}:`, data);
+        results.push(data);
+        
+        // Add a small delay between requests to ensure proper sequencing
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
       return results;
     },
     onSuccess: () => {
