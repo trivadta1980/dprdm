@@ -47,13 +47,10 @@ export default function ApprovalsDashboard() {
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRelationshipType, setSelectedRelationshipType] = useState<string>("");
-  const [selectedSourceDataset, setSelectedSourceDataset] = useState<string>("");
-  const [selectedTargetDataset, setSelectedTargetDataset] = useState<string>("");
-  const [dateRange, setDateRange] = useState<{
-    from?: Date;
-    to?: Date;
-  }>({});
+  const [selectedRelationshipType, setSelectedRelationshipType] = useState("all");
+  const [selectedSourceDataset, setSelectedSourceDataset] = useState("all");
+  const [selectedTargetDataset, setSelectedTargetDataset] = useState("all");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   // Fetch reference data types for dropdowns
   const { data: referenceTypes = [] } = useQuery({
@@ -96,11 +93,11 @@ export default function ApprovalsDashboard() {
         page: relationshipPage.toString(),
         pageSize: relationshipPageSize.toString(),
         ...(searchTerm && { search_term: searchTerm }),
-        ...(selectedRelationshipType && { relationship_type_id: selectedRelationshipType }),
-        ...(selectedSourceDataset && { source_dataset_id: selectedSourceDataset }),
-        ...(selectedTargetDataset && { target_dataset_id: selectedTargetDataset }),
-        ...(dateRange.from && { from_date: dateRange.from.toISOString() }),
-        ...(dateRange.to && { to_date: dateRange.to.toISOString() })
+        ...(selectedRelationshipType !== "all" && { relationship_type_id: selectedRelationshipType }),
+        ...(selectedSourceDataset !== "all" && { source_dataset_id: selectedSourceDataset }),
+        ...(selectedTargetDataset !== "all" && { target_dataset_id: selectedTargetDataset }),
+        ...(dateRange?.from && { from_date: dateRange.from.toISOString() }),
+        ...(dateRange?.to && { to_date: dateRange.to.toISOString() })
       });
 
       const response = await fetch(`/api/approvals/relationship-values/pending?${params}`);
@@ -482,7 +479,7 @@ export default function ApprovalsDashboard() {
                             <SelectValue placeholder="Relationship Type" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">All Types</SelectItem>
+                            <SelectItem value="all">All Types</SelectItem>
                             {referenceTypes.map((type) => (
                               <SelectItem key={type.id} value={type.id.toString()}>
                                 {type.name}
@@ -499,7 +496,7 @@ export default function ApprovalsDashboard() {
                             <SelectValue placeholder="Source Dataset" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">All Sources</SelectItem>
+                            <SelectItem value="all">All Sources</SelectItem>
                             {datasets.map((dataset) => (
                               <SelectItem key={dataset.id} value={dataset.id.toString()}>
                                 {dataset.name}
@@ -516,7 +513,7 @@ export default function ApprovalsDashboard() {
                             <SelectValue placeholder="Target Dataset" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">All Targets</SelectItem>
+                            <SelectItem value="all">All Targets</SelectItem>
                             {datasets.map((dataset) => (
                               <SelectItem key={dataset.id} value={dataset.id.toString()}>
                                 {dataset.name}
@@ -526,8 +523,8 @@ export default function ApprovalsDashboard() {
                         </Select>
 
                         <DatePickerWithRange
-                          selected={dateRange}
-                          onSelect={setDateRange}
+                          value={dateRange}
+                          onChange={setDateRange}
                         />
                       </div>
                     </div>
