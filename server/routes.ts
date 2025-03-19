@@ -856,24 +856,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Update all values to PENDING status
-      await db
-        .update(relationshipValues)
-        .set({
-          approvalStatus: "PENDING",
-          updatedAt: new Date(),
-          changeHistory: sql`array_append(change_history, jsonb_build_object(
-            'timestamp', CURRENT_TIMESTAMP,
-            'changes', jsonb_build_array(
-              jsonb_build_object(
-                'field', 'approvalStatus',
-                'oldValue', 'DRAFT',
-                'newValue', 'PENDING'
-              )
-            )
-          ))`
-        })
-        .where(sql`id = ANY(${valueIds})`);
+      // Update all values with new status and change history
+      const timestamp = new Date().toISOString();
+      const updatedValues = await Promise.all(values.map(async (value) => {
+        return db
+          .update(relationshipValues)
+          .set({
+            approvalStatus: "PENDING",
+            updatedAt: new Date(),
+            changeHistory: [...(value.changeHistory as any[] || []), {
+              timestamp,
+              changes: [{
+                field: 'approvalStatus',
+                oldValue: 'DRAFT',
+                newValue: 'PENDING'
+              }]
+            }]
+          })
+          .where(eq(relationshipValues.id, value.id))
+          .returning();
+      }));
 
       console.log(`POST /api/relationships/:id/values/bulk-submit - Successfully submitted ${valueIds.length} values`);
       res.json({ success: true, count: valueIds.length });
