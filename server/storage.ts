@@ -38,7 +38,7 @@ export interface IStorage {
   createRole(role: InsertRole): Promise<Role>;
   getAllRoles(): Promise<Role[]>;
   updateRole(id: number, role: Partial<InsertRole>): Promise<Role>;
-  deleteRole(id: number): Promise<boolean>;
+  deleteRole(id: number): Promise<{ success: boolean; message?: string }>;
 
   // New methods for password reset
   setResetToken(userId: number, token: string, expiry: Date): Promise<void>;
@@ -568,9 +568,20 @@ export class DatabaseStorage implements IStorage {
 
   // Implement relationship value methods
   async createRelationshipValue(value: InsertRelationshipValue): Promise<RelationshipValue> {
+    // Set default approval status to DRAFT for new values
     const [relationshipValue] = await db
       .insert(relationshipValues)
-      .values(value)
+      .values({
+        ...value,
+        approvalStatus: "DRAFT",
+        changeHistory: [{
+          timestamp: new Date().toISOString(),
+          prevStatus: null,
+          newStatus: "DRAFT",
+          userId: value.approvedBy || null,
+          comment: "Initial creation"
+        }]
+      })
       .returning();
     return relationshipValue;
   }
@@ -789,7 +800,7 @@ export class DatabaseStorage implements IStorage {
     // Get recent datasets
     const recentDatasets = await db
       .select({
-        type: sql`'dataset'`.as('type'),
+        type: sql<string>`'dataset'`.as('type'),
         description: referenceDataSets.name,
         timestamp: referenceDataSets.createdAt,
       })
@@ -800,7 +811,7 @@ export class DatabaseStorage implements IStorage {
     // Get recent mappings
     const recentMappings = await db
       .select({
-        type: sql`'mapping'`.as('type'),
+        type: sql<string>`'mapping'`.as('type'),
         description: crosswalkMappings.name,
         timestamp: crosswalkMappings.createdAt,
       })
@@ -811,7 +822,7 @@ export class DatabaseStorage implements IStorage {
     // Get recent relationships
     const recentRelationships = await db
       .select({
-        type: sql`'relationship'`.as('type'),
+        type: sql<string>`'relationship'`.as('type'),
         description: relationships.name,
         timestamp: relationships.createdAt,
       })

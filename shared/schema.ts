@@ -1,8 +1,15 @@
-import { pgTable, text, serial, timestamp, boolean, integer, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, integer, jsonb, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations, type InferModel } from "drizzle-orm";
-import { pgEnum } from "drizzle-orm/pg-core";
+
+// Define the enum first, before it's used
+export const approvalStatusEnum = pgEnum("approval_status", [
+  "DRAFT",
+  "PENDING",
+  "APPROVED",
+  "REJECTED"
+]);
 
 // Add the session table definition if it doesn't exist
 export const sessions = pgTable("session", {
@@ -436,13 +443,6 @@ export const insertRelationshipAttributeValueSchema = createInsertSchema(relatio
 });
 
 // Add this after the existing imports
-export const approvalStatusEnum = pgEnum("approval_status", [
-  "DRAFT",
-  "PENDING",
-  "APPROVED",
-  "REJECTED"
-]);
-
 
 export type ChangeHistoryEntry = {
   timestamp: string;
