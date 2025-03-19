@@ -716,6 +716,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/relationships/:id/values/:valueId", async (req, res) => {
+    console.log('PATCH /api/relationships/:id/values/:valueId - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('PATCH /api/relationships/:id/values/:valueId - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      const valueId = Number(req.params.valueId);
+      const { sourceInstanceId, targetInstanceId } = req.body;
+
+      // Validate input
+      if (!sourceInstanceId || !targetInstanceId) {
+        return res.status(400).json({ error: "Source and target instance IDs are required" });
+      }
+
+      // Update the relationship value
+      const value = await storage.updateRelationshipValue(valueId, {
+        sourceInstanceId,
+        targetInstanceId,
+        metadata: {}, // Keep existing metadata
+        changeHistory: sql`array_append(change_history, jsonb_build_object(
+          'timestamp', CURRENT_TIMESTAMP,
+          'changes', jsonb_build_array(
+            jsonb_build_object(
+              'field', 'sourceInstanceId',
+              'oldValue', source_instance_id,
+              'newValue', ${sourceInstanceId}
+            ),
+            jsonb_build_object(
+              'field', 'targetInstanceId',
+              'oldValue', target_instance_id,
+              'newValue', ${targetInstanceId}
+            )
+          )
+        ))`
+      });
+
+      console.log('PATCH /api/relationships/:id/values/:valueId - Value updated successfully');
+      res.json(value);
+    } catch (error) {
+      console.error('PATCH /api/relationships/:id/values/:valueId - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   // Optimized endpoint for fetching pending relationship values
   app.get("/api/approvals/relationship-values/pending", async (req, res) => {
     console.log('GET /api/approvals/relationship-values/pending - Request received');

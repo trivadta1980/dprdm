@@ -57,6 +57,8 @@ export default function RelationshipValuesPage() {
   }>({
     attributes: {},
   });
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingValue, setEditingValue] = useState<RelationshipValue | null>(null);
 
   // Fetch relationship details
   const { data: relationship } = useQuery<Relationship>({
@@ -345,6 +347,35 @@ export default function RelationshipValuesPage() {
     },
   });
 
+  // Add edit mutation
+  const editMutation = useMutation({
+    mutationFn: async (data: { valueId: number; sourceInstanceId: string; targetInstanceId: string }) => {
+      const response = await apiRequest(`/api/relationships/${id}/values/${data.valueId}`, {
+        method: "PATCH",
+        data: {
+          sourceInstanceId: data.sourceInstanceId,
+          targetInstanceId: data.targetInstanceId,
+        }
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
+      setIsEditDialogOpen(false);
+      setEditingValue(null);
+      toast({
+        title: "Success",
+        description: "Relationship value updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update relationship value",
+        variant: "destructive",
+      });
+    },
+  });
 
   function handleDelete(valueId: number) {
     setValueToDelete(valueId);
@@ -718,11 +749,8 @@ export default function RelationshipValuesPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => {
-                                // TODO: Add edit functionality
-                                toast({
-                                  title: "Edit Feature",
-                                  description: "Edit functionality will be implemented soon",
-                                });
+                                setEditingValue(value);
+                                setIsEditDialogOpen(true);
                               }}
                               className="hover:bg-blue-50"
                             >
@@ -852,6 +880,75 @@ export default function RelationshipValuesPage() {
                 {deleteMutation.isPending ? "Deleting..." : "Delete"}
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {/* Add Edit Dialog */}
+        <Dialog
+          open={isEditDialogOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              setEditingValue(null);
+            }
+            setIsEditDialogOpen(open);
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Relationship Value</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div>
+                <label className="text-sm font-medium">Source Instance</label>
+                <Select
+                  value={editingValue?.sourceInstanceId || ""}
+                  onValueChange={(value) => setEditingValue(prev => prev ? { ...prev, sourceInstanceId: value } : null)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select source instance" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sourceDataSet && Object.entries(sourceDataSet.data).map(([id, data]) => (
+                      <SelectItem key={id} value={id}>
+                        {getInstanceDisplayValue(id, sourceDataSet, relationship?.sourceField)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Target Instance</label>
+                <Select
+                  value={editingValue?.targetInstanceId || ""}
+                  onValueChange={(value) => setEditingValue(prev => prev ? { ...prev, targetInstanceId: value } : null)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select target instance" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {targetDataSet && Object.entries(targetDataSet.data).map(([id, data]) => (
+                      <SelectItem key={id} value={id}>
+                        {getInstanceDisplayValue(id, targetDataSet, relationship?.targetField)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                className="w-full"
+                onClick={() => {
+                  if (editingValue) {
+                    editMutation.mutate({
+                      valueId: editingValue.id,
+                      sourceInstanceId: editingValue.sourceInstanceId,
+                      targetInstanceId: editingValue.targetInstanceId,
+                    });
+                  }
+                }}
+                disabled={!editingValue || editMutation.isPending}
+              >
+                {editMutation.isPending ? "Updating..." : "Update Relationship Value"}
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
