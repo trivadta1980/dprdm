@@ -52,9 +52,16 @@ export default function ApprovalsDashboard() {
   const [selectedTargetDataset, setSelectedTargetDataset] = useState("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
-  // Fetch reference data types for dropdowns
-  const { data: referenceTypes = [] } = useQuery({
-    queryKey: ["/api/reference-types"],
+  // Fetch relationship types for dropdown
+  const { data: relationshipTypes = [] } = useQuery({
+    queryKey: ["/api/relationships/types"],
+    queryFn: async () => {
+      const response = await fetch("/api/relationships/types");
+      if (!response.ok) {
+        throw new Error("Failed to fetch relationship types");
+      }
+      return response.json();
+    }
   });
 
   // Fetch reference datasets for dropdowns
@@ -480,7 +487,7 @@ export default function ApprovalsDashboard() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">All Types</SelectItem>
-                            {referenceTypes.map((type) => (
+                            {relationshipTypes.map((type) => (
                               <SelectItem key={type.id} value={type.id.toString()}>
                                 {type.name}
                               </SelectItem>

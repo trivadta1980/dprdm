@@ -582,6 +582,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add new endpoint to get unique relationship types
+  app.get("/api/relationships/types", async (req, res) => {
+    console.log('GET /api/relationships/types - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/relationships/types - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      // Get distinct relationship types from pending values
+      const relationshipTypes = await db
+        .select({
+          id: relationships.id,
+          name: relationships.name
+        })
+        .from(relationships)
+        .innerJoin(
+          relationshipValues,
+          eq(relationshipValues.relationshipId, relationships.id)
+        )
+        .where(eq(relationshipValues.approvalStatus, "PENDING"))
+        .groupBy(relationships.id, relationships.name);
+
+      console.log('GET /api/relationships/types - Types fetched:', relationshipTypes.length);
+      res.json(relationshipTypes);
+    } catch (error) {
+      console.error('GET /api/relationships/types - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   app.get("/api/relationships/:id", async (req, res) => {
     console.log('GET /api/relationships/:id - Request received');
     if (!req.isAuthenticated()) {
