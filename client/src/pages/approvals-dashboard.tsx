@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Check, X, History, FileText, CheckSquare } from "lucide-react";
+import { Loader2, Check, X, History, FileText, CheckSquare, Search, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,49 +20,19 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { addDays } from "date-fns";
 import { useState } from "react";
 
-interface PendingApproval {
-  dataSetId: number;
-  dataSetName: string;
-  instanceId: string;
-  instanceName: string;
-  data: Record<string, any>;
-  history: Array<{
-    timestamp: string;
-    changes: Array<{
-      field: string;
-      oldValue: string;
-      newValue: string;
-    }>;
-  }>;
-}
-
-interface PendingRelationshipValue {
-  id: number;
-  relationshipId: number;
-  relationshipName: string;
-  sourceInstanceId: string;
-  targetInstanceId: string;
-  sourceDataSet: {
-    id: number;
-    name: string;
-    data: Record<string, any>;
-  };
-  targetDataSet: {
-    id: number;
-    name: string;
-    data: Record<string, any>;
-  };
-  history: Array<{
-    timestamp: string;
-    changes: Array<{
-      field: string;
-      oldValue: string;
-      newValue: string;
-    }>;
-  }>;
-}
+// ... existing interfaces ...
 
 export default function ApprovalsDashboard() {
   const { toast } = useToast();
@@ -74,7 +44,27 @@ export default function ApprovalsDashboard() {
   const [relationshipPage, setRelationshipPage] = useState(1);
   const [relationshipPageSize, setRelationshipPageSize] = useState(50);
 
-  // Fetch pending dataset instances
+  // Search and filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRelationshipType, setSelectedRelationshipType] = useState<string>("");
+  const [selectedSourceDataset, setSelectedSourceDataset] = useState<string>("");
+  const [selectedTargetDataset, setSelectedTargetDataset] = useState<string>("");
+  const [dateRange, setDateRange] = useState<{
+    from?: Date;
+    to?: Date;
+  }>({});
+
+  // Fetch reference data types for dropdowns
+  const { data: referenceTypes = [] } = useQuery({
+    queryKey: ["/api/reference-types"],
+  });
+
+  // Fetch reference datasets for dropdowns
+  const { data: datasets = [] } = useQuery({
+    queryKey: ["/api/reference-data"],
+  });
+
+  // Existing dataset instances query...
   const {
     data: pendingDatasetInstances = [],
     isLoading: isLoadingDatasets,
@@ -83,15 +73,36 @@ export default function ApprovalsDashboard() {
     queryKey: ["/api/approvals/pending"],
   });
 
-  // Fetch pending relationship values with pagination
+
+  // Updated relationship values query with search and filters
   const {
     data: relationshipValuesResponse = { data: [], metadata: { totalCount: 0, currentPage: 1, pageSize: 50, totalPages: 1 } },
     isLoading: isLoadingRelationships,
     error: relationshipsError
   } = useQuery({
-    queryKey: ["/api/approvals/relationship-values/pending", relationshipPage, relationshipPageSize],
+    queryKey: [
+      "/api/approvals/relationship-values/pending",
+      relationshipPage,
+      relationshipPageSize,
+      searchTerm,
+      selectedRelationshipType,
+      selectedSourceDataset,
+      selectedTargetDataset,
+      dateRange
+    ],
     queryFn: async () => {
-      const response = await fetch(`/api/approvals/relationship-values/pending?page=${relationshipPage}&pageSize=${relationshipPageSize}`);
+      const params = new URLSearchParams({
+        page: relationshipPage.toString(),
+        pageSize: relationshipPageSize.toString(),
+        ...(searchTerm && { search_term: searchTerm }),
+        ...(selectedRelationshipType && { relationship_type_id: selectedRelationshipType }),
+        ...(selectedSourceDataset && { source_dataset_id: selectedSourceDataset }),
+        ...(selectedTargetDataset && { target_dataset_id: selectedTargetDataset }),
+        ...(dateRange.from && { from_date: dateRange.from.toISOString() }),
+        ...(dateRange.to && { to_date: dateRange.to.toISOString() })
+      });
+
+      const response = await fetch(`/api/approvals/relationship-values/pending?${params}`);
       if (!response.ok) {
         throw new Error("Failed to fetch relationship values");
       }
@@ -299,7 +310,7 @@ export default function ApprovalsDashboard() {
                   Dataset Instances ({pendingDatasetInstances.length})
                 </TabsTrigger>
                 <TabsTrigger value="relationship-values">
-                  Relationship Values ({pendingRelationshipValues.length})
+                  Relationship Values ({relationshipValuesResponse.metadata.totalCount})
                 </TabsTrigger>
               </TabsList>
 
@@ -442,30 +453,82 @@ export default function ApprovalsDashboard() {
                     <div className="h-20 bg-muted animate-pulse rounded" />
                     <div className="h-20 bg-muted animate-pulse rounded" />
                   </div>
-                ) : pendingRelationshipValues.length === 0 ? (
+                ) : relationshipValuesResponse.data.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No pending relationship value approvals
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-muted-foreground">
-                        Showing {(relationshipPage - 1) * relationshipPageSize + 1} to{" "}
-                        {Math.min(relationshipPage * relationshipPageSize, relationshipMetadata.totalCount)} of{" "}
-                        {relationshipMetadata.totalCount} pending approvals
+                    {/* Search and Filter Section */}
+                    <div className="flex flex-col gap-4 md:flex-row md:items-end">
+                      <div className="flex-1">
+                        <div className="relative">
+                          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Search by relationship name or instance ID..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-8"
+                          />
+                        </div>
                       </div>
-                      <select
-                        className="text-sm border rounded-md p-1"
-                        value={relationshipPageSize}
-                        onChange={(e) => {
-                          setRelationshipPageSize(Number(e.target.value));
-                          setRelationshipPage(1);
-                        }}
-                      >
-                        <option value="25">25 per page</option>
-                        <option value="50">50 per page</option>
-                        <option value="100">100 per page</option>
-                      </select>
+                      <div className="flex gap-2">
+                        <Select
+                          value={selectedRelationshipType}
+                          onValueChange={setSelectedRelationshipType}
+                        >
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Relationship Type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">All Types</SelectItem>
+                            {referenceTypes.map((type) => (
+                              <SelectItem key={type.id} value={type.id.toString()}>
+                                {type.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <Select
+                          value={selectedSourceDataset}
+                          onValueChange={setSelectedSourceDataset}
+                        >
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Source Dataset" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">All Sources</SelectItem>
+                            {datasets.map((dataset) => (
+                              <SelectItem key={dataset.id} value={dataset.id.toString()}>
+                                {dataset.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <Select
+                          value={selectedTargetDataset}
+                          onValueChange={setSelectedTargetDataset}
+                        >
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Target Dataset" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">All Targets</SelectItem>
+                            {datasets.map((dataset) => (
+                              <SelectItem key={dataset.id} value={dataset.id.toString()}>
+                                {dataset.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <DatePickerWithRange
+                          selected={dateRange}
+                          onSelect={setDateRange}
+                        />
+                      </div>
                     </div>
 
                     <Table>

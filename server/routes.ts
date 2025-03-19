@@ -698,16 +698,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const pageSize = Number(req.query.pageSize) || 50;
       const offset = (page - 1) * pageSize;
 
+      // Extract filter parameters
+      const searchTerm = req.query.search_term as string;
+      const relationshipTypeId = req.query.relationship_type_id ? Number(req.query.relationship_type_id) : undefined;
+      const sourceDatasetId = req.query.source_dataset_id ? Number(req.query.source_dataset_id) : undefined;
+      const targetDatasetId = req.query.target_dataset_id ? Number(req.query.target_dataset_id) : undefined;
+      const fromDate = req.query.from_date as string;
+      const toDate = req.query.to_date as string;
+
+      // Build WHERE conditions
+      let conditions = [eq(relationshipValues.approvalStatus, "PENDING")];
+
+      if (searchTerm) {
+        conditions.push(
+          or(
+            sql`${relationships.name} ILIKE ${`%${searchTerm}%`}`,
+            sql`${relationshipValues.sourceInstanceId} ILIKE ${`%${searchTerm}%`}`,
+            sql`${relationshipValues.targetInstanceId} ILIKE ${`%${searchTerm}%`}`
+          )
+        );
+      }
+
+      if (relationshipTypeId) {
+        conditions.push(eq(relationships.id, relationshipTypeId));
+      }
+
+      if (sourceDatasetId) {
+        conditions.push(eq(relationships.sourceDataSetId, sourceDatasetId));
+      }
+
+      if (targetDatasetId) {
+        conditions.push(eq(relationships.targetDataSetId, targetDatasetId));
+      }
+
+      if (fromDate) {
+        conditions.push(sql`${relationshipValues.createdAt} >= ${fromDate}`);
+      }
+
+      if (toDate) {
+        conditions.push(sql`${relationshipValues.createdAt} <= ${toDate}`);
+      }
+
       // Get total count first
       const totalCountResult = await db
         .select({ count: sql`count(*)` })
         .from(relationshipValues)
-        .where(eq(relationshipValues.approvalStatus, "PENDING"));
+        .innerJoin(relationships, eq(relationshipValues.relationshipId, relationships.id))
+        .where(and(...conditions));
 
       const totalCount = Number(totalCountResult[0].count);
       const totalPages = Math.ceil(totalCount / pageSize);
 
-      // Get paginated relationship values with PENDING status along with relationship info
+      // Get paginated relationship values with filters
       const pendingValues = await db
         .select({
           id: relationshipValues.id,
@@ -716,6 +758,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           targetInstanceId: relationshipValues.targetInstanceId,
           approvalStatus: relationshipValues.approvalStatus,
           history: relationshipValues.changeHistory,
+          createdAt: relationshipValues.createdAt,
           // Join with relationships table
           relationshipName: relationships.name,
           sourceDataSetId: relationships.sourceDataSetId,
@@ -726,7 +769,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           relationships,
           eq(relationshipValues.relationshipId, relationships.id)
         )
-        .where(eq(relationshipValues.approvalStatus, "PENDING"))
+        .where(and(...conditions))
         .limit(pageSize)
         .offset(offset);
 
@@ -747,12 +790,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Enhance values with dataset info
       const enhancedValues = pendingValues.map(value => ({
-        id: value.id,
-        relationshipId: value.relationshipId,
-        relationshipName: value.relationshipName,
-        sourceInstanceId: value.sourceInstanceId,
-        targetInstanceId: value.targetInstanceId,
-        history: value.history,
+        ...value,
         sourceDataSet: {
           id: value.sourceDataSetId,
           name: dataSetMap.get(value.sourceDataSetId)?.name || '',
