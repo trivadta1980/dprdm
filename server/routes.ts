@@ -13,7 +13,7 @@ import {
   crosswalkMappings,
   relationshipValues
 } from "@shared/schema";
-import { sql, eq, and, or } from "drizzle-orm";
+import { sql, eq, and, or, inArray } from "drizzle-orm";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 import { db } from './db';
@@ -841,11 +841,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No values provided for bulk submission" });
       }
 
+      console.log('POST /api/relationships/:id/values/bulk-submit - Processing values:', valueIds);
+
       // Get all values to check their status
       const values = await db
         .select()
         .from(relationshipValues)
-        .where(sql`id = ANY(${valueIds})`);
+        .where(inArray(relationshipValues.id, valueIds));
+
+      console.log('POST /api/relationships/:id/values/bulk-submit - Found values:', values.length);
 
       // Check if all values are in DRAFT status
       const nonDraftValues = values.filter(v => v.approvalStatus !== "DRAFT");
@@ -858,27 +862,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update all values with new status and change history
       const timestamp = new Date().toISOString();
-      const updatedValues = await Promise.all(values.map(async (value) => {
-        return db
-          .update(relationshipValues)
-          .set({
-            approvalStatus: "PENDING",
-            updatedAt: new Date(),
-            changeHistory: [...(value.changeHistory as any[] || []), {
-              timestamp,
-              changes: [{
-                field: 'approvalStatus',
-                oldValue: 'DRAFT',
-                newValue: 'PENDING'
-              }]
-            }]
-          })
-          .where(eq(relationshipValues.id, value.id))
-          .returning();
-      }));
+      const updates = await Promise.all(
+        values.map(value => 
+          db.update(relationshipValues)
+            .set({
+              approvalStatus: "PENDING",
+              updatedAt: new Date(),
+              changeHistory: [
+                ...(value.changeHistory as any[] || []),
+                {
+                  timestamp,
+                  changes: [{
+                    field: 'approvalStatus',
+                    oldValue: 'DRAFT',
+                    newValue: 'PENDING'
+                  }]
+                }
+              ]
+            })
+            .where(eq(relationshipValues.id, value.id))
+            .returning()
+        )
+      );
 
-      console.log(`POST /api/relationships/:id/values/bulk-submit - Successfully submitted ${valueIds.length} values`);
-      res.json({ success: true, count: valueIds.length });
+      console.log(`POST /api/relationships/:id/values/bulk-submit - Successfully submitted ${updates.length} values`);
+      res.json({ success: true, count: updates.length });
     } catch (error) {
       console.error('POST /api/relationships/:id/values/bulk-submit - Error:', error);
       res.status(500).json({ error: String(error) });
