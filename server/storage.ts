@@ -21,6 +21,7 @@ import { relationshipAttributeValues } from "@shared/schema";
 
 const PostgresSessionStore = connectPg(session);
 
+// Update the IStorage interface to include new approval methods
 export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
@@ -119,6 +120,25 @@ export interface IStorage {
   getRelationshipAttributeValues(relationshipValueId: number): Promise<RelationshipAttributeValue[]>;
   updateRelationshipAttributeValue(id: number, value: Partial<InsertRelationshipAttributeValue>): Promise<RelationshipAttributeValue>;
   deleteRelationshipAttributeValue(id: number): Promise<boolean>;
+
+  // Add new approval-related methods for relationship values
+  saveRelationshipValueAsDraft(value: InsertRelationshipValue): Promise<RelationshipValue>;
+  submitRelationshipValueForApproval(id: number, userId: number): Promise<RelationshipValue>;
+  approveRelationshipValue(id: number, userId: number, comment?: string): Promise<RelationshipValue>;
+  rejectRelationshipValue(id: number, userId: number, comment?: string): Promise<RelationshipValue>;
+  bulkApproveRelationshipValues(ids: number[], userId: number): Promise<RelationshipValue[]>;
+  getRelationshipValueHistory(id: number): Promise<ChangeHistoryEntry[]>;
+  getPendingRelationshipValues(): Promise<RelationshipValue[]>;
+  getDraftRelationshipValues(): Promise<RelationshipValue[]>;
+  getRelationshipValuesByStatus(status: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED"): Promise<RelationshipValue[]>;
+}
+
+interface ChangeHistoryEntry {
+  timestamp: string;
+  prevStatus: string | null;
+  newStatus: string;
+  userId: number;
+  comment: string;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -895,6 +915,173 @@ export class DatabaseStorage implements IStorage {
       .where(eq(relationshipAttributeValues.id, id))
       .returning();
     return !!attributeValue;
+  }
+
+  async saveRelationshipValueAsDraft(value: InsertRelationshipValue): Promise<RelationshipValue> {
+    const [relationshipValue] = await db
+      .insert(relationshipValues)
+      .values({
+        ...value,
+        approvalStatus: "DRAFT",
+        changeHistory: [{
+          timestamp: new Date().toISOString(),
+          prevStatus: null,
+          newStatus: "DRAFT",
+          userId: value.approvedBy,
+          comment: "Initial draft created"
+        }]
+      })
+      .returning();
+    return relationshipValue;
+  }
+
+  async submitRelationshipValueForApproval(id: number, userId: number): Promise<RelationshipValue> {
+    const [existingValue] = await db
+      .select()
+      .from(relationshipValues)
+      .where(eq(relationshipValues.id, id));
+
+    if (!existingValue || existingValue.approvalStatus !== "DRAFT") {
+      throw new Error("Only draft values can be submitted for approval");
+    }
+
+    const [updatedValue] = await db
+      .update(relationshipValues)
+      .set({
+        approvalStatus: "PENDING",
+        updatedAt: new Date(),
+        changeHistory: [
+          ...existingValue.changeHistory,
+          {
+            timestamp: new Date().toISOString(),
+            prevStatus: "DRAFT",
+            newStatus: "PENDING",
+            userId,
+            comment: "Submitted for approval"
+          }
+        ]
+      })
+      .where(eq(relationshipValues.id, id))
+      .returning();
+
+    return updatedValue;
+  }
+
+  async approveRelationshipValue(id: number, userId: number, comment?: string): Promise<RelationshipValue> {
+    const [existingValue] = await db
+      .select()
+      .from(relationshipValues)
+      .where(eq(relationshipValues.id, id));
+
+    if (!existingValue || existingValue.approvalStatus !== "PENDING") {
+      throw new Error("Only pending values can be approved");
+    }
+
+    const [updatedValue] = await db
+      .update(relationshipValues)
+      .set({
+        approvalStatus: "APPROVED",
+        approvedBy: userId,
+        approvedAt: new Date(),
+        updatedAt: new Date(),
+        changeHistory: [
+          ...existingValue.changeHistory,
+          {
+            timestamp: new Date().toISOString(),
+            prevStatus: "PENDING",
+            newStatus: "APPROVED",
+            userId,
+            comment: comment || "Approved"
+          }
+        ]
+      })
+      .where(eq(relationshipValues.id, id))
+      .returning();
+
+    return updatedValue;
+  }
+
+  async rejectRelationshipValue(id: number, userId: number, comment?: string): Promise<RelationshipValue> {
+    const [existingValue] = await db
+      .select()
+      .from(relationshipValues)
+      .where(eq(relationshipValues.id, id));
+
+    if (!existingValue || existingValue.approvalStatus !== "PENDING") {
+      throw new Error("Only pending values can be rejected");
+    }
+
+    const [updatedValue] = await db
+      .update(relationshipValues)
+      .set({
+        approvalStatus: "REJECTED",
+        approvedBy: userId,
+        approvedAt: new Date(),
+        updatedAt: new Date(),
+        changeHistory: [
+          ...existingValue.changeHistory,
+          {
+            timestamp: new Date().toISOString(),
+            prevStatus: "PENDING",
+            newStatus: "REJECTED",
+            userId,
+            comment: comment || "Rejected"
+          }
+        ]
+      })
+      .where(eq(relationshipValues.id, id))
+      .returning();
+
+    return updatedValue;
+  }
+
+  async bulkApproveRelationshipValues(ids: number[], userId: number): Promise<RelationshipValue[]> {
+    const results: RelationshipValue[] = [];
+
+    // Process each value sequentially to maintain consistency
+    for (const id of ids) {
+      try {
+        const result = await this.approveRelationshipValue(id, userId);
+        results.push(result);
+      } catch (error) {
+        console.error(`Error approving relationship value ${id}:`, error);
+        // Continue with next item even if one fails
+      }
+    }
+
+    return results;
+  }
+
+  async getRelationshipValueHistory(id: number): Promise<ChangeHistoryEntry[]> {
+    const [value] = await db
+      .select()
+      .from(relationshipValues)
+      .where(eq(relationshipValues.id, id));
+
+    return value?.changeHistory || [];
+  }
+
+  async getPendingRelationshipValues(): Promise<RelationshipValue[]> {
+    return db
+      .select()
+      .from(relationshipValues)
+      .where(eq(relationshipValues.approvalStatus, "PENDING"));
+  }
+
+  async getDraftRelationshipValues(): Promise<RelationshipValue[]> {
+    return db
+      .select()
+      .from(relationshipValues)
+      .where(eq(relationshipValues.approvalStatus, "DRAFT"));
+  }
+
+  async getRelationshipValuesByStatus(
+    status: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED"
+  ): Promise<RelationshipValue[]> {
+    return db
+      .select()
+      .from(relationshipValues)
+      .where(eq(relationshipValues.approvalStatus, status));
   }
 }
 

@@ -2,6 +2,7 @@ import { pgTable, text, serial, timestamp, boolean, integer, jsonb } from "drizz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations, type InferModel } from "drizzle-orm";
+import { pgEnum } from "drizzle-orm/pg-core";
 
 // Add the session table definition if it doesn't exist
 export const sessions = pgTable("session", {
@@ -178,6 +179,11 @@ export const relationshipValues = pgTable("relationship_values", {
   sourceInstanceId: text("source_instance_id").notNull(),
   targetInstanceId: text("target_instance_id").notNull(),
   metadata: jsonb("metadata"),
+  // Add new approval-related columns
+  approvalStatus: approvalStatusEnum("approval_status").default("DRAFT").notNull(),
+  approvedBy: integer("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  changeHistory: jsonb("change_history").default([]).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -203,12 +209,22 @@ export const relationshipValuesRelations = relations(relationshipValues, ({ one 
   }),
 }));
 
+
 // Add after existing schemas
 export const insertRelationshipValueSchema = createInsertSchema(relationshipValues).extend({
   relationshipId: z.number(),
   sourceInstanceId: z.string(),
   targetInstanceId: z.string(),
   metadata: z.record(z.string(), z.any()).optional(),
+  approvalStatus: z.enum(["DRAFT", "PENDING", "APPROVED", "REJECTED"]).default("DRAFT"),
+  changeHistory: z.array(z.object({
+    timestamp: z.string(),
+    prevStatus: z.enum(["DRAFT", "PENDING", "APPROVED", "REJECTED"]),
+    newStatus: z.enum(["DRAFT", "PENDING", "APPROVED", "REJECTED"]),
+    userId: z.number(),
+    comment: z.string().optional(),
+    changes: z.record(z.string(), z.any()).optional()
+  })).default([])
 });
 
 // Add after existing schemas
@@ -418,3 +434,21 @@ export const insertRelationshipAttributeValueSchema = createInsertSchema(relatio
   attributeDefinitionId: z.coerce.number(),
   value: z.string(),
 });
+
+// Add this after the existing imports
+export const approvalStatusEnum = pgEnum("approval_status", [
+  "DRAFT",
+  "PENDING",
+  "APPROVED",
+  "REJECTED"
+]);
+
+
+export type ChangeHistoryEntry = {
+  timestamp: string;
+  prevStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
+  newStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
+  userId: number;
+  comment?: string;
+  changes?: Record<string, any>;
+};
