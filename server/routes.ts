@@ -743,10 +743,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Relationship value not found" });
       }
 
+      const isStatusChange = ["APPROVED", "REJECTED"].includes(currentValue[0].approvalStatus);
+      
       // Update the relationship value with change history
       const value = await storage.updateRelationshipValue(valueId, {
         sourceInstanceId,
         targetInstanceId,
+        // Change status to DRAFT if currently APPROVED or REJECTED
+        ...(isStatusChange && { approvalStatus: "DRAFT" }),
         changeHistory: [...(currentValue[0].changeHistory as any[] || []), {
           timestamp: new Date().toISOString(),
           changes: [
@@ -759,7 +763,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               field: 'targetInstanceId',
               oldValue: currentValue[0].targetInstanceId,
               newValue: targetInstanceId
-            }
+            },
+            // Add status change to history if applicable
+            ...(isStatusChange ? [{
+              field: 'approvalStatus',
+              oldValue: currentValue[0].approvalStatus,
+              newValue: "DRAFT"
+            }] : [])
           ]
         }]
       });
