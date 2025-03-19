@@ -734,29 +734,29 @@ export default function RelationshipValuesPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right space-x-2">
+                        {value.approvalStatus !== "PENDING" && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingValue(value);
+                              setIsEditDialogOpen(true);
+                            }}
+                            className="hover:bg-blue-50"
+                          >
+                            <Pencil className="h-4 w-4 text-blue-600" />
+                          </Button>
+                        )}
                         {value.approvalStatus === "DRAFT" && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => submitForApprovalMutation.mutate(value.id)}
-                              disabled={submitForApprovalMutation.isPending}
-                            >
-                              <Upload className="h-4 w-4 mr-2" />
-                              Submit for Approval
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setEditingValue(value);
-                                setIsEditDialogOpen(true);
-                              }}
-                              className="hover:bg-blue-50"
-                            >
-                              <Pencil className="h-4 w-4 text-blue-600" />
-                            </Button>
-                          </>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => submitForApprovalMutation.mutate(value.id)}
+                            disabled={submitForApprovalMutation.isPending}
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            Submit for Approval
+                          </Button>
                         )}
                         <Dialog onOpenChange={(open) => {
                           if (open) {
