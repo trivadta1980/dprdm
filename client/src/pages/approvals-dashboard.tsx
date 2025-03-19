@@ -1,6 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,143 +38,65 @@ interface PendingApproval {
   }>;
 }
 
-interface DebugInfo {
-  actions: string[];
-  error?: string;
-  apiResponse: any;
-  rawResponse: string | null;
-  requestDetails: any;
-  sessionValid: boolean | null;
-  user: string | null;
-  authStatus?: { isAuthenticated: boolean; status: number; statusText: string };
-  beforeApproval?: {
-    instanceData: any;
-    statusBefore?: string;
-    datasetId: number;
-    instanceId: string;
+interface PendingRelationshipValue {
+  id: number;
+  relationshipId: number;
+  relationshipName: string;
+  sourceInstanceId: string;
+  targetInstanceId: string;
+  sourceDataSet: {
+    id: number;
+    name: string;
+    data: Record<string, any>;
   };
-  afterApproval?: {
-    instanceData: any;
-    statusAfter?: string;
-    datasetId: number;
-    instanceId: string;
-    time?: string;
+  targetDataSet: {
+    id: number;
+    name: string;
+    data: Record<string, any>;
   };
-  responseStatus?: { ok: boolean; status: number; statusText: string };
-  serverPayload?: {
-    instanceId: string;
-    oldStatus: string;
-    newStatus: string;
+  history: Array<{
     timestamp: string;
-  };
+    changes: Array<{
+      field: string;
+      oldValue: string;
+      newValue: string;
+    }>;
+  }>;
 }
 
 export default function ApprovalsDashboard() {
   const { toast } = useToast();
   const [selectedInstance, setSelectedInstance] = useState<PendingApproval | null>(null);
+  const [selectedRelationshipValue, setSelectedRelationshipValue] = useState<PendingRelationshipValue | null>(null);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [selectedInstances, setSelectedInstances] = useState<Set<string>>(new Set());
-  const [debugInfo, setDebugInfo] = useState<DebugInfo>({ actions: [], error: "", apiResponse: null, rawResponse: null, requestDetails: null, sessionValid: null, user: null });
+  const [activeTab, setActiveTab] = useState("dataset-instances");
 
-  // Add debug logging to the query
-  const { data: pendingApprovals, isLoading, error } = useQuery<PendingApproval[]>({
+  // Fetch pending dataset instances
+  const { 
+    data: pendingDatasetInstances = [], 
+    isLoading: isLoadingDatasets,
+    error: datasetsError 
+  } = useQuery<PendingApproval[]>({
     queryKey: ["/api/approvals/pending"],
-    onSuccess: (data) => {
-      console.log("Received pending approvals data:", data);
-    },
-    onError: (err) => {
-      console.error("Error fetching pending approvals:", err);
-      setDebugInfo(prev => ({...prev, error: err instanceof Error ? err.message : String(err)}))
-    }
   });
 
-  // Mutation for handling approvals
+  // Fetch pending relationship values
+  const { 
+    data: pendingRelationshipValues = [], 
+    isLoading: isLoadingRelationships,
+    error: relationshipsError 
+  } = useQuery<PendingRelationshipValue[]>({
+    queryKey: ["/api/approvals/relationship-values/pending"],
+  });
+
+  // Dataset instance approval mutations
   const approveMutation = useMutation({
     mutationFn: async (approval: PendingApproval) => {
-      const url = `/api/reference-data/${approval.dataSetId}/instances/${approval.instanceId}/approve`;
-      console.log(`Approving instance ${approval.instanceId} in dataset ${approval.dataSetId}`);
-
-      try {
-        // Fetch the dataset to get the current state before approval
-        const beforeDataResponse = await fetch(`/api/reference-data/${approval.dataSetId}`, {
-          method: 'GET',
-          credentials: 'include'
-        });
-
-        let beforeData;
-        if (beforeDataResponse.ok) {
-          beforeData = await beforeDataResponse.json();
-        }
-
-        // First, check if we're authenticated by using a status check
-        const authCheckResponse = await fetch('/api/status', {
-          method: 'GET',
-          credentials: 'include'
-        });
-
-        const authStatus = {
-          isAuthenticated: authCheckResponse.ok,
-          status: authCheckResponse.status,
-          statusText: authCheckResponse.statusText
-        };
-
-
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          credentials: 'include' // Ensure credentials are included
-        });
-
-        let responseData;
-        let responseText = '';
-
-        try {
-          // Try to get response as text first
-          responseText = await response.text();
-
-          // Then try to parse as JSON if possible
-          try {
-            responseData = JSON.parse(responseText);
-          } catch (parseError) {
-            // If it's not valid JSON, keep as text
-            responseData = null;
-          }
-        } catch (textError) {
-          responseText = 'Failed to read response body';
-        }
-
-
-        let afterData;
-        if (response.ok) {
-          const afterDataResponse = await fetch(`/api/reference-data/${approval.dataSetId}`, {
-            method: 'GET',
-            credentials: 'include'
-          });
-
-          if (afterDataResponse.ok) {
-            afterData = await afterDataResponse.json();
-          }
-        }
-
-        // Get updated instance state
-        const updatedInstanceState = afterData?.data?.[approval.instanceId] || null;
-
-        if (!response.ok) {
-          throw new Error(`Error approving instance: ${response.statusText}`);
-        }
-
-        return responseData;
-      } catch (error) {
-        console.log('Approval error:', error);
-        setDebugInfo(prev => ({ 
-          ...prev, 
-          error: error.message || String(error)
-        }));
-        throw error;
-      }
+      const response = await apiRequest(`/api/reference-data/${approval.dataSetId}/instances/${approval.instanceId}/approve`, {
+        method: "POST"
+      });
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
@@ -183,12 +106,6 @@ export default function ApprovalsDashboard() {
       });
     },
     onError: (error: Error) => {
-      console.error("Approval error:", error);
-      setDebugInfo(prev => ({
-        ...prev,
-        error: error.message,
-        actions: [...prev.actions, `${new Date().toISOString()} - Error approving instance: ${error.message}`]
-      }));
       toast({
         title: "Error",
         description: error.message || "Failed to approve the instance",
@@ -197,94 +114,64 @@ export default function ApprovalsDashboard() {
     },
   });
 
-  // Mutation for handling rejections
-  const rejectMutation = useMutation({
-    mutationFn: async ({ dataSetId, instanceId }: { dataSetId: number; instanceId: string }) => {
-      console.log(`Rejecting instance ${instanceId} in dataset ${dataSetId}`);
-      setDebugInfo(prev => ({
-        ...prev,
-        actions: [...prev.actions, `${new Date().toISOString()} - Rejecting instance ${instanceId} in dataset ${dataSetId}`]
-      }));
-      const response = await apiRequest(`reference-data/${dataSetId}/instances/${instanceId}/reject`, {
-        method: "POST",
+  // Relationship value approval mutations
+  const approveRelationshipMutation = useMutation({
+    mutationFn: async (value: PendingRelationshipValue) => {
+      const response = await apiRequest(`/api/relationships/${value.relationshipId}/values/${value.id}/approve`, {
+        method: "POST"
       });
-      const responseData = await response.json();
-      setDebugInfo(prev => ({
-        ...prev,
-        actions: [...prev.actions, `${new Date().toISOString()} - Rejection API response: ${JSON.stringify(responseData)}`]
-      }));
-      return responseData;
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
       toast({
-        title: "Rejected",
-        description: "The instance has been rejected.",
+        title: "Approved",
+        description: "The relationship value has been approved successfully.",
       });
     },
     onError: (error: Error) => {
-      console.error("Rejection error:", error);
-      setDebugInfo(prev => ({
-        ...prev,
-        error: error.message,
-        actions: [...prev.actions, `${new Date().toISOString()} - Error rejecting instance: ${error.message}`]
-      }));
       toast({
         title: "Error",
-        description: error.message || "Failed to reject the instance",
+        description: error.message || "Failed to approve the relationship value",
         variant: "destructive",
       });
     },
   });
 
-  // New bulk approval mutation
-  const bulkApproveMutation = useMutation({
-    mutationFn: async (approvals: PendingApproval[]) => {
-      console.log('Starting bulk approval process');
-      console.log('Pending approvals to process:', approvals.length, approvals);
-
-      //Moved auth check outside the loop
-      const authCheckResponse = await fetch('/api/status', {
-        method: 'GET',
-        credentials: 'include'
+  // Rejection mutation for relationship values
+  const rejectRelationshipMutation = useMutation({
+    mutationFn: async (value: PendingRelationshipValue) => {
+      const response = await apiRequest(`/api/relationships/${value.relationshipId}/values/${value.id}/reject`, {
+        method: "POST"
       });
-      const authStatus = {
-        isAuthenticated: authCheckResponse.ok,
-        status: authCheckResponse.status,
-        statusText: authCheckResponse.statusText
-      };
-      console.log('Auth status:', authStatus);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
+      toast({
+        title: "Rejected",
+        description: "The relationship value has been rejected successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reject the relationship value",
+        variant: "destructive",
+      });
+    },
+  });
 
 
+  // Bulk approval mutations
+  const bulkApproveDatasetsMutation = useMutation({
+    mutationFn: async (approvals: PendingApproval[]) => {
       const results = [];
       for (const approval of approvals) {
-        const url = `/api/reference-data/${approval.dataSetId}/instances/${approval.instanceId}/approve`;
-        console.log('Processing approval for:', {
-          dataSetId: approval.dataSetId,
-          instanceId: approval.instanceId,
-          url: url
+        const response = await apiRequest(`/api/reference-data/${approval.dataSetId}/instances/${approval.instanceId}/approve`, {
+          method: "POST"
         });
-        
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          credentials: 'include'
-        });
-
-        if (!response.ok) {
-          console.error(`Failed to approve instance ${approval.instanceId}:`, response);
-          throw new Error(`Failed to approve instance ${approval.instanceId}: ${response.statusText}`);
-        }
-
-          const data = await response.json();
-        console.log(`Successfully approved instance ${approval.instanceId}:`, data);
-        results.push(data);
-        
-        // Add a small delay between requests to ensure proper sequencing
-        await new Promise(resolve => setTimeout(resolve, 100));
+        results.push(await response.json());
       }
       return results;
     },
@@ -297,7 +184,6 @@ export default function ApprovalsDashboard() {
       setSelectedInstances(new Set());
     },
     onError: (error: Error) => {
-      console.error("Bulk approval error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to approve selected instances",
@@ -306,26 +192,15 @@ export default function ApprovalsDashboard() {
     },
   });
 
-  // Helper function to format instance data for display
-  const formatInstanceData = (data: Record<string, any>) => {
-    // Filter out internal fields and format for display
-    const displayData = Object.entries(data).filter(([key]) => 
-      !['_history', 'status', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key)
-    );
-    return displayData;
-  };
-
-  // Handle select all checkbox
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      const allIds = pendingApprovals?.map(item => `${item.dataSetId}-${item.instanceId}`) || [];
+      const allIds = pendingDatasetInstances.map(item => `${item.dataSetId}-${item.instanceId}`);
       setSelectedInstances(new Set(allIds));
     } else {
       setSelectedInstances(new Set());
     }
   };
 
-  // Handle individual checkbox selection
   const handleSelectInstance = (id: string, checked: boolean) => {
     const newSelected = new Set(selectedInstances);
     if (checked) {
@@ -336,7 +211,6 @@ export default function ApprovalsDashboard() {
     setSelectedInstances(newSelected);
   };
 
-  // Handle bulk approve action
   const handleBulkApprove = () => {
     if (selectedInstances.size === 0) {
       toast({
@@ -347,14 +221,14 @@ export default function ApprovalsDashboard() {
       return;
     }
 
-    const selectedApprovals = pendingApprovals?.filter(
+    const selectedApprovals = pendingDatasetInstances.filter(
       item => selectedInstances.has(`${item.dataSetId}-${item.instanceId}`)
-    ) || [];
+    );
 
-    bulkApproveMutation.mutate(selectedApprovals);
+    bulkApproveDatasetsMutation.mutate(selectedApprovals);
   };
 
-  if (isLoading) {
+  if (isLoadingDatasets || isLoadingRelationships) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-[200px]">
@@ -364,11 +238,12 @@ export default function ApprovalsDashboard() {
     );
   }
 
-  if (error) {
+  if (datasetsError || relationshipsError) {
     return (
       <MainLayout>
         <div className="text-center py-8 text-destructive">
-          Error loading approvals: {error instanceof Error ? error.message : 'Unknown error'}
+          Error loading approvals: {(datasetsError || relationshipsError) instanceof Error ? 
+            (datasetsError || relationshipsError).message : 'Unknown error'}
         </div>
       </MainLayout>
     );
@@ -378,139 +253,282 @@ export default function ApprovalsDashboard() {
     <MainLayout>
       <div className="container mx-auto p-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>Pending Approvals</CardTitle>
-            {pendingApprovals?.length > 0 && (
-              <Button
-                onClick={handleBulkApprove}
-                disabled={selectedInstances.size === 0 || bulkApproveMutation.isPending}
-                className="bg-primary hover:bg-primary/90"
-              >
-                {bulkApproveMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <CheckSquare className="h-4 w-4 mr-2" />
-                )}
-                Approve Selected ({selectedInstances.size})
-              </Button>
-            )}
           </CardHeader>
           <CardContent>
-            {pendingApprovals?.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No pending approvals
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[50px]">
-                      <Checkbox
-                        checked={selectedInstances.size === pendingApprovals?.length}
-                        onCheckedChange={handleSelectAll}
-                      />
-                    </TableHead>
-                    <TableHead>Dataset</TableHead>
-                    <TableHead>Instance Name</TableHead>
-                    <TableHead>Instance ID</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Changes</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pendingApprovals?.map((item) => (
-                    <TableRow key={`${item.dataSetId}-${item.instanceId}`}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedInstances.has(`${item.dataSetId}-${item.instanceId}`)}
-                          onCheckedChange={(checked) => 
-                            handleSelectInstance(`${item.dataSetId}-${item.instanceId}`, checked)
-                          }
-                        />
-                      </TableCell>
-                      <TableCell>{item.dataSetName}</TableCell>
-                      <TableCell>{item.instanceName}</TableCell>
-                      <TableCell>
-                        <HoverCard>
-                          <HoverCardTrigger asChild>
-                            <Button variant="link" className="p-0">
-                              <FileText className="h-4 w-4 mr-2" />
-                              {item.instanceId}
-                            </Button>
-                          </HoverCardTrigger>
-                          <HoverCardContent className="w-96">
-                            <div className="space-y-4">
-                              <div>
-                                <h4 className="text-sm font-semibold mb-1">Instance Details</h4>
-                                <p className="text-xs text-muted-foreground">
-                                  Dataset: {item.dataSetName}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  Name: {item.instanceName}
-                                </p>
-                              </div>
-                              <div className="border rounded-lg p-3 bg-muted/50">
-                                <div className="grid grid-cols-2 gap-3">
-                                  {formatInstanceData(item.data).map(([key, value]) => (
-                                    <div key={key} className="contents">
-                                      <span className="text-sm font-medium">{key}:</span>
-                                      <span className="text-sm truncate">{String(value)}</span>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList>
+                <TabsTrigger value="dataset-instances">
+                  Dataset Instances ({pendingDatasetInstances.length})
+                </TabsTrigger>
+                <TabsTrigger value="relationship-values">
+                  Relationship Values ({pendingRelationshipValues.length})
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="dataset-instances">
+                {pendingDatasetInstances.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No pending dataset instance approvals
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex justify-end">
+                      <Button
+                        onClick={handleBulkApprove}
+                        disabled={selectedInstances.size === 0 || bulkApproveDatasetsMutation.isPending}
+                        className="bg-primary hover:bg-primary/90"
+                      >
+                        {bulkApproveDatasetsMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <CheckSquare className="h-4 w-4 mr-2" />
+                        )}
+                        Approve Selected ({selectedInstances.size})
+                      </Button>
+                    </div>
+
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[50px]">
+                            <Checkbox
+                              checked={selectedInstances.size === pendingDatasetInstances.length}
+                              onCheckedChange={handleSelectAll}
+                            />
+                          </TableHead>
+                          <TableHead>Dataset</TableHead>
+                          <TableHead>Instance Name</TableHead>
+                          <TableHead>Instance ID</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Changes</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {pendingDatasetInstances.map((item) => (
+                          <TableRow key={`${item.dataSetId}-${item.instanceId}`}>
+                            <TableCell>
+                              <Checkbox
+                                checked={selectedInstances.has(`${item.dataSetId}-${item.instanceId}`)}
+                                onCheckedChange={(checked) => 
+                                  handleSelectInstance(`${item.dataSetId}-${item.instanceId}`, checked)
+                                }
+                              />
+                            </TableCell>
+                            <TableCell>{item.dataSetName}</TableCell>
+                            <TableCell>{item.instanceName}</TableCell>
+                            <TableCell>
+                              <HoverCard>
+                                <HoverCardTrigger asChild>
+                                  <Button variant="link" className="p-0">
+                                    <FileText className="h-4 w-4 mr-2" />
+                                    {item.instanceId}
+                                  </Button>
+                                </HoverCardTrigger>
+                                <HoverCardContent className="w-96">
+                                  <div className="space-y-4">
+                                    <div>
+                                      <h4 className="text-sm font-semibold mb-1">Instance Details</h4>
+                                      <p className="text-xs text-muted-foreground">
+                                        Dataset: {item.dataSetName}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        Name: {item.instanceName}
+                                      </p>
                                     </div>
-                                  ))}
+                                    <div className="border rounded-lg p-3 bg-muted/50">
+                                      <div className="grid grid-cols-2 gap-3">
+                                        {Object.entries(item.data)
+                                          .filter(([key]) => !['_history', 'status', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
+                                          .map(([key, value]) => (
+                                            <div key={key} className="contents">
+                                              <span className="text-sm font-medium">{key}:</span>
+                                              <span className="text-sm truncate">{String(value)}</span>
+                                            </div>
+                                          ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </HoverCardContent>
+                              </HoverCard>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">Pending Approval</Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedInstance(item);
+                                  setHistoryDialogOpen(true);
+                                }}
+                              >
+                                <History className="h-4 w-4 mr-2" />
+                                View History
+                              </Button>
+                            </TableCell>
+                            <TableCell className="text-right space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => approveMutation.mutate(item)}
+                                disabled={approveMutation.isPending}
+                              >
+                                <Check className="h-4 w-4 mr-2" />
+                                Approve
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => rejectMutation.mutate({
+                                  dataSetId: item.dataSetId,
+                                  instanceId: item.instanceId,
+                                })}
+                                disabled={rejectMutation.isPending}
+                              >
+                                <X className="h-4 w-4 mr-2" />
+                                Reject
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="relationship-values">
+                {pendingRelationshipValues.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No pending relationship value approvals
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Relationship</TableHead>
+                        <TableHead>Source Instance</TableHead>
+                        <TableHead>Target Instance</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Changes</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {pendingRelationshipValues.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell>{item.relationshipName}</TableCell>
+                          <TableCell>
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Button variant="link" className="p-0">
+                                  <FileText className="h-4 w-4 mr-2" />
+                                  {item.sourceInstanceId}
+                                </Button>
+                              </HoverCardTrigger>
+                              <HoverCardContent className="w-96">
+                                <div className="space-y-4">
+                                  <div>
+                                    <h4 className="text-sm font-semibold mb-1">Source Instance Details</h4>
+                                    <p className="text-xs text-muted-foreground">
+                                      Dataset: {item.sourceDataSet.name}
+                                    </p>
+                                  </div>
+                                  <div className="border rounded-lg p-3 bg-muted/50">
+                                    <div className="grid grid-cols-2 gap-3">
+                                      {Object.entries(item.sourceDataSet.data[item.sourceInstanceId] || {})
+                                        .filter(([key]) => !['_history', 'status', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
+                                        .map(([key, value]) => (
+                                          <div key={key} className="contents">
+                                            <span className="text-sm font-medium">{key}:</span>
+                                            <span className="text-sm truncate">{String(value)}</span>
+                                          </div>
+                                        ))}
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                Last modified: {new Date(item.data.lastModifiedAt).toLocaleString()} by {item.data.lastModifiedBy}
-                              </div>
-                            </div>
-                          </HoverCardContent>
-                        </HoverCard>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">Pending Approval</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedInstance(item);
-                            setHistoryDialogOpen(true);
-                          }}
-                        >
-                          <History className="h-4 w-4 mr-2" />
-                          View History
-                        </Button>
-                      </TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => approveMutation.mutate(item)}
-                          disabled={approveMutation.isPending}
-                        >
-                          <Check className="h-4 w-4 mr-2" />
-                          Approve
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => rejectMutation.mutate({
-                            dataSetId: item.dataSetId,
-                            instanceId: item.instanceId,
-                          })}
-                          disabled={rejectMutation.isPending}
-                        >
-                          <X className="h-4 w-4 mr-2" />
-                          Reject
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
+                              </HoverCardContent>
+                            </HoverCard>
+                          </TableCell>
+                          <TableCell>
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Button variant="link" className="p-0">
+                                  <FileText className="h-4 w-4 mr-2" />
+                                  {item.targetInstanceId}
+                                </Button>
+                              </HoverCardTrigger>
+                              <HoverCardContent className="w-96">
+                                <div className="space-y-4">
+                                  <div>
+                                    <h4 className="text-sm font-semibold mb-1">Target Instance Details</h4>
+                                    <p className="text-xs text-muted-foreground">
+                                      Dataset: {item.targetDataSet.name}
+                                    </p>
+                                  </div>
+                                  <div className="border rounded-lg p-3 bg-muted/50">
+                                    <div className="grid grid-cols-2 gap-3">
+                                      {Object.entries(item.targetDataSet.data[item.targetInstanceId] || {})
+                                        .filter(([key]) => !['_history', 'status', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
+                                        .map(([key, value]) => (
+                                          <div key={key} className="contents">
+                                            <span className="text-sm font-medium">{key}:</span>
+                                            <span className="text-sm truncate">{String(value)}</span>
+                                          </div>
+                                        ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              </HoverCardContent>
+                            </HoverCard>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">Pending Approval</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedRelationshipValue(item);
+                                setHistoryDialogOpen(true);
+                              }}
+                            >
+                              <History className="h-4 w-4 mr-2" />
+                              View History
+                            </Button>
+                          </TableCell>
+                          <TableCell className="text-right space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => approveRelationshipMutation.mutate(item)}
+                              disabled={approveRelationshipMutation.isPending}
+                            >
+                              <Check className="h-4 w-4 mr-2" />
+                              Approve
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => rejectRelationshipMutation.mutate(item)}
+                              disabled={rejectRelationshipMutation.isPending}
+                            >
+                              <X className="h-4 w-4 mr-2" />
+                              Reject
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
 
@@ -520,7 +538,7 @@ export default function ApprovalsDashboard() {
               <DialogTitle>Change History</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              {selectedInstance?.history.map((entry, index) => (
+              {(selectedInstance?.history || selectedRelationshipValue?.history || []).map((entry, index) => (
                 <div key={index} className="border rounded-lg p-4">
                   <div className="text-sm text-muted-foreground mb-2">
                     {new Date(entry.timestamp).toLocaleString()}

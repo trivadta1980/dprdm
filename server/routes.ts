@@ -10,7 +10,8 @@ import {
   insertRelationshipAttributeDefinitionSchema,
   insertRelationshipAttributeValueSchema,
   relationships,
-  crosswalkMappings
+  crosswalkMappings,
+  relationshipValues
 } from "@shared/schema";
 import { sql } from "drizzle-orm";
 import { scrypt, randomBytes } from "crypto";
@@ -1562,11 +1563,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           if (relationship) {
             links.push({
-              source: source.identity.toString(),
-              target: target.identity.toString(),
+              source: nodeMap.get(source.identity.toString()),
+              target: nodeMap.get(target.identity.toString()),
               type: relationship.type,
               properties: relationship.properties
-                        });
+            });
           }
         });
 
@@ -1881,7 +1882,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add new route after existing relationship values routes
+  // Add after existing relationship value routes
   app.delete("/api/relationships/:id/values", async (req, res) => {
     console.log('DELETE /api/relationships/:id/values - Request received');
     if (!req.isAuthenticated()) {
@@ -2005,6 +2006,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: String(error) });
     }
   });
+
+  // Add after existing approval routes
+  app.get("/api/approvals/relationship-values/pending", async (req, res) => {
+    console.log('GET /api/approvals/relationship-values/pending - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/approvals/relationship-values/pending - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      // Get all relationship values with PENDING status
+      const pendingValues = await db
+        .select({
+          id: relationshipValues.id,
+          relationshipId: relationshipValues.relationshipId,
+          sourceInstanceId: relationshipValues.sourceInstanceId,
+          targetInstanceId: relationshipValues.targetInstanceId,
+          approvalStatus: relationshipValues.approvalStatus,
+          history: relationshipValues.changeHistory,
+        })
+        .from(relationshipValues)
+        .where(eq(relationshipValues.approvalStatus, "PENDING"));
+
+      // Enhance with relationship and dataset information
+      const enhancedValues = await Promise.all(
+        pendingValues.map(async (value) => {
+          const relationship = await storage.getRelationship(value.relationshipId);
+          const sourceDataSet = await storage.getReferenceDataSet(relationship.sourceDataSetId);
+          const targetDataSet = await storage.getReferenceDataSet(relationship.targetDataSetId);
+
+          return {
+            ...value,
+            relationshipName: relationship.name,
+            sourceDataSet: {
+              id: sourceDataSet.id,
+              name: sourceDataSet.name,
+              data: sourceDataSet.data
+            },
+            targetDataSet: {
+              id: targetDataSet.id,
+              name: targetDataSet.name,
+              data: targetDataSet.data
+            }
+          };
+        })
+      );
+
+      console.log('GET /api/approvals/relationship-values/pending - Values fetched successfully');
+      res.json(enhancedValues);
+    } catch (error) {
+      console.error('GET /api/approvals/relationship-values/pending - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
 
   const httpServer = createServer(app);
   return httpServer;
