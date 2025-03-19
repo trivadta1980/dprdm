@@ -114,6 +114,30 @@ export default function ApprovalsDashboard() {
     },
   });
 
+  // Add the missing rejectMutation
+  const rejectMutation = useMutation({
+    mutationFn: async ({ dataSetId, instanceId }: { dataSetId: number; instanceId: string }) => {
+      const response = await apiRequest(`/api/reference-data/${dataSetId}/instances/${instanceId}/reject`, {
+        method: "POST"
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
+      toast({
+        title: "Rejected",
+        description: "The instance has been rejected successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reject the instance",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Relationship value approval mutations
   const approveRelationshipMutation = useMutation({
     mutationFn: async (value: PendingRelationshipValue) => {
@@ -383,10 +407,7 @@ export default function ApprovalsDashboard() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => rejectMutation.mutate({
-                                  dataSetId: item.dataSetId,
-                                  instanceId: item.instanceId,
-                                })}
+                                onClick={() => rejectMutation.mutate({ dataSetId: item.dataSetId, instanceId: item.instanceId })}
                                 disabled={rejectMutation.isPending}
                               >
                                 <X className="h-4 w-4 mr-2" />
