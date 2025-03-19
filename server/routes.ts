@@ -694,7 +694,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      // Get all relationship values with PENDING status along with relationship info in a single query
+      const page = Number(req.query.page) || 1;
+      const pageSize = Number(req.query.pageSize) || 50;
+      const offset = (page - 1) * pageSize;
+
+      // Get total count first
+      const totalCountResult = await db
+        .select({ count: sql`count(*)` })
+        .from(relationshipValues)
+        .where(eq(relationshipValues.approvalStatus, "PENDING"));
+
+      const totalCount = Number(totalCountResult[0].count);
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      // Get paginated relationship values with PENDING status along with relationship info
       const pendingValues = await db
         .select({
           id: relationshipValues.id,
@@ -714,7 +727,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           eq(relationshipValues.relationshipId, relationships.id)
         )
         .where(eq(relationshipValues.approvalStatus, "PENDING"))
-        .limit(50); // Add pagination limit
+        .limit(pageSize)
+        .offset(offset);
 
       // Batch fetch required datasets
       const dataSetIds = new Set([
@@ -752,7 +766,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }));
 
       console.log('GET /api/approvals/relationship-values/pending - Values fetched successfully:', enhancedValues.length);
-      res.json(enhancedValues);
+      res.json({
+        data: enhancedValues,
+        metadata: {
+          totalCount,
+          currentPage: page,
+          pageSize,
+          totalPages
+        }
+      });
     } catch (error) {
       console.error('GET /api/approvals/relationship-values/pending - Error:', error);
       res.status(500).json({ error: String(error) });

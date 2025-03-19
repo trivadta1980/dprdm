@@ -71,24 +71,36 @@ export default function ApprovalsDashboard() {
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [selectedInstances, setSelectedInstances] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState("dataset-instances");
+  const [relationshipPage, setRelationshipPage] = useState(1);
+  const [relationshipPageSize, setRelationshipPageSize] = useState(50);
 
   // Fetch pending dataset instances
-  const { 
-    data: pendingDatasetInstances = [], 
+  const {
+    data: pendingDatasetInstances = [],
     isLoading: isLoadingDatasets,
-    error: datasetsError 
+    error: datasetsError
   } = useQuery<PendingApproval[]>({
     queryKey: ["/api/approvals/pending"],
   });
 
-  // Fetch pending relationship values
-  const { 
-    data: pendingRelationshipValues = [], 
+  // Fetch pending relationship values with pagination
+  const {
+    data: relationshipValuesResponse = { data: [], metadata: { totalCount: 0, currentPage: 1, pageSize: 50, totalPages: 1 } },
     isLoading: isLoadingRelationships,
-    error: relationshipsError 
-  } = useQuery<PendingRelationshipValue[]>({
-    queryKey: ["/api/approvals/relationship-values/pending"],
+    error: relationshipsError
+  } = useQuery({
+    queryKey: ["/api/approvals/relationship-values/pending", relationshipPage, relationshipPageSize],
+    queryFn: async () => {
+      const response = await fetch(`/api/approvals/relationship-values/pending?page=${relationshipPage}&pageSize=${relationshipPageSize}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch relationship values");
+      }
+      return response.json();
+    }
   });
+
+  const pendingRelationshipValues = relationshipValuesResponse.data;
+  const relationshipMetadata = relationshipValuesResponse.metadata;
 
   // Dataset instance approval mutations
   const approveMutation = useMutation({
@@ -266,7 +278,7 @@ export default function ApprovalsDashboard() {
     return (
       <MainLayout>
         <div className="text-center py-8 text-destructive">
-          Error loading approvals: {(datasetsError || relationshipsError) instanceof Error ? 
+          Error loading approvals: {(datasetsError || relationshipsError) instanceof Error ?
             (datasetsError || relationshipsError).message : 'Unknown error'}
         </div>
       </MainLayout>
@@ -336,7 +348,7 @@ export default function ApprovalsDashboard() {
                             <TableCell>
                               <Checkbox
                                 checked={selectedInstances.has(`${item.dataSetId}-${item.instanceId}`)}
-                                onCheckedChange={(checked) => 
+                                onCheckedChange={(checked) =>
                                   handleSelectInstance(`${item.dataSetId}-${item.instanceId}`, checked)
                                 }
                               />
@@ -435,125 +447,169 @@ export default function ApprovalsDashboard() {
                     No pending relationship value approvals
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Relationship</TableHead>
-                        <TableHead>Source Instance</TableHead>
-                        <TableHead>Target Instance</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Changes</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {pendingRelationshipValues.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell>{item.relationshipName}</TableCell>
-                          <TableCell>
-                            <HoverCard>
-                              <HoverCardTrigger asChild>
-                                <Button variant="link" className="p-0">
-                                  <FileText className="h-4 w-4 mr-2" />
-                                  {item.sourceInstanceId}
-                                </Button>
-                              </HoverCardTrigger>
-                              <HoverCardContent className="w-96">
-                                <div className="space-y-4">
-                                  <div>
-                                    <h4 className="text-sm font-semibold mb-1">Source Instance Details</h4>
-                                    <p className="text-xs text-muted-foreground">
-                                      Dataset: {item.sourceDataSet.name}
-                                    </p>
-                                  </div>
-                                  <div className="border rounded-lg p-3 bg-muted/50">
-                                    <div className="grid grid-cols-2 gap-3">
-                                      {Object.entries(item.sourceDataSet.data[item.sourceInstanceId] || {})
-                                        .filter(([key]) => !['_history', 'status', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
-                                        .map(([key, value]) => (
-                                          <div key={key} className="contents">
-                                            <span className="text-sm font-medium">{key}:</span>
-                                            <span className="text-sm truncate">{String(value)}</span>
-                                          </div>
-                                        ))}
-                                    </div>
-                                  </div>
-                                </div>
-                              </HoverCardContent>
-                            </HoverCard>
-                          </TableCell>
-                          <TableCell>
-                            <HoverCard>
-                              <HoverCardTrigger asChild>
-                                <Button variant="link" className="p-0">
-                                  <FileText className="h-4 w-4 mr-2" />
-                                  {item.targetInstanceId}
-                                </Button>
-                              </HoverCardTrigger>
-                              <HoverCardContent className="w-96">
-                                <div className="space-y-4">
-                                  <div>
-                                    <h4 className="text-sm font-semibold mb-1">Target Instance Details</h4>
-                                    <p className="text-xs text-muted-foreground">
-                                      Dataset: {item.targetDataSet.name}
-                                    </p>
-                                  </div>
-                                  <div className="border rounded-lg p-3 bg-muted/50">
-                                    <div className="grid grid-cols-2 gap-3">
-                                      {Object.entries(item.targetDataSet.data[item.targetInstanceId] || {})
-                                        .filter(([key]) => !['_history', 'status', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
-                                        .map(([key, value]) => (
-                                          <div key={key} className="contents">
-                                            <span className="text-sm font-medium">{key}:</span>
-                                            <span className="text-sm truncate">{String(value)}</span>
-                                          </div>
-                                        ))}
-                                    </div>
-                                  </div>
-                                </div>
-                              </HoverCardContent>
-                            </HoverCard>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">Pending Approval</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedRelationshipValue(item);
-                                setHistoryDialogOpen(true);
-                              }}
-                            >
-                              <History className="h-4 w-4 mr-2" />
-                              View History
-                            </Button>
-                          </TableCell>
-                          <TableCell className="text-right space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => approveRelationshipMutation.mutate(item)}
-                              disabled={approveRelationshipMutation.isPending}
-                            >
-                              <Check className="h-4 w-4 mr-2" />
-                              Approve
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => rejectRelationshipMutation.mutate(item)}
-                              disabled={rejectRelationshipMutation.isPending}
-                            >
-                              <X className="h-4 w-4 mr-2" />
-                              Reject
-                            </Button>
-                          </TableCell>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-muted-foreground">
+                        Showing {(relationshipPage - 1) * relationshipPageSize + 1} to{" "}
+                        {Math.min(relationshipPage * relationshipPageSize, relationshipMetadata.totalCount)} of{" "}
+                        {relationshipMetadata.totalCount} pending approvals
+                      </div>
+                      <select
+                        className="text-sm border rounded-md p-1"
+                        value={relationshipPageSize}
+                        onChange={(e) => {
+                          setRelationshipPageSize(Number(e.target.value));
+                          setRelationshipPage(1);
+                        }}
+                      >
+                        <option value="25">25 per page</option>
+                        <option value="50">50 per page</option>
+                        <option value="100">100 per page</option>
+                      </select>
+                    </div>
+
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Relationship</TableHead>
+                          <TableHead>Source Instance</TableHead>
+                          <TableHead>Target Instance</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Changes</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {pendingRelationshipValues.map((item) => (
+                          <TableRow key={item.id}>
+                            <TableCell>{item.relationshipName}</TableCell>
+                            <TableCell>
+                              <HoverCard>
+                                <HoverCardTrigger asChild>
+                                  <Button variant="link" className="p-0">
+                                    <FileText className="h-4 w-4 mr-2" />
+                                    {item.sourceInstanceId}
+                                  </Button>
+                                </HoverCardTrigger>
+                                <HoverCardContent className="w-96">
+                                  <div className="space-y-4">
+                                    <div>
+                                      <h4 className="text-sm font-semibold mb-1">Source Instance Details</h4>
+                                      <p className="text-xs text-muted-foreground">
+                                        Dataset: {item.sourceDataSet.name}
+                                      </p>
+                                    </div>
+                                    <div className="border rounded-lg p-3 bg-muted/50">
+                                      <div className="grid grid-cols-2 gap-3">
+                                        {Object.entries(item.sourceDataSet.data[item.sourceInstanceId] || {})
+                                          .filter(([key]) => !['_history', 'status', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
+                                          .map(([key, value]) => (
+                                            <div key={key} className="contents">
+                                              <span className="text-sm font-medium">{key}:</span>
+                                              <span className="text-sm truncate">{String(value)}</span>
+                                            </div>
+                                          ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </HoverCardContent>
+                              </HoverCard>
+                            </TableCell>
+                            <TableCell>
+                              <HoverCard>
+                                <HoverCardTrigger asChild>
+                                  <Button variant="link" className="p-0">
+                                    <FileText className="h-4 w-4 mr-2" />
+                                    {item.targetInstanceId}
+                                  </Button>
+                                </HoverCardTrigger>
+                                <HoverCardContent className="w-96">
+                                  <div className="space-y-4">
+                                    <div>
+                                      <h4 className="text-sm font-semibold mb-1">Target Instance Details</h4>
+                                      <p className="text-xs text-muted-foreground">
+                                        Dataset: {item.targetDataSet.name}
+                                      </p>
+                                    </div>
+                                    <div className="border rounded-lg p-3 bg-muted/50">
+                                      <div className="grid grid-cols-2 gap-3">
+                                        {Object.entries(item.targetDataSet.data[item.targetInstanceId] || {})
+                                          .filter(([key]) => !['_history', 'status', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
+                                          .map(([key, value]) => (
+                                            <div key={key} className="contents">
+                                              <span className="text-sm font-medium">{key}:</span>
+                                              <span className="text-sm truncate">{String(value)}</span>
+                                            </div>
+                                          ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </HoverCardContent>
+                              </HoverCard>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">Pending Approval</Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedRelationshipValue(item);
+                                  setHistoryDialogOpen(true);
+                                }}
+                              >
+                                <History className="h-4 w-4 mr-2" />
+                                View History
+                              </Button>
+                            </TableCell>
+                            <TableCell className="text-right space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => approveRelationshipMutation.mutate(item)}
+                                disabled={approveRelationshipMutation.isPending}
+                              >
+                                <Check className="h-4 w-4 mr-2" />
+                                Approve
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => rejectRelationshipMutation.mutate(item)}
+                                disabled={rejectRelationshipMutation.isPending}
+                              >
+                                <X className="h-4 w-4 mr-2" />
+                                Reject
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+
+                    <div className="flex items-center justify-center space-x-2 py-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setRelationshipPage(p => Math.max(1, p - 1))}
+                        disabled={relationshipPage === 1}
+                      >
+                        Previous
+                      </Button>
+                      <div className="text-sm text-muted-foreground">
+                        Page {relationshipPage} of {relationshipMetadata.totalPages}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setRelationshipPage(p => Math.min(relationshipMetadata.totalPages, p + 1))}
+                        disabled={relationshipPage === relationshipMetadata.totalPages}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </TabsContent>
             </Tabs>
