@@ -82,6 +82,9 @@ export interface IStorage {
   deleteRelationshipValue(id: number): Promise<boolean>;
   getAvailableTargets(relationshipId: number, sourceId: string): Promise<Record<string, any>[]>;
   getAvailableSources(relationshipId: number, targetId: string): Promise<Record<string, any>[]>;
+  
+  // Add to IStorage interface after getRelationshipValues method
+  updateRelationshipValue(id: number, updates: Partial<RelationshipValue>): Promise<RelationshipValue>;
 
   // Crosswalk mapping methods
   createCrosswalkMapping(mapping: InsertCrosswalkMapping): Promise<CrosswalkMapping>;
@@ -681,6 +684,22 @@ export class DatabaseStorage implements IStorage {
     }
 
     return allSources;
+  }
+
+  // Add implementation in DatabaseStorage class after getRelationshipValues method
+  async updateRelationshipValue(
+    id: number,
+    updates: Partial<RelationshipValue>
+  ): Promise<RelationshipValue> {
+    const [value] = await db
+      .update(relationshipValues)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(relationshipValues.id, id))
+      .returning();
+    return value;
   }
 
   // Implement crosswalk mapping methods

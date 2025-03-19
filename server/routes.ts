@@ -732,27 +732,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Source and target instance IDs are required" });
       }
 
-      // Update the relationship value
+      // Get current value to record changes
+      const currentValue = await db
+        .select()
+        .from(relationshipValues)
+        .where(eq(relationshipValues.id, valueId))
+        .limit(1);
+
+      if (!currentValue.length) {
+        return res.status(404).json({ error: "Relationship value not found" });
+      }
+
+      // Update the relationship value with change history
       const value = await storage.updateRelationshipValue(valueId, {
         sourceInstanceId,
         targetInstanceId,
-        metadata: {}, // Keep existing metadata
-        changeHistory: sql`array_append(change_history, jsonb_build_object(
-          'timestamp', CURRENT_TIMESTAMP,
-          'changes', jsonb_build_array(
-            jsonb_build_object(
-              'field', 'sourceInstanceId',
-              'oldValue', source_instance_id,
-              'newValue', ${sourceInstanceId}
-            ),
-            jsonb_build_object(
-              'field', 'targetInstanceId',
-              'oldValue', target_instance_id,
-              'newValue', ${targetInstanceId}
-            )
-          )
-        ))`
+        changeHistory: [...(currentValue[0].changeHistory as any[] || []), {
+          timestamp: new Date().toISOString(),
+          changes: [
+            {
+              field: 'sourceInstanceId',
+              oldValue: currentValue[0].sourceInstanceId,
+              newValue: sourceInstanceId
+            },
+            {
+              field: 'targetInstanceId',
+              oldValue: currentValue[0].targetInstanceId,
+              newValue: targetInstanceId
+            }
+          ]
+        }]
       });
+
+      // Sync with Neo4j if available
+      if (GraphDataService.isAvailable()) {
+        try {
+          await GraphDataService.syncRelationship(Number(req.params.id));
+        } catch (graphError) {
+          console.error('Error syncing to graph database:', graphError);
+          // Continue with the response even if graph sync fails
+        }
+      }
 
       console.log('PATCH /api/relationships/:id/values/:valueId - Value updated successfully');
       res.json(value);
