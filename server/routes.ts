@@ -13,7 +13,7 @@ import {
   crosswalkMappings,
   relationshipValues
 } from "@shared/schema";
-import { sql, eq } from "drizzle-orm";
+import { sql, eq, and, or } from "drizzle-orm";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 import { db } from './db';
@@ -703,8 +703,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const relationshipTypeId = req.query.relationship_type_id ? Number(req.query.relationship_type_id) : undefined;
       const sourceDatasetId = req.query.source_dataset_id ? Number(req.query.source_dataset_id) : undefined;
       const targetDatasetId = req.query.target_dataset_id ? Number(req.query.target_dataset_id) : undefined;
-      const fromDate = req.query.from_date as string;
-      const toDate = req.query.to_date as string;
+      const fromDate = req.query.from_date ? new Date(req.query.from_date as string) : undefined;
+      const toDate = req.query.to_date ? new Date(req.query.to_date as string) : undefined;
+
+      console.log('Filter parameters:', {
+        page,
+        pageSize,
+        searchTerm,
+        relationshipTypeId,
+        sourceDatasetId,
+        targetDatasetId,
+        fromDate,
+        toDate
+      });
 
       // Build WHERE conditions
       let conditions = [eq(relationshipValues.approvalStatus, "PENDING")];
@@ -712,9 +723,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (searchTerm) {
         conditions.push(
           or(
-            sql`${relationships.name} ILIKE ${`%${searchTerm}%`}`,
-            sql`${relationshipValues.sourceInstanceId} ILIKE ${`%${searchTerm}%`}`,
-            sql`${relationshipValues.targetInstanceId} ILIKE ${`%${searchTerm}%`}`
+            sql`CAST(${relationships.name} AS TEXT) ILIKE ${`%${searchTerm}%`}`,
+            sql`CAST(${relationshipValues.sourceInstanceId} AS TEXT) ILIKE ${`%${searchTerm}%`}`,
+            sql`CAST(${relationshipValues.targetInstanceId} AS TEXT) ILIKE ${`%${searchTerm}%`}`
           )
         );
       }
@@ -732,16 +743,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (fromDate) {
-        conditions.push(sql`${relationshipValues.createdAt} >= ${fromDate}`);
+        conditions.push(sql`${relationshipValues.createdAt} >= ${fromDate.toISOString()}`);
       }
 
       if (toDate) {
-        conditions.push(sql`${relationshipValues.createdAt} <= ${toDate}`);
+        conditions.push(sql`${relationshipValues.createdAt} <= ${toDate.toISOString()}`);
       }
 
       // Get total count first
       const totalCountResult = await db
-        .select({ count: sql`count(*)` })
+        .select({ count: sql<number>`count(*)` })
         .from(relationshipValues)
         .innerJoin(relationships, eq(relationshipValues.relationshipId, relationships.id))
         .where(and(...conditions));
@@ -759,7 +770,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           approvalStatus: relationshipValues.approvalStatus,
           history: relationshipValues.changeHistory,
           createdAt: relationshipValues.createdAt,
-          // Join with relationships table
           relationshipName: relationships.name,
           sourceDataSetId: relationships.sourceDataSetId,
           targetDataSetId: relationships.targetDataSetId,
@@ -803,7 +813,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }));
 
-      console.log('GET /api/approvals/relationship-values/pending - Values fetched successfully:', enhancedValues.length);
+      console.log('GET /api/approvals/relationship-values/pending - Values fetched successfully:', {
+        totalCount,
+        currentPage: page,
+        totalPages,
+        fetchedCount: enhancedValues.length
+      });
+
       res.json({
         data: enhancedValues,
         metadata: {
@@ -1162,80 +1178,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error('DELETE /api/relationships/attribute-values/:id - Error:', error);
-      res.status(500).json({ error: String(error) });
-    }
-  });
-
-  // Add optimized endpoint for fetching pending relationship values
-  app.get("/api/approvals/relationship-values/pending", async (req, res) => {
-    console.log('GET /api/approvals/relationship-values/pending - Request received');
-    if (!req.isAuthenticated()) {
-      console.log('GET /api/approvals/relationship-values/pending - Unauthorized access');
-      return res.sendStatus(401);
-    }
-
-    try {
-      // Get all relationship values with PENDING status along with relationship info in a single query
-      const pendingValues = await db
-        .select({
-          id: relationshipValues.id,
-          relationshipId: relationshipValues.relationshipId,
-          sourceInstanceId: relationshipValues.sourceInstanceId,
-          targetInstanceId: relationshipValues.targetInstanceId,
-          approvalStatus: relationshipValues.approvalStatus,
-          history: relationshipValues.changeHistory,
-          // Join with relationships table
-          relationshipName: relationships.name,
-          sourceDataSetId: relationships.sourceDataSetId,
-          targetDataSetId: relationships.targetDataSetId,
-        })
-        .from(relationshipValues)
-        .innerJoin(
-          relationships,
-          eq(relationshipValues.relationshipId, relationships.id)
-        )
-        .where(eq(relationshipValues.approvalStatus, "PENDING"))
-        .limit(50); // Add pagination limit
-
-      // Batch fetch required datasets
-      const dataSetIds = new Set([
-        ...pendingValues.map(v => v.sourceDataSetId),
-        ...pendingValues.map(v => v.targetDataSetId)
-      ]);
-      
-      const dataSets = await Promise.all(
-        Array.from(dataSetIds).map(id => storage.getReferenceDataSet(id))
-      );
-      
-      // Create a map for quick dataset lookup  
-      const dataSetMap = new Map(
-        dataSets.filter(ds => ds !== null).map(ds => [ds.id, ds])
-      );
-
-      // Enhance values with dataset info
-      const enhancedValues = pendingValues.map(value => ({
-        id: value.id,
-        relationshipId: value.relationshipId,
-        relationshipName: value.relationshipName,
-        sourceInstanceId: value.sourceInstanceId,
-        targetInstanceId: value.targetInstanceId,
-        history: value.history,
-        sourceDataSet: {
-          id: value.sourceDataSetId,
-          name: dataSetMap.get(value.sourceDataSetId)?.name || '',
-          data: dataSetMap.get(value.sourceDataSetId)?.data || {}
-        },
-        targetDataSet: {
-          id: value.targetDataSetId,
-          name: dataSetMap.get(value.targetDataSetId)?.name || '',
-          data: dataSetMap.get(value.targetDataSetId)?.data || {}
-        }
-      }));
-
-      console.log('GET /api/approvals/relationship-values/pending - Values fetched successfully:', enhancedValues.length);
-      res.json(enhancedValues);
-    } catch (error) {
-      console.error('GET /api/approvals/relationship-values/pending - Error:', error);
       res.status(500).json({ error: String(error) });
     }
   });
