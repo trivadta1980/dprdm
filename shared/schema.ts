@@ -245,7 +245,6 @@ export const insertRelationshipSchema = createInsertSchema(relationships).extend
   targetField: z.string(),
 });
 
-
 // Base schema without password confirmation
 const baseUserSchema = createInsertSchema(users).pick({
   email: true,
