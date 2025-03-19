@@ -536,6 +536,49 @@ export default function ApprovalsDashboard() {
                       </div>
                     </div>
 
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-muted-foreground">
+                        Showing {(relationshipPage - 1) * relationshipPageSize + 1} to{" "}
+                        {Math.min(relationshipPage * relationshipPageSize, relationshipMetadata.totalCount)} of{" "}
+                        {relationshipMetadata.totalCount} pending approvals
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <select
+                          className="text-sm border rounded-md p-1"
+                          value={relationshipPageSize}
+                          onChange={(e) => {
+                            setRelationshipPageSize(Number(e.target.value));
+                            setRelationshipPage(1);
+                          }}
+                        >
+                          <option value="25">25 per page</option>
+                          <option value="50">50 per page</option>
+                          <option value="100">100 per page</option>
+                        </select>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setRelationshipPage(p => Math.max(1, p - 1))}
+                            disabled={relationshipPage === 1}
+                          >
+                            Previous
+                          </Button>
+                          <div className="text-sm text-muted-foreground">
+                            Page {relationshipPage} of {relationshipMetadata.totalPages}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setRelationshipPage(p => Math.min(relationshipMetadata.totalPages, p + 1))}
+                            disabled={relationshipPage === relationshipMetadata.totalPages}
+                          >
+                            Next
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -656,7 +699,7 @@ export default function ApprovalsDashboard() {
                       </TableBody>
                     </Table>
 
-                    <div className="flex items-center justify-center space-x-2 py-4">
+                    <div className="flex items-center justify-end space-x-2 py-4">
                       <Button
                         variant="outline"
                         size="sm"
