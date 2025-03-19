@@ -402,7 +402,14 @@ export default function ApprovalsDashboard() {
               </TabsContent>
 
               <TabsContent value="relationship-values">
-                {pendingRelationshipValues.length === 0 ? (
+                {isLoadingRelationships ? (
+                  <div className="space-y-3">
+                    <div className="h-8 bg-muted animate-pulse rounded" />
+                    <div className="h-20 bg-muted animate-pulse rounded" />
+                    <div className="h-20 bg-muted animate-pulse rounded" />
+                    <div className="h-20 bg-muted animate-pulse rounded" />
+                  </div>
+                ) : pendingRelationshipValues.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No pending relationship value approvals
                   </div>

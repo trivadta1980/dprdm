@@ -685,6 +685,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Optimized endpoint for fetching pending relationship values
+  app.get("/api/approvals/relationship-values/pending", async (req, res) => {
+    console.log('GET /api/approvals/relationship-values/pending - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/approvals/relationship-values/pending - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      // Get all relationship values with PENDING status along with relationship info in a single query
+      const pendingValues = await db
+        .select({
+          id: relationshipValues.id,
+          relationshipId: relationshipValues.relationshipId,
+          sourceInstanceId: relationshipValues.sourceInstanceId,
+          targetInstanceId: relationshipValues.targetInstanceId,
+          approvalStatus: relationshipValues.approvalStatus,
+          history: relationshipValues.changeHistory,
+          // Join with relationships table
+          relationshipName: relationships.name,
+          sourceDataSetId: relationships.sourceDataSetId,
+          targetDataSetId: relationships.targetDataSetId,
+        })
+        .from(relationshipValues)
+        .innerJoin(
+          relationships,
+          eq(relationshipValues.relationshipId, relationships.id)
+        )
+        .where(eq(relationshipValues.approvalStatus, "PENDING"))
+        .limit(50); // Add pagination limit
+
+      // Batch fetch required datasets
+      const dataSetIds = new Set([
+        ...pendingValues.map(v => v.sourceDataSetId),
+        ...pendingValues.map(v => v.targetDataSetId)
+      ]);
+      
+      const dataSets = await Promise.all(
+        Array.from(dataSetIds).map(id => storage.getReferenceDataSet(id))
+      );
+      
+      // Create a map for quick dataset lookup  
+      const dataSetMap = new Map(
+        dataSets.filter(ds => ds !== null).map(ds => [ds.id, ds])
+      );
+
+      // Enhance values with dataset info
+      const enhancedValues = pendingValues.map(value => ({
+        id: value.id,
+        relationshipId: value.relationshipId,
+        relationshipName: value.relationshipName,
+        sourceInstanceId: value.sourceInstanceId,
+        targetInstanceId: value.targetInstanceId,
+        history: value.history,
+        sourceDataSet: {
+          id: value.sourceDataSetId,
+          name: dataSetMap.get(value.sourceDataSetId)?.name || '',
+          data: dataSetMap.get(value.sourceDataSetId)?.data || {}
+        },
+        targetDataSet: {
+          id: value.targetDataSetId,
+          name: dataSetMap.get(value.targetDataSetId)?.name || '',
+          data: dataSetMap.get(value.targetDataSetId)?.data || {}
+        }
+      }));
+
+      console.log('GET /api/approvals/relationship-values/pending - Values fetched successfully:', enhancedValues.length);
+      res.json(enhancedValues);
+    } catch (error) {
+      console.error('GET /api/approvals/relationship-values/pending - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   // Add after the existing relationship routes
   app.get("/api/relationships/:id/values", async (req, res) => {
     console.log('GET /api/relationships/:id/values - Request received');
@@ -846,8 +920,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (columnName && record[columnName]) {
             await storage.createRelationshipAttributeValue({
               relationshipValueId: relationshipValue.id,
+
               attributeDefinitionId: Number(attributeId),
-              value: String(record[columnName])
+              value: String(record[columnName]),
+              createdAt: new Date(),
+              updatedAt: new Date()
             });
           }
         }
@@ -1025,6 +1102,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error('DELETE /api/relationships/attribute-values/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  // Add optimized endpoint for fetching pending relationship values
+  app.get("/api/approvals/relationship-values/pending", async (req, res) => {
+    console.log('GET /api/approvals/relationship-values/pending - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/approvals/relationship-values/pending - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      // Get all relationship values with PENDING status along with relationship info in a single query
+      const pendingValues = await db
+        .select({
+          id: relationshipValues.id,
+          relationshipId: relationshipValues.relationshipId,
+          sourceInstanceId: relationshipValues.sourceInstanceId,
+          targetInstanceId: relationshipValues.targetInstanceId,
+          approvalStatus: relationshipValues.approvalStatus,
+          history: relationshipValues.changeHistory,
+          // Join with relationships table
+          relationshipName: relationships.name,
+          sourceDataSetId: relationships.sourceDataSetId,
+          targetDataSetId: relationships.targetDataSetId,
+        })
+        .from(relationshipValues)
+        .innerJoin(
+          relationships,
+          eq(relationshipValues.relationshipId, relationships.id)
+        )
+        .where(eq(relationshipValues.approvalStatus, "PENDING"))
+        .limit(50); // Add pagination limit
+
+      // Batch fetch required datasets
+      const dataSetIds = new Set([
+        ...pendingValues.map(v => v.sourceDataSetId),
+        ...pendingValues.map(v => v.targetDataSetId)
+      ]);
+      
+      const dataSets = await Promise.all(
+        Array.from(dataSetIds).map(id => storage.getReferenceDataSet(id))
+      );
+      
+      // Create a map for quick dataset lookup  
+      const dataSetMap = new Map(
+        dataSets.filter(ds => ds !== null).map(ds => [ds.id, ds])
+      );
+
+      // Enhance values with dataset info
+      const enhancedValues = pendingValues.map(value => ({
+        id: value.id,
+        relationshipId: value.relationshipId,
+        relationshipName: value.relationshipName,
+        sourceInstanceId: value.sourceInstanceId,
+        targetInstanceId: value.targetInstanceId,
+        history: value.history,
+        sourceDataSet: {
+          id: value.sourceDataSetId,
+          name: dataSetMap.get(value.sourceDataSetId)?.name || '',
+          data: dataSetMap.get(value.sourceDataSetId)?.data || {}
+        },
+        targetDataSet: {
+          id: value.targetDataSetId,
+          name: dataSetMap.get(value.targetDataSetId)?.name || '',
+          data: dataSetMap.get(value.targetDataSetId)?.data || {}
+        }
+      }));
+
+      console.log('GET /api/approvals/relationship-values/pending - Values fetched successfully:', enhancedValues.length);
+      res.json(enhancedValues);
+    } catch (error) {
+      console.error('GET /api/approvals/relationship-values/pending - Error:', error);
       res.status(500).json({ error: String(error) });
     }
   });
