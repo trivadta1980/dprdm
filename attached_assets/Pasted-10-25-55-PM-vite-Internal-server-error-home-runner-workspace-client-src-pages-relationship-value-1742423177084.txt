@@ -1,0 +1,34 @@
+10:25:55 PM [vite] Internal server error: /home/runner/workspace/client/src/pages/relationship-values-page.tsx: Expected corresponding JSX closing tag for <Card>. (982:8)
+
+  980 |             </DialogContent>
+  981 |           </Dialog>
+> 982 |         </div>
+      |         ^
+  983 |       </MainLayout>
+  984 |     );
+  985 | }
+  Plugin: vite:react-babel
+  File: /home/runner/workspace/client/src/pages/relationship-values-page.tsx:982:8
+  980|              </DialogContent>
+  981|            </Dialog>
+  982|          </div>
+     |          ^
+  983|        </MainLayout>
+  984|      );
+      at toParseError (/home/runner/workspace/node_modules/@babel/parser/src/parse-error.ts:95:45)
+      at raise (/home/runner/workspace/node_modules/@babel/parser/src/tokenizer/index.ts:1497:19)
+      at jsxParseElementAt (/home/runner/workspace/node_modules/@babel/parser/src/plugins/jsx/index.ts:527:18)
+      at jsxParseElementAt (/home/runner/workspace/node_modules/@babel/parser/src/plugins/jsx/index.ts:483:34)
+      at jsxParseElementAt (/home/runner/workspace/node_modules/@babel/parser/src/plugins/jsx/index.ts:483:34)
+      at jsxParseElement (/home/runner/workspace/node_modules/@babel/parser/src/plugins/jsx/index.ts:559:19)
+      at parseExprAtom (/home/runner/workspace/node_modules/@babel/parser/src/plugins/jsx/index.ts:573:21)
+      at parseExprSubscripts (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:714:23)
+      at parseUpdate (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:693:21)
+      at parseMaybeUnary (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:655:23)
+      at parseMaybeUnary (/home/runner/workspace/node_modules/@babel/parser/src/plugins/typescript/index.ts:3735:20)
+      at parseMaybeUnaryOrPrivate (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:389:14)
+      at parseExprOps (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:401:23)
+      at parseMaybeConditional (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:356:23)
+      at parseMaybeAssign (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:298:21)
+      at fn (/home/runner/workspace/node_modules/@babel/parser/src/plugins/typescript/index.ts:3588:23)
+      at tryParse (/home/runner/workspace/node_modules/@babel/parser/src/pa
