@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Check, X, History, FileText, CheckSquare, Search, Filter, Pencil } from "lucide-react";
+import { Loader2, Check, X, History, FileText, CheckSquare, Search, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -32,8 +32,6 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { addDays } from "date-fns";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
-import { EditRelationshipValueDialog } from "@/components/ui/edit-relationship-value-dialog";
-
 
 // ... existing interfaces ...
 
@@ -347,9 +345,6 @@ export default function ApprovalsDashboard() {
     bulkApproveRelationshipsMutation.mutate(selectedValues);
   };
 
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingRelationshipValue, setEditingRelationshipValue] = useState<PendingRelationshipValue | null>(null);
-
   if (isLoadingDatasets || isLoadingRelationships) {
     return (
       <MainLayout>
@@ -636,7 +631,6 @@ export default function ApprovalsDashboard() {
                           <TableHead>Status</TableHead>
                           <TableHead>Changes</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
-                          <TableHead>Edit</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -751,19 +745,6 @@ export default function ApprovalsDashboard() {
                                 Reject
                               </Button>
                             </TableCell>
-                            <TableCell>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setEditingRelationshipValue(item);
-                                  setEditDialogOpen(true);
-                                }}
-                              >
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Edit
-                              </Button>
-                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -843,11 +824,6 @@ export default function ApprovalsDashboard() {
             </div>
           </DialogContent>
         </Dialog>
-        <EditRelationshipValueDialog
-          open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
-          relationshipValue={editingRelationshipValue}
-        />
       </div>
     </MainLayout>
   );
