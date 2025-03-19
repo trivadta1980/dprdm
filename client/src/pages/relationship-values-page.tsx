@@ -2,6 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -272,6 +273,78 @@ export default function RelationshipValuesPage() {
       });
     },
   });
+
+  // Add new mutation for submitting for approval
+  const submitForApprovalMutation = useMutation({
+    mutationFn: async (valueId: number) => {
+      const response = await apiRequest(`/api/relationships/${id}/values/${valueId}/submit`, {
+        method: "POST"
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
+      toast({
+        title: "Success",
+        description: "Relationship value submitted for approval",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit relationship value for approval",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Add new mutations for approving and rejecting
+  const approveMutation = useMutation({
+    mutationFn: async (valueId: number) => {
+      const response = await apiRequest(`/api/relationships/${id}/values/${valueId}/approve`, {
+        method: "POST"
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
+      toast({
+        title: "Success",
+        description: "Relationship value approved",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to approve relationship value",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async (valueId: number) => {
+      const response = await apiRequest(`/api/relationships/${id}/values/${valueId}/reject`, {
+        method: "POST"
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
+      toast({
+        title: "Success",
+        description: "Relationship value rejected",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reject relationship value",
+        variant: "destructive",
+      });
+    },
+  });
+
 
   function handleDelete(valueId: number) {
     setValueToDelete(valueId);
@@ -593,6 +666,7 @@ export default function RelationshipValuesPage() {
                   <TableRow>
                     <TableHead>Source Instance</TableHead>
                     <TableHead>Target Instance</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -613,7 +687,54 @@ export default function RelationshipValuesPage() {
                           relationship?.targetField
                         )}
                       </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            value.approvalStatus === "APPROVED"
+                              ? "success"
+                              : value.approvalStatus === "REJECTED"
+                              ? "destructive"
+                              : value.approvalStatus === "PENDING"
+                              ? "warning"
+                              : "secondary"
+                          }
+                        >
+                          {value.approvalStatus || "DRAFT"}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-right space-x-2">
+                        {value.approvalStatus === "DRAFT" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => submitForApprovalMutation.mutate(value.id)}
+                            disabled={submitForApprovalMutation.isPending}
+                          >
+                            Submit for Approval
+                          </Button>
+                        )}
+                        {value.approvalStatus === "PENDING" && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-green-50 hover:bg-green-100"
+                              onClick={() => approveMutation.mutate(value.id)}
+                              disabled={approveMutation.isPending}
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-red-50 hover:bg-red-100"
+                              onClick={() => rejectMutation.mutate(value.id)}
+                              disabled={rejectMutation.isPending}
+                            >
+                              Reject
+                            </Button>
+                          </>
+                        )}
                         <Dialog onOpenChange={(open) => {
                           if (open) {
                             setSelectedValueId(value.id);
@@ -692,6 +813,7 @@ export default function RelationshipValuesPage() {
                           size="sm"
                           onClick={() => handleDelete(value.id)}
                           className="hover:bg-red-50"
+                          disabled={value.approvalStatus !== "DRAFT"}
                         >
                           <Trash2 className="h-4 w-4 text-red-600" />
                         </Button>

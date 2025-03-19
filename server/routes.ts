@@ -507,7 +507,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         stack: error.stack,
         type: error.constructor.name
       });
-      res.status(500).json({ 
+      res.status(500).json({
         error: "Failed to check dependencies",
         details: error.message
       });
@@ -1566,7 +1566,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               target: target.identity.toString(),
               type: relationship.type,
               properties: relationship.properties
-            });
+                        });
           }
         });
 
@@ -1694,9 +1694,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Convert nodes Set back to array
         const nodesArray = Array.from(nodes).map(node => JSON.parse(node));
 
-        res.json({ 
-          nodes: nodesArray, 
-          links 
+        res.json({
+          nodes: nodesArray,
+          links
         });
       } finally {
         await session.close();
@@ -1939,6 +1939,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json({ message: `${deletedCount} relationship values deleted successfully` });
     } catch (error) {
       console.error('DELETE /api/relationships/:id/values - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  // Add after existing relationship value routes
+  app.post("/api/relationships/:id/values/:valueId/submit", async (req, res) => {
+    console.log('POST /api/relationships/:id/values/:valueId/submit - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/relationships/:id/values/:valueId/submit - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const relationshipId = Number(req.params.id);
+      const valueId = Number(req.params.valueId);
+      const userId = req.user.id;
+
+      const value = await storage.submitRelationshipValueForApproval(valueId, userId);
+      console.log('POST /api/relationships/:id/values/:valueId/submit - Value submitted successfully');
+      res.json(value);
+    } catch (error) {
+      console.error('POST /api/relationships/:id/values/:valueId/submit - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.post("/api/relationships/:id/values/:valueId/approve", async (req, res) => {
+    console.log('POST /api/relationships/:id/values/:valueId/approve - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/relationships/:id/values/:valueId/approve - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const relationshipId = Number(req.params.id);
+      const valueId = Number(req.params.valueId);
+      const userId = req.user.id;
+      const comment = req.body.comment;
+
+      const value = await storage.approveRelationshipValue(valueId, userId, comment);
+      console.log('POST /api/relationships/:id/values/:valueId/approve - Value approved successfully');
+      res.json(value);
+    } catch (error) {
+      console.error('POST /api/relationships/:id/values/:valueId/approve - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.post("/api/relationships/:id/values/:valueId/reject", async (req, res) => {
+    console.log('POST /api/relationships/:id/values/:valueId/reject - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/relationships/:id/values/:valueId/reject - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const relationshipId = Number(req.params.id);
+      const valueId = Number(req.params.valueId);
+      const userId = req.user.id;
+      const comment = req.body.comment;
+
+      const value = await storage.rejectRelationshipValue(valueId, userId, comment);
+      console.log('POST /api/relationships/:id/values/:valueId/reject - Value rejected successfully');
+      res.json(value);
+    } catch (error) {
+      console.error('POST /api/relationships/:id/values/:valueId/reject - Error:', error);
       res.status(500).json({ error: String(error) });
     }
   });
