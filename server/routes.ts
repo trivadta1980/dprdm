@@ -792,6 +792,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/relationships/:id/values", async (req, res) => {
+    console.log('GET /api/relationships/:id/values - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/relationships/:id/values - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      const relationshipId = Number(req.params.id);
+      const status = req.query.status as string;
+
+      // Build the conditions array
+      const conditions = [eq(relationshipValues.relationshipId, relationshipId)];
+      
+      // Add status condition if status is specified and not 'all'
+      if (status && status !== 'all') {
+        conditions.push(eq(relationshipValues.approvalStatus, status));
+      }
+
+      // Query with status filter if provided
+      const values = await db
+        .select()
+        .from(relationshipValues)
+        .where(and(...conditions))
+        .orderBy(relationshipValues.createdAt);
+
+      console.log('GET /api/relationships/:id/values - Values fetched successfully');
+      res.json(values);
+    } catch (error) {
+      console.error('GET /api/relationships/:id/values - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   // Optimized endpoint for fetching pending relationship values
   app.get("/api/approvals/relationship-values/pending", async (req, res) => {
     console.log('GET /api/approvals/relationship-values/pending - Request received');

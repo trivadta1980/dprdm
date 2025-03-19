@@ -59,6 +59,7 @@ export default function RelationshipValuesPage() {
   });
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingValue, setEditingValue] = useState<RelationshipValue | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
   // Fetch relationship details
   const { data: relationship } = useQuery<Relationship>({
@@ -68,7 +69,16 @@ export default function RelationshipValuesPage() {
 
   // Fetch relationship values
   const { data: values = [] } = useQuery<RelationshipValue[]>({
-    queryKey: [`/api/relationships/${id}/values`],
+    queryKey: [`/api/relationships/${id}/values`, selectedStatus],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (selectedStatus !== "all") {
+        params.append("status", selectedStatus);
+      }
+      const response = await fetch(`/api/relationships/${id}/values?${params}`);
+      if (!response.ok) throw new Error("Failed to fetch values");
+      return response.json();
+    },
     enabled: !!id,
   });
 
@@ -691,6 +701,24 @@ export default function RelationshipValuesPage() {
             </div>
           </CardHeader>
           <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Select
+                  value={selectedStatus}
+                  onValueChange={setSelectedStatus}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="DRAFT">Draft</SelectItem>
+                    <SelectItem value="PENDING">Pending Approval</SelectItem>
+                    <SelectItem value="APPROVED">Approved</SelectItem>
+                    <SelectItem value="REJECTED">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             {values.length > 0 ? (
               <Table>
                 <TableHeader>
