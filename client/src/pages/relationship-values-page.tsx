@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, GitFork, Trash2, Upload, FileDown, Info } from "lucide-react";
+import { Plus, GitFork, Trash2, Upload, FileDown, Info, Pencil } from "lucide-react";
 import { useParams } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -298,7 +298,7 @@ export default function RelationshipValuesPage() {
     },
   });
 
-  // Add new mutations for approving and rejecting
+
   const approveMutation = useMutation({
     mutationFn: async (valueId: number) => {
       const response = await apiRequest(`/api/relationships/${id}/values/${valueId}/approve`, {
@@ -704,34 +704,29 @@ export default function RelationshipValuesPage() {
                       </TableCell>
                       <TableCell className="text-right space-x-2">
                         {value.approvalStatus === "DRAFT" && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => submitForApprovalMutation.mutate(value.id)}
-                            disabled={submitForApprovalMutation.isPending}
-                          >
-                            Submit for Approval
-                          </Button>
-                        )}
-                        {value.approvalStatus === "PENDING" && (
                           <>
                             <Button
                               variant="outline"
                               size="sm"
-                              className="bg-green-50 hover:bg-green-100"
-                              onClick={() => approveMutation.mutate(value.id)}
-                              disabled={approveMutation.isPending}
+                              onClick={() => submitForApprovalMutation.mutate(value.id)}
+                              disabled={submitForApprovalMutation.isPending}
                             >
-                              Approve
+                              <Upload className="h-4 w-4 mr-2" />
+                              Submit for Approval
                             </Button>
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
-                              className="bg-red-50 hover:bg-red-100"
-                              onClick={() => rejectMutation.mutate(value.id)}
-                              disabled={rejectMutation.isPending}
+                              onClick={() => {
+                                // TODO: Add edit functionality
+                                toast({
+                                  title: "Edit Feature",
+                                  description: "Edit functionality will be implemented soon",
+                                });
+                              }}
+                              className="hover:bg-blue-50"
                             >
-                              Reject
+                              <Pencil className="h-4 w-4 text-blue-600" />
                             </Button>
                           </>
                         )}
