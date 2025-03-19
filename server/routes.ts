@@ -13,7 +13,7 @@ import {
   crosswalkMappings,
   relationshipValues
 } from "@shared/schema";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 import { db } from './db';
@@ -770,7 +770,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add after the existing relationship values routes
   app.get("/api/relationships/:id/values/:valueId/attributes", async (req, res) => {
     console.log('GET /api/relationships/:id/values/:valueId/attributes - Request received');
     if (!req.isAuthenticated()) {
@@ -1556,8 +1555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               id: target.identity.toString(),
               label: target.labels[0],
               properties: properties,
-              color: nodeColors[target.labels[0]] || '#4285F4',
-              val: target.labels[0] === 'DataSet' ? 15 : 10
+              color: nodeColors[target.labels[0]] || '#4285F4',              val: target.labels[0] === 'DataSet' ? 15 : 10
             });
           }
 
@@ -1944,7 +1942,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add after existing relationship value routes
+  // Add after existing approval routes
+  app.get("/api/approvals/relationship-values/pending", async (req, res) => {
+    console.log('GET /api/approvals/relationship-values/pending - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/approvals/relationship-values/pending - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      // Get all relationship values with PENDING status
+      const pendingValues = await db
+        .select({
+          id: relationshipValues.id,
+          relationshipId: relationshipValues.relationshipId,
+          sourceInstanceId: relationshipValues.sourceInstanceId,
+          targetInstanceId: relationshipValues.targetInstanceId,
+          approvalStatus: relationshipValues.approvalStatus,
+          history: relationshipValues.changeHistory,
+        })
+        .from(relationshipValues)
+        .where(eq(relationshipValues.approvalStatus, "PENDING"));
+
+      // Enhance with relationship and dataset information
+      const enhancedValues = [];
+      for (const value of pendingValues) {
+        try {
+          const relationship = await storage.getRelationship(value.relationshipId);
+          if (!relationship) {
+            console.log(`Relationship not found for id: ${value.relationshipId}`);
+            continue;
+          }
+
+          const sourceDataSet = await storage.getReferenceDataSet(relationship.sourceDataSetId);
+          const targetDataSet = await storage.getReferenceDataSet(relationship.targetDataSetId);
+
+          if (!sourceDataSet || !targetDataSet) {
+            console.log(`Missing dataset for relationship: ${value.relationshipId}`);
+            continue;
+          }
+
+          enhancedValues.push({
+            ...value,
+            relationshipName: relationship.name,
+            sourceDataSet: {
+              id: sourceDataSet.id,
+              name: sourceDataSet.name,
+              data: sourceDataSet.data
+            },
+            targetDataSet: {
+              id: targetDataSet.id,
+              name: targetDataSet.name,
+              data: targetDataSet.data
+            }
+          });
+        } catch (enhanceError) {
+          console.error('Error enhancing relationship value:', enhanceError);
+          // Skip this item but continue processing others
+          continue;
+        }
+      }
+
+      console.log('GET /api/approvals/relationship-values/pending - Values fetched successfully:', enhancedValues.length);
+      res.json(enhancedValues);
+    } catch (error) {
+      console.error('GET /api/approvals/relationship-values/pending - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   app.post("/api/relationships/:id/values/:valueId/submit", async (req, res) => {
     console.log('POST /api/relationships/:id/values/:valueId/submit - Request received');
     if (!req.isAuthenticated()) {
@@ -2030,13 +2096,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(relationshipValues.approvalStatus, "PENDING"));
 
       // Enhance with relationship and dataset information
-      const enhancedValues = await Promise.all(
-        pendingValues.map(async (value) => {
+      const enhancedValues = [];
+      for (const value of pendingValues) {
+        try {
           const relationship = await storage.getRelationship(value.relationshipId);
+          if (!relationship) {
+            console.log(`Relationship not found for id: ${value.relationshipId}`);
+            continue;
+          }
+
           const sourceDataSet = await storage.getReferenceDataSet(relationship.sourceDataSetId);
           const targetDataSet = await storage.getReferenceDataSet(relationship.targetDataSetId);
 
-          return {
+          if (!sourceDataSet || !targetDataSet) {
+            console.log(`Missing dataset for relationship: ${value.relationshipId}`);
+            continue;
+          }
+
+          enhancedValues.push({
             ...value,
             relationshipName: relationship.name,
             sourceDataSet: {
@@ -2049,18 +2126,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
               name: targetDataSet.name,
               data: targetDataSet.data
             }
-          };
-        })
-      );
+          });
+        } catch (enhanceError) {
+          console.error('Error enhancing relationship value:', enhanceError);
+          // Skip this item but continue processing others
+          continue;
+        }
+      }
 
-      console.log('GET /api/approvals/relationship-values/pending - Values fetched successfully');
+      console.log('GET /api/approvals/relationship-values/pending - Values fetched successfully:', enhancedValues.length);
       res.json(enhancedValues);
     } catch (error) {
       console.error('GET /api/approvals/relationship-values/pending - Error:', error);
       res.status(500).json({ error: String(error) });
     }
   });
-
 
   const httpServer = createServer(app);
   return httpServer;
