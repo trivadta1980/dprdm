@@ -826,6 +826,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add the bulk submit endpoint after the existing relationship value routes
+  app.post("/api/relationships/:id/values/bulk-submit", async (req, res) => {
+    console.log('POST /api/relationships/:id/values/bulk-submit - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/relationships/:id/values/bulk-submit - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      const { valueIds } = req.body;
+
+      if (!Array.isArray(valueIds) || valueIds.length === 0) {
+        return res.status(400).json({ error: "No values provided for bulk submission" });
+      }
+
+      // Get all values to check their status
+      const values = await db
+        .select()
+        .from(relationshipValues)
+        .where(sql`id = ANY(${valueIds})`);
+
+      // Check if all values are in DRAFT status
+      const nonDraftValues = values.filter(v => v.approvalStatus !== "DRAFT");
+      if (nonDraftValues.length > 0) {
+        return res.status(400).json({
+          error: "Some values are not in DRAFT status",
+          invalidIds: nonDraftValues.map(v => v.id)
+        });
+      }
+
+      // Update all values to PENDING status
+      await db
+        .update(relationshipValues)
+        .set({
+          approvalStatus: "PENDING",
+          updatedAt: new Date(),
+          changeHistory: sql`array_append(change_history, jsonb_build_object(
+            'timestamp', CURRENT_TIMESTAMP,
+            'changes', jsonb_build_array(
+              jsonb_build_object(
+                'field', 'approvalStatus',
+                'oldValue', 'DRAFT',
+                'newValue', 'PENDING'
+              )
+            )
+          ))`
+        })
+        .where(sql`id = ANY(${valueIds})`);
+
+      console.log(`POST /api/relationships/:id/values/bulk-submit - Successfully submitted ${valueIds.length} values`);
+      res.json({ success: true, count: valueIds.length });
+    } catch (error) {
+      console.error('POST /api/relationships/:id/values/bulk-submit - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   // Optimized endpoint for fetching pending relationship values
   app.get("/api/approvals/relationship-values/pending", async (req, res) => {
     console.log('GET /api/approvals/relationship-values/pending - Request received');

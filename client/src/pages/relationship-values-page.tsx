@@ -28,7 +28,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, GitFork, Trash2, Upload, FileDown, Info, Pencil } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, GitFork, Trash2, Upload, FileDown, Info, Pencil, ChevronDown } from "lucide-react";
 import { useParams } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -60,8 +67,10 @@ export default function RelationshipValuesPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingValue, setEditingValue] = useState<RelationshipValue | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
+  const [isBulkSubmitDialogOpen, setIsBulkSubmitDialogOpen] = useState(false);
 
-  // Fetch relationship details
+  // Fetch relationship details and data
   const { data: relationship } = useQuery<Relationship>({
     queryKey: [`/api/relationships/${id}`],
     enabled: !!id,
@@ -82,7 +91,6 @@ export default function RelationshipValuesPage() {
     enabled: !!id,
   });
 
-  // Fetch source and target datasets
   const { data: sourceDataSet } = useQuery<ReferenceDataSet>({
     queryKey: [`/api/reference-data/${relationship?.sourceDataSetId}`],
     enabled: !!relationship?.sourceDataSetId,
@@ -93,7 +101,6 @@ export default function RelationshipValuesPage() {
     enabled: !!relationship?.targetDataSetId,
   });
 
-  // Fetch available targets for selected source
   const { data: availableTargets = [] } = useQuery<Array<{ id: string; [key: string]: any }>>({
     queryKey: [`/api/relationships/${id}/values/available-targets`, selectedSource],
     queryFn: async () => {
@@ -106,26 +113,22 @@ export default function RelationshipValuesPage() {
     enabled: !!selectedSource,
   });
 
-  // Fetch attribute definitions
   const { data: attributeDefinitions = [] } = useQuery<RelationshipAttributeDefinition[]>({
     queryKey: [`/api/relationships/${id}/attribute-definitions`],
     enabled: !!id,
   });
 
-  // Add new query for attribute values
   const { data: attributeValues = [] } = useQuery<RelationshipAttributeValue[]>({
     queryKey: [`/api/relationships/${id}/values/${selectedValueId}/attributes`],
     enabled: !!selectedValueId,
   });
 
-  // Handle CSV file upload
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     setCsvFile(file);
 
-    // Read CSV headers
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target?.result as string;
@@ -135,7 +138,6 @@ export default function RelationshipValuesPage() {
     reader.readAsText(file);
   };
 
-  // Handle column mapping change
   const handleMappingChange = (field: string, value: string | null) => {
     if (!value) return;
 
@@ -156,7 +158,6 @@ export default function RelationshipValuesPage() {
     }
   };
 
-  // Import mutation
   const importMutation = useMutation({
     mutationFn: async () => {
       if (!csvFile || !columnMapping.sourceInstanceId || !columnMapping.targetInstanceId) {
@@ -200,7 +201,6 @@ export default function RelationshipValuesPage() {
     },
   });
 
-  // Create relationship value mutation
   const createMutation = useMutation({
     mutationFn: async () => {
       if (!selectedSource || !selectedTarget) return;
@@ -234,7 +234,6 @@ export default function RelationshipValuesPage() {
     },
   });
 
-  // Delete relationship value mutation
   const deleteMutation = useMutation({
     mutationFn: async (valueId: number) => {
       await apiRequest(`/api/relationships/${id}/values/${valueId}`, {
@@ -261,7 +260,6 @@ export default function RelationshipValuesPage() {
   const [valueToDelete, setValueToDelete] = useState<number | null>(null);
   const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
 
-  // Add new mutation for deleting all values
   const deleteAllMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest(`/api/relationships/${id}/values`, {
@@ -286,7 +284,6 @@ export default function RelationshipValuesPage() {
     },
   });
 
-  // Add new mutation for submitting for approval
   const submitForApprovalMutation = useMutation({
     mutationFn: async (valueId: number) => {
       const response = await apiRequest(`/api/relationships/${id}/values/${valueId}/submit`, {
@@ -309,7 +306,6 @@ export default function RelationshipValuesPage() {
       });
     },
   });
-
 
   const approveMutation = useMutation({
     mutationFn: async (valueId: number) => {
@@ -357,7 +353,6 @@ export default function RelationshipValuesPage() {
     },
   });
 
-  // Add edit mutation
   const editMutation = useMutation({
     mutationFn: async (data: { valueId: number; sourceInstanceId: string; targetInstanceId: string }) => {
       const response = await apiRequest(`/api/relationships/${id}/values/${data.valueId}`, {
@@ -387,6 +382,33 @@ export default function RelationshipValuesPage() {
     },
   });
 
+  const bulkSubmitMutation = useMutation({
+    mutationFn: async (valueIds: number[]) => {
+      const response = await apiRequest(`/api/relationships/${id}/values/bulk-submit`, {
+        method: "POST",
+        data: { valueIds }
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
+      setSelectedItems(new Set());
+      setIsBulkSubmitDialogOpen(false);
+      toast({
+        title: "Success",
+        description: `Successfully submitted ${selectedItems.size} items for approval`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit items for approval",
+        variant: "destructive",
+      });
+    },
+  });
+
+
   function handleDelete(valueId: number) {
     setValueToDelete(valueId);
     setDeleteDialogOpen(true);
@@ -414,7 +436,6 @@ export default function RelationshipValuesPage() {
     return instance && field in instance ? String(instance[field]) : instanceId;
   }
 
-  // Show loading state if any of the required data is still loading
   if (!relationship || !sourceDataSet || !targetDataSet || !attributeDefinitions) {
     return (
       <MainLayout>
@@ -425,7 +446,6 @@ export default function RelationshipValuesPage() {
     );
   }
 
-  // Show error state if relationship is not found
   if (!relationship) {
     return (
       <MainLayout>
@@ -443,6 +463,31 @@ export default function RelationshipValuesPage() {
     );
   }
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const draftValues = values.filter(v => v.approvalStatus === "DRAFT");
+      setSelectedItems(new Set(draftValues.map(v => v.id)));
+    } else {
+      setSelectedItems(new Set());
+    }
+  };
+
+  const toggleItemSelection = (valueId: number) => {
+    const newSelected = new Set(selectedItems);
+    if (newSelected.has(valueId)) {
+      newSelected.delete(valueId);
+    } else {
+      newSelected.add(valueId);
+    }
+    setSelectedItems(newSelected);
+  };
+
+  const handleBulkSubmit = () => {
+    if (selectedItems.size === 0) return;
+    bulkSubmitMutation.mutate(Array.from(selectedItems));
+  };
+
+
   return (
     <MainLayout>
       <div className="max-w-6xl mx-auto space-y-6">
@@ -453,18 +498,33 @@ export default function RelationshipValuesPage() {
               Relationship Values: {relationship?.name}
             </CardTitle>
             <div className="flex gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    disabled={selectedItems.size === 0}
+                  >
+                    Bulk Actions <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem
+                    onClick={() => setIsBulkSubmitDialogOpen(true)}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Submit Selected for Approval
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="outline" onClick={() => {
-                // Create and download template CSV
                 const headers = ['source_instance_id', 'target_instance_id'];
 
-                // Add attribute columns to headers
                 if (attributeDefinitions) {
                   attributeDefinitions.forEach(attr => {
                     headers.push(`attribute_${attr.name.toLowerCase().replace(/\s+/g, '_')}`);
                   });
                 }
 
-                // Create CSV content
                 const csvContent = headers.join(',');
                 const blob = new Blob([csvContent], { type: 'text/csv' });
                 const url = window.URL.createObjectURL(blob);
@@ -516,7 +576,6 @@ export default function RelationshipValuesPage() {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-
               <Dialog
                 open={isImportDialogOpen}
                 onOpenChange={setIsImportDialogOpen}
@@ -625,7 +684,6 @@ export default function RelationshipValuesPage() {
                   </div>
                 </DialogContent>
               </Dialog>
-
               <Dialog
                 open={isDialogOpen}
                 onOpenChange={(open) => {
@@ -724,6 +782,13 @@ export default function RelationshipValuesPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-[50px]">
+                        <Checkbox
+                          checked={values.filter(v => v.approvalStatus === "DRAFT").length > 0 &&
+                            values.filter(v => v.approvalStatus === "DRAFT").every(v => selectedItems.has(v.id))}
+                          onCheckedChange={handleSelectAll}
+                        />
+                      </TableHead>
                       <TableHead>Source Instance</TableHead>
                       <TableHead>Target Instance</TableHead>
                       <TableHead>Status</TableHead>
@@ -733,6 +798,14 @@ export default function RelationshipValuesPage() {
                   <TableBody>
                     {values.map((value) => (
                       <TableRow key={value.id}>
+                        <TableCell>
+                          {value.approvalStatus === "DRAFT" && (
+                            <Checkbox
+                              checked={selectedItems.has(value.id)}
+                              onCheckedChange={() => toggleItemSelection(value.id)}
+                            />
+                          )}
+                        </TableCell>
                         <TableCell>
                           {getInstanceDisplayValue(
                             value.sourceInstanceId,
@@ -913,8 +986,7 @@ export default function RelationshipValuesPage() {
           open={isEditDialogOpen}
           onOpenChange={(open) => {
             if (!open) {
-              setEditingValue(null);
-            }
+              setEditingValue(null);            }
             setIsEditDialogOpen(open);
           }}
         >
@@ -975,6 +1047,33 @@ export default function RelationshipValuesPage() {
                 {editMutation.isPending ? "Updating..." : "Update Relationship Value"}
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+        <Dialog open={isBulkSubmitDialogOpen} onOpenChange={setIsBulkSubmitDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Submit Items for Approval</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to submit {selectedItems.size} items for approval?
+                This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsBulkSubmitDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleBulkSubmit}
+                disabled={bulkSubmitMutation.isPending}
+              >
+                {bulkSubmitMutation.isPending
+                  ? "Submitting..."
+                  : `Submit ${selectedItems.size} Items`}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
