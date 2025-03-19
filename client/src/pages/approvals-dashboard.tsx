@@ -31,6 +31,7 @@ import { Input } from "@/components/ui/input";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { addDays } from "date-fns";
 import { useState } from "react";
+import { DateRange } from "react-day-picker";
 
 // ... existing interfaces ...
 
