@@ -881,104 +881,103 @@ export default function RelationshipValuesPage() {
               )}
             </div>
           </CardContent>
-          {/* Add confirmation dialog */}
-          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Delete Relationship Value</DialogTitle>
-                <DialogDescription>
-                  Are you sure you want to delete this relationship value?
-                  This will also delete all associated attribute values.
-                  This action cannot be undone.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setDeleteDialogOpen(false)}
+        </Card>
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Relationship Value</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this relationship value?
+                This will also delete all associated attribute values.
+                This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDelete}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        <Dialog
+          open={isEditDialogOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              setEditingValue(null);
+            }
+            setIsEditDialogOpen(open);
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Relationship Value</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div>
+                <label className="text-sm font-medium">Source Instance</label>
+                <Select
+                  value={editingValue?.sourceInstanceId || ""}
+                  onValueChange={(value) => setEditingValue(prev => prev ? { ...prev, sourceInstanceId: value } : null)}
                 >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={confirmDelete}
-                  disabled={deleteMutation.isPending}
-                >
-                  {deleteMutation.isPending ? "Deleting..." : "Delete"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          {/* Add Edit Dialog */}
-          <Dialog
-            open={isEditDialogOpen}
-            onOpenChange={(open) => {
-              if (!open) {
-                setEditingValue(null);
-              }
-              setIsEditDialogOpen(open);
-            }}
-          >
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Edit Relationship Value</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <div>
-                  <label className="text-sm font-medium">Source Instance</label>
-                  <Select
-                    value={editingValue?.sourceInstanceId || ""}
-                    onValueChange={(value) => setEditingValue(prev => prev ? { ...prev, sourceInstanceId: value } : null)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select source instance" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sourceDataSet && Object.entries(sourceDataSet.data).map(([id, data]) => (
-                        <SelectItem key={id} value={id}>
-                          {getInstanceDisplayValue(id, sourceDataSet, relationship?.sourceField)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Target Instance</label>
-                  <Select
-                    value={editingValue?.targetInstanceId || ""}
-                    onValueChange={(value) => setEditingValue(prev => prev ? { ...prev, targetInstanceId: value } : null)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select target instance" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {targetDataSet && Object.entries(targetDataSet.data).map(([id, data]) => (
-                        <SelectItem key={id} value={id}>
-                          {getInstanceDisplayValue(id, targetDataSet, relationship?.targetField)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button
-                  className="w-full"
-                  onClick={() => {
-                    if (editingValue) {
-                      editMutation.mutate({
-                        valueId: editingValue.id,
-                        sourceInstanceId: editingValue.sourceInstanceId,
-                        targetInstanceId: editingValue.targetInstanceId,
-                      });
-                    }
-                  }}
-                  disabled={!editingValue || editMutation.isPending}
-                >
-                  {editMutation.isPending ? "Updating..." : "Update Relationship Value"}
-                </Button>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select source instance" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sourceDataSet && Object.entries(sourceDataSet.data).map(([id, data]) => (
+                      <SelectItem key={id} value={id}>
+                        {getInstanceDisplayValue(id, sourceDataSet, relationship?.sourceField)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </MainLayout>
-    );
-  }
+              <div>
+                <label className="text-sm font-medium">Target Instance</label>
+                <Select
+                  value={editingValue?.targetInstanceId || ""}
+                  onValueChange={(value) => setEditingValue(prev => prev ? { ...prev, targetInstanceId: value } : null)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select target instance" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {targetDataSet && Object.entries(targetDataSet.data).map(([id, data]) => (
+                      <SelectItem key={id} value={id}>
+                        {getInstanceDisplayValue(id, targetDataSet, relationship?.targetField)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                className="w-full"
+                onClick={() => {
+                  if (editingValue) {
+                    editMutation.mutate({
+                      valueId: editingValue.id,
+                      sourceInstanceId: editingValue.sourceInstanceId,
+                      targetInstanceId: editingValue.targetInstanceId,
+                    });
+                  }
+                }}
+                disabled={!editingValue || editMutation.isPending}
+              >
+                {editMutation.isPending ? "Updating..." : "Update Relationship Value"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </MainLayout>
+  );
+}
