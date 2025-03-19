@@ -44,6 +44,7 @@ export default function ApprovalsDashboard() {
   const [activeTab, setActiveTab] = useState("dataset-instances");
   const [relationshipPage, setRelationshipPage] = useState(1);
   const [relationshipPageSize, setRelationshipPageSize] = useState(50);
+  const [selectedRelationshipValues, setSelectedRelationshipValues] = useState<Set<number>>(new Set());
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -214,7 +215,6 @@ export default function ApprovalsDashboard() {
     },
   });
 
-
   // Bulk approval mutations
   const bulkApproveDatasetsMutation = useMutation({
     mutationFn: async (approvals: PendingApproval[]) => {
@@ -239,6 +239,35 @@ export default function ApprovalsDashboard() {
       toast({
         title: "Error",
         description: error.message || "Failed to approve selected instances",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Add bulk approve mutation for relationship values
+  const bulkApproveRelationshipsMutation = useMutation({
+    mutationFn: async (values: PendingRelationshipValue[]) => {
+      const results = [];
+      for (const value of values) {
+        const response = await apiRequest(`/api/relationships/${value.relationshipId}/values/${value.id}/approve`, {
+          method: "POST"
+        });
+        results.push(await response.json());
+      }
+      return results;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
+      toast({
+        title: "Bulk Approval Success",
+        description: "Selected relationship values have been approved successfully.",
+      });
+      setSelectedRelationshipValues(new Set());
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to approve selected relationship values",
         variant: "destructive",
       });
     },
@@ -278,6 +307,42 @@ export default function ApprovalsDashboard() {
     );
 
     bulkApproveDatasetsMutation.mutate(selectedApprovals);
+  };
+
+  const handleSelectAllRelationships = (checked: boolean) => {
+    if (checked) {
+      const allIds = pendingRelationshipValues.map(item => item.id);
+      setSelectedRelationshipValues(new Set(allIds));
+    } else {
+      setSelectedRelationshipValues(new Set());
+    }
+  };
+
+  const handleSelectRelationshipValue = (id: number, checked: boolean) => {
+    const newSelected = new Set(selectedRelationshipValues);
+    if (checked) {
+      newSelected.add(id);
+    } else {
+      newSelected.delete(id);
+    }
+    setSelectedRelationshipValues(newSelected);
+  };
+
+  const handleBulkApproveRelationships = () => {
+    if (selectedRelationshipValues.size === 0) {
+      toast({
+        title: "No Selections",
+        description: "Please select relationship values to approve",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const selectedValues = pendingRelationshipValues.filter(
+      item => selectedRelationshipValues.has(item.id)
+    );
+
+    bulkApproveRelationshipsMutation.mutate(selectedValues);
   };
 
   if (isLoadingDatasets || isLoadingRelationships) {
@@ -536,52 +601,30 @@ export default function ApprovalsDashboard() {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-muted-foreground">
-                        Showing {(relationshipPage - 1) * relationshipPageSize + 1} to{" "}
-                        {Math.min(relationshipPage * relationshipPageSize, relationshipMetadata.totalCount)} of{" "}
-                        {relationshipMetadata.totalCount} pending approvals
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <select
-                          className="text-sm border rounded-md p-1"
-                          value={relationshipPageSize}
-                          onChange={(e) => {
-                            setRelationshipPageSize(Number(e.target.value));
-                            setRelationshipPage(1);
-                          }}
-                        >
-                          <option value="25">25 per page</option>
-                          <option value="50">50 per page</option>
-                          <option value="100">100 per page</option>
-                        </select>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setRelationshipPage(p => Math.max(1, p - 1))}
-                            disabled={relationshipPage === 1}
-                          >
-                            Previous
-                          </Button>
-                          <div className="text-sm text-muted-foreground">
-                            Page {relationshipPage} of {relationshipMetadata.totalPages}
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setRelationshipPage(p => Math.min(relationshipMetadata.totalPages, p + 1))}
-                            disabled={relationshipPage === relationshipMetadata.totalPages}
-                          >
-                            Next
-                          </Button>
-                        </div>
-                      </div>
+                    <div className="flex justify-end">
+                      <Button
+                        onClick={handleBulkApproveRelationships}
+                        disabled={selectedRelationshipValues.size === 0 || bulkApproveRelationshipsMutation.isPending}
+                        className="bg-primary hover:bg-primary/90"
+                      >
+                        {bulkApproveRelationshipsMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <CheckSquare className="h-4 w-4 mr-2" />
+                        )}
+                        Approve Selected ({selectedRelationshipValues.size})
+                      </Button>
                     </div>
 
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="w-[50px]">
+                            <Checkbox
+                              checked={selectedRelationshipValues.size === pendingRelationshipValues.length}
+                              onCheckedChange={handleSelectAllRelationships}
+                            />
+                          </TableHead>
                           <TableHead>Relationship</TableHead>
                           <TableHead>Source Instance</TableHead>
                           <TableHead>Target Instance</TableHead>
@@ -593,6 +636,14 @@ export default function ApprovalsDashboard() {
                       <TableBody>
                         {pendingRelationshipValues.map((item) => (
                           <TableRow key={item.id}>
+                            <TableCell>
+                              <Checkbox
+                                checked={selectedRelationshipValues.has(item.id)}
+                                onCheckedChange={(checked) =>
+                                  handleSelectRelationshipValue(item.id, checked as boolean)
+                                }
+                              />
+                            </TableCell>
                             <TableCell>{item.relationshipName}</TableCell>
                             <TableCell>
                               <HoverCard>
@@ -698,27 +749,47 @@ export default function ApprovalsDashboard() {
                         ))}
                       </TableBody>
                     </Table>
-
-                    <div className="flex items-center justify-end space-x-2 py-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setRelationshipPage(p => Math.max(1, p - 1))}
-                        disabled={relationshipPage === 1}
-                      >
-                        Previous
-                      </Button>
+                    <div className="flex items-center justify-between">
                       <div className="text-sm text-muted-foreground">
-                        Page {relationshipPage} of {relationshipMetadata.totalPages}
+                        Showing {(relationshipPage - 1) * relationshipPageSize + 1} to{" "}
+                        {Math.min(relationshipPage * relationshipPageSize, relationshipMetadata.totalCount)} of{" "}
+                        {relationshipMetadata.totalCount} pending approvals
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setRelationshipPage(p => Math.min(relationshipMetadata.totalPages, p + 1))}
-                        disabled={relationshipPage === relationshipMetadata.totalPages}
-                      >
-                        Next
-                      </Button>
+                      <div className="flex items-center gap-4">
+                        <select
+                          className="text-sm border rounded-md p-1"
+                          value={relationshipPageSize}
+                          onChange={(e) => {
+                            setRelationshipPageSize(Number(e.target.value));
+                            setRelationshipPage(1);
+                          }}
+                        >
+                          <option value="25">25 per page</option>
+                          <option value="50">50 per page</option>
+                          <option value="100">100 per page</option>
+                        </select>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setRelationshipPage(p => Math.max(1, p - 1))}
+                            disabled={relationshipPage === 1}
+                          >
+                            Previous
+                          </Button>
+                          <div className="text-sm text-muted-foreground">
+                            Page {relationshipPage} of {relationshipMetadata.totalPages}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setRelationshipPage(p => Math.min(relationshipMetadata.totalPages, p + 1))}
+                            disabled={relationshipPage === relationshipMetadata.totalPages}
+                          >
+                            Next
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
