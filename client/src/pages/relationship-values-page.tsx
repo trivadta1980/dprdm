@@ -719,267 +719,267 @@ export default function RelationshipValuesPage() {
                   </SelectContent>
                 </Select>
               </div>
-            {values.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Source Instance</TableHead>
-                    <TableHead>Target Instance</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {values.map((value) => (
-                    <TableRow key={value.id}>
-                      <TableCell>
-                        {getInstanceDisplayValue(
-                          value.sourceInstanceId,
-                          sourceDataSet,
-                          relationship?.sourceField
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {getInstanceDisplayValue(
-                          value.targetInstanceId,
-                          targetDataSet,
-                          relationship?.targetField
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            value.approvalStatus === "APPROVED"
-                              ? "success"
-                              : value.approvalStatus === "REJECTED"
-                              ? "destructive"
-                              : value.approvalStatus === "PENDING"
-                              ? "warning"
-                              : "secondary"
-                          }
-                        >
-                          {value.approvalStatus || "DRAFT"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right space-x-2">
-                        {value.approvalStatus !== "PENDING" && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setEditingValue(value);
-                              setIsEditDialogOpen(true);
-                            }}
-                            className="hover:bg-blue-50"
+
+              {values.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Source Instance</TableHead>
+                      <TableHead>Target Instance</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {values.map((value) => (
+                      <TableRow key={value.id}>
+                        <TableCell>
+                          {getInstanceDisplayValue(
+                            value.sourceInstanceId,
+                            sourceDataSet,
+                            relationship?.sourceField
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {getInstanceDisplayValue(
+                            value.targetInstanceId,
+                            targetDataSet,
+                            relationship?.targetField
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              value.approvalStatus === "APPROVED"
+                                ? "success"
+                                : value.approvalStatus === "REJECTED"
+                                ? "destructive"
+                                : value.approvalStatus === "PENDING"
+                                ? "warning"
+                                : "secondary"
+                            }
                           >
-                            <Pencil className="h-4 w-4 text-blue-600" />
-                          </Button>
-                        )}
-                        {value.approvalStatus === "DRAFT" && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => submitForApprovalMutation.mutate(value.id)}
-                            disabled={submitForApprovalMutation.isPending}
-                          >
-                            <Upload className="h-4 w-4 mr-2" />
-                            Submit for Approval
-                          </Button>
-                        )}
-                        <Dialog onOpenChange={(open) => {
-                          if (open) {
-                            setSelectedValueId(value.id);
-                          } else {
-                            setSelectedValueId(null);
-                          }
-                        }}>
-                          <DialogTrigger asChild>
+                            {value.approvalStatus || "DRAFT"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right space-x-2">
+                          {value.approvalStatus !== "PENDING" && (
                             <Button
                               variant="ghost"
                               size="sm"
+                              onClick={() => {
+                                setEditingValue(value);
+                                setIsEditDialogOpen(true);
+                              }}
                               className="hover:bg-blue-50"
                             >
-                              <Info className="h-4 w-4 text-blue-600" />
+                              <Pencil className="h-4 w-4 text-blue-600" />
                             </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Attribute Values</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <h3 className="text-sm font-medium mb-2">Relationship Details</h3>
-                                <div className="space-y-2">
-                                  <p>
-                                    <span className="font-medium">Source:</span>{" "}
-                                    {getInstanceDisplayValue(
-                                      value.sourceInstanceId,
-                                      sourceDataSet,
-                                      relationship?.sourceField
-                                    )}
-                                  </p>
-                                  <p>
-                                    <span className="font-medium">Target:</span>{" "}
-                                    {getInstanceDisplayValue(
-                                      value.targetInstanceId,
-                                      targetDataSet,
-                                      relationship?.targetField
-                                    )}
-                                  </p>
+                          )}
+                          {value.approvalStatus === "DRAFT" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => submitForApprovalMutation.mutate(value.id)}
+                              disabled={submitForApprovalMutation.isPending}
+                            >
+                              <Upload className="h-4 w-4 mr-2" />
+                              Submit for Approval
+                            </Button>
+                          )}
+                          <Dialog onOpenChange={(open) => {
+                            if (open) {
+                              setSelectedValueId(value.id);
+                            } else {
+                              setSelectedValueId(null);
+                            }
+                          }}>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="hover:bg-blue-50"
+                              >
+                                <Info className="h-4 w-4 text-blue-600" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Attribute Values</DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <h3 className="text-sm font-medium mb-2">Relationship Details</h3>
+                                  <div className="space-y-2">
+                                    <p>
+                                      <span className="font-medium">Source:</span>{" "}
+                                      {getInstanceDisplayValue(
+                                        value.sourceInstanceId,
+                                        sourceDataSet,
+                                        relationship?.sourceField
+                                      )}
+                                    </p>
+                                    <p>
+                                      <span className="font-medium">Target:</span>{" "}
+                                      {getInstanceDisplayValue(
+                                        value.targetInstanceId,
+                                        targetDataSet,
+                                        relationship?.targetField
+                                      )}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div>
+                                  <h3 className="text-sm font-medium mb-2">Attributes</h3>
+                                  {attributeValues.length > 0 ? (
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow>
+                                          <TableHead>Attribute</TableHead>
+                                          <TableHead>Value</TableHead>
+                                        </TableRow>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {attributeValues.map((attrValue) => {
+                                          const definition = attributeDefinitions.find(
+                                            (def) => def.id === attrValue.attributeDefinitionId
+                                          );
+                                          return (
+                                            <TableRow key={attrValue.id}>
+                                              <TableCell>{definition?.name || 'Unknown'}</TableCell>
+                                              <TableCell>{attrValue.value}</TableCell>
+                                            </TableRow>
+                                          );
+                                        })}
+                                      </TableBody>
+                                    </Table>
+                                  ) : (
+                                    <p className="text-gray-500">No attribute values defined.</p>
+                                  )}
                                 </div>
                               </div>
-                              <div>
-                                <h3 className="text-sm font-medium mb-2">Attributes</h3>
-                                {attributeValues.length > 0 ? (
-                                  <Table>
-                                    <TableHeader>
-                                      <TableRow>
-                                        <TableHead>Attribute</TableHead>
-                                        <TableHead>Value</TableHead>
-                                      </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                      {attributeValues.map((attrValue) => {
-                                        const definition = attributeDefinitions.find(
-                                          (def) => def.id === attrValue.attributeDefinitionId
-                                        );
-                                        return (
-                                          <TableRow key={attrValue.id}>
-                                            <TableCell>{definition?.name || 'Unknown'}</TableCell>
-                                            <TableCell>{attrValue.value}</TableCell>
-                                          </TableRow>
-                                        );
-                                      })}
-                                    </TableBody>
-                                  </Table>
-                                ) : (
-                                  <p className="text-gray-500">No attribute values defined.</p>
-                                )}
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(value.id)}
-                          className="hover:bg-red-50"
-                          disabled={value.approvalStatus !== "DRAFT"}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <GitFork className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p>No relationship values defined yet.</p>
-                <p className="text-sm">Click the "New Value" button to create one.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        {/* Add confirmation dialog */}
-        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete Relationship Value</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete this relationship value?
-                This will also delete all associated attribute values.
-                This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setDeleteDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={confirmDelete}
-                disabled={deleteMutation.isPending}
-              >
-                {deleteMutation.isPending ? "Deleting..." : "Delete"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        {/* Add Edit Dialog */}
-        <Dialog
-          open={isEditDialogOpen}
-          onOpenChange={(open) => {
-            if (!open) {
-              setEditingValue(null);
-            }
-            setIsEditDialogOpen(open);
-          }}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Relationship Value</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-4">
-              <div>
-                <label className="text-sm font-medium">Source Instance</label>
-                <Select
-                  value={editingValue?.sourceInstanceId || ""}
-                  onValueChange={(value) => setEditingValue(prev => prev ? { ...prev, sourceInstanceId: value } : null)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select source instance" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sourceDataSet && Object.entries(sourceDataSet.data).map(([id, data]) => (
-                      <SelectItem key={id} value={id}>
-                        {getInstanceDisplayValue(id, sourceDataSet, relationship?.sourceField)}
-                      </SelectItem>
+                            </DialogContent>
+                          </Dialog>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(value.id)}
+                            className="hover:bg-red-50"
+                            disabled={value.approvalStatus !== "DRAFT"}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Target Instance</label>
-                <Select
-                  value={editingValue?.targetInstanceId || ""}
-                  onValueChange={(value) => setEditingValue(prev => prev ? { ...prev, targetInstanceId: value } : null)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select target instance" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {targetDataSet && Object.entries(targetDataSet.data).map(([id, data]) => (
-                      <SelectItem key={id} value={id}>
-                        {getInstanceDisplayValue(id, targetDataSet, relationship?.targetField)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button
-                className="w-full"
-                onClick={() => {
-                  if (editingValue) {
-                    editMutation.mutate({
-                      valueId: editingValue.id,
-                      sourceInstanceId: editingValue.sourceInstanceId,
-                      targetInstanceId: editingValue.targetInstanceId,
-                    });
-                  }
-                }}
-                disabled={!editingValue || editMutation.isPending}
-              >
-                {editMutation.isPending ? "Updating..." : "Update Relationship Value"}
-              </Button>
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground">No relationship values found.</p>
+                </div>
+              )}
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </MainLayout>
-  );
+          </CardContent>
+
+          {/* Add confirmation dialog */}
+          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete Relationship Value</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete this relationship value?
+                  This will also delete all associated attribute values.
+                  This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={confirmDelete}
+                  disabled={deleteMutation.isPending}
+                >
+                  {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          {/* Add Edit Dialog */}
+          <Dialog
+            open={isEditDialogOpen}
+            onOpenChange={(open) => {
+              if (!open) {
+                setEditingValue(null);
+              }
+              setIsEditDialogOpen(open);
+            }}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Relationship Value</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <div>
+                  <label className="text-sm font-medium">Source Instance</label>
+                  <Select
+                    value={editingValue?.sourceInstanceId || ""}
+                    onValueChange={(value) => setEditingValue(prev => prev ? { ...prev, sourceInstanceId: value } : null)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select source instance" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sourceDataSet && Object.entries(sourceDataSet.data).map(([id, data]) => (
+                        <SelectItem key={id} value={id}>
+                          {getInstanceDisplayValue(id, sourceDataSet, relationship?.sourceField)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Target Instance</label>
+                  <Select
+                    value={editingValue?.targetInstanceId || ""}
+                    onValueChange={(value) => setEditingValue(prev => prev ? { ...prev, targetInstanceId: value } : null)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select target instance" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {targetDataSet && Object.entries(targetDataSet.data).map(([id, data]) => (
+                        <SelectItem key={id} value={id}>
+                          {getInstanceDisplayValue(id, targetDataSet, relationship?.targetField)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    if (editingValue) {
+                      editMutation.mutate({
+                        valueId: editingValue.id,
+                        sourceInstanceId: editingValue.sourceInstanceId,
+                        targetInstanceId: editingValue.targetInstanceId,
+                      });
+                    }
+                  }}
+                  disabled={!editingValue || editMutation.isPending}
+                >
+                  {editMutation.isPending ? "Updating..." : "Update Relationship Value"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </MainLayout>
+    );
 }
