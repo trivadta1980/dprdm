@@ -881,7 +881,6 @@ export default function RelationshipValuesPage() {
               )}
             </div>
           </CardContent>
-
           {/* Add confirmation dialog */}
           <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
             <DialogContent>
@@ -982,4 +981,4 @@ export default function RelationshipValuesPage() {
         </div>
       </MainLayout>
     );
-}
+  }
