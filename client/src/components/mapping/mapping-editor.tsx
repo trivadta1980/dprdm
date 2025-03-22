@@ -72,7 +72,6 @@ export function MappingEditor({
   const { toast } = useToast();
   const [newSourceValue, setNewSourceValue] = useState("");
   const [newTargetValue, setNewTargetValue] = useState("");
-  const [newConfidence, setNewConfidence] = useState<number>(0.7);
   const [sourceFilter, setSourceFilter] = useState("");
   const [targetFilter, setTargetFilter] = useState("");
   const [confidenceOperator, setConfidenceOperator] = useState<"gt" | "lt" | "eq">("gt");
@@ -145,10 +144,39 @@ export function MappingEditor({
       return;
     }
     
+    // Calculate confidence automatically based on the source and target values
+    // This is a simple algorithm that could be replaced with a more sophisticated one
+    // For example, string similarity, domain-specific logic, etc.
+    
+    // Simple algorithm: Check if the strings contain each other
+    let calculatedConfidence = 0.7; // Default medium confidence
+    
+    // Calculate string similarity
+    const sourceStr = newSourceValue.toLowerCase();
+    const targetStr = newTargetValue.toLowerCase();
+    
+    if (sourceStr === targetStr) {
+      // Exact match (ignoring case)
+      calculatedConfidence = 1.0;
+    } else if (sourceStr.includes(targetStr) || targetStr.includes(sourceStr)) {
+      // One contains the other
+      calculatedConfidence = 0.9;
+    } else {
+      // Calculate edit distance-based similarity
+      const maxLength = Math.max(sourceStr.length, targetStr.length);
+      const commonChars = sourceStr.split('').filter(char => targetStr.includes(char)).length;
+      
+      if (maxLength > 0) {
+        const similarityRatio = commonChars / maxLength;
+        // Scale between 0.5 and 0.85 based on character overlap
+        calculatedConfidence = 0.5 + (similarityRatio * 0.35);
+      }
+    }
+    
     const newMapping: MappingItem = {
       sourceValue: newSourceValue,
       targetValue: newTargetValue,
-      confidence: newConfidence,
+      confidence: calculatedConfidence,
       id: Date.now().toString(),
     };
     
@@ -158,7 +186,6 @@ export function MappingEditor({
     // Reset form
     setNewSourceValue("");
     setNewTargetValue("");
-    setNewConfidence(0.7);
     
     toast({
       title: "Success",
@@ -522,17 +549,11 @@ export function MappingEditor({
               
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <Label htmlFor="confidence">Confidence ({(newConfidence * 100).toFixed(0)}%)</Label>
+                  <Label>Confidence will be automatically calculated based on similarity</Label>
                 </div>
-                <Slider
-                  disabled={readOnly}
-                  id="confidence"
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  value={[newConfidence]}
-                  onValueChange={(value) => setNewConfidence(value[0])}
-                />
+                <p className="text-sm text-muted-foreground">
+                  Confidence score is calculated automatically based on the similarity between source and target values
+                </p>
               </div>
             </CardContent>
             <CardFooter className="p-4 flex justify-end">
