@@ -702,7 +702,7 @@ export default function CrosswalkPage() {
       }
 
       // Reset the file input
-      event.target.value = '';
+      e.target.value = '';
     } catch (error) {
       console.error("Error handling file upload:", error);
       setUploadError("An unexpected error occurred during file upload.");
