@@ -317,10 +317,43 @@ export default function NewCrosswalksPage() {
     },
   });
 
+  // Fetch reference data set to get its type
+  const { data: sourceDataSetDetails } = useQuery({
+    queryKey: ["/api/reference-data", selectedSourceDataset, "details"],
+    enabled: !!selectedSourceDataset,
+    queryFn: async () => {
+      const response = await fetch(`/api/reference-data/${selectedSourceDataset}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch source dataset details");
+      }
+      return response.json();
+    },
+  });
+
+  // Fetch reference data set to get its type
+  const { data: targetDataSetDetails } = useQuery({
+    queryKey: ["/api/reference-data", selectedTargetDataset, "details"],
+    enabled: !!selectedTargetDataset,
+    queryFn: async () => {
+      const response = await fetch(`/api/reference-data/${selectedTargetDataset}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch target dataset details");
+      }
+      return response.json();
+    },
+  });
+
   // Fetch schema for source dataset
   const { data: sourceSchema, isLoading: isLoadingSourceSchema } = useQuery({
-    queryKey: ["/api/reference-data-type-schemas", selectedSourceDataset],
-    enabled: !!selectedSourceDataset,
+    queryKey: ["/api/reference-types", sourceDataSetDetails?.typeId, "schemas"],
+    enabled: !!sourceDataSetDetails?.typeId,
+    queryFn: async () => {
+      const response = await fetch(`/api/reference-types/${sourceDataSetDetails?.typeId}/schemas`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch source schema");
+      }
+      return response.json();
+    },
     onError: (error: Error) => {
       toast({
         title: "Error",
@@ -332,8 +365,15 @@ export default function NewCrosswalksPage() {
 
   // Fetch schema for target dataset
   const { data: targetSchema, isLoading: isLoadingTargetSchema } = useQuery({
-    queryKey: ["/api/reference-data-type-schemas", selectedTargetDataset],
-    enabled: !!selectedTargetDataset,
+    queryKey: ["/api/reference-types", targetDataSetDetails?.typeId, "schemas"],
+    enabled: !!targetDataSetDetails?.typeId,
+    queryFn: async () => {
+      const response = await fetch(`/api/reference-types/${targetDataSetDetails?.typeId}/schemas`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch target schema");
+      }
+      return response.json();
+    },
     onError: (error: Error) => {
       toast({
         title: "Error",
