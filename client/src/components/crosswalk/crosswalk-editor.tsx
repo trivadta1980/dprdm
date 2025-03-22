@@ -247,7 +247,7 @@ export function CrosswalkEditor({
     }
     
     loadSourceAttributeValues();
-  }, [selectedSourceDataset, form, toast]);
+  }, [selectedSourceDataset, form.watch("sourceAttribute"), toast]);
   
   // Load target attribute values
   useEffect(() => {
@@ -288,7 +288,7 @@ export function CrosswalkEditor({
     }
     
     loadTargetAttributeValues();
-  }, [selectedTargetDataset, form, toast]);
+  }, [selectedTargetDataset, form.watch("targetAttribute"), toast]);
   
   // Handle form submission
   const onSubmit = async (data: CrosswalkFormData) => {

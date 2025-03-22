@@ -157,7 +157,7 @@ export default function NewCrosswalksPage() {
     mutationFn: async (data: CrosswalkFormData & { mappings: MappingItem[] }) => {
       const response = await apiRequest("/api/crosswalks", {
         method: "POST",
-        body: JSON.stringify({
+        data: {
           name: data.name,
           description: data.description || "",
           sourceSystemId: data.sourceSystemId,
@@ -171,7 +171,7 @@ export default function NewCrosswalksPage() {
               confidence: m.confidence,
             })),
           },
-        }),
+        },
       });
       
       return response.json();
@@ -199,7 +199,7 @@ export default function NewCrosswalksPage() {
     mutationFn: async (data: CrosswalkFormData & { mappings: MappingItem[]; id: number }) => {
       const response = await apiRequest(`/api/crosswalks/${data.id}`, {
         method: "PATCH",
-        body: JSON.stringify({
+        data: {
           name: data.name,
           description: data.description || "",
           sourceSystemId: data.sourceSystemId,
@@ -213,7 +213,7 @@ export default function NewCrosswalksPage() {
               confidence: m.confidence,
             })),
           },
-        }),
+        },
       });
       
       return response.json();
