@@ -64,7 +64,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { 
   PlusCircle, Edit, Trash2, Download, Upload, FileText,
-  Search, CheckCircle, XCircle, ExternalLink
+  Search, CheckCircle, XCircle
 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -760,13 +760,6 @@ export default function NewCrosswalksPage() {
                             onClick={() => handleDelete(crosswalk.id)}
                           >
                             <Trash2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => navigate(`/crosswalks/${crosswalk.id}`)}
-                          >
-                            <ExternalLink className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
