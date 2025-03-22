@@ -858,7 +858,7 @@ export default function CrosswalkPage() {
             {mappings.length > 0 && (
               <div className="mt-8">
                 <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
                     <h2 className="text-xl font-semibold">Value Mappings</h2>
                     <div className="flex items-center gap-2">
                       <input
@@ -905,6 +905,7 @@ export default function CrosswalkPage() {
                       !selectedTargetDataset ||
                       !selectedSourceAttribute
                     }
+                    className="ml-auto"
                   >
                     {saveMappingsMutation.isPending ? (
                       <span className="flex items-center gap-2">
@@ -914,7 +915,7 @@ export default function CrosswalkPage() {
                     ) : (
                       <span className="flex items-center gap-2">
                         <Save className="h-4 w-4" />
-                        Save Crosswalk
+                        {isEditMode ? "Save Crosswalk" : "Create Crosswalk"}
                       </span>
                     )}
                   </Button>
@@ -959,7 +960,7 @@ export default function CrosswalkPage() {
                                 value={confidenceOperator}
                                 onValueChange={(value: "gt" | "lt" | "eq") => setConfidenceOperator(value)}
                               >
-                                <SelectTrigger className="w-[100px">
+                                <SelectTrigger className="w-[100px]">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
