@@ -102,18 +102,19 @@ export function Sidebar({ className }: SidebarProps) {
         icon: TestTube2,
         requiresPermission: true,
       },
-      {
-        title: "Graph Visualization",
-        href: "/graph-visualization",
-        icon: Share2,
-        requiresPermission: true,
-      },
-      {
-        title: "Supply Chain Paths",
-        href: "/site-paths",
-        icon: Map,
-        requiresPermission: true,
-      },
+      // Temporarily hiding Graph Visualization and Supply Chain Paths as requested
+      // {
+      //   title: "Graph Visualization",
+      //   href: "/graph-visualization",
+      //   icon: Share2,
+      //   requiresPermission: true,
+      // },
+      // {
+      //   title: "Supply Chain Paths",
+      //   href: "/site-paths",
+      //   icon: Map,
+      //   requiresPermission: true,
+      // },
     ] : []),
   ];
 
