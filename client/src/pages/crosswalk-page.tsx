@@ -32,7 +32,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Edit, FileText, Loader2, Upload, Download } from "lucide-react";
+import { 
+  ArrowLeft, Edit, FileText, Loader2, Upload, Download, 
+  Search, SearchX, FileStack, FilePlus2, Check, X, Edit2, Save 
+} from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation, useParams, Link } from "wouter";
@@ -63,7 +66,7 @@ import {
   TableHeader as TableHeader2,
   TableRow as TableRow2,
 } from "@/components/ui/table";
-import { Edit2, Check, X, Save, ArrowLeft as ArrowLeft2, Upload as Upload2, Download as Download2 } from "lucide-react";
+import { ArrowLeft as ArrowLeft2, Upload as Upload2, Download as Download2 } from "lucide-react";
 import { Input as Input2 } from "@/components/ui/input";
 import { useToast as useToast2 } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
@@ -1043,7 +1046,7 @@ export default function CrosswalkPage() {
                               <TableRow>
                                 <TableCell colSpan={4} className="h-24 text-center">
                                   <div className="flex flex-col items-center justify-center gap-2">
-                                    <SearchX className="h-8 w-8 text-muted-foreground" />
+                                    <Search className="h-8 w-8 text-muted-foreground" />
                                     <p className="text-muted-foreground">No matching mappings found with current filters</p>
                                     <Button 
                                       variant="outline" 
@@ -1065,6 +1068,34 @@ export default function CrosswalkPage() {
                     </div>
                   </div>
                 </>
+              ) : (
+                <div className="border rounded-lg p-8 text-center">
+                  <div className="flex flex-col items-center justify-center gap-4">
+                    {isEditMode ? (
+                      <>
+                        <FilePlus2 className="h-12 w-12 text-muted-foreground" />
+                        <div className="space-y-2">
+                          <h3 className="text-lg font-medium">No mappings added yet</h3>
+                          <p className="text-muted-foreground max-w-md mx-auto">
+                            You can add mappings by importing a CSV file or manually creating them. 
+                            Use the CSV import button above to get started.
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <FileStack className="h-12 w-12 text-muted-foreground" />
+                        <div className="space-y-2">
+                          <h3 className="text-lg font-medium">Create the crosswalk first</h3>
+                          <p className="text-muted-foreground max-w-md mx-auto">
+                            Fill in the required fields above and click "Create Crosswalk". 
+                            After creation, you'll be able to add mappings.
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </CardContent>
