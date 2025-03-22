@@ -720,38 +720,7 @@ export default function RelationshipsPage() {
                       />
                     </div>
 
-                    {/* Enhanced API Debug Section */}
-                    <div className="mt-6 space-y-4">
-                      <h3 className="text-sm font-medium">API Response Debug</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-sm font-medium">Source Dataset Response</label>
-                          <div className="space-y-2">
-                            <div className="text-xs text-blue-600">
-                              {apiDebugData.sourceSelection || "No selection made yet"}
-                            </div>
-                            <textarea
-                              className="w-full h-32 mt-1 px-3 py-2 text-sm border rounded-md bg-muted"
-                              value={JSON.stringify(apiDebugData.source, null, 2)}
-                              readOnly
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium">Target Dataset Response</label>
-                          <div className="space-y-2">
-                            <div className="text-xs text-blue-600">
-                              {apiDebugData.targetSelection || "No selection made yet"}
-                            </div>
-                            <textarea
-                              className="w-full h-32 mt-1 px-3 py-2 text-sm border rounded-md bg-muted"
-                              value={JSON.stringify(apiDebugData.target, null, 2)}
-                              readOnly
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    {/* Enhanced API Debug Section - Hidden */}
 
                     <Button type="submit" className="w-full">
                       {editingRelationship ? 'Update' : 'Create'} Relationship
