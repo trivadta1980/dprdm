@@ -408,6 +408,8 @@ export default function CrosswalkPage() {
           // Force a new array reference to ensure React detects the change
           setMappings([...mappingsClone]);
           
+          // Also set filtered mappings - this is critical for UI display
+          setFilteredMappings([...mappingsClone]);
 
           // Log after state update
           setTimeout(() => {
@@ -416,10 +418,12 @@ export default function CrosswalkPage() {
         } else {
           console.warn("DETAILED DEBUG - Mappings is not an array:", existingCrosswalk.mappingData.mappings);
           setMappings([]);
+          setFilteredMappings([]);
         }
       } else {
         console.warn("No mapping data found in crosswalk");
         setMappings([]);
+        setFilteredMappings([]);
       }
     }
   }, [existingCrosswalk, isEditMode]);
@@ -658,6 +662,16 @@ export default function CrosswalkPage() {
         
         // Update filtered mappings too (this is critical for UI display)
         setFilteredMappings([...newMappings]);
+        
+        // Debug after setting state
+        setTimeout(() => {
+          console.log('State after import:', {
+            mappings: mappings.length,
+            mappingsData: mappings,
+            filteredMappings: filteredMappings.length,
+            generatePayload: generatePayload()
+          });
+        }, 100);
 
         toast({
           title: "Success",
