@@ -1,0 +1,99 @@
+}
+GET /api/reference-data/:id - Request params: { id: '3' }
+GET /api/reference-data/:id - Fetching dataset: 3
+Storage: Fetching reference data set with ID: 3
+Storage: Retrieved data set structure: {
+  hasResult: true,
+  fields: [
+    'id',
+    'name',
+    'description',
+    'typeId',
+    'data',
+    'createdAt',
+    'updatedAt'
+  ],
+  name: 'Customer Gender',
+  id: 3,
+  dataType: 'object',
+  dataContent: {
+    instance_1: {
+      status: 'DRAFT',
+      _history: [Array],
+      createdAt: '2025-03-12T05:30:31.034Z',
+      createdBy: 'admin',
+      Gender_Code: '111222222',
+      Gender_Name: '11111',
+      lastModifiedAt: '2025-03-12T06:20:47.052Z',
+      lastModifiedBy: 'admin'
+    },
+    instance_2: {
+      status: 'DRAFT',
+      _history: [Array],
+      createdAt: '2025-03-12T06:18:40.107Z',
+      createdBy: 'admin',
+      Gender_Code: 'hhhhhhh',
+      Gender_Name: 'hhhhhhh',
+      lastModifiedAt: '2025-03-12T06:18:40.107Z',
+      lastModifiedBy: 'admin'
+    }
+  }
+}
+GET /api/reference-data/:id - Raw dataset from storage: {
+  id: 3,
+  name: 'Customer Gender',
+  description: 'Customer Gender',
+  typeId: 3,
+  data: {
+    instance_1: {
+      status: 'DRAFT',
+      _history: [Array],
+      createdAt: '2025-03-12T05:30:31.034Z',
+      createdBy: 'admin',
+      Gender_Code: '111222222',
+      Gender_Name: '11111',
+      lastModifiedAt: '2025-03-12T06:20:47.052Z',
+      lastModifiedBy: 'admin'
+    },
+    instance_2: {
+      status: 'DRAFT',
+      _history: [Array],
+      createdAt: '2025-03-12T06:18:40.107Z',
+      createdBy: 'admin',
+      Gender_Code: 'hhhhhhh',
+      Gender_Name: 'hhhhhhh',
+      lastModifiedAt: '2025-03-12T06:18:40.107Z',
+      lastModifiedBy: 'admin'
+    }
+  },
+  createdAt: 2025-02-19T05:56:20.181Z,
+  updatedAt: 2025-03-12T06:20:50.699Z
+}
+GET /api/reference-data/:id - Dataset structure: {
+  id: 3,
+  name: 'Customer Gender',
+  dataType: 'object',
+  dataContent: {
+    instance_1: {
+      status: 'DRAFT',
+      _history: [Array],
+      createdAt: '2025-03-12T05:30:31.034Z',
+      createdBy: 'admin',
+      Gender_Code: '111222222',
+      Gender_Name: '11111',
+      lastModifiedAt: '2025-03-12T06:20:47.052Z',
+      lastModifiedBy: 'admin'
+    },
+    instance_2: {
+      status: 'DRAFT',
+      _history: [Array],
+      createdAt: '2025-03-12T06:18:40.107Z',
+      createdBy: 'admin',
+      Gender_Code: 'hhhhhhh',
+      Gender_Name: 'hhhhhhh',
+      lastModifiedAt: '2025-03-12T06:18:40.107Z',
+      lastModifiedBy: 'admin'
+    }
+  }
+}
+4:24:57 PM [express] GET /api/reference-data/3 304 in 277ms :: {"id":3,"name":"Customer Gender","des…
