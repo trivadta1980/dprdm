@@ -975,37 +975,37 @@ export default function CrosswalkPage() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {mappings.length === 0 ? (
+                            {filteredMappings.length === 0 ? (
                               <TableRow>
                                 <TableCell colSpan={4} className="text-center h-24">
                                   <div className="flex flex-col items-center justify-center gap-2">
-                                    <Database className="h-8 w-8 text-muted-foreground" />
-                                    <p className="text-lg font-medium">No mappings yet</p>
-                                    <p className="text-muted-foreground">
-                                      {isEditMode 
-                                        ? "Import mappings from CSV using the button above" 
-                                        : "Create the crosswalk first, then you can import mappings"}
-                                    </p>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            ) : filteredMappings.length === 0 ? (
-                              <TableRow>
-                                <TableCell colSpan={4} className="text-center h-24">
-                                  <div className="flex flex-col items-center justify-center gap-2">
-                                    <FilterX className="h-8 w-8 text-muted-foreground" />
-                                    <p className="text-lg font-medium">No matching mappings</p>
-                                    <p className="text-muted-foreground">
-                                      Try adjusting your filter criteria or{" "}
-                                      <Button variant="link" onClick={() => {
-                                        setSourceFilter('');
-                                        setTargetFilter('');
-                                        setConfidenceValue('');
-                                        setConfidenceOperator('gt');
-                                      }}>
-                                        clear all filters
-                                      </Button>
-                                    </p>
+                                    {mappings.length === 0 ? (
+                                      <>
+                                        <Database className="h-8 w-8 text-muted-foreground" />
+                                        <p className="text-lg font-medium">No mappings yet</p>
+                                        <p className="text-muted-foreground">
+                                          {isEditMode 
+                                            ? "Import mappings from CSV using the button above" 
+                                            : "Create the crosswalk first, then you can import mappings"}
+                                        </p>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <FilterX className="h-8 w-8 text-muted-foreground" />
+                                        <p className="text-lg font-medium">No matching mappings</p>
+                                        <p className="text-muted-foreground">
+                                          Try adjusting your filter criteria or{" "}
+                                          <Button variant="link" onClick={() => {
+                                            setSourceFilter('');
+                                            setTargetFilter('');
+                                            setConfidenceValue('');
+                                            setConfidenceOperator('gt');
+                                          }}>
+                                            clear all filters
+                                          </Button>
+                                        </p>
+                                      </>
+                                    )}
                                   </div>
                                 </TableCell>
                               </TableRow>
@@ -1108,34 +1108,35 @@ export default function CrosswalkPage() {
           </CardContent>
         </Card>
 
-        {mappings.length > 0 && (
-          <>
-            <Card>
-              <CardHeader>
-                <CardTitle>Debug Information - CSV Import Data</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-                  <pre className="text-sm">
-                    {JSON.stringify(mappings, null, 2)}
-                  </pre>
-                </ScrollArea>
-              </CardContent>
-            </Card>
+        {/* Debug Cards Section */}
+        <div className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Debug Information - CSV Import Data</CardTitle>
+              <CardDescription>Count: {mappings.length}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                <pre className="text-sm">
+                  {JSON.stringify(mappings, null, 2)}
+                </pre>
+              </ScrollArea>
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Debug Information - Save Mappings Payload</CardTitle>              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h[200px] w-full rounded-md border p-4">
-                  <pre className="text-sm">
-                    {JSON.stringify(generatePayload(), null, 2)}
-                  </pre>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </>
-        )}
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle>Debug Information - Save Mappings Payload</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                <pre className="text-sm">
+                  {JSON.stringify(generatePayload(), null, 2)}
+                </pre>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </MainLayout>
   );
