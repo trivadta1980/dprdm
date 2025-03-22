@@ -219,6 +219,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/reference-types/:id", async (req, res) => {
+    console.log('DELETE /api/reference-types/:id - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('DELETE /api/reference-types/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const typeId = Number(req.params.id);
+      console.log('DELETE /api/reference-types/:id - Deleting reference type with ID:', typeId);
+      
+      // First check if this type has associated data sets
+      const hasAssociatedDataSets = await storage.hasAssociatedDataSets(typeId);
+      
+      if (hasAssociatedDataSets) {
+        console.log('DELETE /api/reference-types/:id - Cannot delete: Type has associated datasets');
+        return res.status(400).json({ 
+          error: "Cannot delete this reference data type because it has associated data sets. Please delete the data sets first." 
+        });
+      }
+      
+      // If no associated data sets, proceed with deletion
+      const result = await storage.deleteReferenceDataType(typeId);
+      
+      if (result.success) {
+        console.log('DELETE /api/reference-types/:id - Successfully deleted reference type:', typeId);
+        res.json({ success: true });
+      } else {
+        console.log('DELETE /api/reference-types/:id - Failed to delete reference type:', result.message);
+        res.status(400).json({ error: result.message || "Failed to delete reference data type" });
+      }
+    } catch (error) {
+      console.error('DELETE /api/reference-types/:id - Error deleting reference type:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   // Reference Data Sets routes
   app.get("/api/reference-data", async (req, res) => {
     console.log('GET /api/reference-data - Request received'); //Added logging

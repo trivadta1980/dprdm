@@ -1,6 +1,6 @@
 import { users, roles, type User, type InsertUser, type Role, type InsertRole, type UpdateUser } from "@shared/schema";
 import { db } from "./db";
-import { eq, or, and, sql, desc } from "drizzle-orm";
+import { eq, or, and, sql, desc, count } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { Pool } from '@neondatabase/serverless';
@@ -58,6 +58,10 @@ export interface IStorage {
   getReferenceDataTypeSchemas(typeId: number): Promise<ReferenceDataTypeSchema[]>;
   // Add new update method
   updateReferenceDataType(id: number, data: InsertReferenceDataType): Promise<ReferenceDataType>;
+  // Check if reference data type has associated data sets
+  hasAssociatedDataSets(typeId: number): Promise<boolean>;
+  // Delete reference data type
+  deleteReferenceDataType(id: number): Promise<{ success: boolean; message?: string }>;
 
   // Reference Data Set operations
   createReferenceDataSet(data: InsertReferenceDataSet): Promise<ReferenceDataSet>;
@@ -409,6 +413,52 @@ export class DatabaseStorage implements IStorage {
       }
 
       return referenceType;
+    });
+  }
+
+  async hasAssociatedDataSets(typeId: number): Promise<boolean> {
+    console.log('Storage: Checking if reference type has associated data sets:', typeId);
+    const dataSets = await db
+      .select({ count: count() })
+      .from(referenceDataSets)
+      .where(eq(referenceDataSets.typeId, typeId));
+    
+    const hasDataSets = dataSets[0].count > 0;
+    console.log(`Storage: Type ${typeId} has associated data sets: ${hasDataSets}`);
+    return hasDataSets;
+  }
+
+  async deleteReferenceDataType(id: number): Promise<{ success: boolean; message?: string }> {
+    console.log('Storage: Attempting to delete reference type:', id);
+    
+    // First check if the type has any associated data sets
+    const hasDataSets = await this.hasAssociatedDataSets(id);
+    
+    if (hasDataSets) {
+      console.log(`Storage: Cannot delete reference type ${id} - has associated data sets`);
+      return {
+        success: false,
+        message: "This reference data type cannot be deleted because it has associated data sets. Please delete the data sets first."
+      };
+    }
+    
+    // If no data sets are linked, proceed with deletion
+    return await db.transaction(async (tx) => {
+      // First delete any schemas associated with this type
+      await tx
+        .delete(referenceDataTypeSchemas)
+        .where(eq(referenceDataTypeSchemas.referenceDataTypeId, id));
+      
+      // Then delete the type itself
+      const [deletedType] = await tx
+        .delete(referenceDataTypes)
+        .where(eq(referenceDataTypes.id, id))
+        .returning();
+        
+      console.log(`Storage: Reference type ${id} deleted successfully`);
+      return {
+        success: !!deletedType
+      };
     });
   }
 
