@@ -112,6 +112,11 @@ export default function App() {
                   <CrosswalksPage />
                 </ProtectedRoute>
               </Route>
+              <Route path="/crosswalks/create">
+                <ProtectedRoute>
+                  <CrosswalkPage />
+                </ProtectedRoute>
+              </Route>
               <Route path="/crosswalks/:id/edit">
                 <ProtectedRoute>
                   <CrosswalkPage />
