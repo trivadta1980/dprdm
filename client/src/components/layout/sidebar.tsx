@@ -97,7 +97,7 @@ export function Sidebar({ className }: SidebarProps) {
     },
     ...(isAdmin ? [
       {
-        title: "API Testing",
+        title: "Testing",
         href: "/api-test",
         icon: TestTube2,
         requiresPermission: true,
