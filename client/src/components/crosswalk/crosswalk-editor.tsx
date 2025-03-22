@@ -212,10 +212,17 @@ export function CrosswalkEditor({
   useEffect(() => {
     async function loadSourceAttributeValues() {
       const sourceAttribute = form.getValues().sourceAttribute;
-      if (!selectedSourceDataset || !sourceAttribute) return;
+      if (!selectedSourceDataset || !sourceAttribute) {
+        console.log("Debug Source Values: Early return - missing dataset or attribute", {
+          selectedSourceDataset,
+          sourceAttribute
+        });
+        return;
+      }
       
       try {
         setIsLoadingSourceData(true);
+        console.log(`Debug Source Values: Loading data for dataset ${selectedSourceDataset}, attribute ${sourceAttribute}`);
         
         // Fetch dataset values
         const response = await fetch(`/api/reference-data/${selectedSourceDataset}`);
@@ -224,15 +231,31 @@ export function CrosswalkEditor({
         }
         
         const data = await response.json();
+        console.log("Debug Source Values: Received dataset data:", data);
         
         // Extract unique values for the selected attribute
         if (data && data.data) {
-          const values = Object.values(data.data)
-            .map((instance: any) => instance[sourceAttribute])
-            .filter(Boolean)
-            .filter((value, index, self) => self.indexOf(value) === index);
+          console.log("Debug Source Values: Raw data instances:", data.data);
           
-          setSourceAttributeValues(values as string[]);
+          const instances = Object.values(data.data);
+          console.log("Debug Source Values: Instances:", instances);
+          
+          const attributeValues = instances.map((instance: any) => {
+            const value = instance[sourceAttribute];
+            console.log(`Debug Source Values: Instance ${JSON.stringify(instance)} has ${sourceAttribute} = ${value}`);
+            return value;
+          });
+          console.log("Debug Source Values: All attribute values:", attributeValues);
+          
+          const filteredValues = attributeValues.filter(Boolean);
+          console.log("Debug Source Values: Non-null values:", filteredValues);
+          
+          const uniqueValues = filteredValues.filter((value, index, self) => self.indexOf(value) === index);
+          console.log("Debug Source Values: Final unique values:", uniqueValues);
+          
+          setSourceAttributeValues(uniqueValues as string[]);
+        } else {
+          console.error("Debug Source Values: Data is missing or malformed:", data);
         }
       } catch (error) {
         console.error("Error loading source values:", error);
@@ -253,10 +276,17 @@ export function CrosswalkEditor({
   useEffect(() => {
     async function loadTargetAttributeValues() {
       const targetAttribute = form.getValues().targetAttribute;
-      if (!selectedTargetDataset || !targetAttribute) return;
+      if (!selectedTargetDataset || !targetAttribute) {
+        console.log("Debug Target Values: Early return - missing dataset or attribute", {
+          selectedTargetDataset,
+          targetAttribute
+        });
+        return;
+      }
       
       try {
         setIsLoadingTargetData(true);
+        console.log(`Debug Target Values: Loading data for dataset ${selectedTargetDataset}, attribute ${targetAttribute}`);
         
         // Fetch dataset values
         const response = await fetch(`/api/reference-data/${selectedTargetDataset}`);
@@ -265,15 +295,31 @@ export function CrosswalkEditor({
         }
         
         const data = await response.json();
+        console.log("Debug Target Values: Received dataset data:", data);
         
         // Extract unique values for the selected attribute
         if (data && data.data) {
-          const values = Object.values(data.data)
-            .map((instance: any) => instance[targetAttribute])
-            .filter(Boolean)
-            .filter((value, index, self) => self.indexOf(value) === index);
+          console.log("Debug Target Values: Raw data instances:", data.data);
           
-          setTargetAttributeValues(values as string[]);
+          const instances = Object.values(data.data);
+          console.log("Debug Target Values: Instances:", instances);
+          
+          const attributeValues = instances.map((instance: any) => {
+            const value = instance[targetAttribute];
+            console.log(`Debug Target Values: Instance ${JSON.stringify(instance)} has ${targetAttribute} = ${value}`);
+            return value;
+          });
+          console.log("Debug Target Values: All attribute values:", attributeValues);
+          
+          const filteredValues = attributeValues.filter(Boolean);
+          console.log("Debug Target Values: Non-null values:", filteredValues);
+          
+          const uniqueValues = filteredValues.filter((value, index, self) => self.indexOf(value) === index);
+          console.log("Debug Target Values: Final unique values:", uniqueValues);
+          
+          setTargetAttributeValues(uniqueValues as string[]);
+        } else {
+          console.error("Debug Target Values: Data is missing or malformed:", data);
         }
       } catch (error) {
         console.error("Error loading target values:", error);

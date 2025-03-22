@@ -239,6 +239,8 @@ export function MappingEditor({
     
     console.log("CSV Import - Started parsing file:", file.name);
     console.log("CSV Import - Looking for attributes:", {sourceLabel, targetLabel});
+    console.log("CSV Import - Available source values:", sourceValues);
+    console.log("CSV Import - Available target values:", targetValues);
     
     Papa.parse(file, {
       header: true,
@@ -263,36 +265,72 @@ export function MappingEditor({
           console.log(`CSV Import - Processing row ${index + 1}:`, row);
           
           // Support both direct column names and template format
-          const sourceKey = row.sourceValue || row[`Source_${sourceLabel}`] || Object.keys(row).find(k => k.startsWith('Source_'));
-          const targetKey = row.targetValue || row[`Target_${targetLabel}`] || Object.keys(row).find(k => k.startsWith('Target_'));
+          const sourceKeyName = row.sourceValue ? 'sourceValue' : 
+                              row[`Source_${sourceLabel}`] ? `Source_${sourceLabel}` : 
+                              Object.keys(row).find(k => k.startsWith('Source_'));
+                              
+          const targetKeyName = row.targetValue ? 'targetValue' : 
+                              row[`Target_${targetLabel}`] ? `Target_${targetLabel}` : 
+                              Object.keys(row).find(k => k.startsWith('Target_'));
           
-          console.log(`CSV Import - Row ${index + 1} - Identified keys:`, {
-            sourceKey,
-            targetKey,
+          console.log(`CSV Import - Row ${index + 1} - Identified key names:`, {
+            sourceKeyName,
+            targetKeyName,
             sourceLabel,
-            targetLabel,
-            exactSourceMatch: row[`Source_${sourceLabel}`],
-            exactTargetMatch: row[`Target_${targetLabel}`],
-            hasSourceValue: row.sourceValue,
-            hasTargetValue: row.targetValue
+            targetLabel
           });
           
-          if (!sourceKey || !targetKey || !row[sourceKey] || !row[targetKey]) {
+          if (!sourceKeyName || !targetKeyName) {
+            const errorMsg = `Row ${index + 1}: Could not find source or target column names`;
+            console.error("CSV Import - Error:", errorMsg, { row, allKeys: Object.keys(row) });
+            errors.push(errorMsg);
+            return;
+          }
+          
+          const sourceValue = row[sourceKeyName];
+          const targetValue = row[targetKeyName];
+          
+          console.log(`CSV Import - Row ${index + 1} - Raw values:`, {
+            sourceValue,
+            targetValue
+          });
+          
+          // Verify the values exist in the available source and target values
+          const sourceValueExists = sourceValues.includes(sourceValue);
+          const targetValueExists = targetValues.includes(targetValue);
+          
+          console.log(`CSV Import - Row ${index + 1} - Values exist check:`, {
+            sourceValueExists,
+            targetValueExists 
+          });
+          
+          if (!sourceValue || !targetValue) {
             const errorMsg = `Row ${index + 1}: Missing source or target value`;
             console.error("CSV Import - Error:", errorMsg, {
-              sourceKey, targetKey, 
-              sourceValue: sourceKey ? row[sourceKey] : undefined,
-              targetValue: targetKey ? row[targetKey] : undefined
+              sourceKeyName, targetKeyName, 
+              sourceValue, targetValue
             });
             errors.push(errorMsg);
             return;
           }
           
-          const sourceValue = row.sourceValue || row[sourceKey];
-          const targetValue = row.targetValue || row[targetKey];
+          if (!sourceValueExists) {
+            const errorMsg = `Row ${index + 1}: Source value "${sourceValue}" does not exist in the dataset`;
+            console.warn("CSV Import - Warning:", errorMsg, { sourceValue, availableValues: sourceValues });
+            errors.push(errorMsg);
+            // Don't return here - we'll still create the mapping but warn the user
+          }
+          
+          if (!targetValueExists) {
+            const errorMsg = `Row ${index + 1}: Target value "${targetValue}" does not exist in the dataset`;
+            console.warn("CSV Import - Warning:", errorMsg, { targetValue, availableValues: targetValues });
+            errors.push(errorMsg);
+            // Don't return here - we'll still create the mapping but warn the user
+          }
+          
           const confidence = row.confidence ? parseFloat(row.confidence) : 0.7;
           
-          console.log(`CSV Import - Row ${index + 1} - Extracted values:`, {
+          console.log(`CSV Import - Row ${index + 1} - Final extracted values:`, {
             sourceValue,
             targetValue,
             confidence
