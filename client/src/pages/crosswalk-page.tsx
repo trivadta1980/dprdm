@@ -1073,7 +1073,6 @@ export default function CrosswalkPage() {
                         </Table>
                       </div>
                     </div>
-                  </div>
                 </>
               ) : (
                 <div className="border rounded-lg p-8 text-center">
