@@ -34,7 +34,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   ArrowLeft, Edit, FileText, Loader2, Upload, Download, 
-  Search, SearchX, FileStack, FilePlus2, Check, X, Edit2, Save 
+  Search, SearchX, FileStack, FilePlus2, Check, X, Edit2, Save,
+  Database, FilterX
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
@@ -1005,9 +1006,43 @@ export default function CrosswalkPage() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {filteredMappings.length > 0 ? (
+                            {mappings.length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={4} className="text-center h-24">
+                                  <div className="flex flex-col items-center justify-center gap-2">
+                                    <Database className="h-8 w-8 text-muted-foreground" />
+                                    <p className="text-lg font-medium">No mappings yet</p>
+                                    <p className="text-muted-foreground">
+                                      {isEditMode 
+                                        ? "Import mappings from CSV using the button above" 
+                                        : "Create the crosswalk first, then you can import mappings"}
+                                    </p>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ) : filteredMappings.length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={4} className="text-center h-24">
+                                  <div className="flex flex-col items-center justify-center gap-2">
+                                    <FilterX className="h-8 w-8 text-muted-foreground" />
+                                    <p className="text-lg font-medium">No matching mappings</p>
+                                    <p className="text-muted-foreground">
+                                      Try adjusting your filter criteria or{" "}
+                                      <Button variant="link" onClick={() => {
+                                        setSourceFilter('');
+                                        setTargetFilter('');
+                                        setConfidenceValue('');
+                                        setConfidenceOperator('gt');
+                                      }}>
+                                        clear all filters
+                                      </Button>
+                                    </p>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ) : (
                               filteredMappings.map((mapping, index) => (
-                                <TableRow key={mapping.sourceValue}>
+                                <TableRow key={`${mapping.sourceValue}-${mapping.targetValue}-${index}`}>
                                   <TableCell>{mapping.sourceValue}</TableCell>
                                   <TableCell>
                                     {editingIndex === index ? (
@@ -1064,25 +1099,6 @@ export default function CrosswalkPage() {
                                   </TableCell>
                                 </TableRow>
                               ))
-                            ) : (
-                              <TableRow>
-                                <TableCell colSpan={4} className="h-24 text-center">
-                                  <div className="flex flex-col items-center justify-center gap-2">
-                                    <Search className="h-8 w-8 text-muted-foreground" />
-                                    <p className="text-muted-foreground">No matching mappings found with current filters</p>
-                                    <Button 
-                                      variant="outline" 
-                                      onClick={() => {
-                                        setSourceFilter("");
-                                        setTargetFilter("");
-                                        setConfidenceValue("");
-                                      }}
-                                    >
-                                      Clear Filters
-                                    </Button>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
                             )}
                           </TableBody>
                         </Table>
