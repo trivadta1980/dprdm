@@ -69,7 +69,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { parse } from "csv-parse/sync";
+import Papa from "papaparse";
 
 // Interfaces
 interface CrosswalkMapping {
@@ -506,47 +506,51 @@ export default function NewCrosswalksPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
-      try {
-        // Parse CSV content
-        const records = parse(content, {
-          columns: true,
-          skip_empty_lines: true,
-          trim: true,
-        });
-
-        // Transform records into mappings
-        const newMappings: Mapping[] = records.map((record: CSVMapping) => {
-          let sourceValue = record.sourceValue;
-          let targetValue = record.targetValue;
-          
-          // Handle template format (Source_X, Target_X)
-          if (!sourceValue && !targetValue) {
-            const sourceKey = Object.keys(record).find(key => key.startsWith("Source_"));
-            const targetKey = Object.keys(record).find(key => key.startsWith("Target_"));
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        try {
+          const records = results.data;
+          // Transform records into mappings
+          const newMappings: Mapping[] = records.map((record: any) => {
+            let sourceValue = record.sourceValue;
+            let targetValue = record.targetValue;
             
-            if (sourceKey) sourceValue = record[sourceKey];
-            if (targetKey) targetValue = record[targetKey];
-          }
+            // Handle template format (Source_X, Target_X)
+            if (!sourceValue && !targetValue) {
+              const sourceKey = Object.keys(record).find(key => key.startsWith("Source_"));
+              const targetKey = Object.keys(record).find(key => key.startsWith("Target_"));
+              
+              if (sourceKey) sourceValue = record[sourceKey];
+              if (targetKey) targetValue = record[targetKey];
+            }
 
-          return {
-            sourceValue: sourceValue || "",
-            targetValue: targetValue || "",
-            confidence: 1.0, // Default confidence
-          };
-        });
+            return {
+              sourceValue: sourceValue || "",
+              targetValue: targetValue || "",
+              confidence: 1.0, // Default confidence
+            };
+          });
 
-        // Update state
-        setMappings(prevMappings => [...prevMappings, ...newMappings]);
-        setFilteredMappings(prevMappings => [...prevMappings, ...newMappings]);
-        
-        toast({
-          title: "Success",
-          description: `Imported ${newMappings.length} mappings from CSV`,
-        });
-      } catch (error) {
+          // Update state
+          setMappings(prevMappings => [...prevMappings, ...newMappings]);
+          setFilteredMappings(prevMappings => [...prevMappings, ...newMappings]);
+          
+          toast({
+            title: "Success",
+            description: `Imported ${newMappings.length} mappings from CSV`,
+          });
+        } catch (error) {
+          console.error("Error processing CSV:", error);
+          toast({
+            title: "Error",
+            description: "Failed to process CSV file. Please check the format.",
+            variant: "destructive",
+          });
+        }
+      },
+      error: (error) => {
         console.error("Error parsing CSV:", error);
         toast({
           title: "Error",
@@ -554,14 +558,22 @@ export default function NewCrosswalksPage() {
           variant: "destructive",
         });
       }
-    };
-    reader.readAsText(file);
+    });
   };
 
   // Generate template CSV for download
   const handleDownloadTemplate = () => {
-    const header = "sourceValue,targetValue\n";
-    const blob = new Blob([header], { type: "text/csv" });
+    // Create a template with empty data but correct headers
+    const template = [{
+      sourceValue: "",
+      targetValue: ""
+    }];
+    
+    // Generate CSV with PapaParse
+    const csv = Papa.unparse(template);
+    
+    // Create and trigger download
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -583,14 +595,18 @@ export default function NewCrosswalksPage() {
       return;
     }
 
-    const header = "sourceValue,targetValue,confidencePercent\n";
-    const rows = mappings.map(
-      (m) => 
-        `${m.sourceValue},${m.targetValue},${(m.confidence * 100).toFixed(0)}`
-    ).join("\n");
+    // Convert mappings to rows with percentage confidence
+    const dataToExport = mappings.map(mapping => ({
+      sourceValue: mapping.sourceValue,
+      targetValue: mapping.targetValue,
+      confidencePercent: `${(mapping.confidence * 100).toFixed(0)}%`
+    }));
     
-    const content = header + rows;
-    const blob = new Blob([content], { type: "text/csv" });
+    // Generate CSV with PapaParse
+    const csv = Papa.unparse(dataToExport);
+    
+    // Create and trigger download
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
