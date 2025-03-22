@@ -109,6 +109,7 @@ export default function CrosswalkPage() {
   const [selectedSourceAttribute, setSelectedSourceAttribute] = useState<string | null>(null);
   const [selectedTargetAttribute, setSelectedTargetAttribute] = useState<string | null>(null);
   const [mappings, setMappings] = useState<Mapping[]>([]);
+  const [filteredMappings, setFilteredMappings] = useState<Mapping[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState<string>("");
   const [sourceFilter, setSourceFilter] = useState("");
@@ -293,7 +294,7 @@ export default function CrosswalkPage() {
   }, [mappings, sourceFilter, targetFilter, confidenceOperator, confidenceValue]);
 
 
-  const [filteredMappings, setFilteredMappings] = useState<Mapping[]>([]);
+
 
   const generatePayload = () => {
     if (!selectedSourceDataset || !selectedTargetDataset || !selectedSourceAttribute || !mappingName) {
