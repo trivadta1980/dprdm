@@ -706,6 +706,13 @@ export default function CrosswalkPage() {
     }
   };
 
+  console.log('Crosswalk Form State:', {
+    isPending: saveMappingsMutation.isPending,
+    mappingName,
+    selectedSourceDataset,
+    selectedTargetDataset,
+    selectedSourceAttribute,
+  });
 
   return (
     <MainLayout>
