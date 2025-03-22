@@ -4,7 +4,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, Database, ArrowLeft, Plus, X, Edit, Save } from "lucide-react";
+import { Loader2, Database, ArrowLeft, Plus, X, Edit, Save, Trash2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { ReferenceDataType, ReferenceDataTypeSchema } from "@shared/schema";
 
 type SchemaInput = {
@@ -52,6 +62,10 @@ export default function ReferenceTypesListPage() {
     description: "",
     schemas: [{ name: "", dataType: "string" }]
   });
+  
+  // Delete type dialog state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [typeToDelete, setTypeToDelete] = useState<ReferenceDataType | null>(null);
 
   // Handle add schema field to new type
   const handleAddSchemaField = () => {
@@ -305,6 +319,51 @@ export default function ReferenceTypesListPage() {
     });
   };
   
+  // Handle delete reference type
+  const handleDeleteType = async () => {
+    if (!typeToDelete) return;
+    
+    try {
+      console.log(`Deleting reference type with ID: ${typeToDelete.id}`);
+      
+      const response = await fetch(`/api/reference-types/${typeToDelete.id}`, {
+        method: "DELETE",
+      });
+
+      // Check if the response is not ok
+      if (!response.ok) {
+        // Try to get a detailed error message from the response
+        let errorMessage;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || `Failed to delete reference type: ${response.statusText}`;
+        } catch (e) {
+          errorMessage = `Failed to delete reference type: ${response.statusText}`;
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+      toast({
+        title: "Success",
+        description: "Reference type deleted successfully",
+      });
+
+      // Refresh data after deletion
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting reference type:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete reference type. It may be in use by reference data sets.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setTypeToDelete(null);
+    }
+  };
+  
   // Define the fetchData function
   const fetchData = async () => {
       try {
@@ -445,14 +504,27 @@ export default function ReferenceTypesListPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleEditType(type.id)}
-                          title="Edit Reference Type"
-                        >
-                          <Edit className="h-4 w-4 text-blue-600" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleEditType(type.id)}
+                            title="Edit Reference Type"
+                          >
+                            <Edit className="h-4 w-4 text-blue-600" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => {
+                              setTypeToDelete(type);
+                              setIsDeleteDialogOpen(true);
+                            }}
+                            title="Delete Reference Type"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -660,6 +732,25 @@ export default function ReferenceTypesListPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the reference data type 
+              "{typeToDelete?.name}". This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteType} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MainLayout>
   );
 }
