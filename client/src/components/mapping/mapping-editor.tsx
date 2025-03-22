@@ -237,10 +237,17 @@ export function MappingEditor({
     const file = event.target.files?.[0];
     if (!file) return;
     
+    console.log("CSV Import - Started parsing file:", file.name);
+    console.log("CSV Import - Looking for attributes:", {sourceLabel, targetLabel});
+    
     Papa.parse(file, {
       header: true,
       complete: (results) => {
+        console.log("CSV Import - Parsing complete. Headers:", results.meta.fields);
+        console.log("CSV Import - First row data:", results.data[0]);
+        
         if (results.errors.length > 0) {
+          console.error("CSV Import - Parsing errors:", results.errors);
           toast({
             title: "Error",
             description: `CSV parsing error: ${results.errors[0].message}`,
@@ -253,18 +260,43 @@ export function MappingEditor({
         const errors: string[] = [];
         
         results.data.forEach((row: any, index) => {
+          console.log(`CSV Import - Processing row ${index + 1}:`, row);
+          
           // Support both direct column names and template format
           const sourceKey = row.sourceValue || row[`Source_${sourceLabel}`] || Object.keys(row).find(k => k.startsWith('Source_'));
           const targetKey = row.targetValue || row[`Target_${targetLabel}`] || Object.keys(row).find(k => k.startsWith('Target_'));
           
+          console.log(`CSV Import - Row ${index + 1} - Identified keys:`, {
+            sourceKey,
+            targetKey,
+            sourceLabel,
+            targetLabel,
+            exactSourceMatch: row[`Source_${sourceLabel}`],
+            exactTargetMatch: row[`Target_${targetLabel}`],
+            hasSourceValue: row.sourceValue,
+            hasTargetValue: row.targetValue
+          });
+          
           if (!sourceKey || !targetKey || !row[sourceKey] || !row[targetKey]) {
-            errors.push(`Row ${index + 1}: Missing source or target value`);
+            const errorMsg = `Row ${index + 1}: Missing source or target value`;
+            console.error("CSV Import - Error:", errorMsg, {
+              sourceKey, targetKey, 
+              sourceValue: sourceKey ? row[sourceKey] : undefined,
+              targetValue: targetKey ? row[targetKey] : undefined
+            });
+            errors.push(errorMsg);
             return;
           }
           
           const sourceValue = row.sourceValue || row[sourceKey];
           const targetValue = row.targetValue || row[targetKey];
           const confidence = row.confidence ? parseFloat(row.confidence) : 0.7;
+          
+          console.log(`CSV Import - Row ${index + 1} - Extracted values:`, {
+            sourceValue,
+            targetValue,
+            confidence
+          });
           
           if (isNaN(confidence) || confidence < 0 || confidence > 1) {
             errors.push(`Row ${index + 1}: Invalid confidence value. Using default 0.7.`);
@@ -278,7 +310,14 @@ export function MappingEditor({
           });
         });
         
+        console.log("CSV Import - Processing complete:", {
+          totalRows: results.data.length,
+          validMappings: newMappings.length,
+          errors: errors.length
+        });
+        
         if (errors.length > 0) {
+          console.warn("CSV Import - Warnings:", errors);
           toast({
             title: "Warning",
             description: `Imported with some issues: ${errors.length} rows had problems.`,
@@ -287,6 +326,7 @@ export function MappingEditor({
         }
         
         if (newMappings.length === 0) {
+          console.error("CSV Import - No valid mappings found");
           toast({
             title: "Error",
             description: "No valid mappings found in the CSV file.",
