@@ -245,7 +245,6 @@ export default function CrosswalkPage() {
   useEffect(() => {
     console.log('FILTERING DEBUG - Starting filtering process');
     console.log('FILTERING DEBUG - Mappings state before filtering:', JSON.stringify(mappings));
-    console.log('FILTERING DEBUG - Filtering mappings from array:', JSON.stringify(mappings));
     console.log('FILTERING DEBUG - Array.isArray(mappings):', Array.isArray(mappings));
     console.log('FILTERING DEBUG - mappings.length:', mappings?.length);
 
@@ -256,6 +255,21 @@ export default function CrosswalkPage() {
       return;
     }
 
+    // Check if all filters are empty/default
+    const areAllFiltersEmpty = 
+      sourceFilter === '' && 
+      targetFilter === '' && 
+      confidenceValue === '';
+    
+    // If all filters are empty, show all mappings without filtering
+    if (areAllFiltersEmpty) {
+      console.log('FILTERING DEBUG - No active filters, displaying all mappings');
+      setFilteredMappings([...mappings]);
+      return;
+    }
+    
+    console.log('FILTERING DEBUG - Active filters detected, applying filtering');
+    
     const filteredMappings = mappings.filter(mapping => {
       // Skip undefined mappings
       if (!mapping || typeof mapping !== 'object') {
@@ -291,17 +305,18 @@ export default function CrosswalkPage() {
       sourceFilter,
       targetFilter,
       confidenceOperator,
-      confidenceValue
+      confidenceValue,
+      areAllFiltersEmpty
     });
-    
 
     // Update the filteredMappings state to trigger a re-render
     setFilteredMappings(filteredMappings);
     
-
     // Check what's displayed in the debug section
     setTimeout(() => {
       console.log('FILTERING DEBUG - Save Mappings Payload:', JSON.stringify(generatePayload()));
+      console.log('FILTERING DEBUG - Current mappings count:', mappings.length);
+      console.log('FILTERING DEBUG - Current filtered mappings count:', filteredMappings.length);
     }, 100);
 
   }, [mappings, sourceFilter, targetFilter, confidenceOperator, confidenceValue]);
@@ -660,6 +675,12 @@ export default function CrosswalkPage() {
 
         console.log('New Mappings:', newMappings); // Debug log
 
+        // Reset all filters when importing new data
+        setSourceFilter('');
+        setTargetFilter('');
+        setConfidenceValue('');
+        setConfidenceOperator('gt');
+        
         // Create a new array instead of mutating the state directly
         setMappings([...newMappings]);
         
@@ -672,6 +693,7 @@ export default function CrosswalkPage() {
             mappings: mappings.length,
             mappingsData: mappings,
             filteredMappings: filteredMappings.length,
+            filtersReset: true,
             generatePayload: generatePayload()
           });
         }, 100);
