@@ -293,11 +293,25 @@ export default function NewCrosswalksPage() {
       });
       
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to delete crosswalk mapping");
+        let errorMessage = "Failed to delete crosswalk mapping";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          // If the response is not JSON, use the status text
+          errorMessage = `${errorMessage}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
       
-      return await response.json();
+      // Don't try to parse the response as JSON if it's just "OK"
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        return await response.json();
+      }
+      
+      // Return a simple object to satisfy the mutation
+      return { success: true };
     },
     onSuccess: () => {
       toast({
