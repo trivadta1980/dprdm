@@ -435,14 +435,6 @@ export default function ReferenceTypesListPage() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Reference Data Types List</CardTitle>
             <div className="flex space-x-2">
-              <Button variant="outline" onClick={() => setLocation("/reference-types")}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Reference Types
-              </Button>
-              <Button variant="outline" onClick={() => setLocation("/reference-types-debug")}>
-                <Database className="h-4 w-4 mr-2" />
-                Debug Schemas
-              </Button>
               <Button variant="default" onClick={() => setIsAddDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add New Type
