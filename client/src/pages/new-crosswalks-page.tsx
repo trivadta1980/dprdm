@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { MappingItem } from "@/components/mapping/mapping-editor";
 import { CrosswalkEditor } from "@/components/crosswalk/crosswalk-editor";
+import { MainLayout } from "@/components/layout/main-layout";
 import {
   Table,
   TableBody,
@@ -317,14 +318,15 @@ export default function NewCrosswalksPage() {
   );
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Crosswalk Mappings</h1>
-        <Button onClick={handleCreateCrosswalk}>
-          <PlusIcon className="h-4 w-4 mr-2" />
-          Create Crosswalk
-        </Button>
-      </div>
+    <MainLayout>
+      <div className="container mx-auto py-6 space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold tracking-tight">Crosswalk Mappings</h1>
+          <Button onClick={handleCreateCrosswalk}>
+            <PlusIcon className="h-4 w-4 mr-2" />
+            Create Crosswalk
+          </Button>
+        </div>
 
       <Card>
         <CardHeader>
