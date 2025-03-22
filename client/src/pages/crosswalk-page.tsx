@@ -315,7 +315,7 @@ export default function CrosswalkPage() {
       targetSystemId: Number(selectedTargetDataset),
       mappingData: {
         sourceAttribute: selectedSourceAttribute,
-        targetAttribute: selectedTargetAttribute, // Use the new state variable
+        targetAttribute: selectedTargetAttribute,
         mappings: mappings.map(m => ({
           sourceValue: m.sourceValue,
           targetValue: m.targetValue,
@@ -896,18 +896,18 @@ export default function CrosswalkPage() {
                       !mappingName ||
                       !selectedSourceDataset ||
                       !selectedTargetDataset ||
-                      !selectedSourceAttribute ||
-                      mappings.length === 0
+                      !selectedSourceAttribute
                     }
                   >
                     {saveMappingsMutation.isPending ? (
                       <span className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
                         Saving...
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
                         <Save className="h-4 w-4" />
-                        Save Mappings
+                        Save Crosswalk
                       </span>
                     )}
                   </Button>
@@ -953,7 +953,7 @@ export default function CrosswalkPage() {
                                 onValueChange={(value: "gt" | "lt" | "eq") => setConfidenceOperator(value)}
                               >
                                 <SelectTrigger className="w-[100px]">
-                                  <SelectValue />
+                                  <<SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="gt">&gt;</SelectItem>
@@ -993,7 +993,7 @@ export default function CrosswalkPage() {
                                   <SelectValue placeholder="Choose target value" />
                                 </SelectTrigger>
                                 <SelectContent>
-                  {targetAttributeValues.map((value) => (
+                                  {targetAttributeValues.map((value) => (
                                     <SelectItem key={value} value={value}>
                                       {value}
                                     </SelectItem>
