@@ -451,13 +451,10 @@ export default function ReferenceTypesListPage() {
           </CardHeader>
           <CardContent>
             <div className="mb-4 p-3 bg-muted rounded-md">
-              <div className="text-sm font-medium">Summary</div>
-              <div className="flex gap-4 mt-2">
-                <Badge variant="outline" className="text-sm">
+              <div className="text-sm font-medium mb-2">Summary</div>
+              <div className="flex items-center">
+                <Badge variant="outline" className="text-sm px-3 py-1">
                   Total Types: {referenceTypes.length}
-                </Badge>
-                <Badge variant="outline" className="text-sm">
-                  Total Schemas: {totalSchemas}
                 </Badge>
               </div>
             </div>
