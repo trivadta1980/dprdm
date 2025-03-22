@@ -244,6 +244,8 @@ export default function CrosswalkPage() {
   }, [mappings]);
 
   useEffect(() => {
+    /* 
+    COMMENTING OUT ALL FILTERING LOGIC FOR DEBUGGING
     console.log('FILTERING DEBUG - Starting filtering process');
     console.log('FILTERING DEBUG - Mappings state before filtering:', JSON.stringify(mappings));
     console.log('FILTERING DEBUG - Array.isArray(mappings):', Array.isArray(mappings));
@@ -319,6 +321,11 @@ export default function CrosswalkPage() {
       console.log('FILTERING DEBUG - Current mappings count:', mappings.length);
       console.log('FILTERING DEBUG - Current filtered mappings count:', filteredMappings.length);
     }, 100);
+    */
+
+    // SIMPLE VERSION: Always set filteredMappings to be the same as mappings
+    console.log('Setting filteredMappings directly from mappings:', mappings.length);
+    setFilteredMappings([...mappings]);
 
   }, [mappings, sourceFilter, targetFilter, confidenceOperator, confidenceValue]);
 
