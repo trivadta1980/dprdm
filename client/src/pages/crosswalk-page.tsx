@@ -319,11 +319,11 @@ export default function CrosswalkPage() {
       mappingData: {
         sourceAttribute: selectedSourceAttribute,
         targetAttribute: selectedTargetAttribute,
-        mappings: mappings.map(m => ({
+        mappings: mappings.length > 0 ? mappings.map(m => ({
           sourceValue: m.sourceValue,
           targetValue: m.targetValue,
           confidence: m.confidence
-        }))
+        })) : []
       }
     };
   };
