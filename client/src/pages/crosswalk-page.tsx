@@ -467,65 +467,8 @@ export default function CrosswalkPage() {
     }
   });
 
-  const handleCSVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    setUploadError(null);
-
-    if (!file) return;
-
-    if (file.type !== "text/csv") {
-      setUploadError("Please upload a CSV file");
-      return;
-    }
-
-    try {
-      const text = await file.text();
-      console.log('CSV Content:', text); // Debug log
-
-      const records = parse(text, {
-        columns: true,
-        skip_empty_lines: true,
-        trim: true
-      });
-
-      console.log('Parsed Records:', records); // Debug log
-
-      if (!Array.isArray(records) || records.length === 0) {
-        setUploadError("The CSV file is empty or invalid");
-        return;
-      }
-
-      // Validate CSV structure
-      const firstRecord = records[0];
-      if (!('sourceValue' in firstRecord && 'targetValue' in firstRecord)) {
-        setUploadError("CSV must have 'sourceValue' and 'targetValue' columns");
-        return;
-      }
-
-      // Convert CSV records to mappings
-      const newMappings: Mapping[] = records.map((record: CSVMapping) => ({
-        sourceValue: record.sourceValue,
-        targetValue: record.targetValue,
-        confidence: calculateSimilarity(record.sourceValue, record.targetValue)
-      }));
-
-      console.log('New Mappings:', newMappings); // Debug log
-
-      // Create a new array instead of mutating the state directly
-      setMappings([...newMappings]);
-
-      toast({
-        title: "Success",
-        description: `Imported ${newMappings.length} mappings from CSV`,
-      });
-    } catch (error) {
-      console.error('CSV Import Error:', error);
-      setUploadError("Failed to parse CSV file: " + (error as Error).message);
-    }
-
-    // Reset the file input
-    event.target.value = '';
-  };
+  // Deleted the handleCSVUpload function as it's not used anymore
+  // All functionality has been consolidated into handleFileChange
 
   const handleExportCSV = () => {
     const csvContent = [
@@ -695,17 +638,26 @@ export default function CrosswalkPage() {
           return;
         }
 
-        // Convert CSV records to mappings
-        const newMappings: Mapping[] = records.map((record: Record<string, string>) => ({
-          sourceValue: record[sourceKey],
-          targetValue: record[targetKey],
-          confidence: calculateSimilarity(record[sourceKey], record[targetKey])
-        }));
+        // Convert CSV records to mappings with type safety
+        const newMappings: Mapping[] = records.map((record: Record<string, string>) => {
+          // Ensure sourceValue and targetValue are strings (not undefined)
+          const sourceValue = record[sourceKey] || '';
+          const targetValue = record[targetKey] || '';
+          
+          return {
+            sourceValue,
+            targetValue,
+            confidence: calculateSimilarity(sourceValue, targetValue)
+          };
+        });
 
         console.log('New Mappings:', newMappings); // Debug log
 
         // Create a new array instead of mutating the state directly
         setMappings([...newMappings]);
+        
+        // Update filtered mappings too (this is critical for UI display)
+        setFilteredMappings([...newMappings]);
 
         toast({
           title: "Success",
