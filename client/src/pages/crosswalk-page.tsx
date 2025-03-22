@@ -88,8 +88,9 @@ interface Mapping {
 }
 
 interface CSVMapping {
-  sourceValue: string;
-  targetValue: string;
+  sourceValue?: string;
+  targetValue?: string;
+  [key: string]: string | undefined;
 }
 
 export default function CrosswalkPage() {
@@ -673,18 +674,32 @@ export default function CrosswalkPage() {
           return;
         }
 
-        // Validate CSV structure
+        // Validate CSV structure and support both template format and direct format
         const firstRecord = records[0];
-        if (!('sourceValue' in firstRecord && 'targetValue' in firstRecord)) {
-          setUploadError("CSV must have 'sourceValue' and 'targetValue' columns");
+        let sourceKey = 'sourceValue';
+        let targetKey = 'targetValue';
+        
+        // Check if we have source/target in the template format (Source_X, Target_X)
+        const columnNames = Object.keys(firstRecord);
+        const sourceColumn = columnNames.find(col => col.startsWith('Source_'));
+        const targetColumn = columnNames.find(col => col.startsWith('Target_'));
+        
+        if (sourceColumn && targetColumn) {
+          // Template format detected
+          sourceKey = sourceColumn;
+          targetKey = targetColumn;
+          console.log('Template format detected with columns:', sourceKey, targetKey);
+        } else if (!('sourceValue' in firstRecord && 'targetValue' in firstRecord)) {
+          // Neither template format nor direct format detected
+          setUploadError("CSV must have either 'sourceValue'/'targetValue' columns or 'Source_X'/'Target_X' columns");
           return;
         }
 
         // Convert CSV records to mappings
-        const newMappings: Mapping[] = records.map((record: CSVMapping) => ({
-          sourceValue: record.sourceValue,
-          targetValue: record.targetValue,
-          confidence: calculateSimilarity(record.sourceValue, record.targetValue)
+        const newMappings: Mapping[] = records.map((record: Record<string, string>) => ({
+          sourceValue: record[sourceKey],
+          targetValue: record[targetKey],
+          confidence: calculateSimilarity(record[sourceKey], record[targetKey])
         }));
 
         console.log('New Mappings:', newMappings); // Debug log
