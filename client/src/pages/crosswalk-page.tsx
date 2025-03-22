@@ -952,8 +952,8 @@ export default function CrosswalkPage() {
                                 value={confidenceOperator}
                                 onValueChange={(value: "gt" | "lt" | "eq") => setConfidenceOperator(value)}
                               >
-                                <SelectTrigger className="w-[100px]">
-                                  <<SelectValue />
+                                <SelectTrigger className="w-[100px">
+                                  <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="gt">&gt;</SelectItem>
