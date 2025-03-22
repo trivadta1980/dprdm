@@ -1,37 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Card, 
-  CardContent,
-} from "@/components/ui/card";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { PlusCircle, Edit, Trash2, Download, Upload, XCircle, Check, Filter } from "lucide-react";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SearchIcon, PlusIcon, Trash2Icon, FileIcon, Download, Upload } from "lucide-react";
 import Papa from "papaparse";
 
 export interface MappingItem {
@@ -68,82 +65,66 @@ export function MappingEditor({
   targetLabel = "Target Value",
   allowCsvImport = true,
   allowCsvExport = true,
-  downloadTemplateFilename = "mapping_template.csv",
-  exportFilename = "mappings_export.csv",
+  downloadTemplateFilename = "crosswalk_template.csv",
+  exportFilename = "crosswalk_export.csv",
   readOnly = false,
 }: MappingEditorProps) {
   const { toast } = useToast();
-  const fileInputRef = React.createRef<HTMLInputElement>();
-  
-  // Internal state
-  const [filteredMappings, setFilteredMappings] = useState<MappingItem[]>(mappings);
-  const [sourceFilter, setSourceFilter] = useState("");
-  const [targetFilter, setTargetFilter] = useState("");
-  const [confidenceFilter, setConfidenceFilter] = useState("");
-  const [confidenceOperator, setConfidenceOperator] = useState<"gt" | "lt" | "eq">("gt");
-  
-  // State for editing
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [newSourceValue, setNewSourceValue] = useState("");
   const [newTargetValue, setNewTargetValue] = useState("");
-  const [newConfidence, setNewConfidence] = useState(100);
+  const [newConfidence, setNewConfidence] = useState<number>(0.7);
+  const [sourceFilter, setSourceFilter] = useState("");
+  const [targetFilter, setTargetFilter] = useState("");
+  const [confidenceOperator, setConfidenceOperator] = useState<"gt" | "lt" | "eq">("gt");
+  const [confidenceValue, setConfidenceValue] = useState<string>("");
+  const [filteredMappings, setFilteredMappings] = useState<MappingItem[]>(mappings);
+  const [activeTab, setActiveTab] = useState<string>("manual");
   
-  // State for deletion
-  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  
-  // When external mappings change, update the filtered mappings
+  // Update filtered mappings when mappings or filters change
   useEffect(() => {
-    setFilteredMappings(mappings);
-  }, [mappings]);
-  
-  // Filter mappings when filters change
-  useEffect(() => {
-    // Check if all filters are empty/default
-    const areAllFiltersEmpty = 
-      sourceFilter === '' && 
-      targetFilter === '' && 
-      confidenceFilter === '';
-    
-    if (areAllFiltersEmpty) {
-      // If all filters are empty, show all mappings without filtering
-      setFilteredMappings([...mappings]);
+    if (!sourceFilter && !targetFilter && !confidenceValue) {
+      // No active filters, show all mappings
+      console.log("No active filters, displaying all mappings");
+      setFilteredMappings(mappings);
       return;
     }
-    
-    // Apply filters
-    const filtered = mappings.filter(mapping => {
-      // Guard against missing properties
-      const sourceValue = mapping.sourceValue || '';
-      const targetValue = mapping.targetValue || '';
-      const confidence = mapping.confidence ?? 0;
 
-      const sourceMatch = sourceFilter === '' || 
-        sourceValue.toLowerCase().includes(sourceFilter.toLowerCase());
-
-      const targetMatch = targetFilter === '' || 
-        targetValue.toLowerCase().includes(targetFilter.toLowerCase());
-
-      const confidencePercent = Number((confidence * 100).toFixed(0));
-      const confidenceNumValue = confidenceFilter ? Number(confidenceFilter) : 0;
-
-      const confidenceMatch = confidenceFilter === "" || (
-        confidenceOperator === "gt" ? confidencePercent > confidenceNumValue :
-        confidenceOperator === "lt" ? confidencePercent < confidenceNumValue :
-        confidencePercent === confidenceNumValue
-      );
-
-      return sourceMatch && targetMatch && confidenceMatch;
+    const filtered = mappings.filter((mapping) => {
+      // Source filter
+      if (sourceFilter && !mapping.sourceValue.toLowerCase().includes(sourceFilter.toLowerCase())) {
+        return false;
+      }
+      
+      // Target filter
+      if (targetFilter && !mapping.targetValue.toLowerCase().includes(targetFilter.toLowerCase())) {
+        return false;
+      }
+      
+      // Confidence filter
+      if (confidenceValue) {
+        const confValue = parseFloat(confidenceValue);
+        if (!isNaN(confValue)) {
+          if (confidenceOperator === "gt" && mapping.confidence <= confValue) {
+            return false;
+          } else if (confidenceOperator === "lt" && mapping.confidence >= confValue) {
+            return false;
+          } else if (confidenceOperator === "eq" && mapping.confidence !== confValue) {
+            return false;
+          }
+        }
+      }
+      
+      return true;
     });
-
+    
     setFilteredMappings(filtered);
-  }, [mappings, sourceFilter, targetFilter, confidenceOperator, confidenceFilter]);
+  }, [mappings, sourceFilter, targetFilter, confidenceOperator, confidenceValue]);
   
-  // Add a new mapping
-  const addMapping = () => {
+  // Add new mapping
+  const handleAddMapping = () => {
     if (!newSourceValue || !newTargetValue) {
       toast({
-        title: "Missing Values",
+        title: "Error",
         description: "Both source and target values are required.",
         variant: "destructive",
       });
@@ -151,14 +132,14 @@ export function MappingEditor({
     }
     
     // Check for duplicates
-    const isDuplicate = mappings.some(
-      m => m.sourceValue === newSourceValue && m.targetValue === newTargetValue
+    const exists = mappings.some(
+      (m) => m.sourceValue === newSourceValue && m.targetValue === newTargetValue
     );
     
-    if (isDuplicate) {
+    if (exists) {
       toast({
-        title: "Duplicate Mapping",
-        description: "This source and target value combination already exists.",
+        title: "Error",
+        description: "This mapping already exists.",
         variant: "destructive",
       });
       return;
@@ -167,8 +148,8 @@ export function MappingEditor({
     const newMapping: MappingItem = {
       sourceValue: newSourceValue,
       targetValue: newTargetValue,
-      confidence: newConfidence / 100, // Convert from percentage to decimal
-      id: Date.now().toString(), // Simple unique ID
+      confidence: newConfidence,
+      id: Date.now().toString(),
     };
     
     const updatedMappings = [...mappings, newMapping];
@@ -177,581 +158,476 @@ export function MappingEditor({
     // Reset form
     setNewSourceValue("");
     setNewTargetValue("");
-    setNewConfidence(100);
+    setNewConfidence(0.7);
     
     toast({
-      title: "Mapping Added",
-      description: "New mapping has been added successfully.",
+      title: "Success",
+      description: "Mapping added successfully.",
     });
   };
   
-  // Edit an existing mapping
-  const startEditing = (index: number) => {
-    const mapping = mappings[index];
-    setEditingIndex(index);
-    setNewSourceValue(mapping.sourceValue);
-    setNewTargetValue(mapping.targetValue);
-    setNewConfidence(mapping.confidence * 100); // Convert from decimal to percentage
-  };
-  
-  const saveEdit = () => {
-    if (editingIndex === null) return;
-    
-    if (!newSourceValue || !newTargetValue) {
-      toast({
-        title: "Missing Values",
-        description: "Both source and target values are required.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Check for duplicates (excluding the current mapping being edited)
-    const isDuplicate = mappings.some(
-      (m, idx) => idx !== editingIndex && 
-      m.sourceValue === newSourceValue && 
-      m.targetValue === newTargetValue
-    );
-    
-    if (isDuplicate) {
-      toast({
-        title: "Duplicate Mapping",
-        description: "This source and target value combination already exists.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const updatedMappings = [...mappings];
-    updatedMappings[editingIndex] = {
-      ...updatedMappings[editingIndex],
-      sourceValue: newSourceValue,
-      targetValue: newTargetValue,
-      confidence: newConfidence / 100, // Convert from percentage to decimal
-    };
-    
+  // Delete mapping
+  const handleDeleteMapping = (id: string) => {
+    const updatedMappings = mappings.filter((m) => m.id !== id);
     onMappingsChange(updatedMappings);
     
-    // Reset form
-    setEditingIndex(null);
-    setNewSourceValue("");
-    setNewTargetValue("");
-    setNewConfidence(100);
-    
     toast({
-      title: "Mapping Updated",
-      description: "Mapping has been updated successfully.",
+      title: "Success",
+      description: "Mapping deleted successfully.",
     });
   };
   
-  const cancelEdit = () => {
-    setEditingIndex(null);
-    setNewSourceValue("");
-    setNewTargetValue("");
-    setNewConfidence(100);
-  };
-  
-  // Delete a mapping
-  const confirmDelete = () => {
-    if (deleteIndex === null) return;
-    
-    const updatedMappings = mappings.filter((_, idx) => idx !== deleteIndex);
-    onMappingsChange(updatedMappings);
-    
-    // Reset state
-    setDeleteIndex(null);
-    setIsDeleteDialogOpen(false);
-    
-    toast({
-      title: "Mapping Deleted",
-      description: "Mapping has been deleted successfully.",
-    });
-  };
-  
-  // Handle CSV import
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        try {
-          const records = results.data;
-          // Transform records into mappings
-          const newMappings: MappingItem[] = records.map((record: any) => {
-            let sourceValue = record.sourceValue;
-            let targetValue = record.targetValue;
-            
-            // Handle template format (Source_X, Target_X)
-            if (!sourceValue && !targetValue) {
-              const sourceKey = Object.keys(record).find(key => key.startsWith("Source_"));
-              const targetKey = Object.keys(record).find(key => key.startsWith("Target_"));
-              
-              if (sourceKey) sourceValue = record[sourceKey];
-              if (targetKey) targetValue = record[targetKey];
-            }
-
-            return {
-              sourceValue: sourceValue || "",
-              targetValue: targetValue || "",
-              confidence: 1.0, // Default confidence
-              id: Date.now().toString() + Math.random().toString(36).substr(2, 9), // Unique ID
-            };
-          });
-
-          // Update mappings
-          const mergedMappings = [...mappings];
-          
-          // Add only non-duplicate mappings
-          newMappings.forEach(newMapping => {
-            const isDuplicate = mergedMappings.some(
-              m => m.sourceValue === newMapping.sourceValue && 
-                   m.targetValue === newMapping.targetValue
-            );
-            
-            if (!isDuplicate) {
-              mergedMappings.push(newMapping);
-            }
-          });
-          
-          onMappingsChange(mergedMappings);
-          
-          toast({
-            title: "Success",
-            description: `Imported ${newMappings.length} mappings from CSV.`,
-          });
-          
-          // Clear the input
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-        } catch (error) {
-          console.error("Error processing CSV:", error);
-          toast({
-            title: "Error",
-            description: "Failed to process CSV file. Please check the format.",
-            variant: "destructive",
-          });
-        }
-      },
-      error: (error) => {
-        console.error("Error parsing CSV:", error);
-        toast({
-          title: "Error",
-          description: "Failed to parse CSV file. Please check the format.",
-          variant: "destructive",
-        });
-      }
-    });
-  };
-  
-  // Generate template CSV for download
+  // Create and download CSV template
   const handleDownloadTemplate = () => {
-    // Create a template with empty data but correct headers
-    const template = [{
-      sourceValue: "",
-      targetValue: "",
-      confidence: "100%"
-    }];
+    const headers = [`Source_${sourceLabel}`, `Target_${targetLabel}`];
+    const data = [headers];
     
-    // Generate CSV with PapaParse
-    const csv = Papa.unparse(template);
+    // Create CSV content
+    const csv = Papa.unparse(data);
     
-    // Create and trigger download
+    // Create a Blob and download
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = downloadTemplateFilename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", downloadTemplateFilename);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
   
   // Export current mappings to CSV
-  const handleExportCSV = () => {
+  const handleExportMappings = () => {
     if (mappings.length === 0) {
       toast({
-        title: "No Data",
-        description: "There are no mappings to export",
+        title: "Error",
+        description: "No mappings to export.",
         variant: "destructive",
       });
       return;
     }
-
-    // Convert mappings to rows with percentage confidence
-    const dataToExport = mappings.map(mapping => ({
-      sourceValue: mapping.sourceValue,
-      targetValue: mapping.targetValue,
-      confidencePercent: `${(mapping.confidence * 100).toFixed(0)}%`
-    }));
     
-    // Generate CSV with PapaParse
-    const csv = Papa.unparse(dataToExport);
+    const headers = ["sourceValue", "targetValue", "confidence"];
+    const rows = mappings.map((m) => [m.sourceValue, m.targetValue, m.confidence]);
+    const data = [headers, ...rows];
     
-    // Create and trigger download
+    // Create CSV content
+    const csv = Papa.unparse(data);
+    
+    // Create a Blob and download
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = exportFilename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", exportFilename);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Success",
+      description: "Mappings exported successfully.",
+    });
+  };
+  
+  // Import mappings from CSV
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    Papa.parse(file, {
+      header: true,
+      complete: (results) => {
+        if (results.errors.length > 0) {
+          toast({
+            title: "Error",
+            description: `CSV parsing error: ${results.errors[0].message}`,
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        const newMappings: MappingItem[] = [];
+        const errors: string[] = [];
+        
+        results.data.forEach((row: any, index) => {
+          // Support both direct column names and template format
+          const sourceKey = row.sourceValue || row[`Source_${sourceLabel}`] || Object.keys(row).find(k => k.startsWith('Source_'));
+          const targetKey = row.targetValue || row[`Target_${targetLabel}`] || Object.keys(row).find(k => k.startsWith('Target_'));
+          
+          if (!sourceKey || !targetKey || !row[sourceKey] || !row[targetKey]) {
+            errors.push(`Row ${index + 1}: Missing source or target value`);
+            return;
+          }
+          
+          const sourceValue = row.sourceValue || row[sourceKey];
+          const targetValue = row.targetValue || row[targetKey];
+          const confidence = row.confidence ? parseFloat(row.confidence) : 0.7;
+          
+          if (isNaN(confidence) || confidence < 0 || confidence > 1) {
+            errors.push(`Row ${index + 1}: Invalid confidence value. Using default 0.7.`);
+          }
+          
+          newMappings.push({
+            sourceValue,
+            targetValue,
+            confidence: isNaN(confidence) ? 0.7 : confidence,
+            id: Date.now().toString() + index,
+          });
+        });
+        
+        if (errors.length > 0) {
+          toast({
+            title: "Warning",
+            description: `Imported with some issues: ${errors.length} rows had problems.`,
+            variant: "destructive",
+          });
+        }
+        
+        if (newMappings.length === 0) {
+          toast({
+            title: "Error",
+            description: "No valid mappings found in the CSV file.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Check for duplicates with existing mappings
+        const existingMappingsMap = new Map(
+          mappings.map((m) => [`${m.sourceValue}|${m.targetValue}`, m])
+        );
+        
+        const uniqueNewMappings = newMappings.filter(
+          (m) => !existingMappingsMap.has(`${m.sourceValue}|${m.targetValue}`)
+        );
+        
+        if (uniqueNewMappings.length === 0) {
+          toast({
+            title: "Warning",
+            description: "All mappings in the CSV already exist.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        const updatedMappings = [...mappings, ...uniqueNewMappings];
+        onMappingsChange(updatedMappings);
+        
+        toast({
+          title: "Success",
+          description: `Imported ${uniqueNewMappings.length} new mappings from CSV.`,
+        });
+        
+        // Reset file input
+        event.target.value = "";
+      },
+      error: (error) => {
+        toast({
+          title: "Error",
+          description: `Failed to parse CSV: ${error.message}`,
+          variant: "destructive",
+        });
+      },
+    });
   };
   
   // Clear all mappings
-  const clearAllMappings = () => {
-    if (window.confirm("Are you sure you want to clear all mappings? This cannot be undone.")) {
+  const handleClearAll = () => {
+    if (window.confirm("Are you sure you want to delete all mappings?")) {
       onMappingsChange([]);
       toast({
-        title: "Mappings Cleared",
-        description: "All mappings have been cleared.",
+        title: "Success",
+        description: "All mappings cleared successfully.",
       });
     }
   };
-  
+
   return (
-    <Card>
-      <CardContent className="p-4 space-y-4">
-        {/* Filtering and Actions Header */}
-        <div className="flex flex-col gap-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">Value Mappings ({mappings.length})</h3>
-            <div className="flex gap-2">
-              {allowCsvImport && !readOnly && (
-                <>
-                  <input
-                    type="file"
-                    accept=".csv"
-                    onChange={handleFileChange}
-                    ref={fileInputRef}
-                    className="hidden"
-                    id="csv-upload"
-                  />
-                  <label htmlFor="csv-upload">
-                    <Button variant="outline" asChild>
-                      <span>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Import from CSV
-                      </span>
+    <div className="space-y-4">
+      {/* Tabs for different input methods */}
+      <Tabs 
+        value={activeTab} 
+        onValueChange={setActiveTab}
+        className="w-full"
+        defaultValue="manual"
+      >
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="manual" disabled={readOnly}>Manual Entry</TabsTrigger>
+          <TabsTrigger value="import" disabled={readOnly || !allowCsvImport}>CSV Import/Export</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="manual" className="space-y-4">
+          {/* Manual entry form */}
+          <Card>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-base">Add New Mapping</CardTitle>
+              <CardDescription>Create a mapping between source and target values</CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 pb-2">
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="space-y-2">
+                  <Label htmlFor="sourceValue">{sourceLabel}</Label>
+                  <Select
+                    disabled={readOnly}
+                    value={newSourceValue}
+                    onValueChange={setNewSourceValue}
+                  >
+                    <SelectTrigger id="sourceValue">
+                      <SelectValue placeholder={`Select ${sourceLabel}`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sourceValues.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="targetValue">{targetLabel}</Label>
+                  <Select
+                    disabled={readOnly}
+                    value={newTargetValue}
+                    onValueChange={setNewTargetValue}
+                  >
+                    <SelectTrigger id="targetValue">
+                      <SelectValue placeholder={`Select ${targetLabel}`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {targetValues.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Label htmlFor="confidence">Confidence ({(newConfidence * 100).toFixed(0)}%)</Label>
+                </div>
+                <Slider
+                  disabled={readOnly}
+                  id="confidence"
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  value={[newConfidence]}
+                  onValueChange={(value) => setNewConfidence(value[0])}
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="p-4 flex justify-end">
+              <Button
+                disabled={readOnly || !newSourceValue || !newTargetValue}
+                onClick={handleAddMapping}
+              >
+                <PlusIcon className="h-4 w-4 mr-2" />
+                Add Mapping
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="import" className="space-y-4">
+          {/* CSV import/export options */}
+          <Card>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-base">CSV Import/Export</CardTitle>
+              <CardDescription>Import from CSV or export current mappings</CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 pb-0">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="csvImport">Import from CSV</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      disabled={readOnly}
+                      id="csvImport"
+                      type="file"
+                      accept=".csv"
+                      onChange={handleFileChange}
+                      className="flex-1"
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Upload a CSV file with sourceValue and targetValue columns
+                  </p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Button
+                      disabled={readOnly}
+                      variant="outline"
+                      className="w-full"
+                      onClick={handleDownloadTemplate}
+                    >
+                      <FileIcon className="h-4 w-4 mr-2" />
+                      Download CSV Template
                     </Button>
-                  </label>
-                </>
-              )}
-              
-              {allowCsvExport && (
-                <Button
-                  variant="outline"
-                  onClick={handleExportCSV}
-                  disabled={mappings.length === 0}
+                  </div>
+                  
+                  <div>
+                    <Button
+                      disabled={readOnly || mappings.length === 0}
+                      variant="outline"
+                      className="w-full"
+                      onClick={handleExportMappings}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Export Current Mappings
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+      
+      {/* Filters and data table */}
+      <Card>
+        <CardHeader className="p-4 pb-2">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-base">Mappings</CardTitle>
+            <Button
+              disabled={readOnly || mappings.length === 0}
+              variant="destructive"
+              size="sm"
+              onClick={handleClearAll}
+            >
+              <Trash2Icon className="h-4 w-4 mr-1" />
+              Clear All
+            </Button>
+          </div>
+          <CardDescription>{mappings.length} total mappings</CardDescription>
+        </CardHeader>
+        
+        <CardContent className="p-4 pb-0">
+          {/* Filtering options */}
+          <div className="grid grid-cols-1 gap-4 mb-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="sourceFilter">Filter by {sourceLabel}</Label>
+              <div className="relative">
+                <SearchIcon className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="sourceFilter"
+                  placeholder="Filter source..."
+                  className="pl-8"
+                  value={sourceFilter}
+                  onChange={(e) => setSourceFilter(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="targetFilter">Filter by {targetLabel}</Label>
+              <div className="relative">
+                <SearchIcon className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="targetFilter"
+                  placeholder="Filter target..."
+                  className="pl-8"
+                  value={targetFilter}
+                  onChange={(e) => setTargetFilter(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="confidenceFilter">Filter by Confidence</Label>
+              <div className="flex gap-2">
+                <Select
+                  value={confidenceOperator}
+                  onValueChange={(value) => setConfidenceOperator(value as "gt" | "lt" | "eq")}
                 >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export to CSV
-                </Button>
-              )}
-              
-              {allowCsvImport && !readOnly && (
-                <Button
-                  type="button"
-                  onClick={handleDownloadTemplate}
-                  variant="outline"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Template
-                </Button>
-              )}
-              
-              {!readOnly && (
-                <Button
-                  type="button"
-                  onClick={clearAllMappings}
-                  variant="outline"
-                  className="text-red-500 hover:text-red-700"
-                  disabled={mappings.length === 0}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Clear All
-                </Button>
-              )}
+                  <SelectTrigger className="w-24">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="gt">&gt;</SelectItem>
+                    <SelectItem value="lt">&lt;</SelectItem>
+                    <SelectItem value="eq">=</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Input
+                  id="confidenceFilter"
+                  type="number"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  placeholder="0.0-1.0"
+                  value={confidenceValue}
+                  onChange={(e) => setConfidenceValue(e.target.value)}
+                  className="flex-1"
+                />
+              </div>
             </div>
           </div>
           
-          {/* Filters */}
-          <div className="flex items-center gap-2 pb-2 flex-wrap">
-            <div className="flex items-center">
-              <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground mr-2">Filters:</span>
-            </div>
-            <Input
-              placeholder={`Filter ${sourceLabel}...`}
-              value={sourceFilter}
-              onChange={(e) => setSourceFilter(e.target.value)}
-              className="w-40"
-            />
-            <Input
-              placeholder={`Filter ${targetLabel}...`}
-              value={targetFilter}
-              onChange={(e) => setTargetFilter(e.target.value)}
-              className="w-40"
-            />
-            <div className="flex gap-2 items-center">
-              <Select
-                value={confidenceOperator}
-                onValueChange={(value: "gt" | "lt" | "eq") => setConfidenceOperator(value)}
-              >
-                <SelectTrigger className="w-[80px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="gt">&gt;</SelectItem>
-                  <SelectItem value="lt">&lt;</SelectItem>
-                  <SelectItem value="eq">=</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input
-                type="number"
-                min="0"
-                max="100"
-                placeholder="Confidence %"
-                value={confidenceFilter}
-                onChange={(e) => setConfidenceFilter(e.target.value)}
-                className="w-[120px]"
-              />
-            </div>
-            {(sourceFilter || targetFilter || confidenceFilter) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSourceFilter("");
-                  setTargetFilter("");
-                  setConfidenceFilter("");
-                }}
-              >
-                <XCircle className="h-4 w-4 mr-1" />
-                Clear Filters
-              </Button>
-            )}
-          </div>
-        </div>
-        
-        {/* Mapping Table */}
-        <div className="border rounded-lg">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{sourceLabel}</TableHead>
-                <TableHead>{targetLabel}</TableHead>
-                <TableHead>Confidence</TableHead>
-                {!readOnly && <TableHead className="text-right">Actions</TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredMappings.length > 0 ? (
-                filteredMappings.map((mapping, index) => (
-                  <TableRow key={mapping.id || index}>
-                    {editingIndex === index ? (
-                      // Edit mode
-                      <>
-                        <TableCell>
-                          <Select 
-                            value={newSourceValue} 
-                            onValueChange={setNewSourceValue}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select source value" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {sourceValues.map((value) => (
-                                <SelectItem key={value} value={value}>
-                                  {value}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Select 
-                            value={newTargetValue} 
-                            onValueChange={setNewTargetValue}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select target value" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {targetValues.map((value) => (
-                                <SelectItem key={value} value={value}>
-                                  {value}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={newConfidence}
-                            onChange={(e) => setNewConfidence(Number(e.target.value))}
-                          />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end space-x-2">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={saveEdit}
-                            >
-                              <Check className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={cancelEdit}
-                            >
-                              <XCircle className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </>
-                    ) : (
-                      // View mode
-                      <>
-                        <TableCell>{mapping.sourceValue}</TableCell>
-                        <TableCell>{mapping.targetValue}</TableCell>
-                        <TableCell>{Math.round(mapping.confidence * 100)}%</TableCell>
-                        {!readOnly && (
-                          <TableCell className="text-right">
-                            <div className="flex justify-end space-x-2">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => startEditing(index)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => {
-                                  setDeleteIndex(index);
-                                  setIsDeleteDialogOpen(true);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        )}
-                      </>
-                    )}
-                  </TableRow>
-                ))
-              ) : (
+          {/* Data table */}
+          <div className="border rounded-md">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={readOnly ? 3 : 4} className="text-center py-4">
-                    {sourceFilter || targetFilter || confidenceFilter ? (
-                      <div className="text-muted-foreground">
-                        No mappings match the current filters
-                      </div>
-                    ) : (
-                      <div className="text-muted-foreground">
-                        No mappings defined yet. Add one below or import from CSV.
-                      </div>
-                    )}
-                  </TableCell>
+                  <TableHead>{sourceLabel}</TableHead>
+                  <TableHead>{targetLabel}</TableHead>
+                  <TableHead>Confidence</TableHead>
+                  {!readOnly && <TableHead className="w-24">Actions</TableHead>}
                 </TableRow>
-              )}
-              
-              {/* Add new mapping form (only in non-read-only mode) */}
-              {!readOnly && editingIndex === null && (
-                <TableRow className="bg-muted/20">
-                  <TableCell>
-                    <Select 
-                      value={newSourceValue} 
-                      onValueChange={setNewSourceValue}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={`Select ${sourceLabel.toLowerCase()}`} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {sourceValues.map((value) => (
-                          <SelectItem key={value} value={value}>
-                            {value}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <Select 
-                      value={newTargetValue} 
-                      onValueChange={setNewTargetValue}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={`Select ${targetLabel.toLowerCase()}`} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {targetValues.map((value) => (
-                          <SelectItem key={value} value={value}>
-                            {value}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={newConfidence}
-                      onChange={(e) => setNewConfidence(Number(e.target.value))}
-                      className="w-[100px]"
-                    />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button onClick={addMapping}>
-                      <PlusCircle className="h-4 w-4 mr-2" />
-                      Add
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {filteredMappings.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={readOnly ? 3 : 4} className="h-32 text-center">
+                      No mappings found.
+                      {(sourceFilter || targetFilter || confidenceValue) && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Try adjusting your filters.
+                        </p>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredMappings.map((mapping) => (
+                    <TableRow key={mapping.id}>
+                      <TableCell>{mapping.sourceValue}</TableCell>
+                      <TableCell>{mapping.targetValue}</TableCell>
+                      <TableCell>{(mapping.confidence * 100).toFixed(0)}%</TableCell>
+                      {!readOnly && (
+                        <TableCell>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteMapping(mapping.id!)}
+                          >
+                            <Trash2Icon className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
         
-        {/* Summary */}
-        <div className="text-sm text-muted-foreground">
-          {filteredMappings.length === mappings.length 
-            ? `Showing all ${mappings.length} mappings.` 
-            : `Showing ${filteredMappings.length} of ${mappings.length} mappings.`}
-        </div>
-      </CardContent>
-      
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this mapping from the list.
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeleteIndex(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </Card>
+        <CardFooter className="p-4 justify-between">
+          <div className="text-sm text-muted-foreground">
+            Showing {filteredMappings.length} of {mappings.length} mappings
+          </div>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }
