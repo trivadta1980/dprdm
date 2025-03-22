@@ -25,6 +25,7 @@ const RelationshipsPage = lazy(() => import("@/pages/relationships-page"));
 const RelationshipValuesPage = lazy(() => import("@/pages/relationship-values-page"));
 const CrosswalksPage = lazy(() => import("@/pages/crosswalks-list-page"));
 const CrosswalkPage = lazy(() => import("@/pages/crosswalk-page"));
+const NewCrosswalksPage = lazy(() => import("@/pages/new-crosswalks-page"));
 const ChangePasswordPage = lazy(() => import("@/pages/change-password"));
 const ApiTestPage = lazy(() => import("@/pages/api-test-page"));
 const ResetPasswordPage = lazy(() => import("@/pages/reset-password-page"));
@@ -108,6 +109,11 @@ export default function App() {
                 </ProtectedRoute>
               </Route>
               <Route path="/crosswalks">
+                <ProtectedRoute>
+                  <NewCrosswalksPage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/crosswalks-old">
                 <ProtectedRoute>
                   <CrosswalksPage />
                 </ProtectedRoute>
