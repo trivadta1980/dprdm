@@ -851,32 +851,41 @@ export default function CrosswalkPage() {
                       ref={fileInputRef}
                       className="hidden"
                       id="csv-upload"
+                      disabled={!isEditMode}
                     />
-                    <label htmlFor="csv-upload">
-                      <Button variant="outline" asChild>
-                        <span>
-                          <Upload className="h-4 w-4 mr-2" />
-                          Import from CSV
-                        </span>
-                      </Button>
-                    </label>
-                    <Button
-                      variant="outline"
-                      onClick={handleExportCSV}
-                      disabled={mappings.length === 0}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Export to CSV
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleDownloadTemplate}
-                      variant="outline"
-                      className="bg-white hover:bg-blue-50 mr-2"
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Download Template
-                    </Button>
+                    {isEditMode ? (
+                      <>
+                        <label htmlFor="csv-upload">
+                          <Button variant="outline" asChild>
+                            <span>
+                              <Upload className="h-4 w-4 mr-2" />
+                              Import from CSV
+                            </span>
+                          </Button>
+                        </label>
+                        <Button
+                          variant="outline"
+                          onClick={handleExportCSV}
+                          disabled={mappings.length === 0}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Export to CSV
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={handleDownloadTemplate}
+                          variant="outline"
+                          className="bg-white hover:bg-blue-50 mr-2"
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download Template
+                        </Button>
+                      </>
+                    ) : (
+                      <div className="text-sm text-muted-foreground ml-3">
+                        CSV import will be available after creating the crosswalk
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -905,12 +914,11 @@ export default function CrosswalkPage() {
                 </Button>
               </div>
 
-              {mappings.length > 0 && (
+              {mappings.length > 0 ? (
                 <>
                   <div className="space-y-4">
                     <div className="flex items-center gap-4">
-                      {/*rest of the code*/}
-                      <div className="border rounded-lg">
+                      <div className="border rounded-lg w-full">
                         <Table>
                           <TableHeader>
                             <TableRow>
@@ -972,64 +980,85 @@ export default function CrosswalkPage() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {filteredMappings.map((mapping, index) => (
-                              <TableRow key={mapping.sourceValue}>
-                                <TableCell>{mapping.sourceValue}</TableCell>
-                                <TableCell>
-                                  {editingIndex === index ? (
-                                    <Select
-                                      value={editValue || mapping.targetValue}
-                                      onValueChange={setEditValue}
-                                    >
-                                      <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Choose target value" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {targetAttributeValues.map((value) => (
-                                          <SelectItem key={value} value={value}>
-                                            {value}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  ) : (
-                                    mapping.targetValue
-                                  )}
-                                </TableCell>
-                                <TableCell>{(mapping.confidence * 100).toFixed(0)}%</TableCell>
-                                <TableCell>
-                                  {editingIndex === index ?(
-                                    <div className="flex space-x-2">
+                            {filteredMappings.length > 0 ? (
+                              filteredMappings.map((mapping, index) => (
+                                <TableRow key={mapping.sourceValue}>
+                                  <TableCell>{mapping.sourceValue}</TableCell>
+                                  <TableCell>
+                                    {editingIndex === index ? (
+                                      <Select
+                                        value={editValue || mapping.targetValue}
+                                        onValueChange={setEditValue}
+                                      >
+                                        <SelectTrigger className="w-full">
+                                          <SelectValue placeholder="Choose target value" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {targetAttributeValues.map((value) => (
+                                            <SelectItem key={value} value={value}>
+                                              {value}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    ) : (
+                                      mapping.targetValue
+                                    )}
+                                  </TableCell>
+                                  <TableCell>{(mapping.confidence * 100).toFixed(0)}%</TableCell>
+                                  <TableCell>
+                                    {editingIndex === index ? (
+                                      <div className="flex space-x-2">
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => updateMapping(index, editValue)}
+                                        >
+                                          <Check className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => setEditingIndex(null)}
+                                        >
+                                          <X className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    ) : (
                                       <Button
                                         variant="ghost"
                                         size="icon"
-                                        onClick={() => updateMapping(index, editValue)}
+                                        onClick={() => {
+                                          setEditingIndex(index);
+                                          setEditValue(mapping.targetValue);
+                                        }}
                                       >
-                                        <Check className="h-4 w-4" />
+                                        <Edit2 className="h-4 w-4" />
                                       </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => setEditingIndex(null)}
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  ) : (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            ) : (
+                              <TableRow>
+                                <TableCell colSpan={4} className="h-24 text-center">
+                                  <div className="flex flex-col items-center justify-center gap-2">
+                                    <SearchX className="h-8 w-8 text-muted-foreground" />
+                                    <p className="text-muted-foreground">No matching mappings found with current filters</p>
+                                    <Button 
+                                      variant="outline" 
                                       onClick={() => {
-                                        setEditingIndex(index);
-                                        setEditValue(mapping.targetValue);
+                                        setSourceFilter("");
+                                        setTargetFilter("");
+                                        setConfidenceValue("");
                                       }}
                                     >
-                                      <Edit2 className="h-4 w-4" />
+                                      Clear Filters
                                     </Button>
-                                  )}
+                                  </div>
                                 </TableCell>
                               </TableRow>
-                            ))}
+                            )}
                           </TableBody>
                         </Table>
                       </div>
