@@ -297,8 +297,18 @@ export default function ReferenceTypesListPage() {
         method: "DELETE",
       });
 
+      // Check if the response is not ok
       if (!response.ok) {
-        throw new Error(`Failed to delete reference type: ${response.statusText}`);
+        // Try to get a detailed error message from the response
+        let errorMessage;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || `Failed to delete reference type: ${response.statusText}`;
+        } catch (e) {
+          errorMessage = `Failed to delete reference type: ${response.statusText}`;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       toast({
@@ -312,7 +322,7 @@ export default function ReferenceTypesListPage() {
       console.error("Error deleting reference type:", error);
       toast({
         title: "Error",
-        description: "Failed to delete reference type. It may be in use by reference data sets.",
+        description: error.message || "Failed to delete reference type. It may be in use by reference data sets.",
         variant: "destructive",
       });
     } finally {
