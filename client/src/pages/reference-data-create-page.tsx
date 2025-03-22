@@ -286,62 +286,7 @@ export default function ReferenceDataCreatePage() {
           </CardContent>
         </Card>
 
-        {/* Debug Panel */}
-        <div className="mt-12 border rounded-md">
-          <div className="p-4 bg-gray-100 border-b font-medium flex justify-between items-center">
-            <span>Debug Panel</span>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setDebugInfo({ request: null, response: null, error: null })}
-            >
-              Clear
-            </Button>
-          </div>
-          <div className="p-4 max-h-[500px] overflow-auto">
-            <div className="space-y-4">
-              {selectedTypeId && (
-                <div>
-                  <h3 className="font-medium text-green-600 mb-2">Selected Type:</h3>
-                  <pre className="bg-gray-50 p-3 rounded-md text-xs overflow-auto">
-                    {JSON.stringify({ 
-                      id: selectedTypeId, 
-                      name: selectedTypeName,
-                      type: typeof selectedTypeId 
-                    }, null, 2)}
-                  </pre>
-                </div>
-              )}
-              
-              {debugInfo.request && (
-                <div>
-                  <h3 className="font-medium text-blue-600 mb-2">API Request:</h3>
-                  <pre className="bg-gray-50 p-3 rounded-md text-xs overflow-auto">
-                    {JSON.stringify(debugInfo.request, null, 2)}
-                  </pre>
-                </div>
-              )}
-              
-              {debugInfo.response && (
-                <div>
-                  <h3 className="font-medium text-purple-600 mb-2">API Response:</h3>
-                  <pre className="bg-gray-50 p-3 rounded-md text-xs overflow-auto">
-                    {JSON.stringify(debugInfo.response, null, 2)}
-                  </pre>
-                </div>
-              )}
-              
-              {debugInfo.error && (
-                <div>
-                  <h3 className="font-medium text-red-600 mb-2">Error:</h3>
-                  <pre className="bg-gray-50 p-3 rounded-md text-xs overflow-auto">
-                    {JSON.stringify(debugInfo.error, null, 2)}
-                  </pre>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        {/* Debug Panel is hidden */}
       </div>
     </MainLayout>
   );
