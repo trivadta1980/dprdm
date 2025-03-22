@@ -33,7 +33,30 @@ import { addDays } from "date-fns";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
 
-// ... existing interfaces ...
+interface PendingApproval {
+  dataSetId: number;
+  dataSetName: string;
+  instanceId: string;
+  instanceName: string;
+  status: string;
+  changes: any[];
+}
+
+interface PendingRelationshipValue {
+  id: number;
+  relationshipId: number;
+  relationshipName: string;
+  sourceDatasetId: number;
+  sourceDatasetName: string;
+  targetDatasetId: number;
+  targetDatasetName: string;
+  sourceId: string;
+  sourceName: string;
+  targetId: string;
+  targetName: string;
+  status: string;
+  dateSubmitted: string;
+}
 
 export default function ApprovalsDashboard() {
   const { toast } = useToast();

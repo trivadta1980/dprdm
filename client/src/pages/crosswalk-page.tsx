@@ -960,7 +960,8 @@ export default function CrosswalkPage() {
                                   <span>Confidence</span>
                                   <div className="flex gap-2">
                                     <Select
-                                      value={confidenceOperator                                      onValueChange={(value: "gt" | "lt" | "eq") => setConfidenceOperator(value)}
+                                      value={confidenceOperator}
+                                      onValueChange={(value: "gt" | "lt" | "eq") => setConfidenceOperator(value)}
                                     >
                                       <SelectTrigger className="w-[100px]">
                                         <SelectValue />
