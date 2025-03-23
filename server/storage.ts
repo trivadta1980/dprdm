@@ -621,6 +621,24 @@ export class DatabaseStorage implements IStorage {
       await tx
         .delete(relationshipValues)
         .where(eq(relationshipValues.relationshipId, id));
+        
+      // Get all attribute definitions for this relationship
+      const attrDefs = await tx
+        .select()
+        .from(relationshipAttributeDefinitions)
+        .where(eq(relationshipAttributeDefinitions.relationshipTypeId, id));
+        
+      // Delete all attribute values associated with these definitions
+      for (const attrDef of attrDefs) {
+        await tx
+          .delete(relationshipAttributeValues)
+          .where(eq(relationshipAttributeValues.attributeDefinitionId, attrDef.id));
+      }
+      
+      // Delete all attribute definitions for this relationship
+      await tx
+        .delete(relationshipAttributeDefinitions)
+        .where(eq(relationshipAttributeDefinitions.relationshipTypeId, id));
 
       // Finally delete the relationship itself
       const [relationship] = await tx
