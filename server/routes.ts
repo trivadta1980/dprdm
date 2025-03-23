@@ -2591,14 +2591,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate a secure random key
       const apiKeyValue = randomBytes(32).toString('hex');
       
+      // Extract only the fields we need from req.body to avoid date issues
+      const { name, description, expiresAt } = req.body;
+      
+      // Create a proper Date object or undefined if expiresAt is provided
+      let expiry = undefined;
+      if (expiresAt) {
+        expiry = new Date(expiresAt);
+      }
+      
       // Create the API key in the database
       const apiKey = await storage.createApiKey({
-        ...req.body,
+        name,
+        description,
         key: apiKeyValue,
         createdBy: req.user.id,
         isActive: true,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        expiresAt: expiry
       });
       
       console.log('POST /api/-keys - API key created successfully');
