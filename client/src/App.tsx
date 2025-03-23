@@ -107,7 +107,12 @@ export default function App() {
                   <RelationshipValuesPage />
                 </ProtectedRoute>
               </Route>
-              <Route path="/crosswalks">
+              <Route path="/crosswalks/create">
+                <ProtectedRoute>
+                  <NewCrosswalksPage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/crosswalks/:id/edit">
                 <ProtectedRoute>
                   <NewCrosswalksPage />
                 </ProtectedRoute>
@@ -117,12 +122,7 @@ export default function App() {
                   <CrosswalksPage />
                 </ProtectedRoute>
               </Route>
-              <Route path="/crosswalks/create">
-                <ProtectedRoute>
-                  <NewCrosswalksPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/crosswalks/:id/edit">
+              <Route path="/crosswalks">
                 <ProtectedRoute>
                   <NewCrosswalksPage />
                 </ProtectedRoute>
