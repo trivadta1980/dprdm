@@ -16,6 +16,7 @@ import {
   Share2,
   Map,
   CheckSquare,
+  Key,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -25,7 +26,7 @@ interface SidebarProps {
 
 // Role-based permission mapping - exactly matching the href values in menuItems
 const rolePermissions: Record<number, string[]> = {
-  1: ['/manage-users', '/roles', '/reference-types', '/reference-data', '/relationships', '/crosswalks', '/api-test', '/graph-visualization', '/site-paths'], // Admin
+  1: ['/manage-users', '/roles', '/reference-types', '/reference-data', '/relationships', '/crosswalks', '/api-keys', '/api-test', '/graph-visualization', '/site-paths'], // Admin
   2: ['/approvals', '/reference-types', '/reference-data', '/relationships', '/crosswalks'], // Approver
   3: ['/reference-data', '/relationships'], // Basic User
   10: ['/approvals', '/reference-types', '/reference-data', '/relationships', '/crosswalks'], // Custom Approver Role

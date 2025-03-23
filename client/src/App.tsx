@@ -31,7 +31,8 @@ const ResetPasswordPage = lazy(() => import("@/pages/reset-password-page"));
 const GraphVisualizationPage = lazy(() => import("@/pages/graph-visualization-page"));
 const Neo4jInfoPage = lazy(() => import("@/pages/neo4j-info-page"));
 const SitePathsPage = lazy(() => import("@/pages/site-paths-page"));
-const ApprovalsDashboard = lazy(() => import("@/pages/approvals-dashboard")); // Add import for approvals dashboard
+const ApprovalsDashboard = lazy(() => import("@/pages/approvals-dashboard"));
+const ApiKeysPage = lazy(() => import("@/pages/api-keys-page"));
 
 export default function App() {
   return (
@@ -152,6 +153,11 @@ export default function App() {
               <Route path="/approvals">
                 <ProtectedRoute>
                   <ApprovalsDashboard />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/api-keys">
+                <ProtectedRoute adminOnly>
+                  <ApiKeysPage />
                 </ProtectedRoute>
               </Route>
             </Router>
