@@ -102,7 +102,7 @@ export default function ApiKeysPage() {
         expiresAt: data.expiresAt ? data.expiresAt.toISOString() : null,
       };
       
-      return await apiRequest("api-keys", {
+      return await apiRequest("-keys", {
         method: "POST",
         data: apiData,
       });
@@ -138,7 +138,7 @@ export default function ApiKeysPage() {
         expiresAt: data.values.expiresAt ? data.values.expiresAt.toISOString() : null,
       };
       
-      return await apiRequest(`api-keys/${data.id}`, {
+      return await apiRequest(`-keys/${data.id}`, {
         method: "PATCH",
         data: apiData,
       });
@@ -162,7 +162,7 @@ export default function ApiKeysPage() {
   // Mutation for deleting an API key
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest(`api-keys/${id}`, {
+      return await apiRequest(`-keys/${id}`, {
         method: "DELETE",
       });
     },
