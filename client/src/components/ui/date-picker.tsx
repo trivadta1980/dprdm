@@ -21,29 +21,42 @@ interface DatePickerProps {
 export function DatePicker({
   selected,
   onSelect,
-  placeholder = "Pick a date",
+  placeholder = "Select date",
   disabled = false,
 }: DatePickerProps) {
+  const [date, setDate] = React.useState<Date | undefined>(selected)
+
+  React.useEffect(() => {
+    setDate(selected)
+  }, [selected])
+
+  const handleSelect = (newDate: Date | undefined) => {
+    setDate(newDate)
+    if (onSelect) {
+      onSelect(newDate)
+    }
+  }
+
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button
-          variant={"outline"}
+          variant="outline"
           className={cn(
             "w-full justify-start text-left font-normal",
-            !selected && "text-muted-foreground"
+            !date && "text-muted-foreground"
           )}
           disabled={disabled}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {selected ? format(selected, "PPP") : <span>{placeholder}</span>}
+          {date ? format(date, "PPP") : placeholder}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
+      <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
-          selected={selected}
-          onSelect={onSelect}
+          selected={date}
+          onSelect={handleSelect}
           initialFocus
         />
       </PopoverContent>

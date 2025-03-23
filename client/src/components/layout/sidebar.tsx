@@ -98,6 +98,12 @@ export function Sidebar({ className }: SidebarProps) {
     },
     ...(isAdmin ? [
       {
+        title: "API Keys",
+        href: "/api-keys",
+        icon: Key,
+        requiresPermission: true,
+      },
+      {
         title: "Testing",
         href: "/api-test",
         icon: TestTube2,
