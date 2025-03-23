@@ -2547,6 +2547,211 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/external', apiKeyAuth, externalRoutes);
 
   // API Keys management routes (authenticated users only)
+  // Add compatibility routes for the "-keys" endpoint that client is using
+  app.get('/api/-keys', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/-keys - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    console.log('GET /api/-keys - Request received');
+    try {
+      const apiKeys = await storage.getAllApiKeys();
+      
+      // Only admins can see all API keys
+      const isAdmin = req.user.roleId === 1;
+      
+      // Filter keys if user is not admin to only show their own
+      const filteredKeys = isAdmin 
+        ? apiKeys 
+        : apiKeys.filter(key => key.createdBy === req.user.id);
+      
+      // Don't send the actual key value for security
+      const safeKeys = filteredKeys.map(key => {
+        // Create a copy without the key field
+        const { key: _, ...safeKey } = key;
+        return safeKey;
+      });
+      
+      console.log('GET /api/-keys - Keys fetched successfully:', safeKeys.length);
+      res.json(safeKeys);
+    } catch (error) {
+      console.error('Error fetching API keys:', error);
+      res.status(500).json({ error: 'Failed to fetch API keys' });
+    }
+  });
+  
+  // Add POST endpoint for the "-keys" endpoint for creating keys
+  app.post('/api/-keys', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/-keys - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    console.log('POST /api/-keys - Request received');
+    try {
+      // Generate a secure random key
+      const apiKeyValue = randomBytes(32).toString('hex');
+      
+      // Create the API key in the database
+      const apiKey = await storage.createApiKey({
+        ...req.body,
+        key: apiKeyValue,
+        createdBy: req.user.id,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      
+      console.log('POST /api/-keys - API key created successfully');
+      
+      // Only return the actual key value once during creation
+      res.status(201).json({
+        ...apiKey,
+        key: apiKeyValue // Include the actual key only in the creation response
+      });
+    } catch (error) {
+      console.error('POST /api/-keys - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+  
+  app.patch('/api/-keys/:id', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('PATCH /api/-keys/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    console.log('PATCH /api/-keys/:id - Request received');
+    const keyId = Number(req.params.id);
+    const isAdmin = req.user.roleId === 1;
+    
+    try {
+      // First get the key to check ownership
+      const existingKey = await storage.getApiKey(keyId);
+      
+      if (!existingKey) {
+        console.log('PATCH /api/-keys/:id - Key not found');
+        return res.status(404).json({ error: 'API key not found' });
+      }
+      
+      // Only the key creator or admin can update it
+      if (!isAdmin && existingKey.createdBy !== req.user.id) {
+        console.log('PATCH /api/-keys/:id - Unauthorized: User does not own this key');
+        return res.status(403).json({ error: 'You do not have permission to update this API key' });
+      }
+      
+      // Update the key
+      const updatedKey = await storage.updateApiKey(keyId, {
+        ...req.body,
+        updatedAt: new Date()
+      });
+      
+      if (!updatedKey) {
+        console.log('PATCH /api/-keys/:id - Update failed');
+        return res.status(500).json({ error: 'Failed to update API key' });
+      }
+      
+      console.log('PATCH /api/-keys/:id - Key updated successfully');
+      
+      // Don't return the actual key value in the response
+      const { key: _, ...safeKey } = updatedKey;
+      res.json(safeKey);
+    } catch (error) {
+      console.error('PATCH /api/-keys/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+  
+  app.delete('/api/-keys/:id', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('DELETE /api/-keys/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    console.log('DELETE /api/-keys/:id - Request received');
+    const keyId = Number(req.params.id);
+    const isAdmin = req.user.roleId === 1;
+    
+    try {
+      // First get the key to check ownership
+      const existingKey = await storage.getApiKey(keyId);
+      
+      if (!existingKey) {
+        console.log('DELETE /api/-keys/:id - Key not found');
+        return res.status(404).json({ error: 'API key not found' });
+      }
+      
+      // Only the key creator or admin can delete it
+      if (!isAdmin && existingKey.createdBy !== req.user.id) {
+        console.log('DELETE /api/-keys/:id - Unauthorized: User does not own this key');
+        return res.status(403).json({ error: 'You do not have permission to delete this API key' });
+      }
+      
+      // Delete the key
+      const success = await storage.deleteApiKey(keyId);
+      
+      if (success) {
+        console.log('DELETE /api/-keys/:id - Key deleted successfully');
+        res.sendStatus(200);
+      } else {
+        console.log('DELETE /api/-keys/:id - Deletion failed');
+        res.status(500).json({ error: 'Failed to delete API key' });
+      }
+    } catch (error) {
+      console.error('DELETE /api/-keys/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+  
+  app.post('/api/-keys/:id/view', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/-keys/:id/view - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    console.log('POST /api/-keys/:id/view - Request received');
+    const keyId = Number(req.params.id);
+    const isAdmin = req.user.roleId === 1;
+    const { password } = req.body;
+    
+    if (!password) {
+      console.log('POST /api/-keys/:id/view - No password provided');
+      return res.status(400).json({ error: 'Password is required to view API key' });
+    }
+    
+    try {
+      // First get the key to check ownership
+      const existingKey = await storage.getApiKey(keyId);
+      
+      if (!existingKey) {
+        console.log('POST /api/-keys/:id/view - Key not found');
+        return res.status(404).json({ error: 'API key not found' });
+      }
+      
+      // Only the key creator or admin can view it
+      if (!isAdmin && existingKey.createdBy !== req.user.id) {
+        console.log('POST /api/-keys/:id/view - Unauthorized: User does not own this key');
+        return res.status(403).json({ error: 'You do not have permission to view this API key' });
+      }
+      
+      // Verify password
+      const user = await storage.getUser(req.user.id);
+      
+      if (!user || !user.password) {
+        console.log('POST /api/-keys/:id/view - User authentication error');
+        return res.status(401).json({ error: 'Authentication error' });
+      }
+      
+      const isPasswordValid = await comparePasswords(password, user.password);
+      
+      if (!isPasswordValid) {
+        console.log('POST /api/-keys/:id/view - Invalid password');
+        return res.status(401).json({ error: 'Invalid password' });
+      }
+      
+      console.log('POST /api/-keys/:id/view - Password validated, returning key');
+      res.json(existingKey);
+    } catch (error) {
+      console.error('POST /api/-keys/:id/view - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
   app.get('/api/api-keys', async (req, res) => {
     console.log('GET /api/api-keys - Request received');
     if (!req.isAuthenticated()) {
