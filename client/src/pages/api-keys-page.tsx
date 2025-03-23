@@ -193,7 +193,10 @@ export default function ApiKeysPage() {
       });
     },
     onSuccess: (data) => {
-      setActiveApiKey(data as any);
+      console.log("API Key retrieved:", data);
+      // Extract the JSON data from the response
+      const apiKeyData = data as unknown as ApiKey;
+      setActiveApiKey(apiKeyData);
       setApiKeyPassword("");
       toast({
         title: "API Key Retrieved",
@@ -239,10 +242,16 @@ export default function ApiKeysPage() {
   };
 
   const handleFetchKey = () => {
-    if (activeApiKey) {
+    if (activeApiKey && activeApiKey.id !== undefined) {
       viewKeyMutation.mutate({
         id: activeApiKey.id,
         password: apiKeyPassword,
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Invalid API key selected",
+        variant: "destructive",
       });
     }
   };
