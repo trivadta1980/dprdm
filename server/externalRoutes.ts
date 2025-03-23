@@ -1,9 +1,8 @@
-import { Router, Request, Response } from 'express';
+import express, { Request, Response } from 'express';
 import { storage } from './storage';
-import { eq } from 'drizzle-orm';
-import { relationshipValues } from '@shared/schema';
+import { approvalStatusEnum } from '../shared/schema';
 
-const router = Router();
+const router = express.Router();
 
 /**
  * External API Routes
@@ -19,51 +18,43 @@ const router = Router();
  */
 router.get('/reference-data/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const dataSetId = parseInt(id);
+    const dataSetId = parseInt(req.params.id);
     
     if (isNaN(dataSetId)) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Invalid data set ID'
-      });
+      return res.status(400).json({ error: 'Invalid ID format' });
     }
     
     const dataSet = await storage.getReferenceDataSet(dataSetId);
     
     if (!dataSet) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Data set not found'
-      });
+      return res.status(404).json({ error: 'Dataset not found' });
     }
     
-    // Filter to only include instances that are approved or don't have a status field
+    // Filter out only approved data instances (or pending if explicitly requested)
     const filteredData: Record<string, any> = {};
-    Object.entries(dataSet.data).forEach(([key, instance]) => {
-      // Check if the instance has a status field with an APPROVED value
-      // If not, include only if there's no status (legacy data)
-      if (!instance.status || instance.status === 'APPROVED') {
-        filteredData[key] = instance;
-      }
-    });
     
-    // Return only the filtered data
-    const filteredDataSet = {
+    for (const [id, instance] of Object.entries(dataSet.data)) {
+      // Check if instance has a _history property with approval status
+      const lastHistoryEntry = instance._history?.[instance._history.length - 1];
+      const approvalStatus = lastHistoryEntry?.newStatus;
+      
+      // Only include instances with APPROVED status
+      if (approvalStatus === 'APPROVED') {
+        // Create a shallow copy of the instance without the _history field
+        const { _history, ...cleanInstance } = instance;
+        filteredData[id] = cleanInstance;
+      }
+    }
+    
+    const result = {
       ...dataSet,
       data: filteredData
     };
     
-    return res.status(200).json({
-      status: 'success',
-      data: filteredDataSet
-    });
+    res.json(result);
   } catch (error) {
-    console.error('External API error:', error);
-    return res.status(500).json({
-      status: 'error',
-      message: 'Internal server error'
-    });
+    console.error('Error fetching reference data:', error);
+    res.status(500).json({ error: 'Failed to fetch reference data' });
   }
 });
 
@@ -74,49 +65,55 @@ router.get('/reference-data/:id', async (req: Request, res: Response) => {
  */
 router.get('/relationships/:id/values', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const relationshipId = parseInt(id);
+    const relationshipId = parseInt(req.params.id);
     
     if (isNaN(relationshipId)) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Invalid relationship ID'
-      });
+      return res.status(400).json({ error: 'Invalid ID format' });
     }
     
-    // Get the relationship to verify it exists
     const relationship = await storage.getRelationship(relationshipId);
     
     if (!relationship) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Relationship not found'
-      });
+      return res.status(404).json({ error: 'Relationship not found' });
     }
     
-    // Get only approved relationship values
-    const values = await storage.getRelationshipValuesByStatus('APPROVED');
-    const filteredValues = values.filter(value => value.relationshipId === relationshipId);
+    // Get all relationship values
+    const values = await storage.getRelationshipValues(relationshipId);
     
-    // For each value, get the attribute values
-    const enhancedValues = await Promise.all(filteredValues.map(async (value) => {
-      const attributeValues = await storage.getRelationshipAttributeValues(value.id);
+    // Filter to only include approved values
+    const approvedValues = values.filter(value => 
+      value.approval_status === approvalStatusEnum.enumValues[2] // 'APPROVED'
+    );
+    
+    // Get attribute values for each relationship value
+    const enhancedValues = await Promise.all(approvedValues.map(async (value) => {
+      const attributes = await storage.getRelationshipAttributeValues(value.id);
+      
+      // Get source and target info
+      const sourceDataSet = await storage.getReferenceDataSet(relationship.sourceDatasetId);
+      const targetDataSet = await storage.getReferenceDataSet(relationship.targetDatasetId);
+      
+      const sourceName = sourceDataSet?.data[value.sourceId]?.name || value.sourceId;
+      const targetName = targetDataSet?.data[value.targetId]?.name || value.targetId;
+      
+      // Convert attributes to a simple object
+      const attributeObject: Record<string, any> = {};
+      attributes.forEach(attr => {
+        attributeObject[attr.attributeName] = attr.attributeValue;
+      });
+      
       return {
         ...value,
-        attributeValues
+        sourceName,
+        targetName,
+        attributes: attributeObject
       };
     }));
     
-    return res.status(200).json({
-      status: 'success',
-      data: enhancedValues
-    });
+    res.json(enhancedValues);
   } catch (error) {
-    console.error('External API error:', error);
-    return res.status(500).json({
-      status: 'error',
-      message: 'Internal server error'
-    });
+    console.error('Error fetching relationship values:', error);
+    res.status(500).json({ error: 'Failed to fetch relationship values' });
   }
 });
 
@@ -129,26 +126,21 @@ router.get('/datasets', async (req: Request, res: Response) => {
   try {
     const dataSets = await storage.getAllReferenceDataSets();
     
-    // Return only metadata, not the actual data
-    const dataSetsMeta = dataSets.map(dataSet => ({
-      id: dataSet.id,
-      name: dataSet.name,
-      description: dataSet.description,
-      typeId: dataSet.typeId,
-      createdAt: dataSet.createdAt,
-      updatedAt: dataSet.updatedAt
-    }));
+    // Return only essential information without the data
+    const simplifiedDataSets = dataSets.map(({ id, name, description, typeId }) => {
+      // Get the type name
+      return {
+        id,
+        name,
+        description,
+        typeId
+      };
+    });
     
-    return res.status(200).json({
-      status: 'success',
-      data: dataSetsMeta
-    });
+    res.json(simplifiedDataSets);
   } catch (error) {
-    console.error('External API error:', error);
-    return res.status(500).json({
-      status: 'error',
-      message: 'Internal server error'
-    });
+    console.error('Error fetching datasets:', error);
+    res.status(500).json({ error: 'Failed to fetch datasets' });
   }
 });
 
@@ -161,16 +153,22 @@ router.get('/relationships', async (req: Request, res: Response) => {
   try {
     const relationships = await storage.getAllRelationships();
     
-    return res.status(200).json({
-      status: 'success',
-      data: relationships
-    });
+    // Get datasets for the relationship source and target info
+    const enhancedRelationships = await Promise.all(relationships.map(async (rel) => {
+      const sourceDataSet = await storage.getReferenceDataSet(rel.sourceDatasetId);
+      const targetDataSet = await storage.getReferenceDataSet(rel.targetDatasetId);
+      
+      return {
+        ...rel,
+        sourceDatasetName: sourceDataSet?.name || `Dataset ID: ${rel.sourceDatasetId}`,
+        targetDatasetName: targetDataSet?.name || `Dataset ID: ${rel.targetDatasetId}`
+      };
+    }));
+    
+    res.json(enhancedRelationships);
   } catch (error) {
-    console.error('External API error:', error);
-    return res.status(500).json({
-      status: 'error',
-      message: 'Internal server error'
-    });
+    console.error('Error fetching relationships:', error);
+    res.status(500).json({ error: 'Failed to fetch relationships' });
   }
 });
 
