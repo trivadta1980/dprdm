@@ -443,6 +443,29 @@ export const insertRelationshipAttributeValueSchema = createInsertSchema(relatio
 
 // Add this after the existing imports
 
+export const apiKeys = pgTable("api_keys", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at"),
+  lastUsedAt: timestamp("last_used_at"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdBy: integer("created_by").references(() => users.id),
+});
+
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type InsertApiKey = typeof apiKeys.$inferInsert;
+
+export const insertApiKeySchema = createInsertSchema(apiKeys).omit({
+  id: true,
+  lastUsedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type ChangeHistoryEntry = {
   timestamp: string;
   prevStatus: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";

@@ -23,6 +23,16 @@ const PostgresSessionStore = connectPg(session);
 
 // Update the IStorage interface to include new approval methods
 export interface IStorage {
+  // External API Key operations
+  createApiKey(apiKey: InsertApiKey): Promise<ApiKey>;
+  getApiKey(id: number): Promise<ApiKey | undefined>;
+  getApiKeyByKey(key: string): Promise<ApiKey | undefined>;
+  getAllApiKeys(): Promise<ApiKey[]>;
+  updateApiKey(id: number, updates: Partial<InsertApiKey>): Promise<ApiKey | undefined>;
+  updateApiKeyLastUsed(id: number): Promise<void>;
+  deleteApiKey(id: number): Promise<boolean>;
+  validateApiKey(key: string): Promise<{ valid: boolean; apiKey?: ApiKey }>;
+  
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
