@@ -168,16 +168,28 @@ export default function ApiTestPage() {
       
       const data = await response.json();
       
+      // Debug logging
+      console.log("API Response:", data);
+      
       if (activeTab === "datasets") {
         // Store the schema information
         if (data.schema) {
+          console.log("Schema found:", data.schema);
           setDatasetSchema(data.schema);
+        } else {
+          console.warn("No schema found in API response");
         }
         
         // Transform dataset instances into an array
         const instances = [];
-        for (const [id, value] of Object.entries(data.data)) {
-          instances.push({ id, ...value });
+        if (data.data) {
+          console.log("Dataset data found:", data.data);
+          for (const [id, value] of Object.entries(data.data)) {
+            instances.push({ id, ...value });
+          }
+          console.log("Transformed instances:", instances);
+        } else {
+          console.warn("No data found in API response");
         }
         setResponseData(instances);
       } else {
