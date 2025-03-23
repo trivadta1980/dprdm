@@ -28,6 +28,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { MainLayout } from "@/components/layout/main-layout";
 
 interface ReferenceData {
   id: number;
@@ -186,13 +187,14 @@ export default function ApiTestPage() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <h1 className="text-3xl font-bold">API Test Page</h1>
-      <p className="text-muted-foreground">
-        Use this page to test the external API with your API key.
-      </p>
+    <MainLayout>
+      <div className="container mx-auto py-6 space-y-6">
+        <h1 className="text-3xl font-bold">API Test Page</h1>
+        <p className="text-muted-foreground">
+          Use this page to test the external API with your API key.
+        </p>
 
-      <Card>
+        <Card>
         <CardHeader>
           <CardTitle>API Key Authentication</CardTitle>
         </CardHeader>
@@ -346,6 +348,7 @@ export default function ApiTestPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </MainLayout>
   );
 }
