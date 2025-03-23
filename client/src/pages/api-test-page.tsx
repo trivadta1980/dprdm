@@ -58,6 +58,16 @@ interface RelationshipValue {
   [key: string]: any;
 }
 
+interface SchemaField {
+  name: string;
+  dataType: string;
+}
+
+interface DatasetSchema {
+  typeName: string;
+  fields: SchemaField[];
+}
+
 export default function ApiTestPage() {
   const { toast } = useToast();
   const [apiKey, setApiKey] = useState("");
@@ -66,6 +76,7 @@ export default function ApiTestPage() {
   const [selectedRelationshipId, setSelectedRelationshipId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [responseData, setResponseData] = useState<any[]>([]);
+  const [datasetSchema, setDatasetSchema] = useState<DatasetSchema | null>(null);
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -130,6 +141,7 @@ export default function ApiTestPage() {
     setIsLoading(true);
     setIsError(false);
     setResponseData([]);
+    setDatasetSchema(null);
 
     try {
       let endpoint = "";
@@ -157,6 +169,11 @@ export default function ApiTestPage() {
       const data = await response.json();
       
       if (activeTab === "datasets") {
+        // Store the schema information
+        if (data.schema) {
+          setDatasetSchema(data.schema);
+        }
+        
         // Transform dataset instances into an array
         const instances = [];
         for (const [id, value] of Object.entries(data.data)) {
@@ -311,7 +328,11 @@ export default function ApiTestPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>ID</TableHead>
-                        <TableHead>Name</TableHead>
+                        {activeTab === "datasets" && datasetSchema && datasetSchema.fields && 
+                          datasetSchema.fields.map((field) => (
+                            <TableHead key={field.name}>{field.name}</TableHead>
+                          ))
+                        }
                         {activeTab === "relationships" && (
                           <>
                             <TableHead>Source ID</TableHead>
@@ -322,10 +343,16 @@ export default function ApiTestPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {responseData.slice(0, 10).map((value: RelationshipValue, index) => (
+                      {responseData.slice(0, 10).map((value: any, index) => (
                         <TableRow key={index}>
                           <TableCell>{value.id}</TableCell>
-                          <TableCell>{value.name || (value.sourceName && `${value.sourceName} → ${value.targetName}`)}</TableCell>
+                          {activeTab === "datasets" && datasetSchema && datasetSchema.fields && 
+                            datasetSchema.fields.map((field) => (
+                              <TableCell key={`${value.id}-${field.name}`}>
+                                {value[field.name] || "—"}
+                              </TableCell>
+                            ))
+                          }
                           {activeTab === "relationships" && (
                             <>
                               <TableCell>{value.sourceInstanceId}</TableCell>

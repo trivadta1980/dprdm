@@ -30,6 +30,10 @@ router.get('/reference-data/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Dataset not found' });
     }
     
+    // Get the schema information for this dataset's type
+    const dataType = await storage.getReferenceDataType(dataSet.typeId);
+    const schemaFields = await storage.getReferenceDataTypeSchemas(dataSet.typeId);
+    
     // Filter out only approved data instances (or pending if explicitly requested)
     const filteredData: Record<string, any> = {};
     
@@ -48,7 +52,14 @@ router.get('/reference-data/:id', async (req: Request, res: Response) => {
     
     const result = {
       ...dataSet,
-      data: filteredData
+      data: filteredData,
+      schema: {
+        typeName: dataType?.name || 'Unknown Type',
+        fields: schemaFields.map(field => ({
+          name: field.name,
+          dataType: field.dataType
+        }))
+      }
     };
     
     res.json(result);
