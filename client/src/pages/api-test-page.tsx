@@ -1,684 +1,379 @@
-import { MainLayout } from "@/components/layout/main-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { useState, useEffect } from "react";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { InsertUser, insertUserSchema } from "@shared/schema";
-
+import { MainLayout } from "@/components/layout/main-layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
+import { AlertCircle, Code } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 interface ReferenceData {
   id: number;
   name: string;
 }
 
-interface Instance {
+interface Relationship {
   id: number;
   name: string;
+  sourceDatasetId: number;
+  targetDatasetId: number;
 }
 
-const apiRequest = async (method: string, url: string, body?: any) => {
-  const options: RequestInit = {
-    method,
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  };
+interface Instance {
+  id: string;
+  name: string;
+  [key: string]: any;
+}
 
-  if (body) {
-    options.body = JSON.stringify(body);
-  }
+interface RelationshipValue {
+  id: number;
+  sourceId: string;
+  targetId: string;
+  sourceName: string;
+  targetName: string;
+  approval_status: string;
+  [key: string]: any;
+}
 
-  return fetch(url, options);
-};
+const testSchema = z.object({
+  apiKey: z.string().min(1, "API Key is required"),
+  endpoint: z.string().min(1, "Endpoint is required"),
+  datasetId: z.string().optional(),
+  relationshipId: z.string().optional(),
+});
 
 export default function ApiTestPage() {
+  const [activeTab, setActiveTab] = useState<string>("datasets");
+  const [selectedDatasetId, setSelectedDatasetId] = useState<string>("");
+  const [selectedRelationshipId, setSelectedRelationshipId] = useState<string>("");
+  const [responseData, setResponseData] = useState<any | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  const [selectedEndpoint, setSelectedEndpoint] = useState<string | null>(null);
-  const [testParams, setTestParams] = useState<Record<string, string>>({});
-  const [response, setResponse] = useState<any>(null);
-  const [selectedSourceSystem, setSelectedSourceSystem] = useState<string | null>(null);
-  const [selectedTargetSystem, setSelectedTargetSystem] = useState<string | null>(null);
-  const [selectedSourceInstance, setSelectedSourceInstance] = useState<string | null>(null);
-  const [selectedTargetInstance, setSelectedTargetInstance] = useState<string | null>(null);
-  const [debugLogs, setDebugLogs] = useState<Array<{ message: string; data?: any; time: string }>>([]);
 
-  const addDebugLog = (message: string, data?: any) => {
-    setDebugLogs(prev => [...prev, {
-      message,
-      data,
-      time: new Date().toLocaleTimeString()
-    }]);
-    console.log(`Debug: ${message}`, data);
+  const { data: datasets = [] } = useQuery({
+    queryKey: ["/api/reference-data"],
+  });
+
+  const { data: relationships = [] } = useQuery({
+    queryKey: ["/api/relationships"],
+  });
+
+  const form = useForm({
+    resolver: zodResolver(testSchema),
+    defaultValues: {
+      apiKey: "",
+      endpoint: "/api/external/datasets",
+      datasetId: "",
+      relationshipId: "",
+    },
+  });
+
+  // Update form values when tabs change
+  useEffect(() => {
+    if (activeTab === "datasets") {
+      form.setValue("endpoint", "/api/external/datasets");
+    } else if (activeTab === "reference-data") {
+      form.setValue("endpoint", `/api/external/reference-data/${selectedDatasetId}`);
+    } else if (activeTab === "relationships") {
+      form.setValue("endpoint", `/api/external/relationships/${selectedRelationshipId}/values`);
+    }
+  }, [activeTab, selectedDatasetId, selectedRelationshipId, form]);
+
+  const handleDatasetChange = (value: string) => {
+    setSelectedDatasetId(value);
+    form.setValue("datasetId", value);
+    form.setValue("endpoint", `/api/external/reference-data/${value}`);
   };
 
-  // Authentication endpoints test
-  const { data: userData, isLoading: userLoading } = useQuery({
-    queryKey: ['/api/user'],
-    retry: false
-  });
-
-  // Reference Types endpoints test
-  const { data: referenceTypes, isLoading: typesLoading } = useQuery({
-    queryKey: ['/api/reference-types']
-  });
-
-  // Reference Data endpoints test
-  const { data: referenceData = [], isLoading: dataLoading } = useQuery<ReferenceData[]>({
-    queryKey: ['/api/reference-data']
-  });
-
-  // Source system instances
-  const { data: sourceInstances = [], isLoading: sourceInstancesLoading } = useQuery<Instance[]>({
-    queryKey: [`/api/reference-data/${selectedSourceSystem}/instances`],
-    enabled: !!selectedSourceSystem
-  });
-
-  // Target system instances
-  const { data: targetInstances = [], isLoading: targetInstancesLoading } = useQuery<Instance[]>({
-    queryKey: [`/api/reference-data/${selectedTargetSystem}/instances`],
-    enabled: !!selectedTargetSystem
-  });
-
-  // Relationships endpoints test
-  const { data: relationships = [], isLoading: relationshipsLoading } = useQuery({
-    queryKey: ['/api/relationships']
-  });
-
-  // Crosswalks endpoints test
-  const { data: crosswalks = [], isLoading: crosswalksLoading } = useQuery({
-    queryKey: ['/api/crosswalks']
-  });
-
-  const handleParamChange = (key: string, value: string) => {
-    setTestParams(prev => ({ ...prev, [key]: value }));
+  const handleRelationshipChange = (value: string) => {
+    setSelectedRelationshipId(value);
+    form.setValue("relationshipId", value);
+    form.setValue("endpoint", `/api/external/relationships/${value}/values`);
   };
 
-  const testEndpoint = async (endpoint: string, method: string = 'GET', body?: any) => {
-    setSelectedEndpoint(endpoint);
+  const onSubmit = async (data: z.infer<typeof testSchema>) => {
+    setIsLoading(true);
+    setError(null);
+    setResponseData(null);
+
+    const options: RequestInit = {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "x-api-key": data.apiKey,
+      },
+    };
+
     try {
-      const response = await apiRequest(method, endpoint, body);
-      const data = await response.json();
-      setResponse(data);
+      const response = await fetch(data.endpoint, options);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API Error (${response.status}): ${errorText}`);
+      }
+      
+      const jsonData = await response.json();
+      setResponseData(jsonData);
       toast({
-        title: "Endpoint Test Result",
-        description: `Status: ${response.status}`,
+        title: "API Request Successful",
+        description: `Received data from ${data.endpoint}`,
       });
-    } catch (error) {
+    } catch (err: any) {
+      setError(err.message || "An unknown error occurred");
       toast({
-        title: "Endpoint Test Failed",
-        description: String(error),
+        title: "API Request Failed",
+        description: err.message || "Failed to fetch data from the API",
         variant: "destructive",
       });
     } finally {
-      setSelectedEndpoint(null);
+      setIsLoading(false);
     }
   };
 
-  const renderResponse = (data: any) => {
-    return (
-      <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-        <pre className="text-sm">
-          {JSON.stringify(data, null, 2)}
-        </pre>
-      </ScrollArea>
-    );
-  };
-
-  // Initialize form with valid default password values
-  const form = useForm<InsertUser>({
-    resolver: zodResolver(insertUserSchema),
-    defaultValues: {
-      email: "",
-      username: "",
-      roleId: undefined,
-      password: "Password123", // Meets password requirements
-      confirmPassword: "Password123" // Matches password
-    }
-  });
-
-  // Fetch roles for the select input
-  const { data: roles } = useQuery({
-    queryKey: ["/api/roles"],
-    queryFn: async () => {
-      addDebugLog("Fetching roles");
-      const res = await fetch("/api/roles");
-      const data = await res.json();
-      addDebugLog("Roles fetched", data);
-      return data;
-    }
-  });
-
-  // Create user mutation
-  const createUser = useMutation({
-    mutationFn: async (data: InsertUser) => {
-      addDebugLog("Starting user creation", data);
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        addDebugLog("Create user error", error);
-        throw new Error(error.message || "Failed to create user");
-      }
-
-      const result = await res.json();
-      addDebugLog("User created successfully", result);
-      return result;
-    },
-    onSuccess: () => {
-      addDebugLog("Create user mutation succeeded");
-      form.reset();
-      setDebugLogs([]); // Clear debug logs on success
-      toast({
-        title: "Success",
-        description: "User created successfully",
-      });
-    },
-    onError: (error: Error) => {
-      addDebugLog("Create user mutation failed", error);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const onSubmit = async (formData: InsertUser) => {
-    setDebugLogs([]); // Clear previous debug logs
-    addDebugLog("Form submission started", formData);
-    addDebugLog("Form validation state", form.formState);
-
-    try {
-      await createUser.mutateAsync(formData);
-    } catch (error) {
-      addDebugLog("Submit handler error", error);
-      console.error('Submit handler error:', error);
-    }
+  // Format JSON nicely with 2-space indentation
+  const formatJson = (data: any): string => {
+    return JSON.stringify(data, null, 2);
   };
 
   return (
     <MainLayout>
-      <div className="container mx-auto p-6 space-y-8">
-        <h1 className="text-3xl font-bold">API Endpoint Testing</h1>
-
-        <Tabs defaultValue="auth" className="w-full">
-          <TabsList>
-            <TabsTrigger value="auth">Authentication</TabsTrigger>
-            <TabsTrigger value="types">Reference Types</TabsTrigger>
-            <TabsTrigger value="data">Reference Data</TabsTrigger>
-            <TabsTrigger value="relationships">Relationships</TabsTrigger>
-            <TabsTrigger value="crosswalks">Crosswalks</TabsTrigger>
-          </TabsList>
-
-          {/* Auth Tab Content */}
-          <TabsContent value="auth" className="space-y-4">
+      <div className="container mx-auto py-6">
+        <h1 className="text-3xl font-bold mb-6">External API Test</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
             <Card>
               <CardHeader>
-                <CardTitle>Test User Creation</CardTitle>
+                <CardTitle>Test API Endpoints</CardTitle>
+                <CardDescription>
+                  Use this tool to test the external API endpoints with your API key.
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-6">
-                  <Form {...form}>
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        addDebugLog("Form submission event triggered");
-                        form.handleSubmit(onSubmit)(e);
-                      }}
-                      className="space-y-4"
-                    >
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="email"
-                                placeholder="test@example.com"
-                                {...field}
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  addDebugLog("Email changed", e.target.value);
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Username</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="testuser"
-                                {...field}
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  addDebugLog("Username changed", e.target.value);
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="roleId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Role</FormLabel>
-                            <Select
-                              onValueChange={(value) => {
-                                addDebugLog("Role selected", value);
-                                field.onChange(Number(value));
-                              }}
-                              defaultValue={field.value?.toString()}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select a role" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {roles?.map((role) => (
-                                  <SelectItem
-                                    key={role.id}
-                                    value={role.id.toString()}
-                                  >
-                                    {role.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="password"
-                                {...field}
-                                value={import.meta.env.VITE_DEFAULT_USER_PASSWORD || "Password123"} // Use env variable with fallback
-                                disabled // Disable editing since we're using a default password
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="confirmPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Confirm Password</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="password"
-                                {...field}
-                                value={import.meta.env.VITE_DEFAULT_USER_PASSWORD || "Password123"} // Use env variable with fallback
-                                disabled // Disable editing since we're using a default password
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={createUser.isPending}
-                      >
-                        {createUser.isPending ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Creating...
-                          </>
-                        ) : (
-                          "Create Test User"
-                        )}
-                      </Button>
-                    </form>
-                  </Form>
+                <Tabs defaultValue="datasets" onValueChange={setActiveTab} value={activeTab}>
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="datasets">Datasets List</TabsTrigger>
+                    <TabsTrigger value="reference-data">Reference Data</TabsTrigger>
+                    <TabsTrigger value="relationships">Relationship Values</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="datasets" className="space-y-4 mt-4">
+                    <p className="text-sm text-gray-500">
+                      Get a list of all available datasets
+                    </p>
+                  </TabsContent>
+                  
+                  <TabsContent value="reference-data" className="space-y-4 mt-4">
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="datasetSelector">Select Dataset</Label>
+                        <Select 
+                          onValueChange={handleDatasetChange} 
+                          value={selectedDatasetId}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a dataset" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {datasets && datasets.map((dataset: ReferenceData) => (
+                              <SelectItem key={dataset.id} value={dataset.id.toString()}>
+                                {dataset.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <p className="text-sm text-gray-500">
+                        Get all instances for the selected dataset
+                      </p>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="relationships" className="space-y-4 mt-4">
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="relationshipSelector">Select Relationship</Label>
+                        <Select 
+                          onValueChange={handleRelationshipChange} 
+                          value={selectedRelationshipId}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a relationship" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {relationships && relationships.map((relationship: Relationship) => (
+                              <SelectItem key={relationship.id} value={relationship.id.toString()}>
+                                {relationship.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <p className="text-sm text-gray-500">
+                        Get all values for the selected relationship
+                      </p>
+                    </div>
+                  </TabsContent>
+                </Tabs>
 
-                  {/* Debug Log */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Debug Log</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mb-4"
-                        onClick={() => setDebugLogs([])}
-                      >
-                        Clear Logs
-                      </Button>
-                      <ScrollArea className="h-[500px] w-full rounded-md border p-4">
-                        <div className="space-y-4">
-                          {debugLogs.map((log, index) => (
-                            <div key={index} className="space-y-2">
-                              <div className="flex justify-between text-sm">
-                                <span className="font-medium">{log.message}</span>
-                                <span className="text-muted-foreground">{log.time}</span>
-                              </div>
-                              {log.data && (
-                                <pre className="text-xs bg-slate-100 p-2 rounded-md overflow-auto">
-                                  {JSON.stringify(log.data, null, 2)}
-                                </pre>
-                              )}
-                            </div>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="apiKey">API Key</Label>
+                    <Input
+                      id="apiKey"
+                      placeholder="Enter your API key"
+                      {...form.register("apiKey")}
+                    />
+                    {form.formState.errors.apiKey && (
+                      <p className="text-sm text-red-500">{form.formState.errors.apiKey.message}</p>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="endpoint">Endpoint URL</Label>
+                    <Input
+                      id="endpoint"
+                      readOnly
+                      {...form.register("endpoint")}
+                    />
+                  </div>
+                  
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Sending Request..." : "Test API Endpoint"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div>
+            <Card className="h-full flex flex-col">
+              <CardHeader>
+                <CardTitle>API Response</CardTitle>
+                <CardDescription>
+                  The response from the API will appear here
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow overflow-auto">
+                {error && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>
+                      {error}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                {responseData && (
+                  <div>
+                    {activeTab === "datasets" && Array.isArray(responseData) && (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>ID</TableHead>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Type</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {responseData.map((dataset: any) => (
+                            <TableRow key={dataset.id}>
+                              <TableCell>{dataset.id}</TableCell>
+                              <TableCell>{dataset.name}</TableCell>
+                              <TableCell>{dataset.type}</TableCell>
+                            </TableRow>
                           ))}
-                        </div>
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Crosswalks Tab Content */}
-          <TabsContent value="crosswalks" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Crosswalks Endpoints</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4">
-                  {/* Test GET /api/crosswalks */}
-                  <div className="space-y-2">
-                    <Label>GET /api/crosswalks</Label>
-                    <div className="flex items-center gap-4">
-                      <Button
-                        disabled={selectedEndpoint === '/api/crosswalks'}
-                        onClick={() => testEndpoint('/api/crosswalks')}
-                      >
-                        {selectedEndpoint === '/api/crosswalks' && (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        </TableBody>
+                      </Table>
+                    )}
+                    
+                    {activeTab === "reference-data" && responseData.data && (
+                      <div>
+                        <h3 className="font-medium mb-2">Total Instances: {Object.keys(responseData.data).length}</h3>
+                        {Object.values(responseData.data).slice(0, 10).map((instance: any, index) => (
+                          <div key={index} className="border p-2 mb-2 rounded">
+                            <h4 className="font-medium">{instance.name || 'Unnamed Instance'}</h4>
+                            <div className="text-sm">
+                              {Object.entries(instance)
+                                .filter(([key]) => !key.startsWith('_') && key !== 'name')
+                                .map(([key, value]) => (
+                                  <div key={key} className="grid grid-cols-2 gap-2">
+                                    <span className="text-gray-500">{key}:</span>
+                                    <span>{String(value)}</span>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        ))}
+                        {Object.keys(responseData.data).length > 10 && (
+                          <p className="text-sm text-gray-500 mt-2">
+                            Showing 10 of {Object.keys(responseData.data).length} instances
+                          </p>
                         )}
-                        Test Endpoint
-                      </Button>
-                      <span>
-                        {crosswalksLoading ? 'Loading...' : `${crosswalks.length} crosswalks found`}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Test POST /api/crosswalks */}
-                  <div className="space-y-2">
-                    <Label>POST /api/crosswalks</Label>
-                    <div className="grid gap-4">
-                      <Input
-                        placeholder="Mapping Name"
-                        onChange={(e) => handleParamChange('name', e.target.value)}
-                      />
-
-                      <div className="space-y-2">
-                        <Label>Source Dataset</Label>
-                        <Select
-                          onValueChange={(value) => {
-                            handleParamChange('sourceSystemId', value);
-                            setSelectedSourceSystem(value);
-                            setSelectedSourceInstance(null);
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Source Dataset" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {referenceData.map((data) => (
-                              <SelectItem key={data.id} value={String(data.id)}>
-                                {data.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
                       </div>
-
-                      {selectedSourceSystem && (
-                        <div className="space-y-2">
-                          <Label>Source Instance</Label>
-                          <Select
-                            value={selectedSourceInstance || undefined}
-                            onValueChange={(value) => {
-                              handleParamChange('sourceInstanceId', value);
-                              setSelectedSourceInstance(value);
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select Source Instance" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {sourceInstancesLoading ? (
-                                <SelectItem value="loading">Loading instances...</SelectItem>
-                              ) : sourceInstances.map((instance) => (
-                                <SelectItem key={instance.id} value={String(instance.id)}>
-                                  {instance.name || `Instance ${instance.id}`}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-
-                      <div className="space-y-2">
-                        <Label>Target Dataset</Label>
-                        <Select
-                          onValueChange={(value) => {
-                            handleParamChange('targetSystemId', value);
-                            setSelectedTargetSystem(value);
-                            setSelectedTargetInstance(null);
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Target Dataset" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {referenceData.map((data) => (
-                              <SelectItem key={data.id} value={String(data.id)}>
-                                {data.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                    )}
+                    
+                    {activeTab === "relationships" && Array.isArray(responseData) && (
+                      <div>
+                        <h3 className="font-medium mb-2">Total Relationship Values: {responseData.length}</h3>
+                        {responseData.slice(0, 10).map((value: RelationshipValue, index) => (
+                          <div key={index} className="border p-2 mb-2 rounded">
+                            <div className="grid grid-cols-2 gap-1 text-sm">
+                              <span className="text-gray-500">Source:</span>
+                              <span>{value.sourceName}</span>
+                              <span className="text-gray-500">Target:</span>
+                              <span>{value.targetName}</span>
+                              <span className="text-gray-500">Status:</span>
+                              <span>{value.approval_status}</span>
+                            </div>
+                          </div>
+                        ))}
+                        {responseData.length > 10 && (
+                          <p className="text-sm text-gray-500 mt-2">
+                            Showing 10 of {responseData.length} relationship values
+                          </p>
+                        )}
                       </div>
-
-                      {selectedTargetSystem && (
-                        <div className="space-y-2">
-                          <Label>Target Instance</Label>
-                          <Select
-                            value={selectedTargetInstance || undefined}
-                            onValueChange={(value) => {
-                              handleParamChange('targetInstanceId', value);
-                              setSelectedTargetInstance(value);
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select Target Instance" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {targetInstancesLoading ? (
-                                <SelectItem value="loading">Loading instances...</SelectItem>
-                              ) : targetInstances.map((instance) => (
-                                <SelectItem key={instance.id} value={String(instance.id)}>
-                                  {instance.name || `Instance ${instance.id}`}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-
-                      <Button
-                        onClick={() => testEndpoint('/api/crosswalks', 'POST', {
-                          name: testParams.name,
-                          sourceSystemId: Number(testParams.sourceSystemId),
-                          targetSystemId: Number(testParams.targetSystemId),
-                          sourceInstanceId: Number(testParams.sourceInstanceId),
-                          targetInstanceId: Number(testParams.targetInstanceId)
-                        })}
-                      >
-                        Create Mapping
-                      </Button>
+                    )}
+                    
+                    <div className="mt-4">
+                      <Label className="flex items-center gap-2">
+                        <Code className="h-4 w-4" />
+                        Raw JSON Response
+                      </Label>
+                      <div className="bg-gray-50 p-4 rounded mt-2 overflow-auto max-h-[400px]">
+                        <pre className="text-xs">{formatJson(responseData)}</pre>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Types Tab Content */}
-          <TabsContent value="types" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Reference Types Endpoints</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4">
-                  {/* Test GET /api/reference-types */}
-                  <div className="space-y-2">
-                    <Label>GET /api/reference-types</Label>
-                    <div className="flex items-center gap-4">
-                      <Button
-                        disabled={selectedEndpoint === '/api/reference-types'}
-                        onClick={() => testEndpoint('/api/reference-types')}
-                      >
-                        Test Endpoint
-                      </Button>
-                      <span>{typesLoading ? 'Loading...' : `${referenceTypes?.length || 0} types found`}</span>
-                    </div>
+                )}
+                
+                {!responseData && !error && (
+                  <div className="text-center text-gray-500 py-12">
+                    <Code className="h-12 w-12 mx-auto mb-4" />
+                    <p>No data to display. Make an API request to see results.</p>
                   </div>
-
-                  {/* Test POST /api/reference-types */}
-                  <div className="space-y-2">
-                    <Label>POST /api/reference-types</Label>
-                    <div className="grid gap-2">
-                      <Input
-                        placeholder="Type Name"
-                        onChange={(e) => handleParamChange('name', e.target.value)}
-                      />
-                      <Input
-                        placeholder="Description"
-                        onChange={(e) => handleParamChange('description', e.target.value)}
-                      />
-                      <Button
-                        onClick={() => testEndpoint('/api/reference-types', 'POST', {
-                          name: testParams.name,
-                          description: testParams.description
-                        })}
-                      >
-                        Create Type
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                )}
               </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Data Tab Content */}
-          <TabsContent value="data" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Reference Data Endpoints</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4">
-                  <div className="flex items-center gap-4">
-                    <Button
-                      disabled={selectedEndpoint === '/api/reference-data'}
-                      onClick={() => testEndpoint('/api/reference-data')}
-                    >
-                      {selectedEndpoint === '/api/reference-data' && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      Test /api/reference-data
-                    </Button>
-                    <span>{dataLoading ? 'Loading...' : `${referenceData?.length || 0} datasets found`}</span>
-                  </div>
+              <CardFooter className="border-t bg-gray-50 px-6 py-4">
+                <div className="text-xs text-gray-500">
+                  External API requests require a valid API key and will only return approved data.
                 </div>
-              </CardContent>
+              </CardFooter>
             </Card>
-          </TabsContent>
-
-          {/* Relationships Tab Content */}
-          <TabsContent value="relationships" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Relationships Endpoints</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4">
-                  <div className="flex items-center gap-4">
-                    <Button
-                      disabled={selectedEndpoint === '/api/relationships'}
-                      onClick={() => testEndpoint('/api/relationships')}
-                    >
-                      {selectedEndpoint === '/api/relationships' && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      Test /api/relationships
-                    </Button>
-                    <span>
-                      {relationshipsLoading ? 'Loading...' : `${relationships.length} relationships found`}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {response && (
-            <div className="mt-4">
-              <Label>Response:</Label>
-              {renderResponse(response)}
-            </div>
-          )}
-        </Tabs>
+          </div>
+        </div>
       </div>
     </MainLayout>
   );
