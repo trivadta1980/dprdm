@@ -187,16 +187,16 @@ export default function ApiKeysPage() {
   // Mutation for getting the actual API key (requires password verification)
   const viewKeyMutation = useMutation({
     mutationFn: async ({ id, password }: { id: number; password: string }) => {
-      return await apiRequest(`-keys/${id}/view`, {
+      const response = await apiRequest(`-keys/${id}/view`, {
         method: "POST",
         data: { password },
       });
+      // Parse the response to get the JSON
+      return await response.json();
     },
     onSuccess: (data) => {
       console.log("API Key retrieved:", data);
-      // Extract the JSON data from the response
-      const apiKeyData = data as unknown as ApiKey;
-      setActiveApiKey(apiKeyData);
+      setActiveApiKey(data as ApiKey);
       setApiKeyPassword("");
       toast({
         title: "API Key Retrieved",
