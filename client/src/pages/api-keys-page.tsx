@@ -86,9 +86,9 @@ export default function ApiKeysPage() {
 
   // Query for getting API keys
   const { data: apiKeys, isLoading, refetch } = useQuery({
-    queryKey: ["api-keys"],
+    queryKey: ["-keys"],
     queryFn: async () => {
-      const response = await apiRequest("api-keys");
+      const response = await apiRequest("-keys");
       return response.json();
     },
   });
@@ -187,7 +187,7 @@ export default function ApiKeysPage() {
   // Mutation for getting the actual API key (requires password verification)
   const viewKeyMutation = useMutation({
     mutationFn: async ({ id, password }: { id: number; password: string }) => {
-      return await apiRequest(`api-keys/${id}/view`, {
+      return await apiRequest(`-keys/${id}/view`, {
         method: "POST",
         data: { password },
       });
