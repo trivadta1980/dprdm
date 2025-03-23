@@ -34,20 +34,31 @@ router.get('/reference-data/:id', async (req: Request, res: Response) => {
     const dataType = await storage.getReferenceDataType(dataSet.typeId);
     const schemaFields = await storage.getReferenceDataTypeSchemas(dataSet.typeId);
     
-    // Filter out only approved data instances (or pending if explicitly requested)
+    // Filter out only approved data instances
     const filteredData: Record<string, any> = {};
     
     for (const [id, instance] of Object.entries(dataSet.data)) {
-      // Check if instance has a _history property with approval status
-      const lastHistoryEntry = instance._history?.[instance._history.length - 1];
-      const approvalStatus = lastHistoryEntry?.changes ? 'APPROVED' : lastHistoryEntry?.newStatus;
+      // Check for explicit status property first
+      const explicitStatus = instance.status as string | undefined;
       
-      // Only include instances with APPROVED status
-      if (approvalStatus === 'APPROVED') {
-        // Create a shallow copy of the instance without the _history field
-        const { _history, ...cleanInstance } = instance;
-        filteredData[id] = cleanInstance;
+      // Only include instances with APPROVED status or no status field (legacy data)
+      if (explicitStatus && explicitStatus !== approvalStatusEnum.enumValues[2]) {
+        // Skip instances with explicit non-APPROVED status
+        console.log(`External API - Instance ${id} skipped: explicit status ${explicitStatus} is not APPROVED`);
+        continue;
       }
+      
+      // If no explicit status field exists, we assume the instance is approved
+      // This is for backward compatibility with older data
+      if (!explicitStatus) {
+        console.log(`External API - Instance ${id} APPROVED by default (no status field)`);
+      } else {
+        console.log(`External API - Instance ${id} APPROVED explicitly`);
+      }
+      
+      // Create a shallow copy of the instance without the _history field
+      const { _history, ...cleanInstance } = instance;
+      filteredData[id] = cleanInstance;
     }
     
     // Construct schema information
