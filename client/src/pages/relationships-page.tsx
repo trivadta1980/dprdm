@@ -390,7 +390,7 @@ export default function RelationshipsPage() {
   }
 
   function handleDelete(id: number) {
-    if (window.confirm("Are you sure you want to delete this relationship?")) {
+    if (window.confirm("WARNING: Deleting this relationship will also delete all associated relationship values and attribute values. Are you sure you want to proceed with deletion?")) {
       deleteMutation.mutate(id);
     }
   }
