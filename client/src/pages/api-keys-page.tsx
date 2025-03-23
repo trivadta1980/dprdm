@@ -483,7 +483,7 @@ export default function ApiKeysPage() {
 
         {/* View API Key Dialog */}
         <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>View API Key</DialogTitle>
               <DialogDescription>
@@ -501,13 +501,13 @@ export default function ApiKeysPage() {
                     <Input
                       readOnly
                       value={activeApiKey.key}
-                      className="font-mono text-sm"
+                      className="font-mono text-sm break-all"
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="icon"
-                      className="ml-2"
+                      className="ml-2 flex-shrink-0"
                       onClick={() => copyToClipboard(activeApiKey.key)}
                     >
                       {copiedKey ? <Check size={16} /> : <Copy size={16} />}
@@ -520,7 +520,7 @@ export default function ApiKeysPage() {
                 
                 <div className="rounded-md bg-yellow-50 p-4 text-yellow-800 text-sm">
                   <h4 className="font-semibold">Important</h4>
-                  <p>
+                  <p className="break-words">
                     Store this API key securely. It grants access to your reference data and cannot be 
                     viewed again after you close this dialog.
                   </p>
@@ -528,14 +528,14 @@ export default function ApiKeysPage() {
                 
                 <div className="pt-2">
                   <h4 className="font-semibold mb-2">How to use this API key</h4>
-                  <div className="bg-muted p-3 rounded-md text-sm font-mono overflow-x-auto">
-                    <pre>
+                  <div className="bg-muted p-3 rounded-md text-sm font-mono overflow-x-auto whitespace-pre-wrap break-all">
+                    <code>
                       {`fetch('/api/external/datasets', {
   headers: {
     'x-api-key': '${activeApiKey.key}'
   }
 })`}
-                    </pre>
+                    </code>
                   </div>
                 </div>
               </div>
