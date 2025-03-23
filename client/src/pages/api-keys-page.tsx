@@ -86,10 +86,10 @@ export default function ApiKeysPage() {
 
   // Query for getting API keys
   const { data: apiKeys, isLoading, refetch } = useQuery({
-    queryKey: ["/api/api-keys"],
+    queryKey: ["api-keys"],
     queryFn: async () => {
-      const response = await apiRequest("/api/api-keys");
-      return response || [];
+      const response = await apiRequest("api-keys");
+      return response.json();
     },
   });
 
@@ -102,7 +102,7 @@ export default function ApiKeysPage() {
         expiresAt: data.expiresAt ? data.expiresAt.toISOString() : null,
       };
       
-      return await apiRequest("/api/api-keys", {
+      return await apiRequest("api-keys", {
         method: "POST",
         data: apiData,
       });
@@ -138,7 +138,7 @@ export default function ApiKeysPage() {
         expiresAt: data.values.expiresAt ? data.values.expiresAt.toISOString() : null,
       };
       
-      return await apiRequest(`/api/api-keys/${data.id}`, {
+      return await apiRequest(`api-keys/${data.id}`, {
         method: "PATCH",
         data: apiData,
       });
@@ -162,7 +162,7 @@ export default function ApiKeysPage() {
   // Mutation for deleting an API key
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest(`/api/api-keys/${id}`, {
+      return await apiRequest(`api-keys/${id}`, {
         method: "DELETE",
       });
     },
@@ -187,7 +187,7 @@ export default function ApiKeysPage() {
   // Mutation for getting the actual API key (requires password verification)
   const viewKeyMutation = useMutation({
     mutationFn: async ({ id, password }: { id: number; password: string }) => {
-      return await apiRequest(`/api/api-keys/${id}/view`, {
+      return await apiRequest(`api-keys/${id}/view`, {
         method: "POST",
         data: { password },
       });
