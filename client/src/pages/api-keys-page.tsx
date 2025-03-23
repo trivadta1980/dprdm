@@ -1,22 +1,46 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { MainLayout } from "@/components/layout/main-layout";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { DatePicker } from "@/components/ui/date-picker";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Clipboard, ClipboardCheck, Key, Plus, Trash, AlertCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch";
+import { Trash, Eye, Copy, Check, Clock, Key } from "lucide-react";
 
 type ApiKey = {
   id: number;
@@ -41,17 +65,14 @@ const apiKeySchema = z.object({
 type FormData = z.infer<typeof apiKeySchema>;
 
 export default function ApiKeysPage() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [showKey, setShowKey] = useState(false);
-  const [newKeyValue, setNewKeyValue] = useState("");
-  const [copied, setCopied] = useState(false);
-  const [selectedApiKey, setSelectedApiKey] = useState<ApiKey | null>(null);
   const { toast } = useToast();
-
-  const { data: apiKeys = [], isLoading, refetch } = useQuery({
-    queryKey: ["/api/api-keys"]
-  });
-
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [activeApiKey, setActiveApiKey] = useState<ApiKey | null>(null);
+  const [apiKeyPassword, setApiKeyPassword] = useState("");
+  const [copiedKey, setCopiedKey] = useState(false);
+  
   const form = useForm<FormData>({
     resolver: zodResolver(apiKeySchema),
     defaultValues: {
@@ -62,306 +83,521 @@ export default function ApiKeysPage() {
     },
   });
 
-  const createApiKeyMutation = useMutation({
+  // Query for getting API keys
+  const { data: apiKeys, isLoading, refetch } = useQuery({
+    queryKey: ["/api/api-keys"],
+    queryFn: async () => {
+      const response = await apiRequest<ApiKey[]>("/api/api-keys");
+      return response || [];
+    },
+  });
+
+  // Mutation for creating a new API key
+  const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await apiRequest("/api/api-keys", {
+      // Format the data for the API
+      const apiData = {
+        ...data,
+        expiresAt: data.expiresAt ? data.expiresAt.toISOString() : null,
+      };
+      
+      return await apiRequest("/api/api-keys", {
         method: "POST",
-        data,
+        body: JSON.stringify(apiData),
       });
-      return response.json();
     },
     onSuccess: (data) => {
-      setNewKeyValue(data.key);
-      setShowKey(true);
+      refetch();
+      setIsCreateOpen(false);
+      form.reset();
       toast({
         title: "API Key Created",
-        description: "Your API key has been created successfully.",
+        description: "Your new API key has been created successfully.",
+        variant: "success",
       });
-      form.reset();
-      refetch();
+      // Set the active key for viewing
+      setActiveApiKey(data as ApiKey);
+      setIsViewOpen(true);
+      setCopiedKey(false);
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to create API key",
+        description: `Failed to create API key: ${error.message}`,
         variant: "destructive",
       });
     },
   });
 
-  const deleteApiKeyMutation = useMutation({
+  // Mutation for updating an API key
+  const updateMutation = useMutation({
+    mutationFn: async (data: { id: number; values: Partial<FormData> }) => {
+      // Format the data for the API
+      const apiData = {
+        ...data.values,
+        expiresAt: data.values.expiresAt ? data.values.expiresAt.toISOString() : null,
+      };
+      
+      return await apiRequest(`/api/api-keys/${data.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(apiData),
+      });
+    },
+    onSuccess: () => {
+      refetch();
+      toast({
+        title: "API Key Updated",
+        description: "The API key has been updated successfully.",
+        variant: "success",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update API key: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation for deleting an API key
+  const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest(`/api/api-keys/${id}`, {
+      return await apiRequest(`/api/api-keys/${id}`, {
         method: "DELETE",
       });
     },
     onSuccess: () => {
+      refetch();
+      setIsDeleteOpen(false);
+      setActiveApiKey(null);
       toast({
         title: "API Key Deleted",
-        description: "The API key has been deleted successfully.",
+        description: "The API key has been deleted.",
+        variant: "success",
       });
-      refetch();
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to delete API key",
+        description: `Failed to delete API key: ${error.message}`,
         variant: "destructive",
       });
     },
   });
 
-  const toggleApiKeyMutation = useMutation({
-    mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
-      await apiRequest(`/api/api-keys/${id}`, {
-        method: "PATCH",
-        data: { isActive },
+  // Mutation for getting the actual API key (requires password verification)
+  const viewKeyMutation = useMutation({
+    mutationFn: async ({ id, password }: { id: number; password: string }) => {
+      return await apiRequest(`/api/api-keys/${id}/view`, {
+        method: "POST",
+        body: JSON.stringify({ password }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setActiveApiKey(data as ApiKey);
+      setApiKeyPassword("");
       toast({
-        title: "API Key Updated",
-        description: "The API key status has been updated successfully.",
+        title: "API Key Retrieved",
+        description: "The API key has been successfully retrieved.",
+        variant: "success",
       });
-      refetch();
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to update API key",
+        description: `Failed to retrieve API key: ${error.message}`,
         variant: "destructive",
       });
     },
   });
 
   const onSubmit = (data: FormData) => {
-    createApiKeyMutation.mutate(data);
+    createMutation.mutate(data);
+  };
+
+  const handleToggleActive = (apiKey: ApiKey) => {
+    updateMutation.mutate({
+      id: apiKey.id,
+      values: { isActive: !apiKey.isActive },
+    });
+  };
+
+  const handleDelete = (apiKey: ApiKey) => {
+    setActiveApiKey(apiKey);
+    setIsDeleteOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (activeApiKey) {
+      deleteMutation.mutate(activeApiKey.id);
+    }
   };
 
   const handleViewKey = (apiKey: ApiKey) => {
-    setSelectedApiKey(apiKey);
-    setIsOpen(true);
+    setActiveApiKey(apiKey);
+    setApiKeyPassword("");
+    setIsViewOpen(true);
+    setCopiedKey(false);
+  };
+
+  const handleFetchKey = () => {
+    if (activeApiKey) {
+      viewKeyMutation.mutate({
+        id: activeApiKey.id,
+        password: apiKeyPassword,
+      });
+    }
   };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopiedKey(true);
+    toast({
+      title: "Copied",
+      description: "API key copied to clipboard",
+      variant: "success",
+    });
+    
+    // Reset after 3 seconds
+    setTimeout(() => {
+      setCopiedKey(false);
+    }, 3000);
   };
 
+  function formatDate(date: string | null) {
+    if (!date) return "Never";
+    return format(new Date(date), "PPP");
+  }
+
   return (
-    <MainLayout>
-      <div className="container mx-auto py-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">API Keys Management</h1>
-          <Button onClick={() => setShowKey(false)}>
-            <Plus className="mr-2 h-4 w-4" /> Create API Key
-          </Button>
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">API Keys</h1>
+          <p className="text-muted-foreground">
+            Manage API keys for external access to your data
+          </p>
         </div>
-
-        {!showKey ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Create New API Key</CardTitle>
-              <CardDescription>
-                Generate a new API key for external access to the system.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
-                    <Input
-                      id="name"
-                      placeholder="e.g., External System Integration"
-                      {...form.register("name")}
-                    />
-                    {form.formState.errors.name && (
-                      <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description (Optional)</Label>
-                    <Textarea
-                      id="description"
-                      placeholder="What will this API key be used for?"
-                      {...form.register("description")}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="expiresAt">Expiration Date (Optional)</Label>
-                    <DatePicker
-                      selected={form.getValues("expiresAt")}
-                      onSelect={(date) => form.setValue("expiresAt", date)}
-                      placeholder="Never expires"
-                    />
-                  </div>
-                </div>
-                <Button type="submit" className="w-full" disabled={createApiKeyMutation.isPending}>
-                  {createApiKeyMutation.isPending ? "Creating..." : "Create API Key"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>API Key Created</CardTitle>
-              <CardDescription>
-                Copy this API key now. You won't be able to see it again!
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Alert className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Important</AlertTitle>
-                <AlertDescription>
-                  This API key will only be displayed once. Please store it securely.
-                </AlertDescription>
-              </Alert>
-              <div className="relative mb-4">
-                <Input value={newKeyValue} readOnly className="pr-12" />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full"
-                  onClick={() => copyToClipboard(newKeyValue)}
-                >
-                  {copied ? <ClipboardCheck className="h-4 w-4" /> : <Clipboard className="h-4 w-4" />}
-                </Button>
-              </div>
-              <Button onClick={() => setShowKey(false)} className="w-full">
-                Done
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        <h2 className="text-2xl font-bold mt-8 mb-4">Existing API Keys</h2>
-        {isLoading ? (
-          <p>Loading API keys...</p>
-        ) : apiKeys && apiKeys.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Expires</TableHead>
-                <TableHead>Last Used</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {apiKeys && apiKeys.map((apiKey: ApiKey) => (
-                <TableRow key={apiKey.id}>
-                  <TableCell className="font-medium">{apiKey.name}</TableCell>
-                  <TableCell>{apiKey.description || "—"}</TableCell>
-                  <TableCell>{new Date(apiKey.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    {apiKey.expiresAt ? new Date(apiKey.expiresAt).toLocaleDateString() : "Never"}
-                  </TableCell>
-                  <TableCell>
-                    {apiKey.lastUsedAt ? new Date(apiKey.lastUsedAt).toLocaleDateString() : "Never used"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={apiKey.isActive ? "default" : "outline"}>
-                      {apiKey.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => 
-                          toggleApiKeyMutation.mutate({ id: apiKey.id, isActive: !apiKey.isActive })
-                        }
-                      >
-                        {apiKey.isActive ? "Disable" : "Enable"}
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => deleteApiKeyMutation.mutate(apiKey.id)}
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <Card>
-            <CardContent className="py-6">
-              <div className="text-center">
-                <Key className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-lg font-medium">No API Keys</h3>
-                <p className="mt-1 text-gray-500">
-                  You haven't created any API keys yet. Create one to enable external access.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <Button onClick={() => setIsCreateOpen(true)}>Create New API Key</Button>
       </div>
 
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>API Key Details</DialogTitle>
-            <DialogDescription>
-              Details for API key "{selectedApiKey?.name}"
-            </DialogDescription>
-          </DialogHeader>
-          {selectedApiKey && (
-            <div className="space-y-4">
-              <div>
-                <Label>Name</Label>
-                <p>{selectedApiKey.name}</p>
-              </div>
-              <div>
-                <Label>Description</Label>
-                <p>{selectedApiKey.description || "—"}</p>
-              </div>
-              <div>
-                <Label>Created</Label>
-                <p>{new Date(selectedApiKey.createdAt).toLocaleString()}</p>
-              </div>
-              <div>
-                <Label>Expires</Label>
-                <p>
-                  {selectedApiKey.expiresAt
-                    ? new Date(selectedApiKey.expiresAt).toLocaleString()
-                    : "Never"}
-                </p>
-              </div>
-              <div>
-                <Label>Last Used</Label>
-                <p>
-                  {selectedApiKey.lastUsedAt
-                    ? new Date(selectedApiKey.lastUsedAt).toLocaleString()
-                    : "Never used"}
-                </p>
-              </div>
-              <div>
-                <Label>Status</Label>
-                <Badge variant={selectedApiKey.isActive ? "default" : "outline"}>
-                  {selectedApiKey.isActive ? "Active" : "Inactive"}
-                </Badge>
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>API Keys</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center py-4">Loading API keys...</div>
+          ) : apiKeys && apiKeys.length > 0 ? (
+            <div className="rounded-md border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Expires</TableHead>
+                    <TableHead>Last Used</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-[150px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {apiKeys && apiKeys.map((apiKey: ApiKey) => (
+                    <TableRow key={apiKey.id}>
+                      <TableCell className="font-medium">
+                        {apiKey.name}
+                        {apiKey.description && (
+                          <div className="text-sm text-muted-foreground">
+                            {apiKey.description}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>{formatDate(apiKey.createdAt)}</TableCell>
+                      <TableCell>
+                        {apiKey.expiresAt ? (
+                          <div className="flex items-center gap-1">
+                            <Clock size={14} />
+                            {formatDate(apiKey.expiresAt)}
+                          </div>
+                        ) : (
+                          "Never"
+                        )}
+                      </TableCell>
+                      <TableCell>{formatDate(apiKey.lastUsedAt)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={apiKey.isActive}
+                            onCheckedChange={() => handleToggleActive(apiKey)}
+                          />
+                          <Badge variant={apiKey.isActive ? "default" : "secondary"}>
+                            {apiKey.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewKey(apiKey)}
+                          >
+                            <Eye size={16} className="mr-1" />
+                            View
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(apiKey)}
+                          >
+                            <Trash size={16} className="mr-1" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Key size={48} className="mx-auto mb-4 text-muted-foreground" />
+              <h3 className="font-medium text-lg">No API Keys Found</h3>
+              <p className="text-muted-foreground mb-4">
+                You haven't created any API keys yet.
+              </p>
+              <Button onClick={() => setIsCreateOpen(true)}>Create New API Key</Button>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Create New API Key Dialog */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Create New API Key</DialogTitle>
+            <DialogDescription>
+              Create a new API key for external access to your reference data.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="My API Key" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      A descriptive name to identify this API key
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Used for application X" 
+                        {...field} 
+                        value={field.value || ""}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      A brief description of what this API key will be used for
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="expiresAt"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Expiry Date (Optional)</FormLabel>
+                    <FormControl>
+                      <DatePicker
+                        selected={field.value || undefined}
+                        onSelect={(date) => field.onChange(date)}
+                        placeholder="Select date"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      When this API key should expire. If not set, the key will never expire.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Active</FormLabel>
+                      <FormDescription>
+                        Whether this API key is active and can be used
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button type="submit" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? "Creating..." : "Create API Key"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* View API Key Dialog */}
+      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>View API Key</DialogTitle>
+            <DialogDescription>
+              {activeApiKey?.key 
+                ? "This API key will only be shown once. Make sure to copy it now."
+                : "Enter your password to view the API key."}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {activeApiKey?.key ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>API Key</Label>
+                <div className="flex">
+                  <Input
+                    readOnly
+                    value={activeApiKey.key}
+                    className="font-mono text-sm"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="ml-2"
+                    onClick={() => copyToClipboard(activeApiKey.key)}
+                  >
+                    {copiedKey ? <Check size={16} /> : <Copy size={16} />}
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  This key will only be displayed once and cannot be recovered.
+                </p>
+              </div>
+              
+              <div className="rounded-md bg-yellow-50 p-4 text-yellow-800 text-sm">
+                <h4 className="font-semibold">Important</h4>
+                <p>
+                  Store this API key securely. It grants access to your reference data and cannot be 
+                  viewed again after you close this dialog.
+                </p>
+              </div>
+              
+              <div className="pt-2">
+                <h4 className="font-semibold mb-2">How to use this API key</h4>
+                <div className="bg-muted p-3 rounded-md text-sm font-mono overflow-x-auto">
+                  <pre>
+                    {`fetch('/api/external/datasets', {
+  headers: {
+    'x-api-key': '${activeApiKey.key}'
+  }
+})`}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">Your Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={apiKeyPassword}
+                  onChange={(e) => setApiKeyPassword(e.target.value)}
+                  placeholder="Enter your password"
+                />
+                <p className="text-sm text-muted-foreground">
+                  For security reasons, you need to verify your password to view this API key.
+                </p>
+              </div>
+              
+              <DialogFooter>
+                <Button
+                  onClick={handleFetchKey}
+                  disabled={!apiKeyPassword || viewKeyMutation.isPending}
+                >
+                  {viewKeyMutation.isPending ? "Verifying..." : "View API Key"}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete API Key Dialog */}
+      <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Delete API Key</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this API key? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {activeApiKey && (
+            <div className="py-4">
+              <p className="font-medium">{activeApiKey.name}</p>
+              {activeApiKey.description && (
+                <p className="text-muted-foreground mt-1">{activeApiKey.description}</p>
+              )}
+            </div>
+          )}
+          
           <DialogFooter>
-            <Button onClick={() => setIsOpen(false)}>Close</Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete API Key"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </MainLayout>
+    </div>
   );
 }

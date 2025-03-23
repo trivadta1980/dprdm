@@ -22,6 +22,7 @@ import { db } from './db';
 import { isNeo4jAvailable } from './neo4j';
 import GraphDataService from './services/graphDataService';
 import neo4j from 'neo4j-driver';
+import { comparePasswords } from './auth';
 
 const scryptAsync = promisify(scrypt);
 

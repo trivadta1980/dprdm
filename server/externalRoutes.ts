@@ -36,7 +36,7 @@ router.get('/reference-data/:id', async (req: Request, res: Response) => {
     for (const [id, instance] of Object.entries(dataSet.data)) {
       // Check if instance has a _history property with approval status
       const lastHistoryEntry = instance._history?.[instance._history.length - 1];
-      const approvalStatus = lastHistoryEntry?.newStatus;
+      const approvalStatus = lastHistoryEntry?.changes ? 'APPROVED' : lastHistoryEntry?.newStatus;
       
       // Only include instances with APPROVED status
       if (approvalStatus === 'APPROVED') {
@@ -82,7 +82,7 @@ router.get('/relationships/:id/values', async (req: Request, res: Response) => {
     
     // Filter to only include approved values
     const approvedValues = values.filter(value => 
-      value.approval_status === approvalStatusEnum.enumValues[2] // 'APPROVED'
+      value.approvalStatus === approvalStatusEnum.enumValues[2] // 'APPROVED'
     );
     
     // Get attribute values for each relationship value
@@ -90,16 +90,17 @@ router.get('/relationships/:id/values', async (req: Request, res: Response) => {
       const attributes = await storage.getRelationshipAttributeValues(value.id);
       
       // Get source and target info
-      const sourceDataSet = await storage.getReferenceDataSet(relationship.sourceDatasetId);
-      const targetDataSet = await storage.getReferenceDataSet(relationship.targetDatasetId);
+      const sourceDataSet = await storage.getReferenceDataSet(relationship.sourceDataSetId);
+      const targetDataSet = await storage.getReferenceDataSet(relationship.targetDataSetId);
       
-      const sourceName = sourceDataSet?.data[value.sourceId]?.name || value.sourceId;
-      const targetName = targetDataSet?.data[value.targetId]?.name || value.targetId;
+      const sourceName = sourceDataSet?.data[value.sourceInstanceId]?.name || value.sourceInstanceId;
+      const targetName = targetDataSet?.data[value.targetInstanceId]?.name || value.targetInstanceId;
       
       // Convert attributes to a simple object
       const attributeObject: Record<string, any> = {};
       attributes.forEach(attr => {
-        attributeObject[attr.attributeName] = attr.attributeValue;
+        // Get attribute definition to get the name
+        attributeObject[`attribute_${attr.attributeDefinitionId}`] = attr.value;
       });
       
       return {
@@ -155,13 +156,13 @@ router.get('/relationships', async (req: Request, res: Response) => {
     
     // Get datasets for the relationship source and target info
     const enhancedRelationships = await Promise.all(relationships.map(async (rel) => {
-      const sourceDataSet = await storage.getReferenceDataSet(rel.sourceDatasetId);
-      const targetDataSet = await storage.getReferenceDataSet(rel.targetDatasetId);
+      const sourceDataSet = await storage.getReferenceDataSet(rel.sourceDataSetId);
+      const targetDataSet = await storage.getReferenceDataSet(rel.targetDataSetId);
       
       return {
         ...rel,
-        sourceDatasetName: sourceDataSet?.name || `Dataset ID: ${rel.sourceDatasetId}`,
-        targetDatasetName: targetDataSet?.name || `Dataset ID: ${rel.targetDatasetId}`
+        sourceDatasetName: sourceDataSet?.name || `Dataset ID: ${rel.sourceDataSetId}`,
+        targetDatasetName: targetDataSet?.name || `Dataset ID: ${rel.targetDataSetId}`
       };
     }));
     
