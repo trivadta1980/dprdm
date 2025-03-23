@@ -17,6 +17,9 @@ import { type RelationshipAttributeDefinition, type InsertRelationshipAttributeD
 import { relationshipAttributeDefinitions } from "@shared/schema";
 import { type RelationshipAttributeValue, type InsertRelationshipAttributeValue } from "@shared/schema";
 import { relationshipAttributeValues } from "@shared/schema";
+import { type ApiKey, type InsertApiKey } from "@shared/schema";
+import { apiKeys } from "@shared/schema";
+import crypto from 'crypto';
 
 
 const PostgresSessionStore = connectPg(session);
@@ -169,6 +172,101 @@ export class DatabaseStorage implements IStorage {
       pool: sessionPool,
       createTableIfMissing: true,
     });
+  }
+
+  // API Key operations
+  async createApiKey(apiKey: InsertApiKey): Promise<ApiKey> {
+    // Generate a random API key if one is not provided
+    if (!apiKey.key) {
+      apiKey.key = crypto.randomUUID().replace(/-/g, '');
+    }
+    
+    const [createdApiKey] = await db
+      .insert(apiKeys)
+      .values({
+        ...apiKey,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    
+    return createdApiKey;
+  }
+
+  async getApiKey(id: number): Promise<ApiKey | undefined> {
+    const [apiKey] = await db
+      .select()
+      .from(apiKeys)
+      .where(eq(apiKeys.id, id));
+    
+    return apiKey;
+  }
+
+  async getApiKeyByKey(key: string): Promise<ApiKey | undefined> {
+    const [apiKey] = await db
+      .select()
+      .from(apiKeys)
+      .where(eq(apiKeys.key, key));
+    
+    return apiKey;
+  }
+
+  async getAllApiKeys(): Promise<ApiKey[]> {
+    return db.select().from(apiKeys);
+  }
+
+  async updateApiKey(id: number, updates: Partial<InsertApiKey>): Promise<ApiKey | undefined> {
+    const [apiKey] = await db
+      .update(apiKeys)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(apiKeys.id, id))
+      .returning();
+    
+    return apiKey;
+  }
+
+  async updateApiKeyLastUsed(id: number): Promise<void> {
+    await db
+      .update(apiKeys)
+      .set({
+        lastUsedAt: new Date()
+      })
+      .where(eq(apiKeys.id, id));
+  }
+
+  async deleteApiKey(id: number): Promise<boolean> {
+    const [apiKey] = await db
+      .delete(apiKeys)
+      .where(eq(apiKeys.id, id))
+      .returning();
+    
+    return !!apiKey;
+  }
+
+  async validateApiKey(key: string): Promise<{ valid: boolean; apiKey?: ApiKey }> {
+    const apiKey = await this.getApiKeyByKey(key);
+    
+    if (!apiKey) {
+      return { valid: false };
+    }
+
+    // Check if the API key is active
+    if (!apiKey.isActive) {
+      return { valid: false };
+    }
+
+    // Check if the API key has expired
+    if (apiKey.expiresAt && new Date(apiKey.expiresAt) < new Date()) {
+      return { valid: false };
+    }
+
+    // Update last used timestamp
+    await this.updateApiKeyLastUsed(apiKey.id);
+    
+    return { valid: true, apiKey };
   }
 
   // User operations
