@@ -50,17 +50,25 @@ router.get('/reference-data/:id', async (req: Request, res: Response) => {
       }
     }
     
+    // Construct schema information
+    const schema = {
+      typeName: dataType?.name || 'Unknown Type',
+      fields: schemaFields.map(field => ({
+        name: field.name,
+        dataType: field.dataType
+      }))
+    };
+    
+    console.log('External API - Dataset Schema:', schema);
+    console.log('External API - Schema Fields Count:', schema.fields.length);
+    
     const result = {
       ...dataSet,
       data: filteredData,
-      schema: {
-        typeName: dataType?.name || 'Unknown Type',
-        fields: schemaFields.map(field => ({
-          name: field.name,
-          dataType: field.dataType
-        }))
-      }
+      schema
     };
+    
+    console.log('External API - Data Entries Count:', Object.keys(filteredData).length);
     
     res.json(result);
   } catch (error) {

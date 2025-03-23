@@ -159,6 +159,7 @@ export default function ApiTestPage() {
         },
       };
 
+      console.log(`Fetching from ${endpoint} with API key: ${apiKey.substring(0, 3)}...`);
       const response = await fetch(endpoint, options);
       
       if (!response.ok) {
@@ -185,9 +186,15 @@ export default function ApiTestPage() {
         if (data.data) {
           console.log("Dataset data found:", data.data);
           for (const [id, value] of Object.entries(data.data)) {
-            instances.push({ id, ...value });
+            if (typeof value === 'object' && value !== null) {
+              console.log(`Processing instance ${id}:`, value);
+              instances.push({ id, ...value });
+            } else {
+              console.warn(`Skipping non-object value for ${id}:`, value);
+            }
           }
           console.log("Transformed instances:", instances);
+          console.log("Number of instances:", instances.length);
         } else {
           console.warn("No data found in API response");
         }
@@ -331,9 +338,17 @@ export default function ApiTestPage() {
               </div>
             )}
 
-            {responseData.length > 0 && (
+            {!isLoading && (
               <div className="mt-6">
                 <h3 className="text-lg font-semibold mb-2">Results (showing first 10 items)</h3>
+                <div className="mb-2">
+                  <p className="text-sm text-muted-foreground">
+                    Data Count: {responseData.length} items
+                    {activeTab === "datasets" && datasetSchema && (
+                      <> | Schema: {datasetSchema.typeName} with {datasetSchema.fields?.length || 0} fields</>
+                    )}
+                  </p>
+                </div>
                 <Separator className="my-4" />
                 <div className="overflow-auto max-h-96 rounded-md border">
                   <Table>
@@ -355,25 +370,37 @@ export default function ApiTestPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {responseData.slice(0, 10).map((value: any, index) => (
-                        <TableRow key={index}>
-                          <TableCell>{value.id}</TableCell>
-                          {activeTab === "datasets" && datasetSchema && datasetSchema.fields && 
-                            datasetSchema.fields.map((field) => (
-                              <TableCell key={`${value.id}-${field.name}`}>
-                                {value[field.name] || "—"}
-                              </TableCell>
-                            ))
-                          }
-                          {activeTab === "relationships" && (
-                            <>
-                              <TableCell>{value.sourceInstanceId}</TableCell>
-                              <TableCell>{value.targetInstanceId}</TableCell>
-                              <TableCell>{value.approvalStatus}</TableCell>
-                            </>
-                          )}
+                      {responseData.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={
+                            activeTab === "datasets" 
+                              ? (datasetSchema?.fields?.length || 0) + 1 
+                              : 4
+                          }>
+                            No data available
+                          </TableCell>
                         </TableRow>
-                      ))}
+                      ) : (
+                        responseData.slice(0, 10).map((value: any, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{value.id}</TableCell>
+                            {activeTab === "datasets" && datasetSchema && datasetSchema.fields && 
+                              datasetSchema.fields.map((field) => (
+                                <TableCell key={`${value.id}-${field.name}`}>
+                                  {value[field.name] !== undefined ? String(value[field.name]) : "—"}
+                                </TableCell>
+                              ))
+                            }
+                            {activeTab === "relationships" && (
+                              <>
+                                <TableCell>{value.sourceInstanceId}</TableCell>
+                                <TableCell>{value.targetInstanceId}</TableCell>
+                                <TableCell>{value.approvalStatus}</TableCell>
+                              </>
+                            )}
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                 </div>
