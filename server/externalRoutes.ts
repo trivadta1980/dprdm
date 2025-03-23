@@ -38,23 +38,23 @@ router.get('/reference-data/:id', async (req: Request, res: Response) => {
     const filteredData: Record<string, any> = {};
     
     for (const [id, instance] of Object.entries(dataSet.data)) {
-      // Check for explicit status property first
+      // Check for explicit status property
       const explicitStatus = instance.status as string | undefined;
       
-      // Only include instances with APPROVED status or no status field (legacy data)
-      if (explicitStatus && explicitStatus !== approvalStatusEnum.enumValues[2]) {
-        // Skip instances with explicit non-APPROVED status
-        console.log(`External API - Instance ${id} skipped: explicit status ${explicitStatus} is not APPROVED`);
+      // ONLY include instances with an explicit APPROVED status
+      // All others should be filtered out
+      if (explicitStatus !== approvalStatusEnum.enumValues[2]) {
+        if (!explicitStatus) {
+          // Skip instances with no status field
+          console.log(`External API - Instance ${id} skipped: no explicit status field`);
+        } else {
+          // Skip instances with non-APPROVED status
+          console.log(`External API - Instance ${id} skipped: status ${explicitStatus} is not APPROVED`);
+        }
         continue;
       }
       
-      // If no explicit status field exists, we assume the instance is approved
-      // This is for backward compatibility with older data
-      if (!explicitStatus) {
-        console.log(`External API - Instance ${id} APPROVED by default (no status field)`);
-      } else {
-        console.log(`External API - Instance ${id} APPROVED explicitly`);
-      }
+      console.log(`External API - Instance ${id} APPROVED: has explicit APPROVED status`);
       
       // Create a shallow copy of the instance without the _history field
       const { _history, ...cleanInstance } = instance;
