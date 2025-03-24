@@ -357,9 +357,10 @@ export default function ApiTestPage() {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="datasets">Reference Datasets</TabsTrigger>
                 <TabsTrigger value="relationships">Relationships</TabsTrigger>
+                <TabsTrigger value="crosswalks">Crosswalks</TabsTrigger>
               </TabsList>
               <TabsContent value="datasets" className="space-y-4">
                 <div className="py-4">
@@ -407,6 +408,29 @@ export default function ApiTestPage() {
                   {isLoading ? "Loading..." : "Fetch Relationship Values"}
                 </Button>
               </TabsContent>
+              <TabsContent value="crosswalks" className="space-y-4">
+                <div className="py-4">
+                  <Label htmlFor="crosswalk-select">Select a Crosswalk</Label>
+                  <Select
+                    value={selectedCrosswalkId}
+                    onValueChange={setSelectedCrosswalkId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a crosswalk" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {crosswalks && crosswalks.map((crosswalk: CrosswalkMapping) => (
+                        <SelectItem key={crosswalk.id} value={crosswalk.id.toString()}>
+                          {crosswalk.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={fetchData} disabled={!selectedCrosswalkId || isLoading}>
+                  {isLoading ? "Loading..." : "Fetch Crosswalk Mappings"}
+                </Button>
+              </TabsContent>
             </Tabs>
 
             {isError && (
@@ -424,6 +448,10 @@ export default function ApiTestPage() {
                     Data Count: {responseData.length} items
                     {activeTab === "datasets" && datasetSchema && (
                       <> | Schema: {datasetSchema.typeName} with {datasetSchema.fields?.length || 0} fields</>
+                    )}
+                    {activeTab === "crosswalks" && crosswalkSchema && (
+                      <> | Source Schema: {crosswalkSchema.sourceSchema?.length || 0} fields, 
+                         Target Schema: {crosswalkSchema.targetSchema?.length || 0} fields</>
                     )}
                   </p>
                 </div>
@@ -445,6 +473,14 @@ export default function ApiTestPage() {
                             <TableHead>Status</TableHead>
                           </>
                         )}
+                        {activeTab === "crosswalks" && (
+                          <>
+                            <TableHead>Source Value</TableHead>
+                            <TableHead>Target Value</TableHead>
+                            <TableHead>Confidence</TableHead>
+                            <TableHead>Attribute</TableHead>
+                          </>
+                        )}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -453,7 +489,7 @@ export default function ApiTestPage() {
                           <TableCell colSpan={
                             activeTab === "datasets" 
                               ? (datasetSchema?.fields?.length || 0) + 1 
-                              : 4
+                              : activeTab === "crosswalks" ? 5 : 4
                           }>
                             No data available
                           </TableCell>
@@ -474,6 +510,16 @@ export default function ApiTestPage() {
                                 <TableCell>{value.sourceInstanceId}</TableCell>
                                 <TableCell>{value.targetInstanceId}</TableCell>
                                 <TableCell>{value.approvalStatus}</TableCell>
+                              </>
+                            )}
+                            {activeTab === "crosswalks" && (
+                              <>
+                                <TableCell>{value.sourceValue}</TableCell>
+                                <TableCell>{value.targetValue}</TableCell>
+                                <TableCell>{value.confidence !== undefined ? `${value.confidence * 100}%` : "—"}</TableCell>
+                                <TableCell>{value.sourceAttribute && value.targetAttribute ? 
+                                  `${value.sourceAttribute} → ${value.targetAttribute}` : "—"}
+                                </TableCell>
                               </>
                             )}
                           </TableRow>
