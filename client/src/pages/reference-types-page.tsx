@@ -433,7 +433,7 @@ export default function ReferenceTypesListPage() {
       <div className="max-w-6xl mx-auto space-y-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Reference Data Types List</CardTitle>
+            <CardTitle>Reference Data Types</CardTitle>
             <div className="flex space-x-2">
               <Button variant="default" onClick={() => setIsAddDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
