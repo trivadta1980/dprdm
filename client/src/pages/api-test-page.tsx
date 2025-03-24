@@ -30,6 +30,7 @@ import { AlertCircle, CheckCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Badge } from "@/components/ui/badge";
+import { CrosswalkTransformer } from "@/components/transformation/crosswalk-transformer";
 
 interface ReferenceData {
   id: number;
