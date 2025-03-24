@@ -417,13 +417,13 @@ export default function RelationshipsPage() {
     return dataSets.find(ds => ds.id === id)?.name || "Unknown Dataset";
   };
 
-  // Update the handleSourceDatasetChange function with enhanced debugging
+  // Update the handleSourceDatasetChange function with enhanced debugging and correct API path
   const handleSourceDatasetChange = async (value: string) => {
     console.log(`${new Date().toISOString()} - Starting API request for source dataset ${value}`);
     form.setValue("sourceDataSetId", value);
 
     try {
-      // Capture request details for debugging
+      // Capture request details for debugging - Using the correct API path with /api/ prefix
       const requestDetails = {
         url: `/api/reference-data/${value}`,
         method: 'GET',
@@ -433,7 +433,8 @@ export default function RelationshipsPage() {
       console.log(`${new Date().toISOString()} - Request details:`, requestDetails);
       
       console.log(`${new Date().toISOString()} - Making request to: /api/reference-data/${value}`);
-      const response = await apiRequest(`/reference-data/${value}`, {
+      // FIXED: Added '/api' prefix to the endpoint path
+      const response = await apiRequest(`/api/reference-data/${value}`, {
         method: 'GET'
       });
       
@@ -525,7 +526,7 @@ export default function RelationshipsPage() {
     }
   };
 
-  // Update the handleTargetDatasetChange function with enhanced debugging
+  // Update the handleTargetDatasetChange function with enhanced debugging and correct API path
   const handleTargetDatasetChange = async (value: string) => {
     console.log(`${new Date().toISOString()} - Starting API request for target dataset ${value}`);
     form.setValue("targetDataSetId", value);
@@ -541,7 +542,8 @@ export default function RelationshipsPage() {
       console.log(`${new Date().toISOString()} - Target request details:`, requestDetails);
       
       console.log(`${new Date().toISOString()} - Making request to: /api/reference-data/${value}`);
-      const response = await apiRequest(`/reference-data/${value}`, {
+      // FIXED: Added '/api' prefix to the endpoint path
+      const response = await apiRequest(`/api/reference-data/${value}`, {
         method: 'GET'
       });
       
