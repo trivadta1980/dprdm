@@ -93,9 +93,15 @@ export function setupAuth(app: Express) {
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
+      if (!user) {
+        // If user not found, return null instead of error to handle gracefully
+        console.log(`[DEBUG Auth] User with id ${id} not found during deserialization`);
+        return done(null, null);
+      }
       done(null, user);
     } catch (error) {
-      done(error);
+      console.error('[DEBUG Auth] Error during user deserialization:', error);
+      done(null, null); // Return null instead of error to prevent session failure
     }
   });
 
@@ -143,6 +149,13 @@ export function setupAuth(app: Express) {
       }
     });
 
+    // Allow external API routes with API key authentication 
+    if (req.path.startsWith('/external/')) {
+      console.log('[DEBUG Auth Middleware] External API route, skipping session auth check:', req.path);
+      return next();
+    }
+
+    // Always allow public routes
     if (req.path === "/login" || req.path === "/register" || req.path === "/reset-password/request" || req.path === "/reset-password") {
       console.log('[DEBUG Auth Middleware] Skipping auth check for public route:', req.path);
       return next();
