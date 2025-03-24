@@ -861,9 +861,86 @@ export default function RelationshipsPage() {
                       />
                     </div>
 
-                    {/* Enhanced API Debug Section - Hidden */}
+                    {/* Enhanced API Debug Panel */}
+                    <div className="border-t mt-4 pt-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium">Debug Information</h4>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => console.log('Full Debug Data:', apiDebugData)}
+                          >
+                            Log Debug Data
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2 text-xs">
+                        <div className="border rounded-md p-2 bg-muted/30">
+                          <p className="font-semibold mb-1">Source Dataset:</p>
+                          <p>{apiDebugData.sourceSelection || 'None selected'}</p>
+                          {apiDebugData.source?.error && (
+                            <div className="text-red-500 mt-1">
+                              Error: {apiDebugData.source.error}
+                            </div>
+                          )}
+                          {sourceFields.length > 0 && (
+                            <div className="mt-1">
+                              <p className="font-semibold">Available Fields:</p>
+                              <p className="break-all">{sourceFields.join(', ')}</p>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="border rounded-md p-2 bg-muted/30">
+                          <p className="font-semibold mb-1">Target Dataset:</p>
+                          <p>{apiDebugData.targetSelection || 'None selected'}</p>
+                          {apiDebugData.target?.error && (
+                            <div className="text-red-500 mt-1">
+                              Error: {apiDebugData.target.error}
+                            </div>
+                          )}
+                          {targetFields.length > 0 && (
+                            <div className="mt-1">
+                              <p className="font-semibold">Available Fields:</p>
+                              <p className="break-all">{targetFields.join(', ')}</p>
+                            </div>
+                          )}
+                        </div>
 
-                    <Button type="submit" className="w-full">
+                        {/* Network Info */}
+                        {apiDebugData.requestDetails && (
+                          <div className="border rounded-md p-2 bg-muted/30">
+                            <p className="font-semibold mb-1">Last API Request:</p>
+                            <p>URL: {apiDebugData.requestDetails.url}</p>
+                            <p>Method: {apiDebugData.requestDetails.method}</p>
+                            <p>Time: {apiDebugData.requestDetails.timestamp}</p>
+                          </div>
+                        )}
+
+                        {/* Response Info */}
+                        {apiDebugData.responseDetails && (
+                          <div className="border rounded-md p-2 bg-muted/30">
+                            <p className="font-semibold mb-1">Last API Response:</p>
+                            <p>Status: {apiDebugData.responseDetails.status} {apiDebugData.responseDetails.statusText}</p>
+                            <p>Time: {apiDebugData.responseDetails.timestamp}</p>
+                          </div>
+                        )}
+
+                        {/* Error Details */}
+                        {apiDebugData.errorDetails && (
+                          <div className="border rounded-md p-2 bg-red-100 text-red-900">
+                            <p className="font-semibold mb-1">Error Details:</p>
+                            <pre className="whitespace-pre-wrap text-xs overflow-auto max-h-24">
+                              {JSON.stringify(apiDebugData.errorDetails, null, 2)}
+                            </pre>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <Button type="submit" className="w-full mt-4">
                       {editingRelationship ? 'Update' : 'Create'} Relationship
                     </Button>
                   </form>
