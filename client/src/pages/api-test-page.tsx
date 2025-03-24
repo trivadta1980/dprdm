@@ -358,10 +358,11 @@ export default function ApiTestPage() {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="datasets">Reference Datasets</TabsTrigger>
                 <TabsTrigger value="relationships">Relationships</TabsTrigger>
                 <TabsTrigger value="crosswalks">Crosswalks</TabsTrigger>
+                <TabsTrigger value="transformation">Transformation Demo</TabsTrigger>
               </TabsList>
               <TabsContent value="datasets" className="space-y-4">
                 <div className="py-4">
@@ -432,16 +433,20 @@ export default function ApiTestPage() {
                   {isLoading ? "Loading..." : "Fetch Crosswalk Mappings"}
                 </Button>
               </TabsContent>
+              
+              <TabsContent value="transformation">
+                <CrosswalkTransformer />
+              </TabsContent>
             </Tabs>
 
-            {isError && (
+            {isError && activeTab !== "transformation" && (
               <div className="mt-4 p-4 border rounded-md bg-red-50 text-red-600">
                 <h3 className="font-semibold">Error</h3>
                 <p>{errorMessage}</p>
               </div>
             )}
 
-            {!isLoading && (
+            {!isLoading && activeTab !== "transformation" && (
               <div className="mt-6">
                 <h3 className="text-lg font-semibold mb-2">Results (showing first 10 items)</h3>
                 <div className="mb-2">
