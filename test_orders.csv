@@ -1,0 +1,101 @@
+OrderID,OrderDate,CustomerName,City,State,Country,Amount,Status
+ORD0001,2024-03-16,William Jones,Chicago,IL,France1,219.19,Returned
+ORD0002,2024-11-14,William Jones,Boston,MA,Australia1,2414.95,Processing
+ORD0003,2024-05-07,Harper Green,Seattle,WA,Egypt1,3837.90,Shipped
+ORD0004,2024-07-04,Jane Doe,Los Angeles,CA,Indonesia1,1049.01,On Hold
+ORD0005,2024-04-17,Isabella Taylor,Phoenix,AZ,Spain,3353.16,Processing
+ORD0006,2024-06-20,William Jones,Chicago,IL,Australia1,963.66,Cancelled
+ORD0007,2024-08-31,Olivia Garcia,Philadelphia,PA,France1,1848.79,Shipped
+ORD0008,2024-09-26,Robert Miller,Las Vegas,NV,Japan1,4349.04,Pending
+ORD0009,2024-07-26,Daniel White,Portland,OR,Denmark1,171.53,On Hold
+ORD0010,2024-05-30,Amelia King,Nashville,TN,Australia1,4219.14,Cancelled
+ORD0011,2024-03-19,Thomas Moore,Boston,MA,Spain,4657.13,Shipped
+ORD0012,2024-06-06,Emma Brown,Nashville,TN,Hungary1,4095.27,On Hold
+ORD0013,2024-09-06,Charlotte Lee,Philadelphia,PA,Spain,4880.04,Shipped
+ORD0014,2024-09-17,Olivia Garcia,Dallas,TX,Denmark1,165.81,On Hold
+ORD0015,2024-08-03,Emma Brown,Baltimore,MD,India1,1302.25,Shipped
+ORD0016,2024-12-06,Daniel White,Chicago,IL,Spain,1378.95,Cancelled
+ORD0017,2024-05-06,Mia Hernandez,Denver,CO,Denmark1,1528.91,Processing
+ORD0018,2024-01-10,Thomas Moore,Miami,FL,Canada1,3308.62,Delivered
+ORD0019,2024-07-19,Sophia Martinez,Los Angeles,CA,Australia1,2763.75,On Hold
+ORD0020,2025-01-22,Charlotte Lee,Las Vegas,NV,Egypt1,3866.88,Shipped
+ORD0021,2024-12-11,Amelia King,San Francisco,CA,Spain,3435.06,Returned
+ORD0022,2025-01-17,Michael Johnson,Chicago,IL,Japan1,1213.65,Cancelled
+ORD0023,2024-12-30,Matthew Scott,Nashville,TN,India1,4545.99,Delivered
+ORD0024,2024-01-28,David Anderson,Baltimore,MD,Indonesia1,2393.11,Shipped
+ORD0025,2024-01-05,Robert Miller,Nashville,TN,Hungary1,540.32,Delivered
+ORD0026,2024-04-26,James Wilson,Nashville,TN,Japan1,3416.64,Processing
+ORD0027,2024-06-30,Amelia King,Philadelphia,PA,Indonesia1,4765.34,Pending
+ORD0028,2024-10-07,Harper Green,Chicago,IL,France1,2718.96,On Hold
+ORD0029,2025-01-21,John Smith,Dallas,TX,Indonesia1,566.17,Pending
+ORD0030,2024-06-17,Charlotte Lee,Portland,OR,India1,1821.37,On Hold
+ORD0031,2024-07-14,Olivia Garcia,Boston,MA,Australia1,3671.29,Delivered
+ORD0032,2024-03-10,Olivia Garcia,Dallas,TX,Spain,946.08,Delivered
+ORD0033,2024-03-07,Joseph Rodriguez,Baltimore,MD,France1,3135.03,On Hold
+ORD0034,2024-01-28,William Jones,San Francisco,CA,Egypt1,2744.21,Processing
+ORD0035,2024-12-22,Joseph Rodriguez,Houston,TX,Japan1,3369.79,Pending
+ORD0036,2024-03-26,John Smith,Atlanta,GA,Canada1,3654.83,Pending
+ORD0037,2024-11-17,Robert Miller,Nashville,TN,France1,1942.86,Delivered
+ORD0038,2024-06-04,Harper Green,Las Vegas,NV,Spain,1248.57,Shipped
+ORD0039,2025-01-26,Amelia King,Austin,TX,France1,2998.62,Returned
+ORD0040,2024-12-30,Mia Hernandez,New York,NY,India1,4398.33,Delivered
+ORD0041,2024-09-10,Michael Johnson,Portland,OR,Japan1,3174.00,Shipped
+ORD0042,2024-03-17,Olivia Garcia,Seattle,WA,Indonesia1,3322.42,Processing
+ORD0043,2024-01-25,Matthew Scott,San Francisco,CA,France1,4932.44,Processing
+ORD0044,2024-11-03,Michael Johnson,Baltimore,MD,Hungary1,3293.64,Returned
+ORD0045,2025-01-06,Olivia Garcia,Philadelphia,PA,Canada1,4963.80,Shipped
+ORD0046,2024-06-01,John Smith,San Francisco,CA,France1,1851.24,Returned
+ORD0047,2024-11-10,Emma Brown,Austin,TX,Hungary1,1308.49,Processing
+ORD0048,2024-05-23,Isabella Taylor,Atlanta,GA,France1,2709.06,Pending
+ORD0049,2024-04-25,David Anderson,Chicago,IL,Brazil1,1738.57,Pending
+ORD0050,2024-01-17,Olivia Garcia,Boston,MA,India1,1303.33,Processing
+ORD0051,2024-10-01,Michael Johnson,Miami,FL,France1,4910.82,Delivered
+ORD0052,2024-04-10,Sophia Martinez,Miami,FL,Hungary1,2119.40,Delivered
+ORD0053,2024-09-09,Harper Green,San Diego,CA,India1,634.13,Processing
+ORD0054,2024-01-03,Joseph Rodriguez,Austin,TX,Hungary1,2670.29,Processing
+ORD0055,2024-07-17,Michael Johnson,New York,NY,France1,1088.97,Shipped
+ORD0056,2024-01-03,William Jones,San Antonio,TX,Japan1,1457.14,Processing
+ORD0057,2024-06-10,Matthew Scott,Los Angeles,CA,Egypt1,4480.39,Cancelled
+ORD0058,2025-02-21,Joseph Rodriguez,New York,NY,Indonesia1,3680.24,Cancelled
+ORD0059,2024-09-01,Amelia King,Chicago,IL,Germany1,173.27,On Hold
+ORD0060,2025-02-20,Mia Hernandez,Seattle,WA,Hungary1,1076.70,Returned
+ORD0061,2024-04-16,Isabella Taylor,Atlanta,GA,Hungary1,1756.63,Pending
+ORD0062,2024-01-26,Emily Davis,Seattle,WA,Canada1,1796.40,Pending
+ORD0063,2024-04-09,Robert Miller,New York,NY,France1,2251.27,Returned
+ORD0064,2024-02-16,Olivia Garcia,Los Angeles,CA,Spain,3695.70,Pending
+ORD0065,2024-02-26,Harper Green,San Francisco,CA,Brazil1,3720.36,Cancelled
+ORD0066,2025-01-14,Charlotte Lee,Philadelphia,PA,Brazil1,987.14,Delivered
+ORD0067,2024-09-18,John Smith,Seattle,WA,Australia1,303.37,Pending
+ORD0068,2024-10-26,Thomas Moore,Portland,OR,Hungary1,4535.73,Pending
+ORD0069,2024-05-25,Michael Johnson,San Francisco,CA,South Africa,105.91,Processing
+ORD0070,2024-09-26,Sophia Martinez,Dallas,TX,Norway,2237.07,Returned
+ORD0071,2025-01-23,Michael Johnson,Las Vegas,NV,Italy,4419.25,Returned
+ORD0072,2024-06-04,Sophia Martinez,Houston,TX,Norway,4774.47,Delivered
+ORD0073,2025-01-06,Amelia King,Baltimore,MD,India,1717.26,Returned
+ORD0074,2024-05-20,Charlotte Lee,Boston,MA,Russia,4186.99,Processing
+ORD0075,2024-04-05,Jane Doe,Chicago,IL,Malaysia,4326.92,Shipped
+ORD0076,2024-08-13,John Smith,Chicago,IL,Vietnam,4397.06,Returned
+ORD0077,2024-12-13,James Wilson,Baltimore,MD,South Africa,4572.93,Processing
+ORD0078,2024-09-28,Amelia King,Philadelphia,PA,Brazil,4230.70,On Hold
+ORD0079,2024-12-13,Joseph Rodriguez,Denver,CO,Malaysia,4457.93,Processing
+ORD0080,2024-06-30,Amelia King,Austin,TX,Malaysia,629.94,Shipped
+ORD0081,2025-02-03,Amelia King,Philadelphia,PA,India,4603.92,Delivered
+ORD0082,2025-01-06,John Smith,Dallas,TX,Italy,4305.72,Processing
+ORD0083,2024-09-25,Harper Green,San Diego,CA,India,1104.26,Returned
+ORD0084,2024-05-14,Thomas Moore,Boston,MA,Malaysia,3406.17,Pending
+ORD0085,2024-09-21,Emma Brown,Atlanta,GA,South Africa,299.49,Returned
+ORD0086,2024-02-23,William Jones,Dallas,TX,Norway,711.55,Processing
+ORD0087,2024-05-25,Joseph Rodriguez,Dallas,TX,Norway,2873.15,Cancelled
+ORD0088,2024-01-16,Matthew Scott,Dallas,TX,Thailand,3192.31,Shipped
+ORD0089,2024-05-28,Emma Brown,Austin,TX,Italy,240.95,On Hold
+ORD0090,2024-06-13,Joseph Rodriguez,Phoenix,AZ,Malaysia,3564.85,Processing
+ORD0091,2024-12-23,Daniel White,Los Angeles,CA,Chile,4559.27,Shipped
+ORD0092,2024-02-13,Mia Hernandez,Seattle,WA,Malaysia,1505.77,On Hold
+ORD0093,2024-03-08,Mia Hernandez,San Antonio,TX,Vietnam,601.66,Returned
+ORD0094,2024-11-25,Daniel White,Las Vegas,NV,India,875.53,Pending
+ORD0095,2025-01-20,Michael Johnson,Baltimore,MD,United Kingdom,3409.29,Cancelled
+ORD0096,2024-04-21,Mia Hernandez,Las Vegas,NV,Norway,360.59,Processing
+ORD0097,2024-10-11,Joseph Rodriguez,San Diego,CA,China,4471.95,Cancelled
+ORD0098,2024-11-01,Emma Brown,Chicago,IL,Netherlands,3193.25,Processing
+ORD0099,2025-03-24,Test User,Test City,TS,,299.99,Processing
+ORD0100,2025-03-24,Big Spender,Las Vegas,NV,Brazil1,99999.99,Processing
