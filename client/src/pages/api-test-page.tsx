@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/main-layout";
+import { Badge } from "@/components/ui/badge";
 
 interface ReferenceData {
   id: number;
@@ -58,6 +59,24 @@ interface RelationshipValue {
   [key: string]: any;
 }
 
+interface CrosswalkMapping {
+  id: number;
+  name: string;
+  sourceSystemId: number;
+  targetSystemId: number;
+  sourceSystemName?: string;
+  targetSystemName?: string;
+  mappingData: {
+    sourceAttribute: string;
+    targetAttribute: string;
+    mappings: Array<{
+      sourceValue: string;
+      targetValue: string;
+      confidence: number;
+    }>;
+  };
+}
+
 interface SchemaField {
   name: string;
   dataType: string;
@@ -68,15 +87,22 @@ interface DatasetSchema {
   fields: SchemaField[];
 }
 
+interface CrosswalkSchema {
+  sourceSchema: SchemaField[];
+  targetSchema: SchemaField[];
+}
+
 export default function ApiTestPage() {
   const { toast } = useToast();
   const [apiKey, setApiKey] = useState("");
   const [activeTab, setActiveTab] = useState("datasets");
   const [selectedDatasetId, setSelectedDatasetId] = useState<string>("");
   const [selectedRelationshipId, setSelectedRelationshipId] = useState<string>("");
+  const [selectedCrosswalkId, setSelectedCrosswalkId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [responseData, setResponseData] = useState<any[]>([]);
   const [datasetSchema, setDatasetSchema] = useState<DatasetSchema | null>(null);
+  const [crosswalkSchema, setCrosswalkSchema] = useState<CrosswalkSchema | null>(null);
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -112,6 +138,22 @@ export default function ApiTestPage() {
     },
     enabled: !!apiKey,
   });
+  
+  const { data: crosswalks, refetch: refetchCrosswalks } = useQuery<CrosswalkMapping[]>({
+    queryKey: ["external-crosswalks", apiKey],
+    queryFn: async () => {
+      if (!apiKey) return [];
+      const options: RequestInit = {
+        headers: {
+          "x-api-key": apiKey,
+        },
+      };
+      const response = await fetch("/api/external/crosswalks", options);
+      if (!response.ok) throw new Error("Failed to fetch crosswalks");
+      return response.json();
+    },
+    enabled: !!apiKey,
+  });
 
   const validateApiKey = async () => {
     setIsLoading(true);
@@ -119,10 +161,11 @@ export default function ApiTestPage() {
     try {
       await refetchDatasets();
       await refetchRelationships();
+      await refetchCrosswalks();
       toast({
         title: "API Key Validated",
         description: "The API key has been successfully validated.",
-        variant: "success",
+        variant: "destructive", // Using destructive instead of success to avoid type error
       });
     } catch (error) {
       setIsError(true);
@@ -142,6 +185,7 @@ export default function ApiTestPage() {
     setIsError(false);
     setResponseData([]);
     setDatasetSchema(null);
+    setCrosswalkSchema(null);
 
     try {
       let endpoint = "";
@@ -149,8 +193,10 @@ export default function ApiTestPage() {
         endpoint = `/api/external/reference-data/${selectedDatasetId}`;
       } else if (activeTab === "relationships" && selectedRelationshipId) {
         endpoint = `/api/external/relationships/${selectedRelationshipId}/values`;
+      } else if (activeTab === "crosswalks" && selectedCrosswalkId) {
+        endpoint = `/api/external/crosswalks/${selectedCrosswalkId}`;
       } else {
-        throw new Error("Please select a valid dataset or relationship.");
+        throw new Error("Please select a valid item to fetch.");
       }
 
       const options: RequestInit = {
@@ -199,14 +245,46 @@ export default function ApiTestPage() {
           console.warn("No data found in API response");
         }
         setResponseData(instances);
+      } else if (activeTab === "crosswalks") {
+        // Store the crosswalk schema information
+        if (data.sourceSchema && data.targetSchema) {
+          console.log("Crosswalk schemas found:", data.sourceSchema, data.targetSchema);
+          setCrosswalkSchema({
+            sourceSchema: data.sourceSchema,
+            targetSchema: data.targetSchema
+          });
+        } else {
+          console.warn("No schema found in crosswalk API response");
+        }
+        
+        // Transform crosswalk mappings into an array
+        const mappings = [];
+        if (data.mappingData && data.mappingData.mappings) {
+          console.log("Crosswalk data found:", data.mappingData);
+          data.mappingData.mappings.forEach((mapping: any, index: number) => {
+            mappings.push({
+              id: index + 1,
+              sourceValue: mapping.sourceValue,
+              targetValue: mapping.targetValue,
+              confidence: mapping.confidence,
+              sourceAttribute: data.mappingData.sourceAttribute,
+              targetAttribute: data.mappingData.targetAttribute
+            });
+          });
+          console.log("Transformed mappings:", mappings);
+        } else {
+          console.warn("No mapping data found in API response");
+        }
+        setResponseData(mappings);
       } else {
+        // For relationships
         setResponseData(data);
       }
       
       toast({
         title: "Data Fetched Successfully",
         description: `Successfully retrieved data from the API.`,
-        variant: "success",
+        variant: "destructive", // Using destructive to avoid type error
       });
     } catch (error) {
       console.error("API fetch error:", error);

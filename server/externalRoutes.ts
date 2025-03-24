@@ -203,4 +203,83 @@ router.get('/relationships', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @route GET /api/external/crosswalks
+ * @description Get a list of all crosswalk mappings
+ * @access External API (requires API key)
+ */
+router.get('/crosswalks', async (req: Request, res: Response) => {
+  try {
+    const crosswalks = await storage.getAllCrosswalkMappings();
+    
+    // Get source and target system names for each crosswalk
+    const enhancedCrosswalks = await Promise.all(crosswalks.map(async (crosswalk) => {
+      const sourceSystem = await storage.getReferenceDataSet(crosswalk.sourceSystemId);
+      const targetSystem = await storage.getReferenceDataSet(crosswalk.targetSystemId);
+      
+      return {
+        ...crosswalk,
+        sourceSystemName: sourceSystem?.name || `System ID: ${crosswalk.sourceSystemId}`,
+        targetSystemName: targetSystem?.name || `System ID: ${crosswalk.targetSystemId}`
+      };
+    }));
+    
+    res.json(enhancedCrosswalks);
+  } catch (error) {
+    console.error('Error fetching crosswalks:', error);
+    res.status(500).json({ error: 'Failed to fetch crosswalks' });
+  }
+});
+
+/**
+ * @route GET /api/external/crosswalks/:id
+ * @description Get a specific crosswalk mapping by ID
+ * @access External API (requires API key)
+ */
+router.get('/crosswalks/:id', async (req: Request, res: Response) => {
+  try {
+    const crosswalkId = parseInt(req.params.id);
+    
+    if (isNaN(crosswalkId)) {
+      return res.status(400).json({ error: 'Invalid ID format' });
+    }
+    
+    const crosswalk = await storage.getCrosswalkMapping(crosswalkId);
+    
+    if (!crosswalk) {
+      return res.status(404).json({ error: 'Crosswalk mapping not found' });
+    }
+    
+    // Get source and target systems
+    const sourceSystem = await storage.getReferenceDataSet(crosswalk.sourceSystemId);
+    const targetSystem = await storage.getReferenceDataSet(crosswalk.targetSystemId);
+    
+    // Get schema information for both systems
+    const sourceSchemas = await storage.getReferenceDataTypeSchemas(sourceSystem?.typeId || 0);
+    const targetSchemas = await storage.getReferenceDataTypeSchemas(targetSystem?.typeId || 0);
+    
+    // Format the mappings with additional metadata
+    const result = {
+      ...crosswalk,
+      sourceSystemName: sourceSystem?.name || `System ID: ${crosswalk.sourceSystemId}`,
+      targetSystemName: targetSystem?.name || `System ID: ${crosswalk.targetSystemId}`,
+      sourceSchema: sourceSchemas.map(field => ({
+        name: field.name,
+        dataType: field.dataType
+      })),
+      targetSchema: targetSchemas.map(field => ({
+        name: field.name,
+        dataType: field.dataType
+      })),
+      // Include the original mapping data
+      mappingData: crosswalk.mappingData
+    };
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching crosswalk mapping:', error);
+    res.status(500).json({ error: 'Failed to fetch crosswalk mapping' });
+  }
+});
+
 export default router;
