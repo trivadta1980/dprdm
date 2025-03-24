@@ -68,7 +68,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             <div className="absolute inset-0 z-0 pointer-events-none">
               {/* Base pattern layer */}
               <div 
-                className="absolute inset-0 bg-repeat opacity-20 data-bg-pattern animated-bg"
+                className="absolute inset-0 bg-repeat opacity-20"
                 style={{ 
                   backgroundImage: 'url("/assets/images/data-background.svg")',
                   backgroundSize: '800px 800px'
