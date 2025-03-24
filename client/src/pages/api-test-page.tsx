@@ -165,7 +165,7 @@ export default function ApiTestPage() {
       toast({
         title: "API Key Validated",
         description: "The API key has been successfully validated.",
-        variant: "destructive", // Using destructive instead of success to avoid type error
+        variant: "default",
       });
     } catch (error) {
       setIsError(true);
@@ -284,7 +284,7 @@ export default function ApiTestPage() {
       toast({
         title: "Data Fetched Successfully",
         description: `Successfully retrieved data from the API.`,
-        variant: "destructive", // Using destructive to avoid type error
+        variant: "default",
       });
     } catch (error) {
       console.error("API fetch error:", error);
