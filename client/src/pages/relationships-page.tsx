@@ -76,6 +76,13 @@ type RelationshipForm = z.infer<typeof relationshipSchema>;
 type AttributeDefinitionForm = z.infer<typeof attributeDefinitionSchema>;
 
 export default function RelationshipsPage() {
+  // Environment check for debugging
+  console.log(`${new Date().toISOString()} - Environment check:`, { 
+    nodeEnv: process.env.NODE_ENV,
+    baseUrl: window.location.origin,
+    isProduction: process.env.NODE_ENV === 'production'
+  });
+  
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAttributeDialogOpen, setIsAttributeDialogOpen] = useState(false);
@@ -89,6 +96,10 @@ export default function RelationshipsPage() {
     target?: any;
     sourceSelection?: string;
     targetSelection?: string;
+    requestDetails?: any;
+    responseDetails?: any;
+    errorDetails?: any;
+    networkInfo?: any;
   }>({});
 
   const form = useForm<RelationshipForm>({
@@ -406,94 +417,224 @@ export default function RelationshipsPage() {
     return dataSets.find(ds => ds.id === id)?.name || "Unknown Dataset";
   };
 
-  // Update the handleSourceDatasetChange function
+  // Update the handleSourceDatasetChange function with enhanced debugging
   const handleSourceDatasetChange = async (value: string) => {
-    console.log("Source Dataset selected:", value);
+    console.log(`${new Date().toISOString()} - Starting API request for source dataset ${value}`);
     form.setValue("sourceDataSetId", value);
 
     try {
-      console.log("Fetching source dataset fields:", value);
+      // Capture request details for debugging
+      const requestDetails = {
+        url: `/api/reference-data/${value}`,
+        method: 'GET',
+        timestamp: new Date().toISOString(),
+        datasetId: value
+      };
+      console.log(`${new Date().toISOString()} - Request details:`, requestDetails);
+      
+      console.log(`${new Date().toISOString()} - Making request to: /api/reference-data/${value}`);
       const response = await apiRequest(`/reference-data/${value}`, {
         method: 'GET'
       });
+      
+      // Log response status and headers
+      console.log(`${new Date().toISOString()} - Received response with status: ${response.status}`);
+      const responseDetails = {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries([...response.headers.entries()]),
+        timestamp: new Date().toISOString()
+      };
+      console.log(`${new Date().toISOString()} - Response details:`, responseDetails);
+      
       const data = await response.json();
-      console.log("Source dataset API response:", data);
+      console.log(`${new Date().toISOString()} - Successfully parsed JSON data:`, { 
+        hasData: !!data, 
+        hasDataProperty: !!data?.data, 
+        dataType: typeof data?.data 
+      });
 
+      // Store comprehensive debug info
       setApiDebugData(prev => ({
         ...prev,
         source: data,
-        sourceSelection: `Selected dataset ID: ${value}`
+        sourceSelection: `Selected dataset ID: ${value}`,
+        requestDetails,
+        responseDetails
       }));
 
       if (!data?.data) {
-        console.log("No data in source dataset");
+        console.log(`${new Date().toISOString()} - Early return - No data property in response`);
         setSourceFields([]);
         return;
       }
 
+      // Analyze data structure
+      console.log(`${new Date().toISOString()} - Dataset structure:`, {
+        isObject: typeof data.data === 'object',
+        isArray: Array.isArray(data.data),
+        objectKeys: typeof data.data === 'object' && !Array.isArray(data.data) ? Object.keys(data.data) : '(not an object)',
+        dataLength: typeof data.data === 'object' && !Array.isArray(data.data) ? Object.keys(data.data).length : 0
+      });
+      
       const instances = Object.values(data.data);
       if (instances.length === 0) {
-        console.log("No instances found in source dataset");
+        console.log(`${new Date().toISOString()} - Early return - No instances found`);
         setSourceFields([]);
         return;
       }
 
+      // Log instance entries for detailed inspection
+      const instanceEntries = Object.entries(data.data);
+      console.log(`${new Date().toISOString()} - Instance entries:`, instanceEntries.map(([key, value]) => ({ 
+        key, 
+        valueType: typeof value,
+        isValueObject: typeof value === 'object',
+        valueKeys: typeof value === 'object' ? Object.keys(value) : []
+      })).slice(0, 2));  // Only show first two for brevity
+
       const firstInstance = instances[0];
+      // Log raw keys before filtering
+      console.log(`${new Date().toISOString()} - First instance raw keys:`, Object.keys(firstInstance));
+      
       const fields = Object.keys(firstInstance).filter(field => !field.startsWith('_'));
-      console.log("Source dataset fields:", fields);
+      console.log(`${new Date().toISOString()} - Filtered fields (after removing _):`, fields);
       setSourceFields(fields);
     } catch (error) {
-      console.error("Error fetching source dataset:", error);
+      console.error(`${new Date().toISOString()} - Error in handleSourceDatasetChange:`, {
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : 'No stack trace',
+        datasetId: value,
+        request: `/api/reference-data/${value}`
+      });
+      
       setSourceFields([]);
       setApiDebugData(prev => ({
         ...prev,
-        source: { error: error instanceof Error ? error.message : "Failed to fetch dataset" }
+        source: { 
+          error: error instanceof Error ? error.message : "Failed to fetch dataset",
+          stack: error instanceof Error ? error.stack : undefined,
+          time: new Date().toISOString()
+        },
+        errorDetails: {
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : 'No stack trace',
+          time: new Date().toISOString()
+        }
       }));
     }
   };
 
-  // Update the handleTargetDatasetChange function
+  // Update the handleTargetDatasetChange function with enhanced debugging
   const handleTargetDatasetChange = async (value: string) => {
-    console.log("Target Dataset selected:", value);
+    console.log(`${new Date().toISOString()} - Starting API request for target dataset ${value}`);
     form.setValue("targetDataSetId", value);
 
     try {
-      console.log("Fetching target dataset fields:", value);
+      // Capture request details for debugging
+      const requestDetails = {
+        url: `/api/reference-data/${value}`,
+        method: 'GET',
+        timestamp: new Date().toISOString(),
+        datasetId: value
+      };
+      console.log(`${new Date().toISOString()} - Target request details:`, requestDetails);
+      
+      console.log(`${new Date().toISOString()} - Making request to: /api/reference-data/${value}`);
       const response = await apiRequest(`/reference-data/${value}`, {
         method: 'GET'
       });
+      
+      // Log response status and headers
+      console.log(`${new Date().toISOString()} - Received target response with status: ${response.status}`);
+      const responseDetails = {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries([...response.headers.entries()]),
+        timestamp: new Date().toISOString()
+      };
+      console.log(`${new Date().toISOString()} - Target response details:`, responseDetails);
+      
       const data = await response.json();
-      console.log("Target dataset API response:", data);
+      console.log(`${new Date().toISOString()} - Successfully parsed target JSON data:`, { 
+        hasData: !!data, 
+        hasDataProperty: !!data?.data, 
+        dataType: typeof data?.data 
+      });
 
+      // Store comprehensive debug info
       setApiDebugData(prev => ({
         ...prev,
         target: data,
-        targetSelection: `Selected dataset ID: ${value}`
+        targetSelection: `Selected dataset ID: ${value}`,
+        networkInfo: {
+          ...prev.networkInfo,
+          targetRequest: requestDetails,
+          targetResponse: responseDetails
+        }
       }));
 
       if (!data?.data) {
-        console.log("No data in target dataset");
+        console.log(`${new Date().toISOString()} - Early return - No data property in target response`);
         setTargetFields([]);
         return;
       }
 
+      // Analyze data structure
+      console.log(`${new Date().toISOString()} - Target dataset structure:`, {
+        isObject: typeof data.data === 'object',
+        isArray: Array.isArray(data.data),
+        objectKeys: typeof data.data === 'object' && !Array.isArray(data.data) ? Object.keys(data.data) : '(not an object)',
+        dataLength: typeof data.data === 'object' && !Array.isArray(data.data) ? Object.keys(data.data).length : 0
+      });
+      
       const instances = Object.values(data.data);
       if (instances.length === 0) {
-        console.log("No instances found in target dataset");
+        console.log(`${new Date().toISOString()} - Early return - No instances found in target dataset`);
         setTargetFields([]);
         return;
       }
 
+      // Log instance entries for detailed inspection
+      const instanceEntries = Object.entries(data.data);
+      console.log(`${new Date().toISOString()} - Target instance entries:`, instanceEntries.map(([key, value]) => ({ 
+        key, 
+        valueType: typeof value,
+        isValueObject: typeof value === 'object',
+        valueKeys: typeof value === 'object' ? Object.keys(value) : []
+      })).slice(0, 2));  // Only show first two for brevity
+
       const firstInstance = instances[0];
+      // Log raw keys before filtering
+      console.log(`${new Date().toISOString()} - Target first instance raw keys:`, Object.keys(firstInstance));
+      
       const fields = Object.keys(firstInstance).filter(field => !field.startsWith('_'));
-      console.log("Target dataset fields:", fields);
+      console.log(`${new Date().toISOString()} - Target filtered fields (after removing _):`, fields);
       setTargetFields(fields);
     } catch (error) {
-      console.error("Error fetching target dataset:", error);
+      console.error(`${new Date().toISOString()} - Error in handleTargetDatasetChange:`, {
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : 'No stack trace',
+        datasetId: value,
+        request: `/api/reference-data/${value}`
+      });
+      
       setTargetFields([]);
       setApiDebugData(prev => ({
         ...prev,
-        target: { error: error instanceof Error ? error.message : "Failed to fetch dataset" }
+        target: { 
+          error: error instanceof Error ? error.message : "Failed to fetch dataset",
+          stack: error instanceof Error ? error.stack : undefined,
+          time: new Date().toISOString()
+        },
+        errorDetails: {
+          ...prev.errorDetails,
+          targetError: {
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : 'No stack trace',
+            time: new Date().toISOString()
+          }
+        }
       }));
     }
   };
