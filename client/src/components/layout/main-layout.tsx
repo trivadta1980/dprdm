@@ -63,8 +63,28 @@ export function MainLayout({ children }: MainLayoutProps) {
         <div className="flex flex-1">
           <Sidebar className="w-64 hidden md:block" />
 
-          <div className="flex-1 flex flex-col h-screen">
-            <header className="border-b p-4 flex justify-between items-center bg-white">
+          <div className="flex-1 flex flex-col h-screen relative">
+            {/* Background Layer with Data Visualization Theme */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+              {/* Base pattern layer */}
+              <div 
+                className="absolute inset-0 bg-repeat opacity-20"
+                style={{ 
+                  backgroundImage: 'url("/assets/images/data-background.svg")',
+                  backgroundSize: '800px 800px'
+                }}
+              ></div>
+              {/* Gradient overlay for better readability */}
+              <div 
+                className="absolute inset-0"
+                style={{ 
+                  backgroundImage: 'url("/assets/images/gradient-overlay.svg")',
+                  backgroundSize: 'cover'
+                }}
+              ></div>
+            </div>
+
+            <header className="border-b p-4 flex justify-between items-center bg-white relative z-10">
               <div className="flex items-center gap-3 cursor-pointer" onClick={() => setLocation('/')}>
                 <Database className="h-6 w-6 text-primary" />
                 <div>
@@ -90,11 +110,11 @@ export function MainLayout({ children }: MainLayoutProps) {
               </div>
             </header>
 
-            <main className="flex-1 overflow-auto p-6">
+            <main className="flex-1 overflow-auto p-6 relative z-10">
               {children}
             </main>
 
-            <footer className="border-t py-2 px-4 bg-white">
+            <footer className="border-t py-2 px-4 bg-white relative z-10">
               <div className="flex justify-between items-center">
                 <div className="text-[10px] text-gray-500">
                   © {new Date().getFullYear()} Blumetra Solutions. All rights reserved.

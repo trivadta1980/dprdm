@@ -11,3 +11,33 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+/* Background image responsive adjustments */
+@media (max-width: 768px) {
+  .data-bg-pattern {
+    background-size: 400px 400px !important;
+    opacity: 0.1 !important;
+  }
+}
+
+/* Enhanced card styles with semi-transparent background */
+.card-with-bg {
+  @apply bg-white/95 backdrop-blur-sm;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+/* Optional: Animation for background on large screens */
+@media (min-width: 1024px) {
+  .animated-bg {
+    animation: subtle-move 120s infinite alternate linear;
+  }
+
+  @keyframes subtle-move {
+    0% {
+      background-position: 0% 0%;
+    }
+    100% {
+      background-position: 100% 100%;
+    }
+  }
+}

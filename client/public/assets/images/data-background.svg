@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Grid Pattern -->
+    <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+      <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#f0f4f8" stroke-width="0.5"/>
+    </pattern>
+    
+    <!-- Node Shapes -->
+    <circle id="node" cx="0" cy="0" r="4" fill="#e2e8f0" />
+    <circle id="dataNode" cx="0" cy="0" r="6" fill="#e2e8f0" />
+    
+    <!-- Connection Line -->
+    <path id="connection" d="M0,0 C20,-20 30,20 50,0" stroke="#e2e8f0" stroke-width="0.5" fill="none" />
+  </defs>
+  
+  <!-- Background with subtle grid -->
+  <rect width="100%" height="100%" fill="white" />
+  <rect width="100%" height="100%" fill="url(#grid)" opacity="0.3" />
+  
+  <!-- Data Nodes and Connections - First Layer (Very Light) -->
+  <g opacity="0.07">
+    <!-- Row 1 -->
+    <use href="#node" x="100" y="100" />
+    <use href="#connection" x="100" y="100" />
+    <use href="#node" x="150" y="100" />
+    <use href="#connection" x="150" y="100" transform="rotate(45 150 100)" />
+    <use href="#dataNode" x="200" y="150" />
+    
+    <!-- Row 2 -->
+    <use href="#node" x="50" y="200" />
+    <use href="#connection" x="50" y="200" transform="rotate(-30 50 200)" />
+    <use href="#dataNode" x="100" y="200" />
+    <use href="#connection" x="100" y="200" />
+    <use href="#node" x="150" y="200" />
+    
+    <!-- Row 3 -->
+    <use href="#dataNode" x="200" y="250" />
+    <use href="#connection" x="200" y="250" transform="rotate(60 200 250)" />
+    <use href="#node" x="250" y="300" />
+    <use href="#connection" x="250" y="300" transform="rotate(20 250 300)" />
+    <use href="#dataNode" x="300" y="300" />
+    
+    <!-- Row 4 -->
+    <use href="#node" x="100" y="350" />
+    <use href="#connection" x="100" y="350" transform="rotate(-45 100 350)" />
+    <use href="#dataNode" x="150" y="400" />
+    <use href="#connection" x="150" y="400" />
+    <use href="#node" x="200" y="400" />
+  </g>
+  
+  <!-- Repeat pattern -->
+  <g opacity="0.07">
+    <!-- Row 1 (Offset) -->
+    <use href="#node" x="400" y="150" />
+    <use href="#connection" x="400" y="150" />
+    <use href="#dataNode" x="450" y="150" />
+    <use href="#connection" x="450" y="150" transform="rotate(45 450 150)" />
+    <use href="#node" x="500" y="200" />
+    
+    <!-- Row 2 (Offset) -->
+    <use href="#dataNode" x="350" y="250" />
+    <use href="#connection" x="350" y="250" transform="rotate(-30 350 250)" />
+    <use href="#node" x="400" y="250" />
+    <use href="#connection" x="400" y="250" />
+    <use href="#dataNode" x="450" y="250" />
+    
+    <!-- Row 3 (Offset) -->
+    <use href="#node" x="500" y="300" />
+    <use href="#connection" x="500" y="300" transform="rotate(60 500 300)" />
+    <use href="#dataNode" x="550" y="350" />
+    <use href="#connection" x="550" y="350" transform="rotate(20 550 350)" />
+    <use href="#node" x="600" y="350" />
+    
+    <!-- Row 4 (Offset) -->
+    <use href="#dataNode" x="400" y="400" />
+    <use href="#connection" x="400" y="400" transform="rotate(-45 400 400)" />
+    <use href="#node" x="450" y="450" />
+    <use href="#connection" x="450" y="450" />
+    <use href="#dataNode" x="500" y="450" />
+  </g>
+  
+  <!-- Database Icons (Very Subtle) -->
+  <g opacity="0.05">
+    <path d="M150,50 C100,50 100,80 150,80 C200,80 200,50 150,50 Z M100,50 L100,70 C100,90 200,90 200,70 L200,50" fill="none" stroke="#94a3b8" stroke-width="1" />
+    <path d="M450,350 C400,350 400,380 450,380 C500,380 500,350 450,350 Z M400,350 L400,370 C400,390 500,390 500,370 L500,350" fill="none" stroke="#94a3b8" stroke-width="1" />
+    <path d="M250,200 C200,200 200,230 250,230 C300,230 300,200 250,200 Z M200,200 L200,220 C200,240 300,240 300,220 L300,200" fill="none" stroke="#94a3b8" stroke-width="1" />
+  </g>
+</svg>
