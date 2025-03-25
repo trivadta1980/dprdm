@@ -107,20 +107,124 @@ export default function ApiTestPage() {
   const [crosswalkSchema, setCrosswalkSchema] = useState<CrosswalkSchema | null>(null);
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [apiRequests, setApiRequests] = useState<ApiRequest[]>([]);
+
+  // Function to track API requests
+  const trackApiRequest = (request: Partial<ApiRequest>) => {
+    const requestId = Math.random().toString(36).substring(2, 9);
+    const newRequest: ApiRequest = {
+      id: requestId,
+      url: request.url || '',
+      method: request.method || 'GET',
+      timestamp: new Date(),
+      data: request.data,
+      ...(request.response && { response: request.response }),
+      ...(request.error && { error: request.error }),
+      ...(request.duration && { duration: request.duration })
+    };
+    
+    setApiRequests(prev => [newRequest, ...prev].slice(0, 20)); // Keep the most recent 20 requests
+    return requestId;
+  };
+  
+  // Clear debug log when component unmounts or API key changes
+  useEffect(() => {
+    return () => {
+      setApiRequests([]);
+    };
+  }, [apiKey]);
 
   // Fetch datasets and relationships when API key is provided
   const { data: datasets, refetch: refetchDatasets } = useQuery<ReferenceData[]>({
     queryKey: ["external-datasets", apiKey],
     queryFn: async () => {
       if (!apiKey) return [];
+      
+      const endpoint = "/api/external/datasets";
       const options: RequestInit = {
         headers: {
           "x-api-key": apiKey,
         },
       };
-      const response = await fetch("/api/external/datasets", options);
-      if (!response.ok) throw new Error("Failed to fetch datasets");
-      return response.json();
+      
+      // Start tracking this API request
+      const requestId = trackApiRequest({
+        url: endpoint,
+        method: 'GET',
+        data: { headers: { "x-api-key": `${apiKey.substring(0, 3)}...` } }
+      });
+      
+      const startTime = performance.now();
+      
+      try {
+        const response = await fetch(endpoint, options);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          
+          // Update the request with error info
+          const endTime = performance.now();
+          const duration = Math.round(endTime - startTime);
+          
+          setApiRequests(prev => prev.map(req => 
+            req.id === requestId 
+              ? { 
+                  ...req, 
+                  duration,
+                  error: { message: `Failed to fetch datasets: ${response.status} ${response.statusText}` },
+                  response: {
+                    status: response.status,
+                    statusText: response.statusText,
+                    data: errorText,
+                    timestamp: new Date()
+                  }
+                } 
+              : req
+          ));
+          
+          throw new Error("Failed to fetch datasets");
+        }
+        
+        const data = await response.json();
+        
+        // Update the request with success info
+        const endTime = performance.now();
+        const duration = Math.round(endTime - startTime);
+        
+        setApiRequests(prev => prev.map(req => 
+          req.id === requestId 
+            ? { 
+                ...req, 
+                duration,
+                response: {
+                  status: response.status,
+                  statusText: response.statusText,
+                  data: data,
+                  timestamp: new Date()
+                }
+              } 
+            : req
+        ));
+        
+        return data;
+      } catch (error) {
+        // If error wasn't captured above
+        if (!apiRequests.find(req => req.id === requestId && req.error)) {
+          const endTime = performance.now();
+          const duration = Math.round(endTime - startTime);
+          
+          setApiRequests(prev => prev.map(req => 
+            req.id === requestId 
+              ? { 
+                  ...req, 
+                  duration,
+                  error: { message: error instanceof Error ? error.message : "Unknown error" }
+                } 
+              : req
+          ));
+        }
+        throw error;
+      }
     },
     enabled: !!apiKey,
   });
@@ -129,14 +233,92 @@ export default function ApiTestPage() {
     queryKey: ["external-relationships", apiKey],
     queryFn: async () => {
       if (!apiKey) return [];
+      
+      const endpoint = "/api/external/relationships";
       const options: RequestInit = {
         headers: {
           "x-api-key": apiKey,
         },
       };
-      const response = await fetch("/api/external/relationships", options);
-      if (!response.ok) throw new Error("Failed to fetch relationships");
-      return response.json();
+      
+      // Start tracking this API request
+      const requestId = trackApiRequest({
+        url: endpoint,
+        method: 'GET',
+        data: { headers: { "x-api-key": `${apiKey.substring(0, 3)}...` } }
+      });
+      
+      const startTime = performance.now();
+      
+      try {
+        const response = await fetch(endpoint, options);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          
+          // Update the request with error info
+          const endTime = performance.now();
+          const duration = Math.round(endTime - startTime);
+          
+          setApiRequests(prev => prev.map(req => 
+            req.id === requestId 
+              ? { 
+                  ...req, 
+                  duration,
+                  error: { message: `Failed to fetch relationships: ${response.status} ${response.statusText}` },
+                  response: {
+                    status: response.status,
+                    statusText: response.statusText,
+                    data: errorText,
+                    timestamp: new Date()
+                  }
+                } 
+              : req
+          ));
+          
+          throw new Error("Failed to fetch relationships");
+        }
+        
+        const data = await response.json();
+        
+        // Update the request with success info
+        const endTime = performance.now();
+        const duration = Math.round(endTime - startTime);
+        
+        setApiRequests(prev => prev.map(req => 
+          req.id === requestId 
+            ? { 
+                ...req, 
+                duration,
+                response: {
+                  status: response.status,
+                  statusText: response.statusText,
+                  data: data,
+                  timestamp: new Date()
+                }
+              } 
+            : req
+        ));
+        
+        return data;
+      } catch (error) {
+        // If error wasn't captured above
+        if (!apiRequests.find(req => req.id === requestId && req.error)) {
+          const endTime = performance.now();
+          const duration = Math.round(endTime - startTime);
+          
+          setApiRequests(prev => prev.map(req => 
+            req.id === requestId 
+              ? { 
+                  ...req, 
+                  duration,
+                  error: { message: error instanceof Error ? error.message : "Unknown error" }
+                } 
+              : req
+          ));
+        }
+        throw error;
+      }
     },
     enabled: !!apiKey,
   });
@@ -145,14 +327,92 @@ export default function ApiTestPage() {
     queryKey: ["external-crosswalks", apiKey],
     queryFn: async () => {
       if (!apiKey) return [];
+      
+      const endpoint = "/api/external/crosswalks";
       const options: RequestInit = {
         headers: {
           "x-api-key": apiKey,
         },
       };
-      const response = await fetch("/api/external/crosswalks", options);
-      if (!response.ok) throw new Error("Failed to fetch crosswalks");
-      return response.json();
+      
+      // Start tracking this API request
+      const requestId = trackApiRequest({
+        url: endpoint,
+        method: 'GET',
+        data: { headers: { "x-api-key": `${apiKey.substring(0, 3)}...` } }
+      });
+      
+      const startTime = performance.now();
+      
+      try {
+        const response = await fetch(endpoint, options);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          
+          // Update the request with error info
+          const endTime = performance.now();
+          const duration = Math.round(endTime - startTime);
+          
+          setApiRequests(prev => prev.map(req => 
+            req.id === requestId 
+              ? { 
+                  ...req, 
+                  duration,
+                  error: { message: `Failed to fetch crosswalks: ${response.status} ${response.statusText}` },
+                  response: {
+                    status: response.status,
+                    statusText: response.statusText,
+                    data: errorText,
+                    timestamp: new Date()
+                  }
+                } 
+              : req
+          ));
+          
+          throw new Error("Failed to fetch crosswalks");
+        }
+        
+        const data = await response.json();
+        
+        // Update the request with success info
+        const endTime = performance.now();
+        const duration = Math.round(endTime - startTime);
+        
+        setApiRequests(prev => prev.map(req => 
+          req.id === requestId 
+            ? { 
+                ...req, 
+                duration,
+                response: {
+                  status: response.status,
+                  statusText: response.statusText,
+                  data: data,
+                  timestamp: new Date()
+                }
+              } 
+            : req
+        ));
+        
+        return data;
+      } catch (error) {
+        // If error wasn't captured above
+        if (!apiRequests.find(req => req.id === requestId && req.error)) {
+          const endTime = performance.now();
+          const duration = Math.round(endTime - startTime);
+          
+          setApiRequests(prev => prev.map(req => 
+            req.id === requestId 
+              ? { 
+                  ...req, 
+                  duration,
+                  error: { message: error instanceof Error ? error.message : "Unknown error" }
+                } 
+              : req
+          ));
+        }
+        throw error;
+      }
     },
     enabled: !!apiKey,
   });
@@ -189,33 +449,84 @@ export default function ApiTestPage() {
     setDatasetSchema(null);
     setCrosswalkSchema(null);
 
+    // Create API request info
+    let endpoint = "";
+    if (activeTab === "datasets" && selectedDatasetId) {
+      endpoint = `/api/external/reference-data/${selectedDatasetId}`;
+    } else if (activeTab === "relationships" && selectedRelationshipId) {
+      endpoint = `/api/external/relationships/${selectedRelationshipId}/values`;
+    } else if (activeTab === "crosswalks" && selectedCrosswalkId) {
+      endpoint = `/api/external/crosswalks/${selectedCrosswalkId}`;
+    } else {
+      throw new Error("Please select a valid item to fetch.");
+    }
+
+    const options: RequestInit = {
+      headers: {
+        "x-api-key": apiKey,
+      },
+    };
+
+    // Start tracking the API request
+    const requestId = trackApiRequest({
+      url: endpoint,
+      method: 'GET',
+      data: { headers: { "x-api-key": `${apiKey.substring(0, 3)}...` } }
+    });
+    
+    const startTime = performance.now();
+    
     try {
-      let endpoint = "";
-      if (activeTab === "datasets" && selectedDatasetId) {
-        endpoint = `/api/external/reference-data/${selectedDatasetId}`;
-      } else if (activeTab === "relationships" && selectedRelationshipId) {
-        endpoint = `/api/external/relationships/${selectedRelationshipId}/values`;
-      } else if (activeTab === "crosswalks" && selectedCrosswalkId) {
-        endpoint = `/api/external/crosswalks/${selectedCrosswalkId}`;
-      } else {
-        throw new Error("Please select a valid item to fetch.");
-      }
-
-      const options: RequestInit = {
-        headers: {
-          "x-api-key": apiKey,
-        },
-      };
-
       console.log(`Fetching from ${endpoint} with API key: ${apiKey.substring(0, 3)}...`);
       const response = await fetch(endpoint, options);
       
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(errorText || `Error: ${response.status} ${response.statusText}`);
+        const errorMessage = errorText || `Error: ${response.status} ${response.statusText}`;
+        
+        // Update the request with error info
+        const endTime = performance.now();
+        const duration = Math.round(endTime - startTime);
+        
+        setApiRequests(prev => prev.map(req => 
+          req.id === requestId 
+            ? { 
+                ...req, 
+                duration,
+                error: { message: errorMessage },
+                response: {
+                  status: response.status,
+                  statusText: response.statusText,
+                  data: errorText,
+                  timestamp: new Date()
+                }
+              } 
+            : req
+        ));
+        
+        throw new Error(errorMessage);
       }
       
       const data = await response.json();
+      
+      // Update the request with success info
+      const endTime = performance.now();
+      const duration = Math.round(endTime - startTime);
+      
+      setApiRequests(prev => prev.map(req => 
+        req.id === requestId 
+          ? { 
+              ...req, 
+              duration,
+              response: {
+                status: response.status,
+                statusText: response.statusText,
+                data: data,
+                timestamp: new Date()
+              }
+            } 
+          : req
+      ));
       
       // Debug logging
       console.log("API Response:", data);
@@ -230,7 +541,7 @@ export default function ApiTestPage() {
         }
         
         // Transform dataset instances into an array
-        const instances = [];
+        const instances: any[] = [];
         if (data.data) {
           console.log("Dataset data found:", data.data);
           for (const [id, value] of Object.entries(data.data)) {
@@ -260,7 +571,7 @@ export default function ApiTestPage() {
         }
         
         // Transform crosswalk mappings into an array
-        const mappings = [];
+        const mappings: any[] = [];
         if (data.mappingData && data.mappingData.mappings) {
           console.log("Crosswalk data found:", data.mappingData);
           data.mappingData.mappings.forEach((mapping: any, index: number) => {
@@ -292,6 +603,23 @@ export default function ApiTestPage() {
       console.error("API fetch error:", error);
       setIsError(true);
       setErrorMessage(error instanceof Error ? error.message : "Unknown error occurred");
+      
+      // If error wasn't captured earlier, update the request with error info
+      if (!apiRequests.find(req => req.id === requestId && req.error)) {
+        const endTime = performance.now();
+        const duration = Math.round(endTime - startTime);
+        
+        setApiRequests(prev => prev.map(req => 
+          req.id === requestId 
+            ? { 
+                ...req, 
+                duration,
+                error: { message: error instanceof Error ? error.message : "Unknown error" }
+              } 
+            : req
+        ));
+      }
+      
       toast({
         title: "Error Fetching Data",
         description: error instanceof Error ? error.message : "Failed to fetch data from the API",
@@ -545,6 +873,15 @@ export default function ApiTestPage() {
           </CardContent>
         </Card>
       )}
+        
+        {/* API Debug Panel - only shown in the API test page */}
+        {apiRequests.length > 0 && (
+          <ApiDebugPanel
+            requests={apiRequests}
+            title="API Debug Panel"
+            allowToggle={true}
+          />
+        )}
       </div>
     </MainLayout>
   );
