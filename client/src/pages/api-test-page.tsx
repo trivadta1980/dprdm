@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Tabs,
@@ -28,6 +28,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import ApiDebugPanel, { ApiRequest } from "@/components/debug/api-debug-panel";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Badge } from "@/components/ui/badge";
 import { CrosswalkTransformer } from "@/components/transformation/crosswalk-transformer";
