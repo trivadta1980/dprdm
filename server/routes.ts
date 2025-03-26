@@ -630,19 +630,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      // Get distinct relationship types from pending values
-      const relationshipTypes = await db
+      // Check if this is for dropdown (needs to return all types regardless of pagination)
+      const forDropdown = req.query.forDropdown === 'true';
+      console.log('GET /api/relationships/types - For dropdown:', forDropdown);
+      
+      let query = db
         .select({
           id: relationships.id,
           name: relationships.name
         })
-        .from(relationships)
-        .innerJoin(
-          relationshipValues,
-          eq(relationshipValues.relationshipId, relationships.id)
-        )
-        .where(eq(relationshipValues.approvalStatus, "PENDING"))
-        .groupBy(relationships.id, relationships.name);
+        .from(relationships);
+        
+      if (!forDropdown) {
+        // Original behavior - only get types that have pending values
+        query = query
+          .innerJoin(
+            relationshipValues,
+            eq(relationshipValues.relationshipId, relationships.id)
+          )
+          .where(eq(relationshipValues.approvalStatus, "PENDING"))
+          .groupBy(relationships.id, relationships.name);
+      }
+      
+      const relationshipTypes = await query;
 
       console.log('GET /api/relationships/types - Types fetched:', relationshipTypes.length);
       res.json(relationshipTypes);

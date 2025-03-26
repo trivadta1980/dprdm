@@ -93,7 +93,7 @@ export default function ApprovalsDashboard() {
     queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
     
     // Also invalidate the filter-related queries for relationship values
-    queryClient.invalidateQueries({ queryKey: ["/api/relationships/types"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/relationships/types", { forDropdown: true }] });
     queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
     queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
     
@@ -120,9 +120,9 @@ export default function ApprovalsDashboard() {
 
   // Fetch relationship types for dropdown
   const { data: relationshipTypes = [] } = useQuery({
-    queryKey: ["/api/relationships/types"],
+    queryKey: ["/api/relationships/types", { forDropdown: true }],
     queryFn: async () => {
-      const response = await fetch("/api/relationships/types");
+      const response = await fetch("/api/relationships/types?forDropdown=true");
       if (!response.ok) {
         throw new Error("Failed to fetch relationship types");
       }
@@ -278,7 +278,7 @@ export default function ApprovalsDashboard() {
       // Also invalidate filter-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/relationships/types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/relationships/types", { forDropdown: true }] });
       
       toast({
         title: "Approved",
@@ -311,7 +311,7 @@ export default function ApprovalsDashboard() {
       // Also invalidate filter-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/relationships/types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/relationships/types", { forDropdown: true }] });
       
       toast({
         title: "Rejected",
@@ -342,7 +342,7 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
       
       // Also invalidate filter-related queries
-      queryClient.invalidateQueries({ queryKey: ["/api/relationships/types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/relationships/types", { forDropdown: true }] });
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       
       // This will invalidate the specific relationship values list that the approved item belonged to
@@ -376,7 +376,7 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
       
       // Also invalidate filter-related queries
-      queryClient.invalidateQueries({ queryKey: ["/api/relationships/types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/relationships/types", { forDropdown: true }] });
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       
       // This will invalidate the specific relationship values list that the rejected item belonged to
@@ -416,7 +416,7 @@ export default function ApprovalsDashboard() {
       // Also invalidate filter-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/relationships/types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/relationships/types", { forDropdown: true }] });
       
       toast({
         title: "Bulk Approval Success",
@@ -452,7 +452,7 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
       
       // Also invalidate filter-related queries
-      queryClient.invalidateQueries({ queryKey: ["/api/relationships/types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/relationships/types", { forDropdown: true }] });
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
       
