@@ -139,12 +139,10 @@ export default function ReferenceDataCreatePage() {
   });
 
   const onSubmit = (data: InsertReferenceDataSet) => {
-    console.log("Form submitted:", data);
 
     // Validate and convert typeId
     const typeId = Number(data.typeId);
     if (isNaN(typeId)) {
-      console.error("Invalid typeId:", data.typeId);
       toast({
         title: "Validation Error",
         description: "Invalid reference type selected",
@@ -153,16 +151,11 @@ export default function ReferenceDataCreatePage() {
       return;
     }
 
-    console.log("TypeId value:", typeId, "Type:", typeof typeId);
-
     const payload = {
       ...data,
       typeId: typeId,
       data: {} // Ensure data field is initialized
     };
-
-    console.log("Submitting form with data:", payload);
-    console.log("TypeId type:", typeof payload.typeId);
     createMutation.mutate(payload);
   }
 
@@ -238,7 +231,6 @@ export default function ReferenceDataCreatePage() {
                       <FormLabel>Reference Data Type</FormLabel>
                       <Select
                         onValueChange={(value) => {
-                          console.log("Selected type ID:", value, "Type:", typeof value);
                           const numValue = Number(value);
                           field.onChange(numValue);
                           setSelectedTypeId(numValue);
@@ -265,11 +257,7 @@ export default function ReferenceDataCreatePage() {
                   )}
                 />
 
-                {selectedTypeId && (
-                  <div className="p-3 bg-blue-50 rounded-md text-sm">
-                    Selected Reference Type: <strong>{selectedTypeName}</strong> (ID: {selectedTypeId})
-                  </div>
-                )}
+                {/* Type selection confirmation is shown here */}
 
                 <Button
                   type="submit"
