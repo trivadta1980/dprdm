@@ -69,7 +69,14 @@ export default function ApprovalsDashboard() {
   const [relationshipPageSize, setRelationshipPageSize] = useState(50);
   const [selectedRelationshipValues, setSelectedRelationshipValues] = useState<Set<number>>(new Set());
 
-  // Search and filter states
+  // Dataset filter states
+  const [datasetSearchTerm, setDatasetSearchTerm] = useState("");
+  const [selectedDatasetType, setSelectedDatasetType] = useState("all");
+  const [datasetDateRange, setDatasetDateRange] = useState<DateRange | undefined>();
+  const [datasetPage, setDatasetPage] = useState(1);
+  const [datasetPageSize, setDatasetPageSize] = useState(50);
+  
+  // Relationship filter states
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRelationshipType, setSelectedRelationshipType] = useState("all");
   const [selectedSourceDataset, setSelectedSourceDataset] = useState("all");
@@ -93,13 +100,78 @@ export default function ApprovalsDashboard() {
     queryKey: ["/api/reference-data"],
   });
 
-  // Existing dataset instances query...
+  // Fetch reference data types for dataset type filter
+  const { data: datasetTypes = [] } = useQuery({
+    queryKey: ["/api/reference-types"],
+    queryFn: async () => {
+      const response = await fetch("/api/reference-types");
+      if (!response.ok) {
+        throw new Error("Failed to fetch reference data types");
+      }
+      return response.json();
+    }
+  });
+
+  // Updated dataset instances query with filters and pagination
   const {
-    data: pendingDatasetInstances = [],
+    data: datasetInstancesResponse = { data: [], metadata: { totalCount: 0, currentPage: 1, pageSize: 50, totalPages: 1 } },
     isLoading: isLoadingDatasets,
     error: datasetsError
-  } = useQuery<PendingApproval[]>({
-    queryKey: ["/api/approvals/pending"],
+  } = useQuery({
+    queryKey: [
+      "/api/approvals/pending",
+      datasetPage,
+      datasetPageSize,
+      datasetSearchTerm,
+      selectedDatasetType,
+      datasetDateRange
+    ],
+    queryFn: async () => {
+      // If the API endpoint doesn't support these filters yet, we'll use client-side filtering
+      // But we set up the query structure for future backend implementation
+      const response = await fetch("/api/approvals/pending");
+      if (!response.ok) {
+        throw new Error("Failed to fetch pending dataset instances");
+      }
+      const data = await response.json();
+      
+      // Apply client-side filtering until backend filters are implemented
+      let filteredData = data;
+      
+      // Filter by search term if provided
+      if (datasetSearchTerm) {
+        const term = datasetSearchTerm.toLowerCase();
+        filteredData = filteredData.filter((item: PendingApproval) => 
+          item.instanceName.toLowerCase().includes(term) || 
+          item.instanceId.toLowerCase().includes(term) ||
+          item.dataSetName.toLowerCase().includes(term)
+        );
+      }
+      
+      // Filter by dataset type if selected
+      if (selectedDatasetType !== "all") {
+        const typeId = Number(selectedDatasetType);
+        filteredData = filteredData.filter((item: PendingApproval) => {
+          const dataset = datasets.find((ds: any) => ds.id === item.dataSetId);
+          return dataset?.typeId === typeId;
+        });
+      }
+      
+      // Client-side pagination
+      const startIndex = (datasetPage - 1) * datasetPageSize;
+      const endIndex = startIndex + datasetPageSize;
+      const paginatedData = filteredData.slice(startIndex, endIndex);
+      
+      return {
+        data: paginatedData,
+        metadata: {
+          totalCount: filteredData.length,
+          currentPage: datasetPage,
+          pageSize: datasetPageSize,
+          totalPages: Math.ceil(filteredData.length / datasetPageSize) || 1
+        }
+      };
+    }
   });
 
 
@@ -298,7 +370,7 @@ export default function ApprovalsDashboard() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      const allIds = pendingDatasetInstances.map(item => `${item.dataSetId}-${item.instanceId}`);
+      const allIds = datasetInstancesResponse.data.map(item => `${item.dataSetId}-${item.instanceId}`);
       setSelectedInstances(new Set(allIds));
     } else {
       setSelectedInstances(new Set());
@@ -325,7 +397,7 @@ export default function ApprovalsDashboard() {
       return;
     }
 
-    const selectedApprovals = pendingDatasetInstances.filter(
+    const selectedApprovals = datasetInstancesResponse.data.filter(
       item => selectedInstances.has(`${item.dataSetId}-${item.instanceId}`)
     );
 
@@ -400,7 +472,7 @@ export default function ApprovalsDashboard() {
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList>
                 <TabsTrigger value="dataset-instances">
-                  Dataset Instances ({pendingDatasetInstances.length})
+                  Dataset Instances ({datasetInstancesResponse.metadata.totalCount})
                 </TabsTrigger>
                 <TabsTrigger value="relationship-values">
                   Relationship Values ({relationshipValuesResponse.metadata.totalCount})
@@ -408,13 +480,55 @@ export default function ApprovalsDashboard() {
               </TabsList>
 
               <TabsContent value="dataset-instances">
-                {pendingDatasetInstances.length === 0 ? (
+                {/* Filter bar for dataset instances */}
+                <div className="mb-4 border rounded-lg p-4 bg-background">
+                  <div className="text-sm font-medium mb-2">Filter Dataset Instances</div>
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Search by name or ID..."
+                        value={datasetSearchTerm}
+                        onChange={(e) => setDatasetSearchTerm(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <Select
+                        value={selectedDatasetType}
+                        onValueChange={setSelectedDatasetType}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Dataset Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Types</SelectItem>
+                          {datasetTypes.map((type: any) => (
+                            <SelectItem key={type.id} value={type.id.toString()}>
+                              {type.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <DatePickerWithRange 
+                        value={datasetDateRange}
+                        onChange={setDatasetDateRange}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {datasetInstancesResponse.data.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No pending dataset instance approvals
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="flex justify-end">
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm text-muted-foreground">
+                        Showing {datasetInstancesResponse.data.length} of {datasetInstancesResponse.metadata.totalCount} pending approvals
+                      </div>
                       <Button
                         onClick={handleBulkApprove}
                         disabled={selectedInstances.size === 0 || bulkApproveDatasetsMutation.isPending}
@@ -447,7 +561,7 @@ export default function ApprovalsDashboard() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {pendingDatasetInstances.map((item) => (
+                        {datasetInstancesResponse.data.map((item) => (
                           <TableRow key={`${item.dataSetId}-${item.instanceId}`}>
                             <TableCell>
                               <Checkbox
