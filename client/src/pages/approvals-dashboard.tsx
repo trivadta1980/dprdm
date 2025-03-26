@@ -211,7 +211,6 @@ export default function ApprovalsDashboard() {
     }
   });
 
-  const pendingRelationshipValues = relationshipValuesResponse.data;
   const relationshipMetadata = relationshipValuesResponse.metadata;
 
   // Dataset instance approval mutations
@@ -406,7 +405,7 @@ export default function ApprovalsDashboard() {
 
   const handleSelectAllRelationships = (checked: boolean) => {
     if (checked) {
-      const allIds = pendingRelationshipValues.map(item => item.id);
+      const allIds = relationshipValuesResponse.data.map(item => item.id);
       setSelectedRelationshipValues(new Set(allIds));
     } else {
       setSelectedRelationshipValues(new Set());
@@ -433,7 +432,7 @@ export default function ApprovalsDashboard() {
       return;
     }
 
-    const selectedValues = pendingRelationshipValues.filter(
+    const selectedValues = relationshipValuesResponse.data.filter(
       item => selectedRelationshipValues.has(item.id)
     );
 
@@ -548,7 +547,7 @@ export default function ApprovalsDashboard() {
                         <TableRow>
                           <TableHead className="w-[50px]">
                             <Checkbox
-                              checked={selectedInstances.size === pendingDatasetInstances.length}
+                              checked={selectedInstances.size === datasetInstancesResponse.data.length}
                               onCheckedChange={handleSelectAll}
                             />
                           </TableHead>
@@ -758,7 +757,7 @@ export default function ApprovalsDashboard() {
                         <TableRow>
                           <TableHead className="w-[50px]">
                             <Checkbox
-                              checked={selectedRelationshipValues.size === pendingRelationshipValues.length}
+                              checked={selectedRelationshipValues.size === relationshipValuesResponse.data.length}
                               onCheckedChange={handleSelectAllRelationships}
                             />
                           </TableHead>
@@ -771,7 +770,7 @@ export default function ApprovalsDashboard() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {pendingRelationshipValues.map((item) => (
+                        {relationshipValuesResponse.data.map((item) => (
                           <TableRow key={item.id}>
                             <TableCell>
                               <Checkbox
