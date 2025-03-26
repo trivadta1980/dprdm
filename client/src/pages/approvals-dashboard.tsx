@@ -101,11 +101,13 @@ export default function ApprovalsDashboard() {
   // Fetch reference datasets for dropdowns
   const { data: datasets = [] } = useQuery({
     queryKey: ["/api/reference-data"],
+    refetchInterval: 30000, // Refetch every 30 seconds
   });
 
   // Fetch reference data types for dataset type filter
   const { data: datasetTypes = [] } = useQuery({
     queryKey: ["/api/reference-types"],
+    refetchInterval: 30000, // Refetch every 30 seconds
     queryFn: async () => {
       const response = await fetch("/api/reference-types");
       if (!response.ok) {
@@ -130,6 +132,7 @@ export default function ApprovalsDashboard() {
       selectedDataset,
       datasetDateRange
     ],
+    refetchInterval: 10000, // Refetch every 10 seconds to keep data fresh
     queryFn: async () => {
       // If the API endpoint doesn't support these filters yet, we'll use client-side filtering
       // But we set up the query structure for future backend implementation
@@ -203,6 +206,7 @@ export default function ApprovalsDashboard() {
       selectedTargetDataset,
       dateRange
     ],
+    refetchInterval: 10000, // Refetch every 10 seconds to keep data fresh
     queryFn: async () => {
       const params = new URLSearchParams({
         page: relationshipPage.toString(),
@@ -234,7 +238,10 @@ export default function ApprovalsDashboard() {
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate all approval-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
       toast({
         title: "Approved",
         description: "The instance has been approved successfully.",
@@ -258,7 +265,10 @@ export default function ApprovalsDashboard() {
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate all approval-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
       toast({
         title: "Rejected",
         description: "The instance has been rejected successfully.",
@@ -282,7 +292,13 @@ export default function ApprovalsDashboard() {
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate all approval-related queries and relationship values
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
+      
+      // This will invalidate the specific relationship values list that the approved item belonged to
+      queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
       toast({
         title: "Approved",
         description: "The relationship value has been approved successfully.",
@@ -306,7 +322,13 @@ export default function ApprovalsDashboard() {
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate all approval-related queries and relationship values
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
+      
+      // This will invalidate the specific relationship values list that the rejected item belonged to
+      queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
       toast({
         title: "Rejected",
         description: "The relationship value has been rejected successfully.",
@@ -334,7 +356,12 @@ export default function ApprovalsDashboard() {
       return results;
     },
     onSuccess: () => {
+      // Invalidate all approval-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
+      
       toast({
         title: "Bulk Approval Success",
         description: "Selected instances have been approved successfully.",
@@ -363,7 +390,14 @@ export default function ApprovalsDashboard() {
       return results;
     },
     onSuccess: () => {
+      // Invalidate all approval-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
+      
+      // This will invalidate the specific relationship values lists
+      queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
+      
       toast({
         title: "Bulk Approval Success",
         description: "Selected relationship values have been approved successfully.",

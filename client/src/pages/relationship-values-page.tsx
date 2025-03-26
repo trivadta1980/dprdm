@@ -292,7 +292,11 @@ export default function RelationshipValuesPage() {
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate both relationship-specific queries and approvals dashboard data
       queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals/pending'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals/relationship-values/pending'] });
       toast({
         title: "Success",
         description: "Relationship value submitted for approval",
@@ -315,7 +319,11 @@ export default function RelationshipValuesPage() {
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate both relationship-specific queries and approvals dashboard data
       queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals/pending'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals/relationship-values/pending'] });
       toast({
         title: "Success",
         description: "Relationship value approved",
@@ -338,7 +346,11 @@ export default function RelationshipValuesPage() {
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate both relationship-specific queries and approvals dashboard data
       queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals/pending'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals/relationship-values/pending'] });
       toast({
         title: "Success",
         description: "Relationship value rejected",
@@ -391,7 +403,11 @@ export default function RelationshipValuesPage() {
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate both relationship-specific queries and approvals dashboard data
       queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals/pending'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals/relationship-values/pending'] });
       setSelectedItems(new Set());
       setIsBulkSubmitDialogOpen(false);
       toast({
