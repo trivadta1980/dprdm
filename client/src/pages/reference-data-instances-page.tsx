@@ -34,7 +34,8 @@ import {
   Download, 
   ArrowUpCircle,
   Check,
-  ChevronDown
+  ChevronDown,
+  CheckSquare
 } from "lucide-react";
 import type { ReferenceDataSet, ReferenceDataInstance, HistoryEntry } from "@shared/schema";
 import { useLocation, useParams } from "wouter";
@@ -47,6 +48,7 @@ import { useState, useRef } from "react";
 import { format } from "date-fns";
 import { useSession } from "@/hooks/use-session";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -966,6 +968,47 @@ export default function ReferenceDataInstancesPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
+            {selectedItems.size > 0 && (
+              <div className="mb-4 flex justify-between items-center p-2 border rounded-lg bg-gray-50">
+                <div className="text-sm text-gray-700 flex items-center gap-2">
+                  <CheckSquare className="h-4 w-4 text-primary" />
+                  <span>{selectedItems.size} {selectedItems.size === 1 ? 'item' : 'items'} selected</span>
+                </div>
+                <AlertDialog open={isBulkSubmitDialogOpen} onOpenChange={setIsBulkSubmitDialogOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      size="sm" 
+                      className="bg-primary hover:bg-primary/90"
+                    >
+                      <ArrowUpCircle className="h-4 w-4 mr-2" />
+                      Submit Selected for Approval
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirm Bulk Submission</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to submit {selectedItems.size} {selectedItems.size === 1 ? 'item' : 'items'} for approval?
+                        This will change the status from "DRAFT" to "PENDING_APPROVAL".
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleBulkSubmit}
+                        className="bg-primary hover:bg-primary/90"
+                        disabled={bulkSubmitMutation.isPending}
+                      >
+                        {bulkSubmitMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : null}
+                        Submit for Approval
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            )}
             {filteredInstances.length > 0 ? (
               <Table>
                 <TableHeader>
@@ -991,6 +1034,15 @@ export default function ReferenceDataInstancesPage() {
                 <TableBody>
                   {filteredInstances.map((instance) => (
                     <TableRow key={instance.id} className="hover:bg-gray-50 transition-colors">
+                      <TableCell className="w-[30px]">
+                        {instance.status === "DRAFT" && (
+                          <Checkbox
+                            checked={selectedItems.has(instance.id)}
+                            onCheckedChange={() => toggleItemSelection(instance.id)}
+                            aria-label={`Select instance ${instance.id}`}
+                          />
+                        )}
+                      </TableCell>
                       <TableCell className="font-medium text-gray-900">{instance.id}</TableCell>
                       {schemaFields.map((field) => (
                         <TableCell key={field.name} className="text-gray-700">
