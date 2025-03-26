@@ -639,15 +639,27 @@ export default function ApprovalsDashboard() {
                               </HoverCard>
                             </TableCell>
                             <TableCell>
-                              {/* Find a type-specific field based on typical schema patterns */}
+                              {/* Find a type-specific field based on common field patterns */}
                               {item.data && (() => {
                                 const keys = Object.keys(item.data);
-                                // Look for common type fields
-                                const typeField = keys.find(key => 
-                                  key.toLowerCase().includes('type') || 
-                                  key.toLowerCase().includes('category') ||
-                                  key.toLowerCase().endsWith('_t')
-                                );
+                                // First check for common type field names directly
+                                const commonTypeFields = [
+                                  'Site_Type', 'Type', 'EntityType', 'RecordType', 
+                                  'Category', 'Classification', 'ObjectType'
+                                ];
+                                
+                                // First prioritize exact matches for common type fields
+                                let typeField = keys.find(key => commonTypeFields.includes(key));
+                                
+                                // If no exact match, try a more flexible approach
+                                if (!typeField) {
+                                  typeField = keys.find(key => 
+                                    key.toLowerCase().includes('type') || 
+                                    key.toLowerCase().includes('category') ||
+                                    key.toLowerCase().endsWith('_t')
+                                  );
+                                }
+                                
                                 return typeField ? String(item.data[typeField]) : '-';
                               })()}
                             </TableCell>
