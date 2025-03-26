@@ -38,8 +38,10 @@ interface PendingApproval {
   dataSetName: string;
   instanceId: string;
   instanceName: string;
+  instanceType?: string;
   status: string;
   changes: any[];
+  data?: Record<string, any>;
 }
 
 interface PendingRelationshipValue {
@@ -72,6 +74,7 @@ export default function ApprovalsDashboard() {
   // Dataset filter states
   const [datasetSearchTerm, setDatasetSearchTerm] = useState("");
   const [selectedDatasetType, setSelectedDatasetType] = useState("all");
+  const [selectedDataset, setSelectedDataset] = useState("all");
   const [datasetDateRange, setDatasetDateRange] = useState<DateRange | undefined>();
   const [datasetPage, setDatasetPage] = useState(1);
   const [datasetPageSize, setDatasetPageSize] = useState(50);
@@ -124,6 +127,7 @@ export default function ApprovalsDashboard() {
       datasetPageSize,
       datasetSearchTerm,
       selectedDatasetType,
+      selectedDataset,
       datasetDateRange
     ],
     queryFn: async () => {
@@ -155,6 +159,14 @@ export default function ApprovalsDashboard() {
           const dataset = datasets.find((ds: any) => ds.id === item.dataSetId);
           return dataset?.typeId === typeId;
         });
+      }
+      
+      // Filter by specific dataset if selected
+      if (selectedDataset !== "all") {
+        const datasetId = Number(selectedDataset);
+        filteredData = filteredData.filter((item: PendingApproval) => 
+          item.dataSetId === datasetId
+        );
       }
       
       // Client-side pagination
@@ -510,6 +522,24 @@ export default function ApprovalsDashboard() {
                       </Select>
                     </div>
                     <div>
+                      <Select
+                        value={selectedDataset}
+                        onValueChange={setSelectedDataset}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Dataset" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Datasets</SelectItem>
+                          {datasets.map((dataset: any) => (
+                            <SelectItem key={dataset.id} value={dataset.id.toString()}>
+                              {dataset.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
                       <DatePickerWithRange 
                         value={datasetDateRange}
                         onChange={setDatasetDateRange}
@@ -554,6 +584,7 @@ export default function ApprovalsDashboard() {
                           <TableHead>Dataset</TableHead>
                           <TableHead>Instance Name</TableHead>
                           <TableHead>Instance ID</TableHead>
+                          <TableHead>Instance Type</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Changes</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
@@ -593,7 +624,7 @@ export default function ApprovalsDashboard() {
                                     </div>
                                     <div className="border rounded-lg p-3 bg-muted/50">
                                       <div className="grid grid-cols-2 gap-3">
-                                        {Object.entries(item.data)
+                                        {Object.entries(item.data || {})
                                           .filter(([key]) => !['_history', 'status', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
                                           .map(([key, value]) => (
                                             <div key={key} className="contents">
@@ -606,6 +637,19 @@ export default function ApprovalsDashboard() {
                                   </div>
                                 </HoverCardContent>
                               </HoverCard>
+                            </TableCell>
+                            <TableCell>
+                              {/* Find a type-specific field based on typical schema patterns */}
+                              {item.data && (() => {
+                                const keys = Object.keys(item.data);
+                                // Look for common type fields
+                                const typeField = keys.find(key => 
+                                  key.toLowerCase().includes('type') || 
+                                  key.toLowerCase().includes('category') ||
+                                  key.toLowerCase().endsWith('_t')
+                                );
+                                return typeField ? String(item.data[typeField]) : '-';
+                              })()}
                             </TableCell>
                             <TableCell>
                               <Badge variant="outline">Pending Approval</Badge>
