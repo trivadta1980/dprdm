@@ -30,8 +30,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { addDays } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DateRange } from "react-day-picker";
+import { eventBus, EventType, useEventListener } from "@/lib/eventBus";
 
 interface PendingApproval {
   dataSetId: number;
@@ -70,6 +71,19 @@ export default function ApprovalsDashboard() {
   const [relationshipPage, setRelationshipPage] = useState(1);
   const [relationshipPageSize, setRelationshipPageSize] = useState(50);
   const [selectedRelationshipValues, setSelectedRelationshipValues] = useState<Set<number>>(new Set());
+  
+  // Subscribe to event bus notifications for real-time updates
+  useEventListener(EventType.INSTANCE_SUBMITTED_FOR_APPROVAL, (data) => {
+    console.log("Event received: Instance submitted for approval", data);
+    // Immediately refresh the pending approvals data when a new instance is submitted
+    queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
+  });
+  
+  useEventListener(EventType.RELATIONSHIP_VALUE_SUBMITTED_FOR_APPROVAL, (data) => {
+    console.log("Event received: Relationship value submitted for approval", data);
+    // Immediately refresh the pending relationship values data when a new relationship value is submitted
+    queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
+  });
 
   // Dataset filter states
   const [datasetSearchTerm, setDatasetSearchTerm] = useState("");

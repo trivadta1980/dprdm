@@ -1,6 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
+import { eventBus, EventType } from "@/lib/eventBus";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -291,12 +292,19 @@ export default function RelationshipValuesPage() {
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       // Invalidate both relationship-specific queries and approvals dashboard data
       queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
       queryClient.invalidateQueries({ queryKey: ['/api/approvals'] });
       queryClient.invalidateQueries({ queryKey: ['/api/approvals/pending'] });
       queryClient.invalidateQueries({ queryKey: ['/api/approvals/relationship-values/pending'] });
+      
+      // Publish event to notify other components of the new relationship value submission
+      eventBus.publish(EventType.RELATIONSHIP_VALUE_SUBMITTED_FOR_APPROVAL, {
+        relationshipId: Number(id),
+        valueId: variables
+      });
+      
       toast({
         title: "Success",
         description: "Relationship value submitted for approval",
@@ -402,12 +410,22 @@ export default function RelationshipValuesPage() {
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       // Invalidate both relationship-specific queries and approvals dashboard data
       queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
       queryClient.invalidateQueries({ queryKey: ['/api/approvals'] });
       queryClient.invalidateQueries({ queryKey: ['/api/approvals/pending'] });
       queryClient.invalidateQueries({ queryKey: ['/api/approvals/relationship-values/pending'] });
+      
+      // Publish event to notify other components of bulk relationship value submissions
+      // For each relationship value submitted, trigger an event
+      variables.forEach(valueId => {
+        eventBus.publish(EventType.RELATIONSHIP_VALUE_SUBMITTED_FOR_APPROVAL, {
+          relationshipId: Number(id),
+          valueId: valueId
+        });
+      });
+      
       setSelectedItems(new Set());
       setIsBulkSubmitDialogOpen(false);
       toast({
