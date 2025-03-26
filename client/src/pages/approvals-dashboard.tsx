@@ -77,12 +77,30 @@ export default function ApprovalsDashboard() {
     console.log("Event received: Instance submitted for approval", data);
     // Immediately refresh the pending approvals data when a new instance is submitted
     queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
+    
+    // Also invalidate the filter-related queries for dataset instances
+    queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
+    
+    // Reset filter state to ensure latest data is reflected in filters
+    setSelectedDatasetType("all");
+    setSelectedDataset("all");
   });
   
   useEventListener(EventType.RELATIONSHIP_VALUE_SUBMITTED_FOR_APPROVAL, (data) => {
     console.log("Event received: Relationship value submitted for approval", data);
     // Immediately refresh the pending relationship values data when a new relationship value is submitted
     queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
+    
+    // Also invalidate the filter-related queries for relationship values
+    queryClient.invalidateQueries({ queryKey: ["/api/relationships/types"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
+    
+    // Reset filter state to ensure latest data is reflected in filters
+    setSelectedRelationshipType("all");
+    setSelectedSourceDataset("all");
+    setSelectedTargetDataset("all");
   });
 
   // Dataset filter states
@@ -256,6 +274,12 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
+      
+      // Also invalidate filter-related queries
+      queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/relationships/types"] });
+      
       toast({
         title: "Approved",
         description: "The instance has been approved successfully.",
@@ -283,6 +307,12 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
+      
+      // Also invalidate filter-related queries
+      queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/relationships/types"] });
+      
       toast({
         title: "Rejected",
         description: "The instance has been rejected successfully.",
@@ -310,6 +340,10 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
+      
+      // Also invalidate filter-related queries
+      queryClient.invalidateQueries({ queryKey: ["/api/relationships/types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       
       // This will invalidate the specific relationship values list that the approved item belonged to
       queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
@@ -340,6 +374,10 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
+      
+      // Also invalidate filter-related queries
+      queryClient.invalidateQueries({ queryKey: ["/api/relationships/types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       
       // This will invalidate the specific relationship values list that the rejected item belonged to
       queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
@@ -374,7 +412,11 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
+      
+      // Also invalidate filter-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/relationships/types"] });
       
       toast({
         title: "Bulk Approval Success",
@@ -408,6 +450,11 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
+      
+      // Also invalidate filter-related queries
+      queryClient.invalidateQueries({ queryKey: ["/api/relationships/types"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
       
       // This will invalidate the specific relationship values lists
       queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
