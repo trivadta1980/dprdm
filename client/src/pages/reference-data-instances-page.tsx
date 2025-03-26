@@ -9,6 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -19,7 +21,21 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, ArrowLeft, Plus, Pencil, Trash2, History, Database, Upload, Download, ArrowUpCircle } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Loader2, 
+  ArrowLeft, 
+  Plus, 
+  Pencil, 
+  Trash2, 
+  History, 
+  Database, 
+  Upload, 
+  Download, 
+  ArrowUpCircle,
+  Check,
+  ChevronDown
+} from "lucide-react";
 import type { ReferenceDataSet, ReferenceDataInstance, HistoryEntry } from "@shared/schema";
 import { useLocation, useParams } from "wouter";
 import { useForm } from "react-hook-form";
@@ -31,6 +47,12 @@ import { useState, useRef } from "react";
 import { format } from "date-fns";
 import { useSession } from "@/hooks/use-session";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ReferenceDataTypeSchema {
   name: string;
@@ -63,6 +85,8 @@ export default function ReferenceDataInstancesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [statusFilter, setStatusFilter] = useState<InstanceStatus | "ALL">("ALL");
   const [isDownloading, setIsDownloading] = useState(false); // Added state for download
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [isBulkSubmitDialogOpen, setIsBulkSubmitDialogOpen] = useState(false);
 
   const { data: dataSet, isLoading: isLoadingDataSet } = useQuery<ReferenceDataSet>({
     queryKey: [`/api/reference-data/${dataSetId}`],
@@ -510,6 +534,80 @@ export default function ReferenceDataInstancesPage() {
       });
     },
   });
+  
+  const bulkSubmitMutation = useMutation({
+    mutationFn: async (instanceIds: string[]) => {
+      if (!dataSet?.data) return;
+
+      console.log("Bulk submitting instances for approval:", instanceIds);
+      
+      const currentData = { ...dataSet.data };
+      const timestamp = new Date().toISOString();
+      const updatedData = { ...currentData };
+      
+      // Update all selected instances to PENDING_APPROVAL
+      for (const instanceId of instanceIds) {
+        const instance = currentData[instanceId] as ExtendedReferenceDataInstance;
+        
+        // Skip instances that are not in DRAFT status
+        if (instance?.status !== "DRAFT") {
+          console.log(`Skipping instance ${instanceId} with status ${instance?.status}`);
+          continue;
+        }
+        
+        updatedData[instanceId] = {
+          ...instance,
+          status: "PENDING_APPROVAL" as InstanceStatus,
+          lastModifiedBy: user?.username || "system",
+          lastModifiedAt: timestamp,
+          _history: [
+            ...(instance._history || []),
+            {
+              timestamp,
+              changes: [{
+                field: "status",
+                oldValue: "DRAFT",
+                newValue: "PENDING_APPROVAL"
+              }]
+            }
+          ]
+        };
+      }
+      
+      // Send the update to the server
+      const response = await fetch(`/api/reference-data/${dataSetId}`, {
+        method: "PATCH",
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ data: updatedData })
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to bulk submit instances for approval");
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
+      toast({
+        title: "Success",
+        description: "Instances submitted for approval successfully",
+      });
+      setSelectedItems(new Set());
+      setIsBulkSubmitDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit instances for approval",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -570,6 +668,31 @@ export default function ReferenceDataInstancesPage() {
     if (window.confirm("Are you sure you want to submit this instance for approval?")) {
       submitForApprovalMutation.mutate(instanceId);
     }
+  };
+  
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      // Only select DRAFT instances
+      const draftInstances = filteredInstances.filter(instance => instance.status === "DRAFT");
+      setSelectedItems(new Set(draftInstances.map(instance => instance.id)));
+    } else {
+      setSelectedItems(new Set());
+    }
+  };
+  
+  const toggleItemSelection = (instanceId: string) => {
+    const newSelected = new Set(selectedItems);
+    if (newSelected.has(instanceId)) {
+      newSelected.delete(instanceId);
+    } else {
+      newSelected.add(instanceId);
+    }
+    setSelectedItems(newSelected);
+  };
+  
+  const handleBulkSubmit = () => {
+    if (selectedItems.size === 0) return;
+    bulkSubmitMutation.mutate(Array.from(selectedItems));
   };
 
   const handleDownloadTemplate = async () => {
@@ -847,6 +970,14 @@ export default function ReferenceDataInstancesPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50">
+                    <TableHead className="text-sm font-semibold text-gray-700 w-[30px]">
+                      <Checkbox
+                        checked={filteredInstances.filter(i => i.status === "DRAFT").length > 0 && 
+                                 filteredInstances.filter(i => i.status === "DRAFT").every(i => selectedItems.has(i.id))}
+                        onCheckedChange={handleSelectAll}
+                        aria-label="Select all drafts"
+                      />
+                    </TableHead>
                     <TableHead className="text-sm font-semibold text-gray-700">Instance ID</TableHead>
                     {schemaFields.map((field) => (
                       <TableHead key={field.name} className="text-sm font-semibold text-gray-700">
