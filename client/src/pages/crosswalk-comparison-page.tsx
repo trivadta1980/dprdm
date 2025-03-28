@@ -29,6 +29,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeftIcon, SearchIcon, ChevronLeftIcon, ChevronRightIcon, DownloadIcon } from "lucide-react";
 import { Link } from "wouter";
+import { useDebugApi } from "@/hooks/use-debug-api";
 
 // Types
 interface CrosswalkMapping {
@@ -64,6 +65,7 @@ interface DataSet {
 export default function CrosswalkComparisonPage() {
   const { targetDatasetId } = useParams();
   const { toast } = useToast();
+  const debugApi = useDebugApi();
   
   // State for filters and pagination
   const [searchQuery, setSearchQuery] = useState("");
@@ -81,75 +83,8 @@ export default function CrosswalkComparisonPage() {
   } = useQuery({
     queryKey: [`/api/reference-data/${targetId}`],
     queryFn: async () => {
-      try {
-        console.log(`[Debug] Fetching dataset for targetId: ${targetId}`);
-        
-        // Log request details
-        const requestUrl = `/api/reference-data/${targetId}`;
-        console.log(`[Debug] Dataset request URL: ${requestUrl}`);
-        
-        // Perform the fetch with credentials
-        const response = await fetch(requestUrl, {
-          credentials: 'include',
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
-        
-        // Log response details
-        console.log(`[Debug] Dataset response status: ${response.status} ${response.statusText}`);
-        console.log(`[Debug] Dataset response content-type:`, response.headers.get('content-type'));
-        console.log(`[Debug] Dataset response content-length:`, response.headers.get('content-length'));
-        
-        if (!response.ok) {
-          console.error(`[Error] Failed dataset response: ${response.status} ${response.statusText}`);
-          throw new Error(`Failed to fetch target dataset: ${response.status} ${response.statusText}`);
-        }
-        
-        const text = await response.text();
-        console.log(`[Debug] Dataset response text length: ${text.length}`);
-        console.log(`[Debug] Dataset response text preview: ${text.substring(0, 100)}...`);
-        
-        // Check if response looks like HTML (DOCTYPE)
-        if (text.includes('<!DOCTYPE') || text.includes('<html')) {
-          console.error("[Error] Received HTML instead of JSON for dataset. First 500 chars:", text.substring(0, 500));
-          console.error("[Error] Dataset request headers may be incorrect or session may have expired.");
-          console.error("[Error] Dataset content-type received:", response.headers.get('content-type'));
-          
-          // Check if it's likely a login page
-          if (text.includes('login') || text.includes('Sign in') || text.includes('Password') || 
-              text.includes('authentication') || text.includes('authenticate') || text.includes('401') || 
-              response.status === 401 || response.status === 403) {
-            throw new Error("Authentication error: Your session may have expired. Please refresh the page and log in again.");
-          } else {
-            throw new Error("Server returned HTML instead of JSON for dataset. This may indicate a server configuration issue.");
-          }
-        }
-        
-        // Try to parse as JSON
-        try {
-          const data = JSON.parse(text) as DataSet;
-          console.log(`[Debug] Successfully parsed dataset JSON:`, data);
-          return data;
-        } catch (parseError) {
-          console.error("[Error] Failed to parse dataset JSON. Response preview:", text.substring(0, 300));
-          console.error("[Error] Dataset parse error details:", parseError);
-          
-          // Try to identify common JSON parsing issues
-          if (text.trim().startsWith('<') || text.includes('<!DOCTYPE')) {
-            throw new Error(`Invalid dataset JSON: Received HTML content instead of JSON. Server may require authentication or encountered an error.`);
-          } else if (text.includes('Error') || text.includes('Exception')) {
-            throw new Error(`Invalid dataset JSON: Server error message detected in response. Raw response: ${text.substring(0, 100)}...`);
-          } else {
-            throw new Error(`Invalid dataset JSON response: ${parseError instanceof Error ? parseError.message : 'Unknown parsing error'}. Raw response: ${text.substring(0, 100)}...`);
-          }
-        }
-      } catch (error) {
-        console.error("[Error] Complete error fetching dataset:", error);
-        console.error("[Error] Dataset error name:", error instanceof Error ? error.name : 'Unknown');
-        console.error("[Error] Dataset error stack:", error instanceof Error ? error.stack : 'No stack trace');
-        throw error;
-      }
+      console.log(`[Debug] Fetching dataset ${targetId} from: /api/reference-data/${targetId}`);
+      return debugApi.debugFetch<DataSet>(`/api/reference-data/${targetId}`);
     },
     enabled: !!targetId && targetId > 0,
   });
@@ -162,75 +97,8 @@ export default function CrosswalkComparisonPage() {
   } = useQuery({
     queryKey: [`/api/crosswalks/by-target/${targetId}`],
     queryFn: async () => {
-      try {
-        console.log(`[Debug] Fetching crosswalks for targetId: ${targetId}`);
-        
-        // Log request details
-        const requestUrl = `/api/crosswalks/by-target/${targetId}`;
-        console.log(`[Debug] Request URL: ${requestUrl}`);
-        
-        // Perform the fetch with credentials
-        const response = await fetch(requestUrl, {
-          credentials: 'include',
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
-        
-        // Log response details
-        console.log(`[Debug] Response status: ${response.status} ${response.statusText}`);
-        console.log(`[Debug] Response content-type:`, response.headers.get('content-type'));
-        console.log(`[Debug] Response content-length:`, response.headers.get('content-length'));
-        
-        if (!response.ok) {
-          console.error(`[Error] Failed response: ${response.status} ${response.statusText}`);
-          throw new Error(`Failed to fetch crosswalks: ${response.status} ${response.statusText}`);
-        }
-        
-        const text = await response.text();
-        console.log(`[Debug] Response text length: ${text.length}`);
-        console.log(`[Debug] Response text preview: ${text.substring(0, 100)}...`);
-        
-        // Check if response looks like HTML (DOCTYPE)
-        if (text.includes('<!DOCTYPE') || text.includes('<html')) {
-          console.error("[Error] Received HTML instead of JSON. First 500 chars:", text.substring(0, 500));
-          console.error("[Error] Request headers may be incorrect or session may have expired.");
-          console.error("[Error] Content-Type received:", response.headers.get('content-type'));
-          
-          // Check if it's likely a login page
-          if (text.includes('login') || text.includes('Sign in') || text.includes('Password') || 
-              text.includes('authentication') || text.includes('authenticate') || text.includes('401') || 
-              response.status === 401 || response.status === 403) {
-            throw new Error("Authentication error: Your session may have expired. Please refresh the page and log in again.");
-          } else {
-            throw new Error("Server returned HTML instead of JSON. This may indicate a server configuration issue.");
-          }
-        }
-        
-        // Try to parse as JSON
-        try {
-          const data = JSON.parse(text) as CrosswalkMapping[];
-          console.log(`[Debug] Successfully parsed JSON. Found ${data.length} crosswalk mappings.`);
-          return data;
-        } catch (parseError) {
-          console.error("[Error] Failed to parse JSON response. Response preview:", text.substring(0, 300));
-          console.error("[Error] Parse error details:", parseError);
-          
-          // Try to identify common JSON parsing issues
-          if (text.trim().startsWith('<') || text.includes('<!DOCTYPE')) {
-            throw new Error(`Invalid JSON: Received HTML content instead of JSON. Server may require authentication or encountered an error.`);
-          } else if (text.includes('Error') || text.includes('Exception')) {
-            throw new Error(`Invalid JSON: Server error message detected in response. Raw response: ${text.substring(0, 100)}...`);
-          } else {
-            throw new Error(`Invalid JSON response: ${parseError instanceof Error ? parseError.message : 'Unknown parsing error'}. Raw response: ${text.substring(0, 100)}...`);
-          }
-        }
-      } catch (error) {
-        console.error("[Error] Complete error fetching crosswalks:", error);
-        console.error("[Error] Error name:", error instanceof Error ? error.name : 'Unknown');
-        console.error("[Error] Error stack:", error instanceof Error ? error.stack : 'No stack trace');
-        throw error;
-      }
+      console.log(`[Debug] Fetching crosswalks for target dataset ${targetId} from: /api/crosswalks/by-target/${targetId}`);
+      return debugApi.debugFetch<CrosswalkMapping[]>(`/api/crosswalks/by-target/${targetId}`);
     },
     enabled: !!targetId && targetId > 0,
   });

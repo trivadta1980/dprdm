@@ -1,5 +1,3 @@
-import { QueryClientProvider } from "@tanstack/react-query";
-import { queryClient } from "./lib/queryClient";
 import { lazy, Suspense } from "react";
 import { Route, Router } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
@@ -9,6 +7,8 @@ import ProtectedRoute from "@/lib/protected-route";
 import DebugPanel from '@/pages/debug-panel';
 import ReferenceTypesDebugPage from "./pages/reference-types-debug";
 import ReferenceTypesListPage from "./pages/reference-types-list-page";
+import { DebugErrorProvider } from "@/components/debug/debug-error-panel";
+import { EnhancedQueryClientProvider } from "@/components/providers/enhanced-query-provider";
 
 // Lazy load pages
 const HomePage = lazy(() => import("@/pages/home-page"));
@@ -37,140 +37,142 @@ const CrosswalkComparisonPage = lazy(() => import("@/pages/crosswalk-comparison-
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <SidebarProvider>
-          <Suspense fallback={<div>Loading...</div>}>
-            <Router>
-              <Route path="/auth" component={AuthPage} />
-              <Route path="/reset-password" component={ResetPasswordPage} />
-              <Route path="/">
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/manage-users">
-                <ProtectedRoute adminOnly>
-                  <ManageUsersPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/roles">
-                <ProtectedRoute adminOnly>
-                  <RolesPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/reference-types">
-                <ProtectedRoute>
-                  <ReferenceTypesPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/reference-types-list">
-                <ProtectedRoute>
-                  <ReferenceTypesListPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/reference-types-debug">
-                <ProtectedRoute>
-                  <ReferenceTypesDebugPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/reference-data/create">
-                <ProtectedRoute>
-                  <ReferenceDataCreatePage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/reference-data/:id/edit">
-                <ProtectedRoute>
-                  <ReferenceDataEditPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/reference-data/:id/instances">
-                <ProtectedRoute>
-                  <ReferenceDataInstancesPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/reference-data/:id/graph">
-                <ProtectedRoute>
-                  <DatasetGraphPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/reference-data">
-                <ProtectedRoute>
-                  <ReferenceDataPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/relationships">
-                <ProtectedRoute>
-                  <RelationshipsPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/relationships/:id/values">
-                <ProtectedRoute>
-                  <RelationshipValuesPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/crosswalks/create">
-                <ProtectedRoute>
-                  <NewCrosswalksPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/crosswalks/:id/edit">
-                <ProtectedRoute>
-                  <NewCrosswalksPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/crosswalks-old">
-                <ProtectedRoute>
-                  <CrosswalksPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/crosswalks">
-                <ProtectedRoute>
-                  <NewCrosswalksPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/change-password">
-                <ProtectedRoute>
-                  <ChangePasswordPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/api-test">
-                <ProtectedRoute>
-                  <ApiTestPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/debug" component={DebugPanel} />
-              <Route path="/graph-visualization" component={GraphVisualizationPage} />
-              <Route path="/neo4j-info">
-                <ProtectedRoute>
-                  <Neo4jInfoPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/site-paths">
-                <ProtectedRoute>
-                  <SitePathsPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/approvals">
-                <ProtectedRoute>
-                  <ApprovalsDashboard />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/api-keys">
-                <ProtectedRoute adminOnly>
-                  <ApiKeysPage />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/crosswalk/comparison/:targetDatasetId">
-                <ProtectedRoute>
-                  <CrosswalkComparisonPage />
-                </ProtectedRoute>
-              </Route>
-            </Router>
-          </Suspense>
-          <Toaster />
-        </SidebarProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <DebugErrorProvider>
+      <EnhancedQueryClientProvider>
+        <AuthProvider>
+          <SidebarProvider>
+            <Suspense fallback={<div>Loading...</div>}>
+              <Router>
+                <Route path="/auth" component={AuthPage} />
+                <Route path="/reset-password" component={ResetPasswordPage} />
+                <Route path="/">
+                  <ProtectedRoute>
+                    <HomePage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/manage-users">
+                  <ProtectedRoute adminOnly>
+                    <ManageUsersPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/roles">
+                  <ProtectedRoute adminOnly>
+                    <RolesPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/reference-types">
+                  <ProtectedRoute>
+                    <ReferenceTypesPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/reference-types-list">
+                  <ProtectedRoute>
+                    <ReferenceTypesListPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/reference-types-debug">
+                  <ProtectedRoute>
+                    <ReferenceTypesDebugPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/reference-data/create">
+                  <ProtectedRoute>
+                    <ReferenceDataCreatePage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/reference-data/:id/edit">
+                  <ProtectedRoute>
+                    <ReferenceDataEditPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/reference-data/:id/instances">
+                  <ProtectedRoute>
+                    <ReferenceDataInstancesPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/reference-data/:id/graph">
+                  <ProtectedRoute>
+                    <DatasetGraphPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/reference-data">
+                  <ProtectedRoute>
+                    <ReferenceDataPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/relationships">
+                  <ProtectedRoute>
+                    <RelationshipsPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/relationships/:id/values">
+                  <ProtectedRoute>
+                    <RelationshipValuesPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/crosswalks/create">
+                  <ProtectedRoute>
+                    <NewCrosswalksPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/crosswalks/:id/edit">
+                  <ProtectedRoute>
+                    <NewCrosswalksPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/crosswalks-old">
+                  <ProtectedRoute>
+                    <CrosswalksPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/crosswalks">
+                  <ProtectedRoute>
+                    <NewCrosswalksPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/change-password">
+                  <ProtectedRoute>
+                    <ChangePasswordPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/api-test">
+                  <ProtectedRoute>
+                    <ApiTestPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/debug" component={DebugPanel} />
+                <Route path="/graph-visualization" component={GraphVisualizationPage} />
+                <Route path="/neo4j-info">
+                  <ProtectedRoute>
+                    <Neo4jInfoPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/site-paths">
+                  <ProtectedRoute>
+                    <SitePathsPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/approvals">
+                  <ProtectedRoute>
+                    <ApprovalsDashboard />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/api-keys">
+                  <ProtectedRoute adminOnly>
+                    <ApiKeysPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/crosswalk/comparison/:targetDatasetId">
+                  <ProtectedRoute>
+                    <CrosswalkComparisonPage />
+                  </ProtectedRoute>
+                </Route>
+              </Router>
+            </Suspense>
+            <Toaster />
+          </SidebarProvider>
+        </AuthProvider>
+      </EnhancedQueryClientProvider>
+    </DebugErrorProvider>
   );
 }
