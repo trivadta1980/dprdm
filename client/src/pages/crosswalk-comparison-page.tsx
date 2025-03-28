@@ -115,7 +115,15 @@ export default function CrosswalkComparisonPage() {
           console.error("[Error] Received HTML instead of JSON for dataset. First 500 chars:", text.substring(0, 500));
           console.error("[Error] Dataset request headers may be incorrect or session may have expired.");
           console.error("[Error] Dataset content-type received:", response.headers.get('content-type'));
-          throw new Error("Server returned HTML instead of JSON for dataset. The server may be returning a login page or error page.");
+          
+          // Check if it's likely a login page
+          if (text.includes('login') || text.includes('Sign in') || text.includes('Password') || 
+              text.includes('authentication') || text.includes('authenticate') || text.includes('401') || 
+              response.status === 401 || response.status === 403) {
+            throw new Error("Authentication error: Your session may have expired. Please refresh the page and log in again.");
+          } else {
+            throw new Error("Server returned HTML instead of JSON for dataset. This may indicate a server configuration issue.");
+          }
         }
         
         // Try to parse as JSON
@@ -188,7 +196,15 @@ export default function CrosswalkComparisonPage() {
           console.error("[Error] Received HTML instead of JSON. First 500 chars:", text.substring(0, 500));
           console.error("[Error] Request headers may be incorrect or session may have expired.");
           console.error("[Error] Content-Type received:", response.headers.get('content-type'));
-          throw new Error("Server returned HTML instead of JSON. The server may be returning a login page or error page.");
+          
+          // Check if it's likely a login page
+          if (text.includes('login') || text.includes('Sign in') || text.includes('Password') || 
+              text.includes('authentication') || text.includes('authenticate') || text.includes('401') || 
+              response.status === 401 || response.status === 403) {
+            throw new Error("Authentication error: Your session may have expired. Please refresh the page and log in again.");
+          } else {
+            throw new Error("Server returned HTML instead of JSON. This may indicate a server configuration issue.");
+          }
         }
         
         // Try to parse as JSON
