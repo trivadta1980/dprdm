@@ -158,7 +158,6 @@ export default function ReferenceDataPage() {
                           onClick={() => handleManageInstances(dataSet)}
                         >
                           <Database className="h-4 w-4 mr-2" />
-                          Manage Instances
                         </Button>
                         <Button
                           variant="outline"
@@ -166,7 +165,7 @@ export default function ReferenceDataPage() {
                           onClick={() => handleCompareView(dataSet)}
                         >
                           <GitCompare className="h-4 w-4 mr-2" />
-                          Compare Mappings
+                          
                         </Button>
                         <Button
                           variant="ghost"

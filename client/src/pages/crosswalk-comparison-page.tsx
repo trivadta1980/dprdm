@@ -312,8 +312,7 @@ export default function CrosswalkComparisonPage() {
                 {targetDataset.description || "No description available"}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <Badge variant="outline" className="rounded-full shadow-sm bg-primary/5 px-3 py-1">{targetDataset.id}</Badge>
-                <Badge variant="outline" className="rounded-full shadow-sm bg-primary/5 px-3 py-1">{targetDataset.typeId}</Badge>
+                
               </div>
             </CardContent>
           </Card>
