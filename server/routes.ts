@@ -6,6 +6,7 @@ import multer from "multer";
 import { parse } from "csv-parse";
 import externalRoutes from "./externalRoutes";
 import { apiKeyAuth } from "./middleware/api-auth";
+import diagnosticsRouter from "./diagnostics";
 import {
   insertRelationshipSchema,
   insertCrosswalkMappingSchema,
@@ -1459,6 +1460,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get crosswalks by target dataset ID
   app.get("/api/crosswalks/by-target/:targetDatasetId", async (req, res) => {
     console.log(`GET /api/crosswalks/by-target/${req.params.targetDatasetId} - Request received`);
+    
+    // Enhanced auth logging for production debugging
+    console.log(`[DEBUG Auth] Crosswalks By Target - Auth details:`, {
+      isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : 'method unavailable',
+      hasUser: !!req.user,
+      userId: req.user ? req.user.id : 'none',
+      sessionID: req.sessionID || 'no session ID',
+      path: req.path,
+      cookies: req.headers.cookie ? 'present' : 'absent'
+    });
+    
     if (!req.isAuthenticated()) {
       console.log(`GET /api/crosswalks/by-target/${req.params.targetDatasetId} - Unauthorized access`);
       return res.sendStatus(401);
@@ -1478,6 +1490,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: String(error) });
     }
   });
+  
+  // DIAGNOSTIC ROUTES - Not included in navigation, for debugging only
+  // These routes help diagnose authentication issues in production
+  app.use('/api/diagnostics', (req, res, next) => {
+    console.log(`[DIAGNOSTICS] Request to ${req.path}`);
+    next();
+  });
+  
+  // Use the diagnostic routes imported at the top of the file
+  app.use('/api/diagnostics', diagnosticsRouter);
 
   app.get("/api/crosswalks/:id", async (req, res) => {
     console.log('GET /api/crosswalks/:id - Request received');

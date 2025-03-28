@@ -34,6 +34,8 @@ const SitePathsPage = lazy(() => import("@/pages/site-paths-page"));
 const ApprovalsDashboard = lazy(() => import("@/pages/approvals-dashboard"));
 const ApiKeysPage = lazy(() => import("@/pages/api-keys-page"));
 const CrosswalkComparisonPage = lazy(() => import("@/pages/crosswalk-comparison-page"));
+// Diagnostic page (not included in navigation)
+const DiagnosticsPage = lazy(() => import("@/pages/diagnostics-page"));
 
 export default function App() {
   return (
@@ -165,6 +167,12 @@ export default function App() {
                 <Route path="/crosswalk/comparison/:targetDatasetId">
                   <ProtectedRoute>
                     <CrosswalkComparisonPage />
+                  </ProtectedRoute>
+                </Route>
+                {/* Diagnostic page - not included in navigation */}
+                <Route path="/diagnostics">
+                  <ProtectedRoute>
+                    <DiagnosticsPage />
                   </ProtectedRoute>
                 </Route>
               </Router>
