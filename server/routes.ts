@@ -1455,6 +1455,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: String(error) });
     }
   });
+  
+  // Get crosswalks by target dataset ID
+  app.get("/api/crosswalks/by-target/:targetDatasetId", async (req, res) => {
+    console.log(`GET /api/crosswalks/by-target/${req.params.targetDatasetId} - Request received`);
+    if (!req.isAuthenticated()) {
+      console.log(`GET /api/crosswalks/by-target/${req.params.targetDatasetId} - Unauthorized access`);
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const targetDatasetId = parseInt(req.params.targetDatasetId);
+      if (isNaN(targetDatasetId)) {
+        return res.status(400).json({ error: "Invalid target dataset ID" });
+      }
+      
+      const crosswalks = await storage.getCrosswalkMappingsByTargetId(targetDatasetId);
+      console.log(`GET /api/crosswalks/by-target/${targetDatasetId} - Mappings fetched successfully`);
+      res.status(200).json(crosswalks);
+    } catch (error) {
+      console.error(`GET /api/crosswalks/by-target/${req.params.targetDatasetId} - Error:`, error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
 
   app.get("/api/crosswalks/:id", async (req, res) => {
     console.log('GET /api/crosswalks/:id - Request received');

@@ -3,7 +3,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus, Pencil, Trash2, Database } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Database, GitCompare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
@@ -104,6 +104,10 @@ export default function ReferenceDataPage() {
   function handleManageInstances(dataSet: ReferenceDataSet) {
     setLocation(`/reference-data/${dataSet.id}/instances`);
   }
+  
+  function handleCompareView(dataSet: ReferenceDataSet) {
+    setLocation(`/crosswalk/comparison/${dataSet.id}`);
+  }
 
   if (isLoading) {
     return (
@@ -155,6 +159,14 @@ export default function ReferenceDataPage() {
                         >
                           <Database className="h-4 w-4 mr-2" />
                           Manage Instances
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCompareView(dataSet)}
+                        >
+                          <GitCompare className="h-4 w-4 mr-2" />
+                          Compare Mappings
                         </Button>
                         <Button
                           variant="ghost"

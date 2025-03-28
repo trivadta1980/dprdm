@@ -33,6 +33,7 @@ const Neo4jInfoPage = lazy(() => import("@/pages/neo4j-info-page"));
 const SitePathsPage = lazy(() => import("@/pages/site-paths-page"));
 const ApprovalsDashboard = lazy(() => import("@/pages/approvals-dashboard"));
 const ApiKeysPage = lazy(() => import("@/pages/api-keys-page"));
+const CrosswalkComparisonPage = lazy(() => import("@/pages/crosswalk-comparison-page"));
 
 export default function App() {
   return (
@@ -158,6 +159,11 @@ export default function App() {
               <Route path="/api-keys">
                 <ProtectedRoute adminOnly>
                   <ApiKeysPage />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/crosswalk/comparison/:targetDatasetId">
+                <ProtectedRoute>
+                  <CrosswalkComparisonPage />
                 </ProtectedRoute>
               </Route>
             </Router>

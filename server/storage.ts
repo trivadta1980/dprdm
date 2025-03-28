@@ -108,6 +108,7 @@ export interface IStorage {
   getCrosswalkMapping(id: number): Promise<CrosswalkMapping | undefined>;
   getAllCrosswalkMappings(): Promise<CrosswalkMapping[]>;
   getCrosswalkMappingsBySystem(systemId: number): Promise<CrosswalkMapping[]>;
+  getCrosswalkMappingsByTargetId(targetId: number): Promise<CrosswalkMapping[]>;
   updateCrosswalkMapping(id: number, mapping: Partial<InsertCrosswalkMapping>): Promise<CrosswalkMapping>;
   deleteCrosswalkMapping(id: number): Promise<boolean>;
 
@@ -931,6 +932,13 @@ export class DatabaseStorage implements IStorage {
           eq(crosswalkMappings.targetSystemId, systemId)
         )
       );
+  }
+  
+  async getCrosswalkMappingsByTargetId(targetId: number): Promise<CrosswalkMapping[]> {
+    return db
+      .select()
+      .from(crosswalkMappings)
+      .where(eq(crosswalkMappings.targetSystemId, targetId));
   }
 
   async updateCrosswalkMapping(
