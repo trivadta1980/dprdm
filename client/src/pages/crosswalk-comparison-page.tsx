@@ -494,7 +494,8 @@ export default function CrosswalkComparisonPage() {
                   </TableHead>
                   {crosswalks.map(crosswalk => (
                     <TableHead key={crosswalk.id} className="bg-muted/20">
-                      <div className="font-bold text-primary">{crosswalk.sourceSystemName}</div>
+                      <div className="font-bold text-primary">{crosswalk.name}</div>
+                      <div className="text-sm font-medium text-muted-foreground">{crosswalk.sourceSystemName}</div>
                       <div className="text-sm font-semibold mt-1 bg-secondary/10 rounded-sm px-2 py-0.5 inline-block">
                         {crosswalk.mappingData.sourceAttribute}
                       </div>
