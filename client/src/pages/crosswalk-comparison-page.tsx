@@ -81,11 +81,32 @@ export default function CrosswalkComparisonPage() {
   } = useQuery({
     queryKey: [`/api/reference-data/${targetId}`],
     queryFn: async () => {
-      const response = await fetch(`/api/reference-data/${targetId}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch target dataset");
+      try {
+        const response = await fetch(`/api/reference-data/${targetId}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch target dataset: ${response.status} ${response.statusText}`);
+        }
+        
+        const text = await response.text();
+        
+        // Check if response looks like HTML (DOCTYPE)
+        if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+          console.error("Received HTML instead of JSON for dataset:", text.substring(0, 200));
+          throw new Error("Server returned HTML instead of JSON. This may indicate a server issue.");
+        }
+        
+        // Try to parse as JSON
+        try {
+          return JSON.parse(text) as DataSet;
+        } catch (parseError) {
+          console.error("Failed to parse JSON for dataset:", text.substring(0, 200));
+          throw new Error(`Invalid JSON response: ${parseError instanceof Error ? parseError.message : 'Unknown parsing error'}`);
+        }
+      } catch (error) {
+        console.error("Error fetching dataset:", error);
+        throw error;
       }
-      return response.json() as Promise<DataSet>;
     },
     enabled: !!targetId && targetId > 0,
   });
@@ -98,11 +119,32 @@ export default function CrosswalkComparisonPage() {
   } = useQuery({
     queryKey: [`/api/crosswalks/by-target/${targetId}`],
     queryFn: async () => {
-      const response = await fetch(`/api/crosswalks/by-target/${targetId}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch crosswalks");
+      try {
+        const response = await fetch(`/api/crosswalks/by-target/${targetId}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch crosswalks: ${response.status} ${response.statusText}`);
+        }
+        
+        const text = await response.text();
+        
+        // Check if response looks like HTML (DOCTYPE)
+        if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+          console.error("Received HTML instead of JSON:", text.substring(0, 200));
+          throw new Error("Server returned HTML instead of JSON. This may indicate a server issue.");
+        }
+        
+        // Try to parse as JSON
+        try {
+          return JSON.parse(text) as CrosswalkMapping[];
+        } catch (parseError) {
+          console.error("Failed to parse JSON:", text.substring(0, 200));
+          throw new Error(`Invalid JSON response: ${parseError instanceof Error ? parseError.message : 'Unknown parsing error'}`);
+        }
+      } catch (error) {
+        console.error("Error fetching crosswalks:", error);
+        throw error;
       }
-      return response.json() as Promise<CrosswalkMapping[]>;
     },
     enabled: !!targetId && targetId > 0,
   });
