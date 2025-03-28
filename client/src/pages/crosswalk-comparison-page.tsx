@@ -82,29 +82,64 @@ export default function CrosswalkComparisonPage() {
     queryKey: [`/api/reference-data/${targetId}`],
     queryFn: async () => {
       try {
-        const response = await fetch(`/api/reference-data/${targetId}`);
+        console.log(`[Debug] Fetching dataset for targetId: ${targetId}`);
+        
+        // Log request details
+        const requestUrl = `/api/reference-data/${targetId}`;
+        console.log(`[Debug] Dataset request URL: ${requestUrl}`);
+        
+        // Perform the fetch with credentials
+        const response = await fetch(requestUrl, {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        // Log response details
+        console.log(`[Debug] Dataset response status: ${response.status} ${response.statusText}`);
+        console.log(`[Debug] Dataset response content-type:`, response.headers.get('content-type'));
+        console.log(`[Debug] Dataset response content-length:`, response.headers.get('content-length'));
         
         if (!response.ok) {
+          console.error(`[Error] Failed dataset response: ${response.status} ${response.statusText}`);
           throw new Error(`Failed to fetch target dataset: ${response.status} ${response.statusText}`);
         }
         
         const text = await response.text();
+        console.log(`[Debug] Dataset response text length: ${text.length}`);
+        console.log(`[Debug] Dataset response text preview: ${text.substring(0, 100)}...`);
         
         // Check if response looks like HTML (DOCTYPE)
         if (text.includes('<!DOCTYPE') || text.includes('<html')) {
-          console.error("Received HTML instead of JSON for dataset:", text.substring(0, 200));
-          throw new Error("Server returned HTML instead of JSON. This may indicate a server issue.");
+          console.error("[Error] Received HTML instead of JSON for dataset. First 500 chars:", text.substring(0, 500));
+          console.error("[Error] Dataset request headers may be incorrect or session may have expired.");
+          console.error("[Error] Dataset content-type received:", response.headers.get('content-type'));
+          throw new Error("Server returned HTML instead of JSON for dataset. The server may be returning a login page or error page.");
         }
         
         // Try to parse as JSON
         try {
-          return JSON.parse(text) as DataSet;
+          const data = JSON.parse(text) as DataSet;
+          console.log(`[Debug] Successfully parsed dataset JSON:`, data);
+          return data;
         } catch (parseError) {
-          console.error("Failed to parse JSON for dataset:", text.substring(0, 200));
-          throw new Error(`Invalid JSON response: ${parseError instanceof Error ? parseError.message : 'Unknown parsing error'}`);
+          console.error("[Error] Failed to parse dataset JSON. Response preview:", text.substring(0, 300));
+          console.error("[Error] Dataset parse error details:", parseError);
+          
+          // Try to identify common JSON parsing issues
+          if (text.trim().startsWith('<') || text.includes('<!DOCTYPE')) {
+            throw new Error(`Invalid dataset JSON: Received HTML content instead of JSON. Server may require authentication or encountered an error.`);
+          } else if (text.includes('Error') || text.includes('Exception')) {
+            throw new Error(`Invalid dataset JSON: Server error message detected in response. Raw response: ${text.substring(0, 100)}...`);
+          } else {
+            throw new Error(`Invalid dataset JSON response: ${parseError instanceof Error ? parseError.message : 'Unknown parsing error'}. Raw response: ${text.substring(0, 100)}...`);
+          }
         }
       } catch (error) {
-        console.error("Error fetching dataset:", error);
+        console.error("[Error] Complete error fetching dataset:", error);
+        console.error("[Error] Dataset error name:", error instanceof Error ? error.name : 'Unknown');
+        console.error("[Error] Dataset error stack:", error instanceof Error ? error.stack : 'No stack trace');
         throw error;
       }
     },
@@ -120,29 +155,64 @@ export default function CrosswalkComparisonPage() {
     queryKey: [`/api/crosswalks/by-target/${targetId}`],
     queryFn: async () => {
       try {
-        const response = await fetch(`/api/crosswalks/by-target/${targetId}`);
+        console.log(`[Debug] Fetching crosswalks for targetId: ${targetId}`);
+        
+        // Log request details
+        const requestUrl = `/api/crosswalks/by-target/${targetId}`;
+        console.log(`[Debug] Request URL: ${requestUrl}`);
+        
+        // Perform the fetch with credentials
+        const response = await fetch(requestUrl, {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        // Log response details
+        console.log(`[Debug] Response status: ${response.status} ${response.statusText}`);
+        console.log(`[Debug] Response content-type:`, response.headers.get('content-type'));
+        console.log(`[Debug] Response content-length:`, response.headers.get('content-length'));
         
         if (!response.ok) {
+          console.error(`[Error] Failed response: ${response.status} ${response.statusText}`);
           throw new Error(`Failed to fetch crosswalks: ${response.status} ${response.statusText}`);
         }
         
         const text = await response.text();
+        console.log(`[Debug] Response text length: ${text.length}`);
+        console.log(`[Debug] Response text preview: ${text.substring(0, 100)}...`);
         
         // Check if response looks like HTML (DOCTYPE)
         if (text.includes('<!DOCTYPE') || text.includes('<html')) {
-          console.error("Received HTML instead of JSON:", text.substring(0, 200));
-          throw new Error("Server returned HTML instead of JSON. This may indicate a server issue.");
+          console.error("[Error] Received HTML instead of JSON. First 500 chars:", text.substring(0, 500));
+          console.error("[Error] Request headers may be incorrect or session may have expired.");
+          console.error("[Error] Content-Type received:", response.headers.get('content-type'));
+          throw new Error("Server returned HTML instead of JSON. The server may be returning a login page or error page.");
         }
         
         // Try to parse as JSON
         try {
-          return JSON.parse(text) as CrosswalkMapping[];
+          const data = JSON.parse(text) as CrosswalkMapping[];
+          console.log(`[Debug] Successfully parsed JSON. Found ${data.length} crosswalk mappings.`);
+          return data;
         } catch (parseError) {
-          console.error("Failed to parse JSON:", text.substring(0, 200));
-          throw new Error(`Invalid JSON response: ${parseError instanceof Error ? parseError.message : 'Unknown parsing error'}`);
+          console.error("[Error] Failed to parse JSON response. Response preview:", text.substring(0, 300));
+          console.error("[Error] Parse error details:", parseError);
+          
+          // Try to identify common JSON parsing issues
+          if (text.trim().startsWith('<') || text.includes('<!DOCTYPE')) {
+            throw new Error(`Invalid JSON: Received HTML content instead of JSON. Server may require authentication or encountered an error.`);
+          } else if (text.includes('Error') || text.includes('Exception')) {
+            throw new Error(`Invalid JSON: Server error message detected in response. Raw response: ${text.substring(0, 100)}...`);
+          } else {
+            throw new Error(`Invalid JSON response: ${parseError instanceof Error ? parseError.message : 'Unknown parsing error'}. Raw response: ${text.substring(0, 100)}...`);
+          }
         }
       } catch (error) {
-        console.error("Error fetching crosswalks:", error);
+        console.error("[Error] Complete error fetching crosswalks:", error);
+        console.error("[Error] Error name:", error instanceof Error ? error.name : 'Unknown');
+        console.error("[Error] Error stack:", error instanceof Error ? error.stack : 'No stack trace');
         throw error;
       }
     },
