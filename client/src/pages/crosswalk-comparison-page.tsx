@@ -486,16 +486,21 @@ export default function CrosswalkComparisonPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[200px]">Target Value</TableHead>
+                  <TableHead className="w-[200px] bg-muted/30 border-r border-muted">
+                    <div className="font-bold text-primary text-lg">{targetDataset?.name}</div>
+                    <div className="text-sm font-semibold mt-1 bg-primary/10 rounded-sm px-2 py-0.5 inline-block">
+                      {crosswalks[0]?.mappingData.targetAttribute}
+                    </div>
+                  </TableHead>
                   {crosswalks.map(crosswalk => (
-                    <TableHead key={crosswalk.id}>
-                      {crosswalk.sourceSystemName}
-                      <div className="text-xs text-muted-foreground">
+                    <TableHead key={crosswalk.id} className="bg-muted/20">
+                      <div className="font-bold text-primary">{crosswalk.sourceSystemName}</div>
+                      <div className="text-sm font-semibold mt-1 bg-secondary/10 rounded-sm px-2 py-0.5 inline-block">
                         {crosswalk.mappingData.sourceAttribute}
                       </div>
                     </TableHead>
                   ))}
-                  <TableHead>Issues</TableHead>
+                  <TableHead className="bg-muted/30">Issues</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -520,8 +525,10 @@ export default function CrosswalkComparisonPage() {
                     
                     return (
                       <TableRow key={`${item.targetValue}-${index}`}>
-                        <TableCell className="font-medium">
-                          {item.targetValue}
+                        <TableCell className="border-r border-muted">
+                          <div className="font-medium text-primary-foreground bg-primary/10 px-2 py-1 rounded">
+                            {item.targetValue}
+                          </div>
                         </TableCell>
                         
                         {crosswalks.map(crosswalk => {
@@ -530,10 +537,10 @@ export default function CrosswalkComparisonPage() {
                             <TableCell key={crosswalk.id}>
                               {sourceData ? (
                                 <div>
-                                  <div>
+                                  <div className="bg-secondary/10 px-2 py-1 rounded font-medium">
                                     {sourceData.sourceValue}
                                   </div>
-                                  <div className="flex items-center gap-2 mt-1">
+                                  <div className="flex items-center gap-2 mt-2">
                                     <Badge variant={
                                       sourceData.confidence >= 90 ? "default" :
                                       sourceData.confidence >= 70 ? "outline" : 
