@@ -67,11 +67,8 @@ export default function CrosswalkComparisonPage() {
   
   // State for filters and pagination
   const [searchQuery, setSearchQuery] = useState("");
-  const [confidenceFilter, setConfidenceFilter] = useState<string>("all");
-  const [approvalStatusFilter, setApprovalStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [showOnlyConflicts, setShowOnlyConflicts] = useState(false);
   
   // Convert targetDatasetId to number
   const targetId = parseInt(targetDatasetId || "0");
@@ -160,42 +157,9 @@ export default function CrosswalkComparisonPage() {
         return false;
       }
       
-      // Apply confidence filter
-      if (confidenceFilter && confidenceFilter !== "all") {
-        const minConfidence = parseInt(confidenceFilter);
-        const hasLowConfidence = Object.values(item.sources).some(
-          source => source.confidence < minConfidence
-        );
-        
-        if (!hasLowConfidence) return false;
-      }
-      
-      // Apply approval status filter
-      if (approvalStatusFilter && approvalStatusFilter !== "all") {
-        const hasMatchingStatus = Object.values(item.sources).some(
-          source => source.approvalStatus === approvalStatusFilter
-        );
-        
-        if (!hasMatchingStatus) return false;
-      }
-      
-      // Apply conflicts filter
-      if (showOnlyConflicts) {
-        // Check if there are inconsistencies in confidence levels
-        const confidenceValues = Object.values(item.sources).map(s => s.confidence);
-        const hasConfidenceConflict = Math.max(...confidenceValues) - Math.min(...confidenceValues) > 20;
-        
-        // Check if some sources are missing
-        const allSourceSystemIds = crosswalks.map(c => c.sourceSystemId);
-        const mappedSourceSystemIds = Object.keys(item.sources).map(Number);
-        const hasMissingSource = allSourceSystemIds.some(id => !mappedSourceSystemIds.includes(id));
-        
-        if (!hasConfidenceConflict && !hasMissingSource) return false;
-      }
-      
       return true;
     });
-  }, [comparisonData, searchQuery, confidenceFilter, approvalStatusFilter, showOnlyConflicts, crosswalks]);
+  }, [comparisonData, searchQuery, crosswalks]);
   
   // Pagination
   const paginatedData = useMemo(() => {
@@ -360,8 +324,8 @@ export default function CrosswalkComparisonPage() {
         {/* Filters */}
         <div className="bg-card rounded-lg border shadow-sm p-5 mb-6">
           <h2 className="text-lg font-semibold mb-4 text-primary">Filters & Controls</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
-            <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2 w-full max-w-md">
               <Label htmlFor="search" className="text-sm font-medium">Search by Target Value</Label>
               <div className="relative">
                 <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -378,66 +342,7 @@ export default function CrosswalkComparisonPage() {
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="confidence-filter" className="text-sm font-medium">Confidence Filter</Label>
-              <Select 
-                value={confidenceFilter} 
-                onValueChange={(value) => {
-                  setConfidenceFilter(value || "all");
-                  setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger id="confidence-filter" className="rounded-md shadow-sm border-input/50 h-10">
-                  <SelectValue placeholder="Filter by confidence" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Confidence Levels</SelectItem>
-                  <SelectItem value="90">Less than 90%</SelectItem>
-                  <SelectItem value="80">Less than 80%</SelectItem>
-                  <SelectItem value="70">Less than 70%</SelectItem>
-                  <SelectItem value="50">Less than 50%</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="status-filter" className="text-sm font-medium">Approval Status</Label>
-              <Select 
-                value={approvalStatusFilter} 
-                onValueChange={(value) => {
-                  setApprovalStatusFilter(value || "all");
-                  setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger id="status-filter" className="rounded-md shadow-sm border-input/50 h-10">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="DRAFT">Draft</SelectItem>
-                  <SelectItem value="PENDING">Pending Approval</SelectItem>
-                  <SelectItem value="APPROVED">Approved</SelectItem>
-                  <SelectItem value="REJECTED">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between border-t pt-4">
-            <div className="flex items-center space-x-2 bg-muted/10 py-1 px-3 rounded-full">
-              <Checkbox 
-                id="show-conflicts" 
-                checked={showOnlyConflicts}
-                onCheckedChange={(checked) => {
-                  setShowOnlyConflicts(checked === true);
-                  setCurrentPage(1);
-                }}
-                className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-              />
-              <Label htmlFor="show-conflicts" className="text-sm font-medium">Show only records with inconsistencies</Label>
-            </div>
-            
-            <div className="flex gap-3">
+            <div className="flex gap-3 items-end">
               <Select
                 value={itemsPerPage.toString()}
                 onValueChange={(value) => {
