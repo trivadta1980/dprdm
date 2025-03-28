@@ -426,8 +426,13 @@ export default function CrosswalkComparisonPage() {
                         {crosswalks[0]?.mappingData.targetAttribute}
                       </div>
                     </TableHead>
-                    {crosswalks.map(crosswalk => (
-                      <TableHead key={crosswalk.id} className="bg-gradient-to-b from-muted/5 to-transparent p-4">
+                    {crosswalks.map((crosswalk, index) => (
+                      <TableHead 
+                        key={crosswalk.id} 
+                        className={`p-4 ${index % 2 === 0 
+                          ? "bg-gradient-to-b from-muted/10 to-transparent" 
+                          : "bg-gradient-to-b from-muted/20 to-muted/5"}`}
+                      >
                         <div className="font-bold text-primary">{crosswalk.name}</div>
                         <div className="text-sm font-medium text-muted-foreground mt-1">{crosswalk.sourceSystemName}</div>
                         <div className="text-sm font-semibold mt-2 bg-secondary/10 rounded-md px-3 py-1 inline-block shadow-sm">
@@ -435,7 +440,7 @@ export default function CrosswalkComparisonPage() {
                         </div>
                       </TableHead>
                     ))}
-                    <TableHead className="bg-muted/20 p-4">
+                    <TableHead className="bg-gradient-to-b from-muted/25 to-muted/10 p-4">
                       <div className="font-bold text-primary">Issues</div>
                     </TableHead>
                   </TableRow>
@@ -468,10 +473,15 @@ export default function CrosswalkComparisonPage() {
                             </div>
                           </TableCell>
                           
-                          {crosswalks.map(crosswalk => {
+                          {crosswalks.map((crosswalk, colIndex) => {
                             const sourceData = item.sources[crosswalk.sourceSystemId];
                             return (
-                              <TableCell key={crosswalk.id} className="p-4">
+                              <TableCell 
+                                key={crosswalk.id} 
+                                className={`p-4 ${colIndex % 2 === 0 
+                                  ? "bg-muted/5" 
+                                  : "bg-muted/10"}`}
+                              >
                                 {sourceData ? (
                                   <div className="space-y-3">
                                     <div className="bg-secondary/10 px-3 py-2 rounded-md font-medium shadow-sm">
@@ -509,7 +519,7 @@ export default function CrosswalkComparisonPage() {
                             );
                           })}
                           
-                          <TableCell className="p-4">
+                          <TableCell className="p-4 bg-muted/15">
                             {missingSourceSystems.length > 0 && (
                               <div className="text-amber-600 text-sm mb-2 bg-amber-50/30 p-2 rounded-md">
                                 <span className="font-medium">Missing from:</span> {missingSourceSystems.join(", ")}
