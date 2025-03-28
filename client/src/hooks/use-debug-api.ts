@@ -8,17 +8,26 @@ export function useDebugApi() {
   const { addError } = useDebugErrors();
 
   /**
-   * Check whether an error response contains HTML that might indicate an authentication issue
+   * Check whether a response contains HTML content
    */
-  const isHtmlAuthError = (responseText: string): boolean => {
-    // Check for common patterns in login pages or auth redirect responses
-    return (
-      (responseText.includes("<html") || responseText.includes("<!DOCTYPE")) &&
-      (responseText.includes("login") || 
-       responseText.includes("sign in") || 
-       responseText.includes("unauthorized") ||
-       responseText.includes("authentication"))
-    );
+  const isHtmlResponse = (responseText: string): boolean => {
+    // Check for any HTML indicators in the response
+    return responseText.trim().startsWith("<!DOCTYPE") || 
+           responseText.trim().startsWith("<html") ||
+           (responseText.includes("<html") && responseText.includes("</html>"));
+  };
+
+  /**
+   * Check whether an HTML response is likely an authentication-related page
+   */
+  const isAuthRelatedHtml = (responseText: string): boolean => {
+    const lowerText = responseText.toLowerCase();
+    return lowerText.includes("login") || 
+           lowerText.includes("sign in") || 
+           lowerText.includes("unauthorized") ||
+           lowerText.includes("authentication") ||
+           lowerText.includes("session") ||
+           lowerText.includes("expired");
   };
 
   /**
@@ -46,16 +55,25 @@ export function useDebugApi() {
       console.log(`[Debug] Response text length: ${responseText.length}`);
       console.log(`[Debug] Response text preview: ${responseText.slice(0, 100)}${responseText.length > 100 ? '...' : ''}`);
 
-      // Check for HTML in response when expecting JSON
-      if (isHtmlAuthError(responseText)) {
+      // First check for HTML in response when expecting JSON
+      // This needs to happen BEFORE we try to parse JSON
+      if (isHtmlResponse(responseText)) {
+        // Determine if this is likely an auth-related HTML (login page, etc.)
+        const isAuthRelated = isAuthRelatedHtml(responseText);
+        const errorType = isAuthRelated ? "authentication" : "parsing";
+        const errorMessage = isAuthRelated 
+          ? "Received HTML login page instead of JSON. Your session may have expired." 
+          : "Received HTML instead of JSON data.";
+          
         addError({
-          message: "Received HTML instead of JSON. You may need to log in again.",
-          type: "authentication",
+          message: errorMessage,
+          type: errorType,
           url,
           status: response.status,
           responsePreview: responseText.slice(0, 500) + (responseText.length > 500 ? '...' : '')
         });
-        throw new Error("Authentication error: Received HTML instead of expected data format");
+        
+        throw new Error(`${isAuthRelated ? "Authentication" : "Format"} error: Received HTML instead of expected JSON data`);
       }
 
       // Try to parse as JSON
@@ -70,6 +88,26 @@ export function useDebugApi() {
                 : `Value: ${String(data)}`)
         );
       } catch (parseError) {
+        // If we got here with HTML content, it means our HTML detection failed
+        // Double-check if the content might be HTML that wasn't caught earlier
+        if (responseText.includes('<') && responseText.includes('>')) {
+          console.error("[Debug] Possible HTML content detected after JSON parse failure");
+          
+          // Check if it looks like HTML content
+          if (responseText.includes('<!DOCTYPE') || responseText.includes('<html')) {
+            addError({
+              message: "Received HTML instead of JSON. Session may have expired.",
+              type: "authentication",
+              url,
+              status: response.status,
+              responsePreview: responseText.slice(0, 500) + (responseText.length > 500 ? '...' : ''),
+              details: { parseError: (parseError as Error).message }
+            });
+            throw new Error("Authentication error: Received HTML instead of expected JSON format");
+          }
+        }
+        
+        // Otherwise, handle as a standard parsing error
         console.error("[Debug] Failed to parse response as JSON", parseError);
         addError({
           message: "Failed to parse response as JSON",
