@@ -67,8 +67,8 @@ export default function CrosswalkComparisonPage() {
   
   // State for filters and pagination
   const [searchQuery, setSearchQuery] = useState("");
-  const [confidenceFilter, setConfidenceFilter] = useState<string | null>(null);
-  const [approvalStatusFilter, setApprovalStatusFilter] = useState<string | null>(null);
+  const [confidenceFilter, setConfidenceFilter] = useState<string>("all");
+  const [approvalStatusFilter, setApprovalStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [showOnlyConflicts, setShowOnlyConflicts] = useState(false);
@@ -161,7 +161,7 @@ export default function CrosswalkComparisonPage() {
       }
       
       // Apply confidence filter
-      if (confidenceFilter) {
+      if (confidenceFilter && confidenceFilter !== "all") {
         const minConfidence = parseInt(confidenceFilter);
         const hasLowConfidence = Object.values(item.sources).some(
           source => source.confidence < minConfidence
@@ -171,7 +171,7 @@ export default function CrosswalkComparisonPage() {
       }
       
       // Apply approval status filter
-      if (approvalStatusFilter) {
+      if (approvalStatusFilter && approvalStatusFilter !== "all") {
         const hasMatchingStatus = Object.values(item.sources).some(
           source => source.approvalStatus === approvalStatusFilter
         );
@@ -379,9 +379,9 @@ export default function CrosswalkComparisonPage() {
           <div className="space-y-2">
             <Label htmlFor="confidence-filter">Confidence Filter</Label>
             <Select 
-              value={confidenceFilter || ""} 
+              value={confidenceFilter} 
               onValueChange={(value) => {
-                setConfidenceFilter(value || null);
+                setConfidenceFilter(value || "all");
                 setCurrentPage(1);
               }}
             >
@@ -389,7 +389,7 @@ export default function CrosswalkComparisonPage() {
                 <SelectValue placeholder="Filter by confidence" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Confidence Levels</SelectItem>
+                <SelectItem value="all">All Confidence Levels</SelectItem>
                 <SelectItem value="90">Less than 90%</SelectItem>
                 <SelectItem value="80">Less than 80%</SelectItem>
                 <SelectItem value="70">Less than 70%</SelectItem>
@@ -401,9 +401,9 @@ export default function CrosswalkComparisonPage() {
           <div className="space-y-2">
             <Label htmlFor="status-filter">Approval Status</Label>
             <Select 
-              value={approvalStatusFilter || ""} 
+              value={approvalStatusFilter} 
               onValueChange={(value) => {
-                setApprovalStatusFilter(value || null);
+                setApprovalStatusFilter(value || "all");
                 setCurrentPage(1);
               }}
             >
@@ -411,7 +411,7 @@ export default function CrosswalkComparisonPage() {
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Statuses</SelectItem>
+                <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="DRAFT">Draft</SelectItem>
                 <SelectItem value="PENDING">Pending Approval</SelectItem>
                 <SelectItem value="APPROVED">Approved</SelectItem>
