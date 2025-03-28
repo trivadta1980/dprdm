@@ -304,21 +304,21 @@ export default function CrosswalkComparisonPage() {
   return (
     <MainLayout>
       <div className="container mx-auto py-6 space-y-6">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 mb-6">
           <Link href="/reference-data">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="shadow-sm border-primary/20 rounded-full px-4">
               <ArrowLeftIcon className="h-4 w-4 mr-2" />
               Back to Reference Data
             </Button>
           </Link>
           
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 text-transparent bg-clip-text">
             Crosswalk Comparison View
           </h1>
         </div>
         
         {isLoadingDataset ? (
-          <Card>
+          <Card className="shadow-md border-primary/10">
             <CardHeader>
               <Skeleton className="h-8 w-1/3" />
             </CardHeader>
@@ -328,8 +328,8 @@ export default function CrosswalkComparisonPage() {
             </CardContent>
           </Card>
         ) : !targetDataset ? (
-          <Card>
-            <CardHeader>
+          <Card className="shadow-md border-red-200">
+            <CardHeader className="bg-red-50/50">
               <CardTitle className="text-red-500">
                 Dataset Not Found
               </CardTitle>
@@ -339,289 +339,327 @@ export default function CrosswalkComparisonPage() {
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Target Dataset: {targetDataset.name}</CardTitle>
+          <Card className="shadow-md border-primary/10 overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+              <CardTitle className="text-primary">Target Dataset: {targetDataset.name}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
                 {targetDataset.description || "No description available"}
               </p>
-              <p className="mt-2">
-                <Badge variant="outline">ID: {targetDataset.id}</Badge>
-                <Badge variant="outline" className="ml-2">Type ID: {targetDataset.typeId}</Badge>
-              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Badge variant="outline" className="rounded-full shadow-sm bg-primary/5 px-3 py-1">ID: {targetDataset.id}</Badge>
+                <Badge variant="outline" className="rounded-full shadow-sm bg-primary/5 px-3 py-1">Type ID: {targetDataset.typeId}</Badge>
+              </div>
             </CardContent>
           </Card>
         )}
         
-        <Separator />
+        <Separator className="my-6" />
         
         {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="search">Search by Target Value</Label>
-            <div className="relative">
-              <SearchIcon className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="search"
-                placeholder="Search..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1); // Reset to first page on search
+        <div className="bg-card rounded-lg border shadow-sm p-5 mb-6">
+          <h2 className="text-lg font-semibold mb-4 text-primary">Filters & Controls</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+            <div className="space-y-2">
+              <Label htmlFor="search" className="text-sm font-medium">Search by Target Value</Label>
+              <div className="relative">
+                <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="search"
+                  placeholder="Search..."
+                  className="pl-9 rounded-md shadow-sm border-input/50 h-10"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1); // Reset to first page on search
+                  }}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="confidence-filter" className="text-sm font-medium">Confidence Filter</Label>
+              <Select 
+                value={confidenceFilter} 
+                onValueChange={(value) => {
+                  setConfidenceFilter(value || "all");
+                  setCurrentPage(1);
                 }}
-              />
+              >
+                <SelectTrigger id="confidence-filter" className="rounded-md shadow-sm border-input/50 h-10">
+                  <SelectValue placeholder="Filter by confidence" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Confidence Levels</SelectItem>
+                  <SelectItem value="90">Less than 90%</SelectItem>
+                  <SelectItem value="80">Less than 80%</SelectItem>
+                  <SelectItem value="70">Less than 70%</SelectItem>
+                  <SelectItem value="50">Less than 50%</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="status-filter" className="text-sm font-medium">Approval Status</Label>
+              <Select 
+                value={approvalStatusFilter} 
+                onValueChange={(value) => {
+                  setApprovalStatusFilter(value || "all");
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger id="status-filter" className="rounded-md shadow-sm border-input/50 h-10">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="DRAFT">Draft</SelectItem>
+                  <SelectItem value="PENDING">Pending Approval</SelectItem>
+                  <SelectItem value="APPROVED">Approved</SelectItem>
+                  <SelectItem value="REJECTED">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="confidence-filter">Confidence Filter</Label>
-            <Select 
-              value={confidenceFilter} 
-              onValueChange={(value) => {
-                setConfidenceFilter(value || "all");
-                setCurrentPage(1);
-              }}
-            >
-              <SelectTrigger id="confidence-filter">
-                <SelectValue placeholder="Filter by confidence" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Confidence Levels</SelectItem>
-                <SelectItem value="90">Less than 90%</SelectItem>
-                <SelectItem value="80">Less than 80%</SelectItem>
-                <SelectItem value="70">Less than 70%</SelectItem>
-                <SelectItem value="50">Less than 50%</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="status-filter">Approval Status</Label>
-            <Select 
-              value={approvalStatusFilter} 
-              onValueChange={(value) => {
-                setApprovalStatusFilter(value || "all");
-                setCurrentPage(1);
-              }}
-            >
-              <SelectTrigger id="status-filter">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="DRAFT">Draft</SelectItem>
-                <SelectItem value="PENDING">Pending Approval</SelectItem>
-                <SelectItem value="APPROVED">Approved</SelectItem>
-                <SelectItem value="REJECTED">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="show-conflicts" 
-              checked={showOnlyConflicts}
-              onCheckedChange={(checked) => {
-                setShowOnlyConflicts(checked === true);
-                setCurrentPage(1);
-              }} 
-            />
-            <Label htmlFor="show-conflicts">Show only records with inconsistencies</Label>
-          </div>
-          
-          <div className="flex gap-2">
-            <Select
-              value={itemsPerPage.toString()}
-              onValueChange={(value) => {
-                setItemsPerPage(parseInt(value));
-                setCurrentPage(1);
-              }}
-            >
-              <SelectTrigger className="w-[100px]">
-                <SelectValue placeholder="Items per page" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10 rows</SelectItem>
-                <SelectItem value="20">20 rows</SelectItem>
-                <SelectItem value="50">50 rows</SelectItem>
-                <SelectItem value="100">100 rows</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center justify-between border-t pt-4">
+            <div className="flex items-center space-x-2 bg-muted/10 py-1 px-3 rounded-full">
+              <Checkbox 
+                id="show-conflicts" 
+                checked={showOnlyConflicts}
+                onCheckedChange={(checked) => {
+                  setShowOnlyConflicts(checked === true);
+                  setCurrentPage(1);
+                }}
+                className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+              />
+              <Label htmlFor="show-conflicts" className="text-sm font-medium">Show only records with inconsistencies</Label>
+            </div>
             
-            <Button variant="outline" onClick={handleDownloadCsv}>
-              <DownloadIcon className="h-4 w-4 mr-2" />
-              Export CSV
-            </Button>
+            <div className="flex gap-3">
+              <Select
+                value={itemsPerPage.toString()}
+                onValueChange={(value) => {
+                  setItemsPerPage(parseInt(value));
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[120px] rounded-md shadow-sm border-input/50 h-9">
+                  <SelectValue placeholder="Items per page" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10 rows</SelectItem>
+                  <SelectItem value="20">20 rows</SelectItem>
+                  <SelectItem value="50">50 rows</SelectItem>
+                  <SelectItem value="100">100 rows</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Button variant="outline" onClick={handleDownloadCsv} className="h-9 rounded-md shadow-sm border-primary/20 bg-primary/5">
+                <DownloadIcon className="h-4 w-4 mr-2" />
+                Export CSV
+              </Button>
+            </div>
           </div>
         </div>
         
         {/* Comparison Table */}
         {isLoadingCrosswalks ? (
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
+          <div className="space-y-6">
+            <div className="rounded-lg border shadow-sm overflow-hidden">
+              <div className="bg-gradient-to-r from-muted/30 to-muted/10 p-4 flex gap-6">
+                <Skeleton className="h-14 w-[200px] rounded-md" />
+                <Skeleton className="h-14 w-[200px] rounded-md" />
+                <Skeleton className="h-14 w-[200px] rounded-md" />
+              </div>
+              <div className="p-4 space-y-4">
+                <div className="flex gap-6">
+                  <Skeleton className="h-10 w-[200px] rounded-md" />
+                  <Skeleton className="h-10 w-[200px] rounded-md" />
+                  <Skeleton className="h-10 w-[200px] rounded-md" />
+                </div>
+                <div className="flex gap-6">
+                  <Skeleton className="h-10 w-[200px] rounded-md" />
+                  <Skeleton className="h-10 w-[200px] rounded-md" />
+                  <Skeleton className="h-10 w-[200px] rounded-md" />
+                </div>
+                <div className="flex gap-6">
+                  <Skeleton className="h-10 w-[200px] rounded-md" />
+                  <Skeleton className="h-10 w-[200px] rounded-md" />
+                  <Skeleton className="h-10 w-[200px] rounded-md" />
+                </div>
+              </div>
+            </div>
           </div>
         ) : crosswalks.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <p>No crosswalks found for this target dataset.</p>
-              <p className="text-muted-foreground mt-2">
-                Create crosswalks that map to this dataset to enable comparison.
-              </p>
-              <Button className="mt-4" onClick={() => window.location.href = "/crosswalks"}>
-                Manage Crosswalks
-              </Button>
+          <Card className="shadow-md border-primary/10 overflow-hidden">
+            <CardContent className="pt-8 pb-8 text-center bg-gradient-to-b from-muted/10 to-transparent">
+              <div className="max-w-md mx-auto space-y-4">
+                <div className="bg-muted/20 rounded-full p-4 w-16 h-16 mx-auto flex items-center justify-center">
+                  <ChevronRightIcon className="h-8 w-8 text-primary/60" />
+                </div>
+                <h3 className="text-xl font-medium text-primary">No crosswalks found for this target dataset</h3>
+                <p className="text-muted-foreground">
+                  Create crosswalks that map to this dataset to enable comparison and data mapping.
+                </p>
+                <Button className="mt-4 rounded-full shadow-sm px-6" onClick={() => window.location.href = "/crosswalks"}>
+                  Manage Crosswalks
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (
           <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[200px] bg-muted/30 border-r border-muted">
-                    <div className="font-bold text-primary text-lg">{targetDataset?.name}</div>
-                    <div className="text-sm font-semibold mt-1 bg-primary/10 rounded-sm px-2 py-0.5 inline-block">
-                      {crosswalks[0]?.mappingData.targetAttribute}
-                    </div>
-                  </TableHead>
-                  {crosswalks.map(crosswalk => (
-                    <TableHead key={crosswalk.id} className="bg-muted/20">
-                      <div className="font-bold text-primary">{crosswalk.name}</div>
-                      <div className="text-sm font-medium text-muted-foreground">{crosswalk.sourceSystemName}</div>
-                      <div className="text-sm font-semibold mt-1 bg-secondary/10 rounded-sm px-2 py-0.5 inline-block">
-                        {crosswalk.mappingData.sourceAttribute}
+            <div className="relative overflow-hidden rounded-lg border shadow-sm">
+              <Table className="bg-card">
+                <TableHeader>
+                  <TableRow className="bg-gradient-to-r from-muted/30 to-muted/10">
+                    <TableHead className="w-[200px] bg-gradient-to-r from-primary/5 to-primary/10 border-r border-primary/10 p-4">
+                      <div className="font-bold text-primary text-lg">{targetDataset?.name}</div>
+                      <div className="text-sm font-semibold mt-2 bg-primary/20 rounded-md px-3 py-1 inline-block shadow-sm">
+                        {crosswalks[0]?.mappingData.targetAttribute}
                       </div>
                     </TableHead>
-                  ))}
-                  <TableHead className="bg-muted/30">Issues</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedData.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={crosswalks.length + 2} className="text-center">
-                      No data matches the current filters
-                    </TableCell>
+                    {crosswalks.map(crosswalk => (
+                      <TableHead key={crosswalk.id} className="bg-gradient-to-b from-muted/5 to-transparent p-4">
+                        <div className="font-bold text-primary">{crosswalk.name}</div>
+                        <div className="text-sm font-medium text-muted-foreground mt-1">{crosswalk.sourceSystemName}</div>
+                        <div className="text-sm font-semibold mt-2 bg-secondary/10 rounded-md px-3 py-1 inline-block shadow-sm">
+                          {crosswalk.mappingData.sourceAttribute}
+                        </div>
+                      </TableHead>
+                    ))}
+                    <TableHead className="bg-muted/20 p-4">
+                      <div className="font-bold text-primary">Issues</div>
+                    </TableHead>
                   </TableRow>
-                ) : (
-                  paginatedData.map((item, index) => {
-                    // Identify issues
-                    const allSourceSystemIds = crosswalks.map(c => c.sourceSystemId);
-                    const mappedSourceSystemIds = Object.keys(item.sources).map(Number);
-                    const missingSourceSystems = allSourceSystemIds
-                      .filter(id => !mappedSourceSystemIds.includes(id))
-                      .map(id => crosswalks.find(c => c.sourceSystemId === id)?.sourceSystemName || "");
-                    
-                    const confidenceValues = Object.values(item.sources).map(s => s.confidence);
-                    const hasConfidenceConflict = confidenceValues.length > 1 && 
-                      Math.max(...confidenceValues) - Math.min(...confidenceValues) > 20;
-                    
-                    return (
-                      <TableRow key={`${item.targetValue}-${index}`}>
-                        <TableCell className="border-r border-muted">
-                          <div className="font-medium text-primary-foreground bg-primary/10 px-2 py-1 rounded">
-                            {item.targetValue}
-                          </div>
-                        </TableCell>
-                        
-                        {crosswalks.map(crosswalk => {
-                          const sourceData = item.sources[crosswalk.sourceSystemId];
-                          return (
-                            <TableCell key={crosswalk.id}>
-                              {sourceData ? (
-                                <div>
-                                  <div className="bg-secondary/10 px-2 py-1 rounded font-medium">
-                                    {sourceData.sourceValue}
-                                  </div>
-                                  <div className="flex items-center gap-2 mt-2">
-                                    <Badge variant={
-                                      sourceData.confidence >= 90 ? "default" :
-                                      sourceData.confidence >= 70 ? "outline" : 
-                                      "destructive"
-                                    } className="text-xs">
-                                      {sourceData.confidence}%
-                                    </Badge>
-                                    
-                                    {sourceData.approvalStatus && (
+                </TableHeader>
+                <TableBody>
+                  {paginatedData.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={crosswalks.length + 2} className="text-center p-8">
+                        <div className="p-4 bg-muted/10 rounded-md">No data matches the current filters</div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    paginatedData.map((item, index) => {
+                      // Identify issues
+                      const allSourceSystemIds = crosswalks.map(c => c.sourceSystemId);
+                      const mappedSourceSystemIds = Object.keys(item.sources).map(Number);
+                      const missingSourceSystems = allSourceSystemIds
+                        .filter(id => !mappedSourceSystemIds.includes(id))
+                        .map(id => crosswalks.find(c => c.sourceSystemId === id)?.sourceSystemName || "");
+                      
+                      const confidenceValues = Object.values(item.sources).map(s => s.confidence);
+                      const hasConfidenceConflict = confidenceValues.length > 1 && 
+                        Math.max(...confidenceValues) - Math.min(...confidenceValues) > 20;
+                      
+                      return (
+                        <TableRow key={`${item.targetValue}-${index}`} className={index % 2 === 0 ? "bg-card" : "bg-muted/5"}>
+                          <TableCell className="border-r border-primary/5 p-4">
+                            <div className="font-medium text-foreground bg-primary/10 px-3 py-2 rounded-md shadow-sm">
+                              {item.targetValue}
+                            </div>
+                          </TableCell>
+                          
+                          {crosswalks.map(crosswalk => {
+                            const sourceData = item.sources[crosswalk.sourceSystemId];
+                            return (
+                              <TableCell key={crosswalk.id} className="p-4">
+                                {sourceData ? (
+                                  <div className="space-y-3">
+                                    <div className="bg-secondary/10 px-3 py-2 rounded-md font-medium shadow-sm">
+                                      {sourceData.sourceValue}
+                                    </div>
+                                    <div className="flex items-center flex-wrap gap-2">
                                       <Badge variant={
-                                        sourceData.approvalStatus === "APPROVED" ? "default" :
-                                        sourceData.approvalStatus === "PENDING" ? "outline" :
-                                        sourceData.approvalStatus === "REJECTED" ? "destructive" :
-                                        "secondary"
-                                      } className="text-xs">
-                                        {sourceData.approvalStatus.toLowerCase()}
+                                        sourceData.confidence >= 90 ? "default" :
+                                        sourceData.confidence >= 70 ? "outline" : 
+                                        "destructive"
+                                      } className="text-xs rounded-md px-2 py-1">
+                                        {sourceData.confidence}%
                                       </Badge>
-                                    )}
+                                      
+                                      {sourceData.approvalStatus && (
+                                        <Badge variant={
+                                          sourceData.approvalStatus === "APPROVED" ? "default" :
+                                          sourceData.approvalStatus === "PENDING" ? "outline" :
+                                          sourceData.approvalStatus === "REJECTED" ? "destructive" :
+                                          "secondary"
+                                        } className="text-xs rounded-md px-2 py-1">
+                                          {sourceData.approvalStatus.toLowerCase()}
+                                        </Badge>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              ) : (
-                                <Badge variant="outline" className="text-xs bg-red-50">
-                                  No mapping
-                                </Badge>
-                              )}
-                            </TableCell>
-                          );
-                        })}
-                        
-                        <TableCell>
-                          {missingSourceSystems.length > 0 && (
-                            <div className="text-amber-600 text-sm mb-1">
-                              Missing from: {missingSourceSystems.join(", ")}
-                            </div>
-                          )}
+                                ) : (
+                                  <div className="bg-red-50/30 rounded-md p-3 text-center shadow-sm border border-red-100">
+                                    <Badge variant="outline" className="text-xs">
+                                      No mapping
+                                    </Badge>
+                                  </div>
+                                )}
+                              </TableCell>
+                            );
+                          })}
                           
-                          {hasConfidenceConflict && (
-                            <div className="text-red-600 text-sm">
-                              Inconsistent confidence levels
-                            </div>
-                          )}
-                          
-                          {!missingSourceSystems.length && !hasConfidenceConflict && (
-                            <div className="text-green-600 text-sm">No issues detected</div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+                          <TableCell className="p-4">
+                            {missingSourceSystems.length > 0 && (
+                              <div className="text-amber-600 text-sm mb-2 bg-amber-50/30 p-2 rounded-md">
+                                <span className="font-medium">Missing from:</span> {missingSourceSystems.join(", ")}
+                              </div>
+                            )}
+                            
+                            {hasConfidenceConflict && (
+                              <div className="text-red-600 text-sm bg-red-50/30 p-2 rounded-md">
+                                <span className="font-medium">Inconsistent confidence levels</span>
+                              </div>
+                            )}
+                            
+                            {!missingSourceSystems.length && !hasConfidenceConflict && (
+                              <div className="text-green-600 text-sm bg-green-50/30 p-2 rounded-md">
+                                <span className="font-medium">No issues detected</span>
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
             
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
+              <div className="flex items-center justify-between mt-6 p-4 bg-card rounded-lg border shadow-sm">
+                <div className="text-sm font-medium px-3 py-1 bg-muted/20 rounded-full">
                   Showing {Math.min(filteredData.length, (currentPage - 1) * itemsPerPage + 1)}-
                   {Math.min(filteredData.length, currentPage * itemsPerPage)} of {filteredData.length} items
                 </div>
                 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center bg-muted/10 rounded-full p-1 shadow-sm">
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
+                    className="rounded-full"
                   >
                     <ChevronLeftIcon className="h-4 w-4" />
                   </Button>
                   
-                  <span className="text-sm">
+                  <span className="text-sm font-medium px-3">
                     Page {currentPage} of {totalPages}
                   </span>
                   
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
+                    className="rounded-full"
                   >
                     <ChevronRightIcon className="h-4 w-4" />
                   </Button>
