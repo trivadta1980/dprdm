@@ -97,8 +97,37 @@ export default function CrosswalkComparisonPage() {
   } = useQuery({
     queryKey: [`/api/crosswalks/by-target/${targetId}`],
     queryFn: async () => {
-      console.log(`[Debug] Fetching crosswalks for target dataset ${targetId} from: /api/crosswalks/by-target/${targetId}`);
-      return debugApi.debugFetch<CrosswalkMapping[]>(`/api/crosswalks/by-target/${targetId}`);
+      try {
+        console.log(`[Debug] Fetching crosswalks for target dataset ${targetId} from: /api/crosswalks/by-target/${targetId}`);
+        
+        // Manual fetch with extra HTML detection safeguards for this specific endpoint
+        // This addresses the production issue where this endpoint may return HTML instead of JSON
+        const response = await fetch(`/api/crosswalks/by-target/${targetId}`, {
+          credentials: 'include'
+        });
+        
+        // Get response as text first
+        const responseText = await response.text();
+        
+        // Check if the response is HTML (more aggressive check than our normal one)
+        if (responseText.includes('<html') || responseText.includes('<!DOCTYPE') || 
+            responseText.includes('<body') || responseText.includes('<head')) {
+          console.error('[Debug] Received HTML instead of JSON for crosswalks endpoint');
+          // If HTML, redirect to login or handle as auth error
+          throw new Error('Session expired or authentication required. Please refresh the page and log in again.');
+        }
+        
+        // If not HTML, parse as JSON
+        try {
+          return JSON.parse(responseText) as CrosswalkMapping[];
+        } catch (parseError) {
+          console.error('[Debug] Failed to parse crosswalks response as JSON:', parseError);
+          throw new Error('Failed to parse server response. The server might be returning an invalid format.');
+        }
+      } catch (error) {
+        console.error('[Debug] Error fetching crosswalks:', error);
+        throw error;
+      }
     },
     enabled: !!targetId && targetId > 0,
   });
