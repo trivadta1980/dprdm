@@ -321,7 +321,7 @@ export default function NewCrosswalksPage() {
     <MainLayout>
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold tracking-tight">Crosswalk Mappings Test</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Crosswalk Mappings</h1>
           <Button onClick={handleCreateCrosswalk}>
             <PlusIcon className="h-4 w-4 mr-2" />
             Create Crosswalk
