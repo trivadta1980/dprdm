@@ -385,91 +385,7 @@ export default function AuthPage() {
             
             <Carousel className="w-full max-w-xl mx-auto">
               <CarouselContent>
-                {/* Slide 1: Overview */}
-                <CarouselItem className="p-1">
-                  <Card className="card-with-bg">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="p-3 bg-blue-100 rounded-lg">
-                          <Database className="h-8 w-8 text-blue-600" />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-bold">Enterprise Data Solution</h3>
-                          <p className="text-sm text-gray-500">Comprehensive Reference Data Platform</p>
-                        </div>
-                      </div>
-                      <p className="text-gray-700 mb-4">
-                        A complete solution for managing, governing, and leveraging business-critical 
-                        reference data across your organization.
-                      </p>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="flex items-start gap-2">
-                          <Shield className="h-5 w-5 text-blue-600 mt-1" />
-                          <div>
-                            <h4 className="font-medium">Data Governance</h4>
-                            <p className="text-sm text-gray-500">Enterprise-grade controls</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <Globe className="h-5 w-5 text-blue-600 mt-1" />
-                          <div>
-                            <h4 className="font-medium">Global Standards</h4>
-                            <p className="text-sm text-gray-500">Industry-compliant formats</p>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-                
-                {/* Slide 2: Key Features */}
-                <CarouselItem className="p-1">
-                  <Card className="card-with-bg">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="p-3 bg-indigo-100 rounded-lg">
-                          <Layers className="h-8 w-8 text-indigo-600" />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-bold">Key Capabilities</h3>
-                          <p className="text-sm text-gray-500">Powerful Data Management Features</p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="flex items-start gap-2">
-                          <Database className="h-5 w-5 text-indigo-600 mt-1" />
-                          <div>
-                            <h4 className="font-medium">Data Management</h4>
-                            <p className="text-sm text-gray-500">Centralized control</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <GitFork className="h-5 w-5 text-indigo-600 mt-1" />
-                          <div>
-                            <h4 className="font-medium">Relationships</h4>
-                            <p className="text-sm text-gray-500">Track connections</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <History className="h-5 w-5 text-indigo-600 mt-1" />
-                          <div>
-                            <h4 className="font-medium">Audit History</h4>
-                            <p className="text-sm text-gray-500">Complete change tracking</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <GitCompare className="h-5 w-5 text-indigo-600 mt-1" />
-                          <div>
-                            <h4 className="font-medium">Crosswalks</h4>
-                            <p className="text-sm text-gray-500">System mapping</p>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-                
-                {/* Slide 3: What is RDM - Visual Explanation */}
+                {/* Slide 1: What is RDM - Visual Explanation */}
                 <CarouselItem className="p-1">
                   <Card className="card-with-bg">
                     <CardContent className="p-6">
@@ -496,7 +412,7 @@ export default function AuthPage() {
                   </Card>
                 </CarouselItem>
                 
-                {/* Slide 4: The Value of Reference Data Management */}
+                {/* Slide 2: The Value of Reference Data Management */}
                 <CarouselItem className="p-1">
                   <Card className="card-with-bg">
                     <CardContent className="p-6">
@@ -519,46 +435,6 @@ export default function AuthPage() {
                       <p className="text-sm text-gray-600 mt-2 text-center italic">
                         Deliver lasting value through improved data quality and business alignment
                       </p>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-                
-                {/* Slide 5: Business Benefits */}
-                <CarouselItem className="p-1">
-                  <Card className="card-with-bg">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="p-3 bg-green-100 rounded-lg">
-                          <BarChart3 className="h-8 w-8 text-green-600" />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-bold">Business Benefits</h3>
-                          <p className="text-sm text-gray-500">Measurable Operational Improvements</p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 gap-4">
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">1</div>
-                          <div>
-                            <h4 className="font-medium">Enhanced Data Quality</h4>
-                            <p className="text-sm text-gray-500">Reduce errors and inconsistencies across systems</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">2</div>
-                          <div>
-                            <h4 className="font-medium">Operational Efficiency</h4>
-                            <p className="text-sm text-gray-500">Streamline data management workflows</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">3</div>
-                          <div>
-                            <h4 className="font-medium">Regulatory Compliance</h4>
-                            <p className="text-sm text-gray-500">Meet reporting requirements with confidence</p>
-                          </div>
-                        </div>
-                      </div>
                     </CardContent>
                   </Card>
                 </CarouselItem>
