@@ -28,10 +28,34 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { Loader2, Database, GitFork, History, GitCompare } from "lucide-react";
+import { 
+  Loader2, 
+  Database, 
+  GitFork, 
+  History, 
+  GitCompare, 
+  BarChart3, 
+  Globe, 
+  Shield, 
+  Layers, 
+  FileText,
+  Network,
+  AreaChart,
+  FileJson,
+  Search,
+  Workflow
+} from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Logo } from "@/components/ui/logo";
+import { Separator } from "@/components/ui/separator";
+import { 
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext 
+} from "@/components/ui/carousel";
 
 type LoginData = Pick<InsertUser, "username" | "password">;
 
@@ -338,45 +362,169 @@ export default function AuthPage() {
         </Card>
       </div>
 
-      <div className="hidden md:flex flex-col justify-center p-8 bg-gradient-to-br from-blue-50 to-indigo-50">
-        <div className="max-w-md mx-auto space-y-6">
-          <div className="flex items-center gap-3 mb-6">
-            <Database className="h-10 w-10 text-primary" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-              Reference Data Management
-            </h1>
-          </div>
-          <p className="text-lg text-gray-600">
-            A comprehensive platform for managing reference data, types, and relationships.
-            Features include data versioning, audit history, and cross-reference management.
-          </p>
-          <div className="grid grid-cols-2 gap-4 pt-4">
-            <div className="flex items-start gap-2">
-              <Database className="h-5 w-5 text-primary mt-1" />
+      <div className="hidden md:block relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        <div className="absolute inset-0 data-bg-pattern opacity-5 animated-bg" 
+             style={{ 
+               backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M54.627 0l.83.828-1.415 1.415L51.8 0h2.827zM5.373 0l-.83.828L5.96 2.243 8.2 0H5.374zM48.97 0l3.657 3.657-1.414 1.414L46.143 0h2.828zM11.03 0L7.372 3.657 8.787 5.07 13.857 0H11.03zm32.284 0L49.8 6.485 48.384 7.9l-7.9-7.9h2.83zM16.686 0L10.2 6.485 11.616 7.9l7.9-7.9h-2.83zm20.97 0l9.315 9.314-1.414 1.414L34.828 0h2.83zM22.344 0L13.03 9.314l1.414 1.414L25.172 0h-2.83zM32 0l12.142 12.142-1.414 1.414L30 .828 17.272 13.556l-1.414-1.414L28 0h4zM.284 0l28 28-1.414 1.414L0 2.544v-.828L.282 0h.002zM0 5.373l25.456 25.455-1.414 1.415L0 8.2V5.374zm0 5.656l22.627 22.627-1.414 1.414L0 13.86v-2.83zm0 5.656l19.8 19.8-1.415 1.413L0 19.514v-2.83zm0 5.657l16.97 16.97-1.414 1.415L0 25.172v-2.83zM0 28l14.142 14.142-1.414 1.414L0 30.828V28zm0 5.657L11.314 44.97 9.9 46.386l-9.9-9.9v-2.828zm0 5.657L8.485 47.8 7.07 49.212 0 42.143v-2.83zm0 5.657l5.657 5.657-1.414 1.415L0 47.8v-2.83zm0 5.657l2.828 2.83-1.414 1.413L0 53.456v-2.83zM54.627 60L30 35.373 5.373 60H8.2L30 38.2 51.8 60h2.827zm-5.656 0L30 41.03 11.03 60h2.828L30 43.858 46.142 60h2.83zm-5.656 0L30 46.686 16.686 60h2.83L30 49.515 40.485 60h2.83zm-5.657 0L30 52.343 22.344 60h2.83L30 55.172 34.828 60h2.83zM32 60l-2-2-2 2h4zM59.716 0l-28 28 1.414 1.414L60 2.544v-.828L59.718 0h-.002zM60 5.373L34.544 30.828l1.414 1.415L60 8.2V5.374zm0 5.656L37.373 33.656l1.414 1.414L60 13.86v-2.83zm0 5.656l-19.8 19.8 1.415 1.413L60 19.514v-2.83zm0 5.657l-16.97 16.97 1.414 1.415L60 25.172v-2.83zM60 28L45.858 42.142l1.414 1.414L60 30.828V28zm0 5.657L48.686 44.97l1.415 1.415 9.9-9.9v-2.828zm0 5.657L51.515 47.8l1.414 1.413 7.07-7.07v-2.83zm0 5.657l-5.657 5.657 1.414 1.415L60 47.8v-2.83zm0 5.657l-2.828 2.83 1.414 1.413L60 53.456v-2.83zM39.9 16.385l1.414-1.414L30 3.657 18.686 14.97l1.415 1.415 9.9-9.9 9.9 9.9zm-2.83 2.828l1.415-1.414L30 9.313 21.515 17.8l1.414 1.413L30 11.8l7.07 7.414v-.002zm-2.827 2.83l1.414-1.416L30 14.97l-5.657 5.657 1.414 1.415L30 17.8l4.243 4.242zm-2.83 2.827l1.415-1.414L30 20.626l-2.828 2.83 1.414 1.414L30 23.456l1.414 1.414zM56.87 59.414L58.284 58 30 29.716 1.716 58l1.414 1.414L30 32.544l26.87 26.87z\' fill=\'%2320232a\' fill-opacity=\'0.1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E")',
+               backgroundSize: '700px 700px'
+             }}
+        />
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="max-w-xl mx-auto py-12 px-8 relative z-10">
+            <div className="flex items-center gap-4 mb-6">
+              <Logo size="md" />
               <div>
-                <h3 className="font-medium">Data Management</h3>
-                <p className="text-sm text-gray-500">Centralized reference data control</p>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-900 to-blue-600 bg-clip-text text-transparent">
+                  Reference Data Management
+                </h1>
+                <p className="text-blue-600 font-medium">Enterprise Solution</p>
               </div>
             </div>
-            <div className="flex items-start gap-2">
-              <GitFork className="h-5 w-5 text-primary mt-1" />
-              <div>
-                <h3 className="font-medium">Relationships</h3>
-                <p className="text-sm text-gray-500">Define and track data relationships</p>
+            
+            <Separator className="my-8" />
+            
+            <Carousel className="w-full max-w-xl mx-auto">
+              <CarouselContent>
+                {/* Slide 1: Overview */}
+                <CarouselItem className="p-1">
+                  <Card className="card-with-bg">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="p-3 bg-blue-100 rounded-lg">
+                          <Database className="h-8 w-8 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold">Enterprise Data Solution</h3>
+                          <p className="text-sm text-gray-500">Comprehensive Reference Data Platform</p>
+                        </div>
+                      </div>
+                      <p className="text-gray-700 mb-4">
+                        A complete solution for managing, governing, and leveraging business-critical 
+                        reference data across your organization.
+                      </p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="flex items-start gap-2">
+                          <Shield className="h-5 w-5 text-blue-600 mt-1" />
+                          <div>
+                            <h4 className="font-medium">Data Governance</h4>
+                            <p className="text-sm text-gray-500">Enterprise-grade controls</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Globe className="h-5 w-5 text-blue-600 mt-1" />
+                          <div>
+                            <h4 className="font-medium">Global Standards</h4>
+                            <p className="text-sm text-gray-500">Industry-compliant formats</p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+                
+                {/* Slide 2: Key Features */}
+                <CarouselItem className="p-1">
+                  <Card className="card-with-bg">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="p-3 bg-indigo-100 rounded-lg">
+                          <Layers className="h-8 w-8 text-indigo-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold">Key Capabilities</h3>
+                          <p className="text-sm text-gray-500">Powerful Data Management Features</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="flex items-start gap-2">
+                          <Database className="h-5 w-5 text-indigo-600 mt-1" />
+                          <div>
+                            <h4 className="font-medium">Data Management</h4>
+                            <p className="text-sm text-gray-500">Centralized control</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <GitFork className="h-5 w-5 text-indigo-600 mt-1" />
+                          <div>
+                            <h4 className="font-medium">Relationships</h4>
+                            <p className="text-sm text-gray-500">Track connections</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <History className="h-5 w-5 text-indigo-600 mt-1" />
+                          <div>
+                            <h4 className="font-medium">Audit History</h4>
+                            <p className="text-sm text-gray-500">Complete change tracking</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <GitCompare className="h-5 w-5 text-indigo-600 mt-1" />
+                          <div>
+                            <h4 className="font-medium">Crosswalks</h4>
+                            <p className="text-sm text-gray-500">System mapping</p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+                
+                {/* Slide 3: Business Benefits */}
+                <CarouselItem className="p-1">
+                  <Card className="card-with-bg">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="p-3 bg-green-100 rounded-lg">
+                          <BarChart3 className="h-8 w-8 text-green-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold">Business Benefits</h3>
+                          <p className="text-sm text-gray-500">Measurable Operational Improvements</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">1</div>
+                          <div>
+                            <h4 className="font-medium">Enhanced Data Quality</h4>
+                            <p className="text-sm text-gray-500">Reduce errors and inconsistencies across systems</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">2</div>
+                          <div>
+                            <h4 className="font-medium">Operational Efficiency</h4>
+                            <p className="text-sm text-gray-500">Streamline data management workflows</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">3</div>
+                          <div>
+                            <h4 className="font-medium">Regulatory Compliance</h4>
+                            <p className="text-sm text-gray-500">Meet reporting requirements with confidence</p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              </CarouselContent>
+              <div className="flex justify-center mt-4">
+                <CarouselPrevious className="relative mx-1 inset-0 translate-y-0" />
+                <CarouselNext className="relative mx-1 inset-0 translate-y-0" />
               </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <History className="h-5 w-5 text-primary mt-1" />
-              <div>
-                <h3 className="font-medium">Audit History</h3>
-                <p className="text-sm text-gray-500">Track all data changes</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <GitCompare className="h-5 w-5 text-primary mt-1" />
-              <div>
-                <h3 className="font-medium">Crosswalks</h3>
-                <p className="text-sm text-gray-500">Map between different systems</p>
+            </Carousel>
+            
+            <div className="flex flex-col items-center mt-8">
+              <p className="text-center text-sm text-gray-500 max-w-md">
+                Trusted by organizations worldwide to manage critical reference data
+                and streamline information governance processes.
+              </p>
+              <div className="mt-4 flex items-center space-x-1">
+                <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                <span className="w-5 h-1 rounded-full bg-blue-400"></span>
+                <span className="w-3 h-1 rounded-full bg-blue-300"></span>
+                <span className="ml-1 text-blue-600 text-xs font-semibold">Blumetra Solutions</span>
               </div>
             </div>
           </div>
