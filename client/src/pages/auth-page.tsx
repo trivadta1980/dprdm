@@ -469,7 +469,34 @@ export default function AuthPage() {
                   </Card>
                 </CarouselItem>
                 
-                {/* Slide 3: Business Benefits */}
+                {/* Slide 3: What is RDM - Visual Explanation */}
+                <CarouselItem className="p-1">
+                  <Card className="card-with-bg">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="p-3 bg-blue-100 rounded-lg">
+                          <FileText className="h-8 w-8 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold">What is Reference Data Management?</h3>
+                          <p className="text-sm text-gray-500">Core Concepts Explained</p>
+                        </div>
+                      </div>
+                      <div className="mt-3 mb-2">
+                        <img 
+                          src="/assets/images/rdm-explanation.png" 
+                          alt="Reference Data Management explanation" 
+                          className="w-full h-auto object-contain rounded-md"
+                        />
+                      </div>
+                      <p className="text-sm text-gray-600 mt-2 text-center italic">
+                        The building blocks of an organization's data ecosystem
+                      </p>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+                
+                {/* Slide 4: Business Benefits */}
                 <CarouselItem className="p-1">
                   <Card className="card-with-bg">
                     <CardContent className="p-6">
