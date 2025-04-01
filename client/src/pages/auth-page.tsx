@@ -484,8 +484,8 @@ export default function AuthPage() {
                       </div>
                       <div className="mt-3 mb-2">
                         <img 
-                          src="/assets/images/rdm-explanation.png" 
-                          alt="Reference Data Management explanation" 
+                          src="/assets/images/rdm-concept.png" 
+                          alt="Reference Data Management concepts" 
                           className="w-full h-auto object-contain rounded-md"
                         />
                       </div>
