@@ -2,7 +2,7 @@
  * Custom hook for listening to approval-related events
  */
 import { useEffect } from 'react';
-import { EventBus, EventTypes, EventPayload } from '@/lib/eventBus';
+import { EventBus, EventPayload } from '@/lib/eventBus';
 import { useQueryClient } from '@tanstack/react-query';
 
 /**
