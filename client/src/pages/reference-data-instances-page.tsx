@@ -86,6 +86,15 @@ export default function ReferenceDataInstancesPage() {
     dataSetId: dataSetId || undefined,
     onApprovalChange: (payload) => {
       console.log('[ReferenceDataInstancesPage] Approval event received:', payload);
+      
+      // Show toast notification about the approval event
+      if (payload.actionType === 'approve') {
+        toast({
+          title: "Data refreshed",
+          description: "The instance data has been updated due to an approval event.",
+          variant: "default",
+        });
+      }
     }
   });
   const [editingDataSet, setEditingDataSet] = useState<ExtendedReferenceDataInstance | null>(null);

@@ -31,7 +31,11 @@ export function useApprovalEvents({
         if (!dataSetId || payload.dataSetId === dataSetId) {
           // Invalidate queries related to the data set
           if (dataSetId) {
+            // This is the primary query key used in reference-data-instances-page
+            console.log(`[useApprovalEvents] Invalidating query for dataSetId: ${dataSetId}`);
             queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
+            
+            // Also invalidate other related queries that might be in use
             queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}/instances`] });
           } else {
             // If no specific dataset, invalidate all reference data
@@ -56,7 +60,11 @@ export function useApprovalEvents({
         if (!dataSetId || payload.dataSetId === dataSetId) {
           // Invalidate queries related to the data set
           if (dataSetId) {
+            // This is the primary query key used in reference-data-instances-page
+            console.log(`[useApprovalEvents] Invalidating query for dataSetId: ${dataSetId} (data update)`);
             queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
+            
+            // Also invalidate other related queries that might be in use
             queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}/instances`] });
           } else {
             // If no specific dataset, invalidate all reference data
