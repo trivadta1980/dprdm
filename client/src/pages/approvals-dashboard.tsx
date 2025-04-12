@@ -141,8 +141,6 @@ export default function ApprovalsDashboard() {
   const [selectedSourceSystem, setSelectedSourceSystem] = useState("all");
   const [selectedTargetSystem, setSelectedTargetSystem] = useState("all"); 
   const [crosswalkDateRange, setCrosswalkDateRange] = useState<DateRange | undefined>();
-  const [crosswalkPage, setCrosswalkPage] = useState(1);
-  const [crosswalkPageSize, setCrosswalkPageSize] = useState(50);
 
   // Fetch relationship types for dropdown
   const { data: relationshipTypes = [] } = useQuery({
