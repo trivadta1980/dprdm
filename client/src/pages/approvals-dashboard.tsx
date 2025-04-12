@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Check, X, History, FileText, CheckSquare, Search, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useApprovalEvents } from "@/hooks/use-approval-events";
+import { EventBus, dispatchApprovalStatusChange, dispatchDataUpdate, EventPayload, EventTypes } from "@/lib/eventBus";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -32,7 +34,6 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { addDays } from "date-fns";
 import { useState, useEffect } from "react";
 import { DateRange } from "react-day-picker";
-import { EventBus, dispatchApprovalStatusChange, dispatchDataUpdate, EventTypes } from "@/lib/eventBus";
 
 interface PendingApproval {
   dataSetId: number;
@@ -405,16 +406,6 @@ export default function ApprovalsDashboard() {
     },
   });
 
-      // Since relationships connect datasets, we should invalidate both source and target datasets
-      console.log(`[ApprovalsDashboard] Relationship rejection - invalidating related dataset queries`);
-      if (value.sourceDatasetId) {
-        console.log(`[ApprovalsDashboard] Invalidating source dataset query: /api/reference-data/${value.sourceDatasetId}`);
-        queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${value.sourceDatasetId}`] });
-      }
-      if (value.targetDatasetId) {
-        console.log(`[ApprovalsDashboard] Invalidating target dataset query: /api/reference-data/${value.targetDatasetId}`);
-        queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${value.targetDatasetId}`] });
-      }
   // Rejection mutation for relationship values
   const rejectRelationshipMutation = useMutation({
     mutationFn: async (value: PendingRelationshipValue) => {
@@ -435,6 +426,17 @@ export default function ApprovalsDashboard() {
       
       // This will invalidate the specific relationship values list that the rejected item belonged to
       queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
+      
+      // Since relationships connect datasets, we should invalidate both source and target datasets
+      console.log(`[ApprovalsDashboard] Relationship rejection - invalidating related dataset queries`);
+      if (value.sourceDatasetId) {
+        console.log(`[ApprovalsDashboard] Invalidating source dataset query: /api/reference-data/${value.sourceDatasetId}`);
+        queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${value.sourceDatasetId}`] });
+      }
+      if (value.targetDatasetId) {
+        console.log(`[ApprovalsDashboard] Invalidating target dataset query: /api/reference-data/${value.targetDatasetId}`);
+        queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${value.targetDatasetId}`] });
+      }
       
       // Dispatch event to notify other components about the rejection
       dispatchApprovalStatusChange({
@@ -471,6 +473,17 @@ export default function ApprovalsDashboard() {
       return results;
     },
     onSuccess: (_, approvals) => {
+      // Group approvals by dataset for more efficient event dispatching
+      const approvalsByDataset: Record<number, string[]> = {};
+      
+      // Collect all instance IDs by dataset
+      approvals.forEach(approval => {
+        if (!approvalsByDataset[approval.dataSetId]) {
+          approvalsByDataset[approval.dataSetId] = [];
+        }
+        approvalsByDataset[approval.dataSetId].push(approval.instanceId);
+      });
+      
       // Invalidate all approval-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
@@ -480,15 +493,13 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
       queryClient.invalidateQueries({ queryKey: ["/api/relationships/types", { forDropdown: true }] });
+      
       // Also invalidate specific dataset queries for all affected datasets
       console.log(`[ApprovalsDashboard] Bulk approval - invalidating specific dataset queries for affected datasets`);
       Object.keys(approvalsByDataset).forEach(dataSetId => {
         console.log(`[ApprovalsDashboard] Invalidating dataset query: /api/reference-data/${dataSetId}`);
         queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
       });
-      
-      // Group approvals by dataset for more efficient event dispatching
-      const approvalsByDataset: Record<number, string[]> = {};
       
       // Collect all instance IDs by dataset
       approvals.forEach(approval => {
