@@ -347,6 +347,11 @@ export const crosswalkMappings = pgTable("crosswalk_mappings", {
     .references(() => referenceDataSets.id)
     .notNull(),
   mappingData: jsonb("mapping_data").notNull(), // Stores key-value pairs for the mapping
+  // Add approval-related fields
+  approvalStatus: approvalStatusEnum("approval_status").default("DRAFT").notNull(),
+  approvedBy: integer("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  changeHistory: jsonb("change_history").default([]).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -361,6 +366,10 @@ export const crosswalkMappingsRelations = relations(crosswalkMappings, ({ one })
     fields: [crosswalkMappings.targetSystemId],
     references: [referenceDataSets.id],
   }),
+  approver: one(users, {
+    fields: [crosswalkMappings.approvedBy],
+    references: [users.id],
+  }),
 }));
 
 // Add after existing schemas
@@ -369,6 +378,15 @@ export const insertCrosswalkMappingSchema = createInsertSchema(crosswalkMappings
   targetSystemId: z.coerce.number(),
   name: z.string().min(1, "Mapping name is required"),
   mappingData: z.record(z.string(), z.any()),
+  approvalStatus: z.enum(["DRAFT", "PENDING", "APPROVED", "REJECTED"]).default("DRAFT"),
+  changeHistory: z.array(z.object({
+    timestamp: z.string(),
+    prevStatus: z.enum(["DRAFT", "PENDING", "APPROVED", "REJECTED"]),
+    newStatus: z.enum(["DRAFT", "PENDING", "APPROVED", "REJECTED"]),
+    userId: z.number(),
+    comment: z.string().optional(),
+    changes: z.record(z.string(), z.any()).optional()
+  })).default([])
 });
 
 // Add after existing types
