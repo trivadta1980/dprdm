@@ -913,13 +913,13 @@ export default function ApprovalsDashboard() {
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList>
                 <TabsTrigger value="dataset-instances">
-                  Dataset Instances ({datasetInstancesResponse.metadata.totalCount})
+                  Dataset Instances ({datasetInstancesResponse?.metadata?.totalCount || 0})
                 </TabsTrigger>
                 <TabsTrigger value="relationship-values">
-                  Relationship Values ({relationshipValuesResponse.metadata.totalCount})
+                  Relationship Values ({relationshipValuesResponse?.metadata?.totalCount || 0})
                 </TabsTrigger>
                 <TabsTrigger value="crosswalk-mappings">
-                  Crosswalk Mappings ({crosswalkMappingsResponse.metadata.totalCount})
+                  Crosswalk Mappings ({crosswalkMappingsResponse?.metadata?.totalCount || 0})
                 </TabsTrigger>
               </TabsList>
 
@@ -981,7 +981,7 @@ export default function ApprovalsDashboard() {
                   </div>
                 </div>
                 
-                {datasetInstancesResponse.data.length === 0 ? (
+                {!datasetInstancesResponse?.data?.length ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No pending dataset instance approvals
                   </div>
@@ -989,7 +989,7 @@ export default function ApprovalsDashboard() {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <div className="text-sm text-muted-foreground">
-                        Showing {datasetInstancesResponse.data.length} of {datasetInstancesResponse.metadata.totalCount} pending approvals
+                        Showing {datasetInstancesResponse?.data?.length || 0} of {datasetInstancesResponse?.metadata?.totalCount || 0} pending approvals
                       </div>
                       <Button
                         onClick={handleBulkApprove}
@@ -1148,7 +1148,7 @@ export default function ApprovalsDashboard() {
                     <div className="h-20 bg-muted animate-pulse rounded" />
                     <div className="h-20 bg-muted animate-pulse rounded" />
                   </div>
-                ) : relationshipValuesResponse.data.length === 0 ? (
+                ) : !relationshipValuesResponse?.data?.length ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No pending relationship value approvals
                   </div>
@@ -1428,7 +1428,7 @@ export default function ApprovalsDashboard() {
                     <div className="h-20 bg-muted animate-pulse rounded" />
                     <div className="h-20 bg-muted animate-pulse rounded" />
                   </div>
-                ) : crosswalkMappingsResponse.data.length === 0 ? (
+                ) : !crosswalkMappingsResponse?.data?.length ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No pending crosswalk mapping approvals
                   </div>
