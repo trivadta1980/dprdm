@@ -152,3 +152,31 @@ export const dispatchApprovalStatusChange = (
     timestamp: new Date().toISOString()
   });
 };
+
+/**
+ * Convenience function for dispatching crosswalk mapping update events
+ */
+export const dispatchCrosswalkUpdate = (
+  crosswalkMappingId: number,
+  actionType: 'approve' | 'reject' | 'update' | 'delete'
+): void => {
+  EventBus.dispatch('crosswalkUpdated', {
+    crosswalkMappingId,
+    timestamp: new Date().toISOString(),
+    actionType
+  });
+};
+
+/**
+ * Convenience function for dispatching bulk crosswalk mapping update events
+ */
+export const dispatchBulkCrosswalkUpdate = (
+  crosswalkMappingIds: number[],
+  actionType: 'approve' | 'reject' | 'update' | 'delete'
+): void => {
+  EventBus.dispatch('crosswalkUpdated', {
+    crosswalkMappingIds,
+    timestamp: new Date().toISOString(),
+    actionType
+  });
+};

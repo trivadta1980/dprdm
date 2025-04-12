@@ -1005,6 +1005,38 @@ export class DatabaseStorage implements IStorage {
   async rejectCrosswalkMapping(id: number, userId: number, comment?: string): Promise<CrosswalkMapping> {
     return this.updateCrosswalkMappingStatus(id, "REJECTED", userId, comment);
   }
+  
+  async bulkApproveCrosswalkMappings(ids: number[], userId: number, comment?: string): Promise<CrosswalkMapping[]> {
+    const results: CrosswalkMapping[] = [];
+    
+    for (const id of ids) {
+      try {
+        const mapping = await this.approveCrosswalkMapping(id, userId, comment);
+        results.push(mapping);
+      } catch (error) {
+        console.error(`Error approving crosswalk mapping ${id}:`, error);
+        // Continue with other mappings even if one fails
+      }
+    }
+    
+    return results;
+  }
+
+  async bulkRejectCrosswalkMappings(ids: number[], userId: number, comment?: string): Promise<CrosswalkMapping[]> {
+    const results: CrosswalkMapping[] = [];
+    
+    for (const id of ids) {
+      try {
+        const mapping = await this.rejectCrosswalkMapping(id, userId, comment);
+        results.push(mapping);
+      } catch (error) {
+        console.error(`Error rejecting crosswalk mapping ${id}:`, error);
+        // Continue with other mappings even if one fails
+      }
+    }
+    
+    return results;
+  }
 
   async updateCrosswalkMappingStatus(
     id: number,

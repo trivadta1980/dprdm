@@ -2400,7 +2400,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const comment = req.body.comment;
 
       const mapping = await storage.approveCrosswalkMapping(mappingId, userId, comment);
+      
+      // Log and dispatch event for UI refresh
       console.log('POST /api/crosswalks/:id/approve - Mapping approved successfully');
+      
+      // Broadcast approval event to update UI components
+      res.app.emit('crosswalkMappingApproved', {
+        crosswalkMappingId: mappingId,
+        actionType: 'approve',
+        userId
+      });
+      
       res.json(mapping);
     } catch (error) {
       console.error('POST /api/crosswalks/:id/approve - Error:', error);
@@ -2421,7 +2431,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const comment = req.body.comment;
 
       const mapping = await storage.rejectCrosswalkMapping(mappingId, userId, comment);
+      
+      // Log and dispatch event for UI refresh
       console.log('POST /api/crosswalks/:id/reject - Mapping rejected successfully');
+      
+      // Broadcast rejection event to update UI components
+      res.app.emit('crosswalkMappingRejected', {
+        crosswalkMappingId: mappingId,
+        actionType: 'reject',
+        userId
+      });
+      
       res.json(mapping);
     } catch (error) {
       console.error('POST /api/crosswalks/:id/reject - Error:', error);
@@ -2438,7 +2458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const { ids } = req.body;
+      const { ids, comment } = req.body;
       const userId = req.user.id;
       
       if (!Array.isArray(ids) || ids.length === 0) {
@@ -2446,27 +2466,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No IDs provided for bulk approval" });
       }
 
-      const results = await Promise.all(
-        ids.map(async (id) => {
-          try {
-            return await storage.approveCrosswalkMapping(id, userId);
-          } catch (err) {
-            console.error(`Error approving mapping ${id}:`, err);
-            return null;
-          }
-        })
-      );
-
-      const successCount = results.filter(r => r !== null).length;
+      const results = await storage.bulkApproveCrosswalkMappings(ids, userId, comment);
+      const successCount = results.length;
       
       console.log(`POST /api/approvals/crosswalk-mappings/bulk-approve - Successfully approved ${successCount}/${ids.length} mappings`);
+      
+      // Broadcast bulk approval event to update UI components
+      res.app.emit('crosswalkMappingBulkApproved', {
+        crosswalkMappingIds: ids,
+        actionType: 'approve',
+        userId: userId
+      });
+      
       res.json({ 
         success: true, 
         message: `Successfully approved ${successCount}/${ids.length} mappings`,
-        results: results.filter(r => r !== null)
+        results
       });
     } catch (error) {
       console.error('POST /api/approvals/crosswalk-mappings/bulk-approve - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+  
+  app.post("/api/approvals/crosswalk-mappings/bulk-reject", async (req, res) => {
+    console.log('POST /api/approvals/crosswalk-mappings/bulk-reject - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/approvals/crosswalk-mappings/bulk-reject - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      const { ids, comment } = req.body;
+      const userId = req.user.id;
+      
+      if (!Array.isArray(ids) || ids.length === 0) {
+        console.log('POST /api/approvals/crosswalk-mappings/bulk-reject - Invalid request, no IDs provided');
+        return res.status(400).json({ error: "No IDs provided for bulk rejection" });
+      }
+
+      const results = await storage.bulkRejectCrosswalkMappings(ids, userId, comment);
+      const successCount = results.length;
+      
+      console.log(`POST /api/approvals/crosswalk-mappings/bulk-reject - Successfully rejected ${successCount}/${ids.length} mappings`);
+      
+      // Broadcast bulk rejection event to update UI components
+      res.app.emit('crosswalkMappingBulkRejected', {
+        crosswalkMappingIds: ids,
+        actionType: 'reject',
+        userId: userId
+      });
+      
+      res.json({ 
+        success: true, 
+        message: `Successfully rejected ${successCount}/${ids.length} mappings`,
+        results
+      });
+    } catch (error) {
+      console.error('POST /api/approvals/crosswalk-mappings/bulk-reject - Error:', error);
       res.status(500).json({ error: String(error) });
     }
   });
