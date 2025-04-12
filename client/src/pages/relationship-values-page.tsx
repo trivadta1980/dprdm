@@ -76,11 +76,11 @@ export default function RelationshipValuesPage() {
     console.log(`[RelationshipValuesPage] Setting up event listeners for relationship ${id}`);
     
     // Handler for approval events
-    const handleApprovalEvent = (event: CustomEvent) => {
-      console.log("[RelationshipValuesPage] Received approval event:", event.detail);
+    const handleApprovalEvent = (payload: EventPayload) => {
+      console.log("[RelationshipValuesPage] Received approval event:", payload);
       
       // Check if this event is relevant to this relationship
-      if (event.detail.relationshipId === Number(id) || !event.detail.relationshipId) {
+      if (payload.relationshipId === Number(id) || !payload.relationshipId) {
         console.log(`[RelationshipValuesPage] Invalidating queries for relationship ${id}`);
         
         // Refresh the data by invalidating queries
@@ -88,17 +88,20 @@ export default function RelationshipValuesPage() {
       }
     };
     
-    // Subscribe to all relevant events
-    window.addEventListener(EventType.RELATIONSHIP_VALUE_APPROVED, handleApprovalEvent as EventListener);
-    window.addEventListener(EventType.RELATIONSHIP_VALUE_REJECTED, handleApprovalEvent as EventListener);
-    window.addEventListener(EventType.APPROVAL_STATUS_CHANGED, handleApprovalEvent as EventListener);
+    // Use the EventBus subscription method which handles the CustomEvent unwrapping
+    const unsubscribe1 = eventBus.subscribe(EventType.RELATIONSHIP_VALUE_APPROVED, handleApprovalEvent);
+    const unsubscribe2 = eventBus.subscribe(EventType.RELATIONSHIP_VALUE_REJECTED, handleApprovalEvent);
+    const unsubscribe3 = eventBus.subscribe(EventType.APPROVAL_STATUS_CHANGED, handleApprovalEvent);
+    
+    // Log that we've subscribed
+    console.log(`[RelationshipValuesPage] Subscribed to approval events for relationship ${id}`);
     
     // Cleanup when component unmounts
     return () => {
       console.log(`[RelationshipValuesPage] Removing event listeners for relationship ${id}`);
-      window.removeEventListener(EventType.RELATIONSHIP_VALUE_APPROVED, handleApprovalEvent as EventListener);
-      window.removeEventListener(EventType.RELATIONSHIP_VALUE_REJECTED, handleApprovalEvent as EventListener);
-      window.removeEventListener(EventType.APPROVAL_STATUS_CHANGED, handleApprovalEvent as EventListener);
+      unsubscribe1();
+      unsubscribe2();
+      unsubscribe3();
     };
   }, [id, queryClient]);
 
