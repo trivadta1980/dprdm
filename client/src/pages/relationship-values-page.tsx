@@ -71,6 +71,37 @@ export default function RelationshipValuesPage() {
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
   const [isBulkSubmitDialogOpen, setIsBulkSubmitDialogOpen] = useState(false);
 
+  // Set up event listeners for approval events
+  useEffect(() => {
+    console.log(`[RelationshipValuesPage] Setting up event listeners for relationship ${id}`);
+    
+    // Handler for approval events
+    const handleApprovalEvent = (event: CustomEvent) => {
+      console.log("[RelationshipValuesPage] Received approval event:", event.detail);
+      
+      // Check if this event is relevant to this relationship
+      if (event.detail.relationshipId === Number(id) || !event.detail.relationshipId) {
+        console.log(`[RelationshipValuesPage] Invalidating queries for relationship ${id}`);
+        
+        // Refresh the data by invalidating queries
+        queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
+      }
+    };
+    
+    // Subscribe to all relevant events
+    window.addEventListener(EventType.RELATIONSHIP_VALUE_APPROVED, handleApprovalEvent as EventListener);
+    window.addEventListener(EventType.RELATIONSHIP_VALUE_REJECTED, handleApprovalEvent as EventListener);
+    window.addEventListener(EventType.APPROVAL_STATUS_CHANGED, handleApprovalEvent as EventListener);
+    
+    // Cleanup when component unmounts
+    return () => {
+      console.log(`[RelationshipValuesPage] Removing event listeners for relationship ${id}`);
+      window.removeEventListener(EventType.RELATIONSHIP_VALUE_APPROVED, handleApprovalEvent as EventListener);
+      window.removeEventListener(EventType.RELATIONSHIP_VALUE_REJECTED, handleApprovalEvent as EventListener);
+      window.removeEventListener(EventType.APPROVAL_STATUS_CHANGED, handleApprovalEvent as EventListener);
+    };
+  }, [id, queryClient]);
+
   // Fetch relationship details and data
   const { data: relationship } = useQuery<Relationship>({
     queryKey: [`/api/relationships/${id}`],
@@ -302,7 +333,9 @@ export default function RelationshipValuesPage() {
       // Publish event to notify other components of the new relationship value submission
       eventBus.publish(EventType.RELATIONSHIP_VALUE_SUBMITTED_FOR_APPROVAL, {
         relationshipId: Number(id),
-        valueId: variables
+        relationshipValueIds: [variables],
+        timestamp: new Date().toISOString(),
+        actionType: 'update'
       });
       
       toast({
@@ -326,12 +359,21 @@ export default function RelationshipValuesPage() {
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       // Invalidate both relationship-specific queries and approvals dashboard data
       queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
       queryClient.invalidateQueries({ queryKey: ['/api/approvals'] });
       queryClient.invalidateQueries({ queryKey: ['/api/approvals/pending'] });
       queryClient.invalidateQueries({ queryKey: ['/api/approvals/relationship-values/pending'] });
+      
+      // Publish event for approval
+      eventBus.publish(EventType.RELATIONSHIP_VALUE_APPROVED, {
+        relationshipId: Number(id),
+        relationshipValueIds: [variables],
+        timestamp: new Date().toISOString(),
+        actionType: 'approve'
+      });
+      
       toast({
         title: "Success",
         description: "Relationship value approved",
@@ -353,12 +395,21 @@ export default function RelationshipValuesPage() {
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       // Invalidate both relationship-specific queries and approvals dashboard data
       queryClient.invalidateQueries({ queryKey: [`/api/relationships/${id}/values`] });
       queryClient.invalidateQueries({ queryKey: ['/api/approvals'] });
       queryClient.invalidateQueries({ queryKey: ['/api/approvals/pending'] });
       queryClient.invalidateQueries({ queryKey: ['/api/approvals/relationship-values/pending'] });
+      
+      // Publish event for rejection
+      eventBus.publish(EventType.RELATIONSHIP_VALUE_REJECTED, {
+        relationshipId: Number(id),
+        relationshipValueIds: [variables],
+        timestamp: new Date().toISOString(),
+        actionType: 'reject'
+      });
+      
       toast({
         title: "Success",
         description: "Relationship value rejected",
@@ -417,13 +468,12 @@ export default function RelationshipValuesPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/approvals/pending'] });
       queryClient.invalidateQueries({ queryKey: ['/api/approvals/relationship-values/pending'] });
       
-      // Publish event to notify other components of bulk relationship value submissions
-      // For each relationship value submitted, trigger an event
-      variables.forEach(valueId => {
-        eventBus.publish(EventType.RELATIONSHIP_VALUE_SUBMITTED_FOR_APPROVAL, {
-          relationshipId: Number(id),
-          valueId: valueId
-        });
+      // Publish single event for all submitted relationship values
+      eventBus.publish(EventType.RELATIONSHIP_VALUE_SUBMITTED_FOR_APPROVAL, {
+        relationshipId: Number(id),
+        relationshipValueIds: variables,
+        timestamp: new Date().toISOString(),
+        actionType: 'update'
       });
       
       setSelectedItems(new Set());
