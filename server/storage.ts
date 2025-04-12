@@ -111,6 +111,12 @@ export interface IStorage {
   getCrosswalkMappingsByTargetId(targetId: number): Promise<CrosswalkMapping[]>;
   updateCrosswalkMapping(id: number, mapping: Partial<InsertCrosswalkMapping>): Promise<CrosswalkMapping>;
   deleteCrosswalkMapping(id: number): Promise<boolean>;
+  
+  // Crosswalk mapping approval methods
+  getPendingCrosswalkMappings(): Promise<CrosswalkMapping[]>;
+  approveCrosswalkMapping(id: number, userId: number, comment?: string): Promise<CrosswalkMapping>;
+  rejectCrosswalkMapping(id: number, userId: number, comment?: string): Promise<CrosswalkMapping>;
+  updateCrosswalkMappingStatus(id: number, status: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED", userId: number, comment?: string): Promise<CrosswalkMapping>;
 
   // Dashboard metrics and activity
   getDashboardMetrics(): Promise<{
@@ -981,6 +987,73 @@ export class DatabaseStorage implements IStorage {
       .where(eq(crosswalkMappings.id, id))
       .returning();
     return !!mapping;
+  }
+
+  // Crosswalk mapping approval methods
+  async getPendingCrosswalkMappings(): Promise<CrosswalkMapping[]> {
+    return db
+      .select()
+      .from(crosswalkMappings)
+      .where(eq(crosswalkMappings.approvalStatus, "PENDING"))
+      .orderBy(desc(crosswalkMappings.createdAt));
+  }
+
+  async approveCrosswalkMapping(id: number, userId: number, comment?: string): Promise<CrosswalkMapping> {
+    return this.updateCrosswalkMappingStatus(id, "APPROVED", userId, comment);
+  }
+
+  async rejectCrosswalkMapping(id: number, userId: number, comment?: string): Promise<CrosswalkMapping> {
+    return this.updateCrosswalkMappingStatus(id, "REJECTED", userId, comment);
+  }
+
+  async updateCrosswalkMappingStatus(
+    id: number,
+    status: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED",
+    userId: number,
+    comment?: string
+  ): Promise<CrosswalkMapping> {
+    // Get the current status first
+    const currentMapping = await this.getCrosswalkMapping(id);
+    if (!currentMapping) {
+      throw new Error(`Crosswalk mapping with ID ${id} not found`);
+    }
+
+    const prevStatus = currentMapping.approvalStatus;
+    const timestamp = new Date().toISOString();
+
+    // Create a history entry
+    const historyEntry: ChangeHistoryEntry = {
+      timestamp,
+      prevStatus,
+      newStatus: status,
+      userId,
+      comment: comment || ""
+    };
+
+    // Get current history or initialize empty array
+    const currentHistory = currentMapping.changeHistory as ChangeHistoryEntry[] || [];
+    const updatedHistory = [...currentHistory, historyEntry];
+
+    // Update fields based on new status
+    const updates: Partial<CrosswalkMapping> = {
+      approvalStatus: status,
+      changeHistory: updatedHistory
+    };
+
+    // For approved status, add approver info
+    if (status === "APPROVED") {
+      updates.approvedBy = userId;
+      updates.approvedAt = new Date();
+    }
+
+    // Apply the updates
+    const [updatedMapping] = await db
+      .update(crosswalkMappings)
+      .set(updates)
+      .where(eq(crosswalkMappings.id, id))
+      .returning();
+
+    return updatedMapping;
   }
 
   async getDashboardMetrics(): Promise<{

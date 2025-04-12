@@ -2336,6 +2336,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Add after existing relationship value routes
+  
+  // Crosswalk Mapping Approval Endpoints
+  app.get("/api/approvals/crosswalk-mappings/pending", async (req, res) => {
+    console.log('GET /api/approvals/crosswalk-mappings/pending - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/approvals/crosswalk-mappings/pending - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      // Get pending crosswalk mappings
+      const pendingMappings = await storage.getPendingCrosswalkMappings();
+      
+      // Enhance with source and target system names
+      const enhancedMappings = await Promise.all(
+        pendingMappings.map(async (mapping) => {
+          const sourceSystem = await storage.getReferenceDataSet(mapping.sourceSystemId);
+          const targetSystem = await storage.getReferenceDataSet(mapping.targetSystemId);
+          
+          return {
+            ...mapping,
+            sourceSystemName: sourceSystem?.name || 'Unknown System',
+            targetSystemName: targetSystem?.name || 'Unknown System'
+          };
+        })
+      );
+      
+      console.log('GET /api/approvals/crosswalk-mappings/pending - Mappings fetched successfully:', enhancedMappings.length);
+      res.json(enhancedMappings);
+    } catch (error) {
+      console.error('GET /api/approvals/crosswalk-mappings/pending - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.post("/api/crosswalks/:id/approve", async (req, res) => {
+    console.log('POST /api/crosswalks/:id/approve - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/crosswalks/:id/approve - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      const mappingId = parseInt(req.params.id);
+      const userId = req.user.id;
+      const comment = req.body.comment;
+
+      const mapping = await storage.approveCrosswalkMapping(mappingId, userId, comment);
+      console.log('POST /api/crosswalks/:id/approve - Mapping approved successfully');
+      res.json(mapping);
+    } catch (error) {
+      console.error('POST /api/crosswalks/:id/approve - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  app.post("/api/crosswalks/:id/reject", async (req, res) => {
+    console.log('POST /api/crosswalks/:id/reject - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/crosswalks/:id/reject - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      const mappingId = parseInt(req.params.id);
+      const userId = req.user.id;
+      const comment = req.body.comment;
+
+      const mapping = await storage.rejectCrosswalkMapping(mappingId, userId, comment);
+      console.log('POST /api/crosswalks/:id/reject - Mapping rejected successfully');
+      res.json(mapping);
+    } catch (error) {
+      console.error('POST /api/crosswalks/:id/reject - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
+  // Add bulk approval endpoint for crosswalk mappings
+  app.post("/api/approvals/crosswalk-mappings/bulk-approve", async (req, res) => {
+    console.log('POST /api/approvals/crosswalk-mappings/bulk-approve - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/approvals/crosswalk-mappings/bulk-approve - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      const { ids } = req.body;
+      const userId = req.user.id;
+      
+      if (!Array.isArray(ids) || ids.length === 0) {
+        console.log('POST /api/approvals/crosswalk-mappings/bulk-approve - Invalid request, no IDs provided');
+        return res.status(400).json({ error: "No IDs provided for bulk approval" });
+      }
+
+      const results = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            return await storage.approveCrosswalkMapping(id, userId);
+          } catch (err) {
+            console.error(`Error approving mapping ${id}:`, err);
+            return null;
+          }
+        })
+      );
+
+      const successCount = results.filter(r => r !== null).length;
+      
+      console.log(`POST /api/approvals/crosswalk-mappings/bulk-approve - Successfully approved ${successCount}/${ids.length} mappings`);
+      res.json({ 
+        success: true, 
+        message: `Successfully approved ${successCount}/${ids.length} mappings`,
+        results: results.filter(r => r !== null)
+      });
+    } catch (error) {
+      console.error('POST /api/approvals/crosswalk-mappings/bulk-approve - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
   app.delete("/api/relationships/:id/values", async (req, res) => {
     console.log('DELETE /api/relationships/:id/values - Request received');
     if (!req.isAuthenticated()) {
