@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/main-layout";
-import { eventBus, EventType } from "@/lib/eventBus";
+import { EventBus, EventPayload } from "@/lib/eventBus";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -287,9 +287,11 @@ export default function ReferenceDataInstancesPage() {
       queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
       
       // Publish event to notify other components (like approvals dashboard)
-      eventBus.publish(EventType.INSTANCE_SUBMITTED_FOR_APPROVAL, {
+      EventBus.dispatch('approvalStatusChanged', {
         dataSetId: dataSetId!,
-        instanceId: instanceId
+        instanceIds: [instanceId],
+        timestamp: new Date().toISOString(),
+        actionType: 'update'
       });
       
       toast({
@@ -604,11 +606,12 @@ export default function ReferenceDataInstancesPage() {
       queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
       
       // Publish events for each instance to notify other components (like approvals dashboard)
-      instanceIds.forEach(instanceId => {
-        eventBus.publish(EventType.INSTANCE_SUBMITTED_FOR_APPROVAL, {
-          dataSetId: dataSetId!,
-          instanceId: instanceId
-        });
+      // Use new EventBus system
+      EventBus.dispatch('approvalStatusChanged', {
+        dataSetId: dataSetId!,
+        instanceIds: instanceIds,
+        timestamp: new Date().toISOString(),
+        actionType: 'update'
       });
       
       toast({
