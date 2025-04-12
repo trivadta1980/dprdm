@@ -381,8 +381,12 @@ export default function ApprovalsDashboard() {
         queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${value.targetDatasetId}`] });
       }
       
-      // This will invalidate the specific relationship values list that the approved item belonged to
+      // This will invalidate relationships queries
       queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
+      
+      // Invalidate specific relationship values queries
+      console.log(`[ApprovalsDashboard] Relationship approval - invalidating relationship values: /api/relationships/${value.relationshipId}/values`);
+      queryClient.invalidateQueries({ queryKey: [`/api/relationships/${value.relationshipId}/values`] });
       
       // Dispatch event to notify other components about the approval
       dispatchApprovalStatusChange({
@@ -424,8 +428,12 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/relationships/types", { forDropdown: true }] });
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       
-      // This will invalidate the specific relationship values list that the rejected item belonged to
+      // This will invalidate all relationships
       queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
+      
+      // Invalidate specific relationship values query
+      console.log(`[ApprovalsDashboard] Relationship rejection - invalidating relationship values: /api/relationships/${value.relationshipId}/values`);
+      queryClient.invalidateQueries({ queryKey: [`/api/relationships/${value.relationshipId}/values`] });
       
       // Since relationships connect datasets, we should invalidate both source and target datasets
       console.log(`[ApprovalsDashboard] Relationship rejection - invalidating related dataset queries`);
@@ -556,7 +564,7 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
       
-      // This will invalidate the specific relationship values lists
+      // This will invalidate all relationships
       queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
       
       // Group relationship values by relationship ID for more efficient event dispatching
@@ -568,10 +576,15 @@ export default function ApprovalsDashboard() {
           valuesByRelationship[value.relationshipId] = [];
         }
         valuesByRelationship[value.relationshipId].push(value.id);
+        
+        // Invalidate specific relationship values queries for each relationship
+        console.log(`[ApprovalsDashboard] Bulk approve - invalidating relationship values: /api/relationships/${value.relationshipId}/values`);
+        queryClient.invalidateQueries({ queryKey: [`/api/relationships/${value.relationshipId}/values`] });
       });
       
       // Dispatch events for each relationship
       Object.entries(valuesByRelationship).forEach(([relationshipId, valueIds]) => {
+        // Dispatch approval status change event
         dispatchApprovalStatusChange({
           relationshipId: Number(relationshipId),
           relationshipValueIds: valueIds,
