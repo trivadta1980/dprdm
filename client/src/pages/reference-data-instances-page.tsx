@@ -1,6 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/main-layout";
 import { EventBus, EventPayload } from "@/lib/eventBus";
+import { useApprovalEvents } from "@/hooks/use-approval-events";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -79,6 +80,14 @@ export default function ReferenceDataInstancesPage() {
   const { toast } = useToast();
   const { id } = useParams();
   const dataSetId = id ? Number(id) : null;
+  
+  // Set up the approval events listener to refresh the page when approvals change
+  useApprovalEvents({
+    dataSetId: dataSetId || undefined,
+    onApprovalChange: (payload) => {
+      console.log('[ReferenceDataInstancesPage] Approval event received:', payload);
+    }
+  });
   const [editingDataSet, setEditingDataSet] = useState<ExtendedReferenceDataInstance | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
@@ -607,10 +616,11 @@ export default function ReferenceDataInstancesPage() {
       return await response.json();
     },
     onSuccess: (_, instanceIds) => {
+      // First refresh the data
       queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
       
-      // Publish events for each instance to notify other components (like approvals dashboard)
-      // Use dispatchApprovalStatusChange helper instead of direct dispatch
+      // Then dispatch events to notify other components (like approvals dashboard)
+      // Use the shared dispatchApprovalStatusChange helper
       import('@/lib/eventBus').then(({dispatchApprovalStatusChange}) => {
         dispatchApprovalStatusChange({
           dataSetId: dataSetId!,
