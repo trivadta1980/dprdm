@@ -1,114 +1,85 @@
 /**
- * Simple event bus implementation for cross-component communication
- * Allows components to publish and subscribe to events
+ * Event Bus System
+ * 
+ * A simple event system to enable communication between different parts
+ * of the application without tight coupling.
  */
 
-// Define event types for type safety
-export enum EventType {
-  INSTANCE_SUBMITTED_FOR_APPROVAL = 'INSTANCE_SUBMITTED_FOR_APPROVAL',
-  RELATIONSHIP_VALUE_SUBMITTED_FOR_APPROVAL = 'RELATIONSHIP_VALUE_SUBMITTED_FOR_APPROVAL',
-  APPROVAL_STATUS_CHANGED = 'APPROVAL_STATUS_CHANGED',
-}
+export type EventPayload = {
+  dataSetId?: number;
+  instanceIds?: string[];
+  relationshipId?: number;
+  relationshipValueIds?: number[];
+  timestamp: string;
+  userId?: string;
+  actionType: 'approve' | 'reject' | 'update' | 'delete';
+};
 
-// Define event data interfaces
-export interface InstanceApprovalEvent {
-  dataSetId: number;
-  instanceId: string;
-  instanceName?: string;
-}
+export type EventTypes = 
+  | 'referenceDataUpdated'   // When reference data instances are updated
+  | 'relationshipUpdated'    // When relationship values are updated
+  | 'approvalStatusChanged'; // When approval status changes on any entity
 
-export interface RelationshipApprovalEvent {
-  relationshipId: number;
-  valueId: number;
-  sourceId?: string;
-  targetId?: string;
-}
-
-export interface ApprovalStatusEvent {
-  type: 'instance' | 'relationship';
-  id: number | string;
-  status: 'APPROVED' | 'REJECTED';
-}
-
-// Union type for all possible event payloads
-export type EventData = 
-  | InstanceApprovalEvent 
-  | RelationshipApprovalEvent 
-  | ApprovalStatusEvent;
-
-// Event listener type
-type EventCallback = (data: EventData) => void;
-
-class EventBus {
-  private listeners: { [key in EventType]?: EventCallback[] } = {};
+export class EventBus {
+  /**
+   * Dispatch a custom event with a payload
+   */
+  static dispatch(eventName: EventTypes, payload: EventPayload): void {
+    console.log(`[EventBus] Dispatching event: ${eventName}`, payload);
+    
+    // Create and dispatch a custom event
+    const event = new CustomEvent(eventName, {
+      detail: payload,
+      bubbles: true,
+    });
+    
+    document.dispatchEvent(event);
+  }
 
   /**
    * Subscribe to an event
-   * @param event The event type to subscribe to
-   * @param callback The callback to execute when the event occurs
-   * @returns An unsubscribe function
    */
-  subscribe(event: EventType, callback: EventCallback): () => void {
-    if (!this.listeners[event]) {
-      this.listeners[event] = [];
-    }
-    
-    this.listeners[event]?.push(callback);
-    
-    // Return unsubscribe function
-    return () => {
-      if (!this.listeners[event]) return;
-      
-      this.listeners[event] = this.listeners[event]?.filter(
-        (listener) => listener !== callback
-      );
+  static subscribe(eventName: EventTypes, callback: (payload: EventPayload) => void): () => void {
+    const handler = (event: Event) => {
+      const customEvent = event as CustomEvent<EventPayload>;
+      callback(customEvent.detail);
     };
-  }
-
-  /**
-   * Publish an event
-   * @param event The event type to publish
-   * @param data The data to pass to event subscribers
-   */
-  publish(event: EventType, data: EventData): void {
-    if (!this.listeners[event]) return;
     
-    this.listeners[event]?.forEach((callback) => {
-      try {
-        callback(data);
-      } catch (error) {
-        console.error(`Error in event listener for ${event}:`, error);
-      }
-    });
-  }
-
-  /**
-   * Remove all listeners for a specific event
-   * @param event The event type to clear listeners for
-   */
-  clear(event?: EventType): void {
-    if (event) {
-      delete this.listeners[event];
-    } else {
-      this.listeners = {};
-    }
+    document.addEventListener(eventName, handler);
+    
+    // Return an unsubscribe function
+    return () => {
+      document.removeEventListener(eventName, handler);
+    };
   }
 }
 
-// Create a singleton instance
-export const eventBus = new EventBus();
+/**
+ * Convenience function for dispatching data update events
+ */
+export const dispatchDataUpdate = (
+  dataSetId: number, 
+  instanceIds: string[] = [], 
+  actionType: EventPayload['actionType'] = 'update',
+  userId?: string
+): void => {
+  EventBus.dispatch('referenceDataUpdated', {
+    dataSetId,
+    instanceIds,
+    timestamp: new Date().toISOString(),
+    actionType,
+    userId
+  });
+};
 
-// React hook for using the event bus in function components
-import { useEffect } from 'react';
-
-export function useEventListener(event: EventType, callback: EventCallback) {
-  useEffect(() => {
-    // Subscribe when the component mounts
-    const unsubscribe = eventBus.subscribe(event, callback);
-    
-    // Unsubscribe when the component unmounts
-    return () => {
-      unsubscribe();
-    };
-  }, [event, callback]);
-}
+/**
+ * Convenience function for dispatching approval status change events
+ */
+export const dispatchApprovalStatusChange = (
+  payload: Partial<EventPayload> & { actionType: EventPayload['actionType'] }
+): void => {
+  EventBus.dispatch('approvalStatusChanged', {
+    ...payload,
+    timestamp: new Date().toISOString()
+  });
+};
