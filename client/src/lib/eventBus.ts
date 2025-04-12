@@ -13,6 +13,8 @@ export type EventPayload = {
   instanceIds?: string[];
   relationshipId?: number;
   relationshipValueIds?: number[];
+  crosswalkMappingId?: number;
+  crosswalkMappingIds?: number[];
   timestamp: string;
   userId?: string;
   actionType: 'approve' | 'reject' | 'update' | 'delete';
@@ -24,6 +26,7 @@ export type EventPayload = {
 export type EventTypes = 
   | 'referenceDataUpdated'   // When reference data instances are updated
   | 'relationshipUpdated'    // When relationship values are updated
+  | 'crosswalkUpdated'       // When crosswalk mappings are updated
   | 'approvalStatusChanged'; // When approval status changes on any entity
 
 /**
@@ -35,6 +38,9 @@ export enum EventType {
   RELATIONSHIP_VALUE_REJECTED = 'relationshipValueRejected',
   REFERENCE_DATA_UPDATED = 'referenceDataUpdated',
   RELATIONSHIP_UPDATED = 'relationshipUpdated',
+  CROSSWALK_MAPPING_APPROVED = 'crosswalkMappingApproved',
+  CROSSWALK_MAPPING_REJECTED = 'crosswalkMappingRejected',
+  CROSSWALK_UPDATED = 'crosswalkUpdated',
   APPROVAL_STATUS_CHANGED = 'approvalStatusChanged'
 }
 

@@ -1609,7 +1609,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json(result.error);
       }
 
-      const mapping = await storage.createCrosswalkMapping(result.data);
+      // Set the initial approval status to PENDING and create a change history entry
+      const userId = req.user.id;
+      const timestamp = new Date().toISOString();
+      
+      const mappingData = {
+        ...result.data,
+        approvalStatus: "PENDING",
+        changeHistory: [{
+          timestamp,
+          prevStatus: null,
+          newStatus: "PENDING",
+          userId,
+          comment: "Initial submission"
+        }]
+      };
+      
+      const mapping = await storage.createCrosswalkMapping(mappingData);
       console.log('POST /api/crosswalks - Mapping created successfully');
       // Sync with Neo4j if available
       if (GraphDataService.isAvailable()) {
