@@ -342,7 +342,7 @@ export default function ApprovalsDashboard() {
       
       // Dispatch event to notify other components about the approval
       dispatchApprovalStatusChange({
-        crosswalkId: mapping.id,
+        crosswalkMappingId: mapping.id,
         actionType: 'approve',
         userId: undefined
       });
@@ -381,7 +381,7 @@ export default function ApprovalsDashboard() {
       
       // Dispatch event to notify other components about the rejection
       dispatchApprovalStatusChange({
-        crosswalkId: mapping.id,
+        crosswalkMappingId: mapping.id,
         actionType: 'reject',
         userId: undefined
       });
@@ -429,7 +429,7 @@ export default function ApprovalsDashboard() {
       // Dispatch events for each crosswalk
       mappings.forEach(mapping => {
         dispatchApprovalStatusChange({
-          crosswalkId: mapping.id,
+          crosswalkMappingId: mapping.id,
           actionType: 'approve',
           userId: undefined
         });
@@ -1417,6 +1417,219 @@ export default function ApprovalsDashboard() {
                   </div>
                 )}
               </TabsContent>
+
+              <TabsContent value="crosswalk-mappings">
+                {isLoadingCrosswalks ? (
+                  <div className="space-y-3">
+                    <div className="h-8 bg-muted animate-pulse rounded" />
+                    <div className="h-20 bg-muted animate-pulse rounded" />
+                    <div className="h-20 bg-muted animate-pulse rounded" />
+                    <div className="h-20 bg-muted animate-pulse rounded" />
+                  </div>
+                ) : crosswalkMappingsResponse.data.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No pending crosswalk mapping approvals
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Search and Filter Section for Crosswalk Mappings */}
+                    <div className="mb-4 border rounded-lg p-4 bg-background">
+                      <div className="text-sm font-medium mb-2">Filter Crosswalk Mappings</div>
+                      <div className="flex flex-col md:flex-row gap-4">
+                        <div className="flex-1">
+                          <div className="relative">
+                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              placeholder="Search by name or system..."
+                              value={crosswalkSearchTerm}
+                              onChange={(e) => setCrosswalkSearchTerm(e.target.value)}
+                              className="pl-8"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Select
+                            value={selectedSourceSystem}
+                            onValueChange={setSelectedSourceSystem}
+                          >
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="Source System" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Sources</SelectItem>
+                              {datasets.map((dataset: any) => (
+                                <SelectItem key={dataset.id} value={dataset.id.toString()}>
+                                  {dataset.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Select
+                            value={selectedTargetSystem}
+                            onValueChange={setSelectedTargetSystem}
+                          >
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="Target System" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Targets</SelectItem>
+                              {datasets.map((dataset: any) => (
+                                <SelectItem key={dataset.id} value={dataset.id.toString()}>
+                                  {dataset.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <DatePickerWithRange 
+                            value={crosswalkDateRange}
+                            onChange={setCrosswalkDateRange}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm text-muted-foreground">
+                        Showing {crosswalkMappingsResponse.data.length} of {crosswalkMappingsResponse.metadata.totalCount} pending crosswalk mappings
+                      </div>
+                      <Button
+                        onClick={() => {
+                          const selectedMappings = crosswalkMappingsResponse.data.filter(
+                            (mapping: PendingCrosswalkMapping) => selectedCrosswalkMappings.has(mapping.id)
+                          );
+                          if (selectedMappings.length > 0) {
+                            bulkApproveCrosswalksMutation.mutate(selectedMappings);
+                          }
+                        }}
+                        disabled={selectedCrosswalkMappings.size === 0 || bulkApproveCrosswalksMutation.isPending}
+                        className="bg-primary hover:bg-primary/90"
+                      >
+                        {bulkApproveCrosswalksMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <CheckSquare className="h-4 w-4 mr-2" />
+                        )}
+                        Approve Selected ({selectedCrosswalkMappings.size})
+                      </Button>
+                    </div>
+
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[50px]">
+                            <Checkbox
+                              checked={selectedCrosswalkMappings.size === crosswalkMappingsResponse.data.length && crosswalkMappingsResponse.data.length > 0}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  // Select all visible mappings
+                                  const allIds = new Set<number>();
+                                  crosswalkMappingsResponse.data.forEach((mapping: PendingCrosswalkMapping) => {
+                                    allIds.add(mapping.id);
+                                  });
+                                  setSelectedCrosswalkMappings(allIds);
+                                } else {
+                                  // Deselect all
+                                  setSelectedCrosswalkMappings(new Set());
+                                }
+                              }}
+                            />
+                          </TableHead>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Source System</TableHead>
+                          <TableHead>Target System</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Submitted</TableHead>
+                          <TableHead>Submitted By</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {crosswalkMappingsResponse.data.map((mapping: PendingCrosswalkMapping) => (
+                          <TableRow key={mapping.id}>
+                            <TableCell>
+                              <Checkbox
+                                checked={selectedCrosswalkMappings.has(mapping.id)}
+                                onCheckedChange={(checked) => {
+                                  const newSelectedMappings = new Set(selectedCrosswalkMappings);
+                                  if (checked) {
+                                    newSelectedMappings.add(mapping.id);
+                                  } else {
+                                    newSelectedMappings.delete(mapping.id);
+                                  }
+                                  setSelectedCrosswalkMappings(newSelectedMappings);
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell>{mapping.name}</TableCell>
+                            <TableCell>{mapping.sourceSystemName}</TableCell>
+                            <TableCell>{mapping.targetSystemName}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">Pending Approval</Badge>
+                            </TableCell>
+                            <TableCell>{new Date(mapping.submittedAt || mapping.createdAt).toLocaleDateString()}</TableCell>
+                            <TableCell>User ID: {mapping.submittedBy || mapping.createdBy}</TableCell>
+                            <TableCell className="text-right space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedCrosswalkMapping(mapping);
+                                  setHistoryDialogOpen(true);
+                                }}
+                              >
+                                <History className="h-4 w-4 mr-2" />
+                                History
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => approveCrosswalkMutation.mutate(mapping)}
+                                disabled={approveCrosswalkMutation.isPending}
+                              >
+                                <Check className="h-4 w-4 mr-2" />
+                                Approve
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => rejectCrosswalkMutation.mutate(mapping)}
+                                disabled={rejectCrosswalkMutation.isPending}
+                              >
+                                <X className="h-4 w-4 mr-2" />
+                                Reject
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+
+                    {/* Pagination */}
+                    <div className="flex items-center justify-end space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCrosswalkPage(Math.max(1, crosswalkPage - 1))}
+                        disabled={crosswalkPage === 1}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCrosswalkPage(crosswalkPage + 1)}
+                        disabled={crosswalkPage >= crosswalkMetadata.totalPages}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
@@ -1427,7 +1640,7 @@ export default function ApprovalsDashboard() {
               <DialogTitle>Change History</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              {(selectedInstance?.history || selectedRelationshipValue?.history || []).map((entry, index) => (
+              {(selectedInstance?.history || selectedRelationshipValue?.history || selectedCrosswalkMapping?.changeHistory || []).map((entry, index) => (
                 <div key={index} className="border rounded-lg p-4">
                   <div className="text-sm text-muted-foreground mb-2">
                     {new Date(entry.timestamp).toLocaleString()}
