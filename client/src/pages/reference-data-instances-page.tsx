@@ -83,6 +83,7 @@ export default function ReferenceDataInstancesPage() {
   
   // Set up the approval events listener to refresh the page when approvals change
   useApprovalEvents({
+    componentName: 'ReferenceDataInstancesPage',
     dataSetId: dataSetId || undefined,
     onApprovalChange: (payload) => {
       console.log('[ReferenceDataInstancesPage] Approval event received:', payload);

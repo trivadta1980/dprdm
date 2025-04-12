@@ -43,14 +43,18 @@ export default function ReferenceDataPage() {
   
   // Subscribe to approval events to refresh data when instances are approved/rejected
   useApprovalEvents({
+    componentName: 'ReferenceDataPage',
     onApprovalChange: (payload) => {
       console.log("[ReferenceDataPage] Approval event received:", payload);
 
       // Invalidate queries to refresh data
       if (payload.dataSetId) {
         // If we know exactly which dataset changed
+        console.log(`[ReferenceDataPage] Invalidating query for specific dataSetId: ${payload.dataSetId}`);
+        
+        // Use the same query key format as used in reference-data-instances-page
         queryClient.invalidateQueries({ 
-          queryKey: ["/api/reference-data", payload.dataSetId] 
+          queryKey: [`/api/reference-data/${payload.dataSetId}`] 
         });
         
         // Also invalidate the overall list

@@ -14,11 +14,16 @@ import { useQueryClient } from '@tanstack/react-query';
 export function useApprovalEvents({
   dataSetId,
   onApprovalChange,
+  componentName = 'Unknown',
 }: {
   dataSetId?: number;
   onApprovalChange?: (payload: EventPayload) => void;
+  componentName?: string;
 }) {
   const queryClient = useQueryClient();
+  
+  // Log component registration for debugging
+  console.log(`[useApprovalEvents] Component ${componentName} registered with dataSetId: ${dataSetId || 'all'}`);
 
   useEffect(() => {
     // Listen for approval status changes
