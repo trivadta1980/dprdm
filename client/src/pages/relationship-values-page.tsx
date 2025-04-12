@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
-import { eventBus, EventType } from "@/lib/eventBus";
+import { eventBus, EventType, EventPayload } from "@/lib/eventBus";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
