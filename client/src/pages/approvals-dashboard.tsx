@@ -72,7 +72,25 @@ export default function ApprovalsDashboard() {
   const [relationshipPageSize, setRelationshipPageSize] = useState(50);
   const [selectedRelationshipValues, setSelectedRelationshipValues] = useState<Set<number>>(new Set());
   
-  // We're now using event dispatchers instead of listeners for approval status changes
+  // We use the useApprovalEvents hook to listen for approval events from other components
+  useApprovalEvents({
+    componentName: 'ApprovalsDashboard',
+    onApprovalChange: (payload) => {
+      console.log('[ApprovalsDashboard] Received approval event:', payload);
+      // Refresh pending approvals when we receive an event about approval status changes
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
+      
+      // Also refresh relationship values
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
+      
+      toast({
+        title: "Data Updated",
+        description: "The approval status data has been refreshed due to changes.",
+        variant: "default",
+      });
+    }
+  });
 
   // Dataset filter states
   const [datasetSearchTerm, setDatasetSearchTerm] = useState("");
@@ -250,6 +268,9 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
       queryClient.invalidateQueries({ queryKey: ["/api/relationships/types", { forDropdown: true }] });
+      // Also invalidate the specific dataset query - this ensures the instances page gets refreshed
+      console.log(`[ApprovalsDashboard] Invalidating specific dataset query: /api/reference-data/${approval.dataSetId}`);
+      queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${approval.dataSetId}`] });
       
       // Dispatch event to notify other components about the approval
       dispatchApprovalStatusChange({
