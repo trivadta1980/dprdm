@@ -62,16 +62,40 @@ interface PendingRelationshipValue {
   dateSubmitted: string;
 }
 
+// Interface for pending crosswalk mappings
+interface PendingCrosswalkMapping {
+  id: number;
+  name: string;
+  sourceSystemId: number;
+  sourceSystemName: string;
+  targetSystemId: number;
+  targetSystemName: string;
+  approvalStatus: string;
+  createdAt: string;
+  createdBy: number;
+  submittedAt: string | null;
+  submittedBy: number | null;
+  approvedAt: string | null;
+  approvedBy: number | null;
+  rejectedAt: string | null;
+  rejectedBy: number | null;
+  changeHistory?: any[];
+}
+
 export default function ApprovalsDashboard() {
   const { toast } = useToast();
   const [selectedInstance, setSelectedInstance] = useState<PendingApproval | null>(null);
   const [selectedRelationshipValue, setSelectedRelationshipValue] = useState<PendingRelationshipValue | null>(null);
+  const [selectedCrosswalkMapping, setSelectedCrosswalkMapping] = useState<PendingCrosswalkMapping | null>(null);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [selectedInstances, setSelectedInstances] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState("dataset-instances");
   const [relationshipPage, setRelationshipPage] = useState(1);
   const [relationshipPageSize, setRelationshipPageSize] = useState(50);
   const [selectedRelationshipValues, setSelectedRelationshipValues] = useState<Set<number>>(new Set());
+  const [crosswalkPage, setCrosswalkPage] = useState(1);
+  const [crosswalkPageSize, setCrosswalkPageSize] = useState(50);
+  const [selectedCrosswalkMappings, setSelectedCrosswalkMappings] = useState<Set<number>>(new Set());
   
   // We use the useApprovalEvents hook to listen for approval events from other components
   useApprovalEvents({
@@ -82,8 +106,12 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
       
-      // Also refresh relationship values
+      // Also refresh relationship values and crosswalk mappings
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/crosswalk-mappings/pending"] });
+      
+      // Invalidate other related queries
+      queryClient.invalidateQueries({ queryKey: ["/api/crosswalks"] });
       
       toast({
         title: "Data Updated",
@@ -250,6 +278,177 @@ export default function ApprovalsDashboard() {
   });
 
   const relationshipMetadata = relationshipValuesResponse.metadata;
+  
+  // Crosswalk mappings filter states
+  const [crosswalkSearchTerm, setCrosswalkSearchTerm] = useState("");
+  const [selectedSourceSystem, setSelectedSourceSystem] = useState("all");
+  const [selectedTargetSystem, setSelectedTargetSystem] = useState("all");
+  const [crosswalkDateRange, setCrosswalkDateRange] = useState<DateRange | undefined>();
+  
+  // Fetch pending crosswalk mappings
+  const {
+    data: crosswalkMappingsResponse = { data: [], metadata: { totalCount: 0, currentPage: 1, pageSize: 50, totalPages: 1 } },
+    isLoading: isLoadingCrosswalks,
+    error: crosswalksError
+  } = useQuery({
+    queryKey: [
+      "/api/approvals/crosswalk-mappings/pending",
+      crosswalkPage,
+      crosswalkPageSize,
+      crosswalkSearchTerm,
+      selectedSourceSystem,
+      selectedTargetSystem,
+      crosswalkDateRange
+    ],
+    refetchInterval: 10000, // Refetch every 10 seconds to keep data fresh
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        page: crosswalkPage.toString(),
+        pageSize: crosswalkPageSize.toString(),
+        ...(crosswalkSearchTerm && { search: crosswalkSearchTerm }),
+        ...(selectedSourceSystem !== "all" && { source_system_id: selectedSourceSystem }),
+        ...(selectedTargetSystem !== "all" && { target_system_id: selectedTargetSystem }),
+        ...(crosswalkDateRange?.from && { from_date: crosswalkDateRange.from.toISOString() }),
+        ...(crosswalkDateRange?.to && { to_date: crosswalkDateRange.to.toISOString() })
+      });
+
+      const response = await fetch(`/api/approvals/crosswalk-mappings/pending?${params}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch pending crosswalk mappings");
+      }
+      return response.json();
+    }
+  });
+  
+  const crosswalkMetadata = crosswalkMappingsResponse.metadata;
+  
+  // Crosswalk mapping approval mutations
+  const approveCrosswalkMutation = useMutation({
+    mutationFn: async (mapping: PendingCrosswalkMapping) => {
+      const response = await apiRequest(`/api/crosswalks/${mapping.id}/approve`, {
+        method: "POST"
+      });
+      return response.json();
+    },
+    onSuccess: (_, mapping) => {
+      // Invalidate all approval-related queries
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/crosswalk-mappings/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
+      
+      // Also invalidate crosswalk-related queries
+      queryClient.invalidateQueries({ queryKey: ["/api/crosswalks"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/crosswalks/${mapping.id}`] });
+      
+      // Dispatch event to notify other components about the approval
+      dispatchApprovalStatusChange({
+        crosswalkId: mapping.id,
+        actionType: 'approve',
+        userId: undefined
+      });
+      
+      toast({
+        title: "Approved",
+        description: "The crosswalk mapping has been approved successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to approve the crosswalk mapping",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Rejection mutation for crosswalk mappings
+  const rejectCrosswalkMutation = useMutation({
+    mutationFn: async (mapping: PendingCrosswalkMapping) => {
+      const response = await apiRequest(`/api/crosswalks/${mapping.id}/reject`, {
+        method: "POST"
+      });
+      return response.json();
+    },
+    onSuccess: (_, mapping) => {
+      // Invalidate all approval-related queries
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/crosswalk-mappings/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
+      
+      // Also invalidate crosswalk-related queries
+      queryClient.invalidateQueries({ queryKey: ["/api/crosswalks"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/crosswalks/${mapping.id}`] });
+      
+      // Dispatch event to notify other components about the rejection
+      dispatchApprovalStatusChange({
+        crosswalkId: mapping.id,
+        actionType: 'reject',
+        userId: undefined
+      });
+      
+      toast({
+        title: "Rejected",
+        description: "The crosswalk mapping has been rejected successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reject the crosswalk mapping",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Bulk approval for crosswalk mappings
+  const bulkApproveCrosswalksMutation = useMutation({
+    mutationFn: async (mappings: PendingCrosswalkMapping[]) => {
+      const results = [];
+      for (const mapping of mappings) {
+        const response = await apiRequest(`/api/crosswalks/${mapping.id}/approve`, {
+          method: "POST"
+        });
+        results.push(await response.json());
+      }
+      return results;
+    },
+    onSuccess: (_, mappings) => {
+      // Invalidate all approval-related queries
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/crosswalk-mappings/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
+      
+      // Also invalidate crosswalk-related queries
+      queryClient.invalidateQueries({ queryKey: ["/api/crosswalks"] });
+      
+      // Invalidate specific crosswalk queries for all affected crosswalks
+      mappings.forEach(mapping => {
+        queryClient.invalidateQueries({ queryKey: [`/api/crosswalks/${mapping.id}`] });
+      });
+      
+      // Dispatch events for each crosswalk
+      mappings.forEach(mapping => {
+        dispatchApprovalStatusChange({
+          crosswalkId: mapping.id,
+          actionType: 'approve',
+          userId: undefined
+        });
+      });
+      
+      toast({
+        title: "Bulk Approval Success",
+        description: "Selected crosswalk mappings have been approved successfully.",
+      });
+      setSelectedCrosswalkMappings(new Set());
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to approve selected crosswalk mappings",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Dataset instance approval mutations
   const approveMutation = useMutation({
@@ -716,6 +915,9 @@ export default function ApprovalsDashboard() {
                 </TabsTrigger>
                 <TabsTrigger value="relationship-values">
                   Relationship Values ({relationshipValuesResponse.metadata.totalCount})
+                </TabsTrigger>
+                <TabsTrigger value="crosswalk-mappings">
+                  Crosswalk Mappings ({crosswalkMappingsResponse.metadata.totalCount})
                 </TabsTrigger>
               </TabsList>
 
