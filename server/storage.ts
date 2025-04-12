@@ -617,7 +617,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllReferenceDataSets(): Promise<ReferenceDataSet[]> {
-    const dataSets = await db.select().from(referenceDataSets);
+    // Sort by created_at in descending order (newest first)
+    const dataSets = await db
+      .select()
+      .from(referenceDataSets)
+      .orderBy(desc(referenceDataSets.createdAt));
+    
     return dataSets.map(dataSet => ({
       ...dataSet,
       data: dataSet.data as Record<string, ReferenceDataInstance>
@@ -628,7 +633,8 @@ export class DatabaseStorage implements IStorage {
     const dataSets = await db
       .select()
       .from(referenceDataSets)
-      .where(eq(referenceDataSets.typeId, typeId));
+      .where(eq(referenceDataSets.typeId, typeId))
+      .orderBy(desc(referenceDataSets.createdAt));
 
     return dataSets.map(dataSet => ({
       ...dataSet,
