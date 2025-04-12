@@ -135,6 +135,14 @@ export default function ApprovalsDashboard() {
   const [selectedSourceDataset, setSelectedSourceDataset] = useState("all");
   const [selectedTargetDataset, setSelectedTargetDataset] = useState("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  
+  // Crosswalk filter and pagination states
+  const [crosswalkSearchTerm, setCrosswalkSearchTerm] = useState("");
+  const [selectedSourceSystem, setSelectedSourceSystem] = useState("all");
+  const [selectedTargetSystem, setSelectedTargetSystem] = useState("all"); 
+  const [crosswalkDateRange, setCrosswalkDateRange] = useState<DateRange | undefined>();
+  const [crosswalkPage, setCrosswalkPage] = useState(1);
+  const [crosswalkPageSize, setCrosswalkPageSize] = useState(50);
 
   // Fetch relationship types for dropdown
   const { data: relationshipTypes = [] } = useQuery({
@@ -279,11 +287,7 @@ export default function ApprovalsDashboard() {
 
   const relationshipMetadata = relationshipValuesResponse.metadata;
   
-  // Crosswalk mappings filter states
-  const [crosswalkSearchTerm, setCrosswalkSearchTerm] = useState("");
-  const [selectedSourceSystem, setSelectedSourceSystem] = useState("all");
-  const [selectedTargetSystem, setSelectedTargetSystem] = useState("all");
-  const [crosswalkDateRange, setCrosswalkDateRange] = useState<DateRange | undefined>();
+  // Crosswalk metadata access
   
   // Fetch pending crosswalk mappings
   const {
