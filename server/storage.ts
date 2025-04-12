@@ -687,7 +687,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllRelationships(): Promise<Relationship[]> {
-    return db.select().from(relationships);
+    return db
+      .select()
+      .from(relationships)
+      .orderBy(desc(relationships.createdAt));
   }
 
   async getRelationshipsByDataSet(dataSetId: number): Promise<Relationship[]> {
@@ -699,7 +702,8 @@ export class DatabaseStorage implements IStorage {
           eq(relationships.sourceDataSetId, dataSetId),
           eq(relationships.targetDataSetId, dataSetId)
         )
-      );
+      )
+      .orderBy(desc(relationships.createdAt));
   }
 
   async updateRelationship(
@@ -797,7 +801,8 @@ export class DatabaseStorage implements IStorage {
     return db
       .select()
       .from(relationshipValues)
-      .where(eq(relationshipValues.relationshipId, relationshipId));
+      .where(eq(relationshipValues.relationshipId, relationshipId))
+      .orderBy(desc(relationshipValues.createdAt));
   }
 
   async deleteRelationshipValue(id: number): Promise<boolean> {
@@ -925,7 +930,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllCrosswalkMappings(): Promise<CrosswalkMapping[]> {
-    return db.select().from(crosswalkMappings);
+    return db
+      .select()
+      .from(crosswalkMappings)
+      .orderBy(desc(crosswalkMappings.createdAt));
   }
 
   async getCrosswalkMappingsBySystem(systemId: number): Promise<CrosswalkMapping[]> {
@@ -937,14 +945,16 @@ export class DatabaseStorage implements IStorage {
           eq(crosswalkMappings.sourceSystemId, systemId),
           eq(crosswalkMappings.targetSystemId, systemId)
         )
-      );
+      )
+      .orderBy(desc(crosswalkMappings.createdAt));
   }
   
   async getCrosswalkMappingsByTargetId(targetId: number): Promise<CrosswalkMapping[]> {
     return db
       .select()
       .from(crosswalkMappings)
-      .where(eq(crosswalkMappings.targetSystemId, targetId));
+      .where(eq(crosswalkMappings.targetSystemId, targetId))
+      .orderBy(desc(crosswalkMappings.createdAt));
   }
 
   async updateCrosswalkMapping(
@@ -1316,14 +1326,16 @@ export class DatabaseStorage implements IStorage {
     return db
       .select()
       .from(relationshipValues)
-      .where(eq(relationshipValues.approvalStatus, "PENDING"));
+      .where(eq(relationshipValues.approvalStatus, "PENDING"))
+      .orderBy(desc(relationshipValues.createdAt));
   }
 
   async getDraftRelationshipValues(): Promise<RelationshipValue[]> {
     return db
       .select()
       .from(relationshipValues)
-      .where(eq(relationshipValues.approvalStatus, "DRAFT"));
+      .where(eq(relationshipValues.approvalStatus, "DRAFT"))
+      .orderBy(desc(relationshipValues.createdAt));
   }
 
   async getRelationshipValuesByStatus(
@@ -1332,7 +1344,8 @@ export class DatabaseStorage implements IStorage {
     return db
       .select()
       .from(relationshipValues)
-      .where(eq(relationshipValues.approvalStatus, status));
+      .where(eq(relationshipValues.approvalStatus, status))
+      .orderBy(desc(relationshipValues.createdAt));
   }
 }
 
