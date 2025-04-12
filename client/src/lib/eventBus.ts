@@ -27,13 +27,25 @@ export type EventTypes =
   | 'approvalStatusChanged'; // When approval status changes on any entity
 
 /**
+ * Event type enum for backward compatibility
+ */
+export enum EventType {
+  RELATIONSHIP_VALUE_SUBMITTED_FOR_APPROVAL = 'relationshipValueSubmittedForApproval',
+  RELATIONSHIP_VALUE_APPROVED = 'relationshipValueApproved',
+  RELATIONSHIP_VALUE_REJECTED = 'relationshipValueRejected',
+  REFERENCE_DATA_UPDATED = 'referenceDataUpdated',
+  RELATIONSHIP_UPDATED = 'relationshipUpdated',
+  APPROVAL_STATUS_CHANGED = 'approvalStatusChanged'
+}
+
+/**
  * Event Bus class for managing application-wide events
  */
 export class EventBus {
   /**
    * Dispatch a custom event with a payload
    */
-  static dispatch(eventName: EventTypes, payload: EventPayload): void {
+  static dispatch(eventName: EventTypes | string, payload: EventPayload): void {
     // Add a timestamp if not provided
     if (!payload.timestamp) {
       payload.timestamp = new Date().toISOString();
@@ -60,7 +72,7 @@ export class EventBus {
   /**
    * Subscribe to an event
    */
-  static subscribe(eventName: EventTypes, callback: (payload: EventPayload) => void): () => void {
+  static subscribe(eventName: EventTypes | string, callback: (payload: EventPayload) => void): () => void {
     const handler = (event: Event) => {
       const customEvent = event as CustomEvent<EventPayload>;
       callback(customEvent.detail);
@@ -73,7 +85,39 @@ export class EventBus {
       window.removeEventListener(eventName, handler);
     };
   }
+  
+  /**
+   * Legacy publish method for backward compatibility
+   */
+  static publish(eventName: EventType | string, payload: Partial<EventPayload>): void {
+    const fullPayload: EventPayload = {
+      ...payload as any,
+      timestamp: payload.timestamp || new Date().toISOString(),
+      actionType: payload.actionType || 'update'
+    };
+    
+    let eventNameStr: string;
+    if (typeof eventName === 'string') {
+      eventNameStr = eventName;
+    } else {
+      eventNameStr = String(eventName);
+    }
+    
+    EventBus.dispatch(eventNameStr, fullPayload);
+  }
 }
+
+/**
+ * Singleton instance for backward compatibility
+ */
+export const eventBus = {
+  publish: (eventName: EventType | string, payload: Partial<EventPayload>) => {
+    EventBus.publish(eventName, payload);
+  },
+  subscribe: (eventName: EventTypes | string, callback: (payload: EventPayload) => void) => {
+    return EventBus.subscribe(eventName, callback);
+  }
+};
 
 /**
  * Convenience function for dispatching data update events
