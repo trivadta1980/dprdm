@@ -1010,7 +1010,7 @@ export default function ApprovalsDashboard() {
                         <TableRow>
                           <TableHead className="w-[50px]">
                             <Checkbox
-                              checked={selectedInstances.size === datasetInstancesResponse.data.length}
+                              checked={selectedInstances.size === datasetInstancesResponse?.data?.length}
                               onCheckedChange={handleSelectAll}
                             />
                           </TableHead>
@@ -1024,7 +1024,7 @@ export default function ApprovalsDashboard() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {datasetInstancesResponse.data.map((item) => (
+                        {datasetInstancesResponse?.data?.map((item) => (
                           <TableRow key={`${item.dataSetId}-${item.instanceId}`}>
                             <TableCell>
                               <Checkbox
@@ -1246,7 +1246,7 @@ export default function ApprovalsDashboard() {
                         <TableRow>
                           <TableHead className="w-[50px]">
                             <Checkbox
-                              checked={selectedRelationshipValues.size === relationshipValuesResponse.data.length}
+                              checked={selectedRelationshipValues.size === relationshipValuesResponse?.data?.length}
                               onCheckedChange={handleSelectAllRelationships}
                             />
                           </TableHead>
@@ -1259,7 +1259,7 @@ export default function ApprovalsDashboard() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {relationshipValuesResponse.data.map((item) => (
+                        {relationshipValuesResponse?.data?.map((item) => (
                           <TableRow key={item.id}>
                             <TableCell>
                               <Checkbox
@@ -1496,13 +1496,13 @@ export default function ApprovalsDashboard() {
 
                     <div className="flex justify-between items-center">
                       <div className="text-sm text-muted-foreground">
-                        Showing {crosswalkMappingsResponse.data.length} of {crosswalkMappingsResponse.metadata.totalCount} pending crosswalk mappings
+                        Showing {crosswalkMappingsResponse?.data?.length || 0} of {crosswalkMappingsResponse?.metadata?.totalCount || 0} pending crosswalk mappings
                       </div>
                       <Button
                         onClick={() => {
-                          const selectedMappings = crosswalkMappingsResponse.data.filter(
+                          const selectedMappings = crosswalkMappingsResponse?.data?.filter(
                             (mapping: PendingCrosswalkMapping) => selectedCrosswalkMappings.has(mapping.id)
-                          );
+                          ) || [];
                           if (selectedMappings.length > 0) {
                             bulkApproveCrosswalksMutation.mutate(selectedMappings);
                           }
@@ -1524,12 +1524,12 @@ export default function ApprovalsDashboard() {
                         <TableRow>
                           <TableHead className="w-[50px]">
                             <Checkbox
-                              checked={selectedCrosswalkMappings.size === crosswalkMappingsResponse.data.length && crosswalkMappingsResponse.data.length > 0}
+                              checked={selectedCrosswalkMappings.size === crosswalkMappingsResponse?.data?.length && (crosswalkMappingsResponse?.data?.length || 0) > 0}
                               onCheckedChange={(checked) => {
                                 if (checked) {
                                   // Select all visible mappings
                                   const allIds = new Set<number>();
-                                  crosswalkMappingsResponse.data.forEach((mapping: PendingCrosswalkMapping) => {
+                                  crosswalkMappingsResponse?.data?.forEach((mapping: PendingCrosswalkMapping) => {
                                     allIds.add(mapping.id);
                                   });
                                   setSelectedCrosswalkMappings(allIds);
@@ -1550,7 +1550,7 @@ export default function ApprovalsDashboard() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {crosswalkMappingsResponse.data.map((mapping: PendingCrosswalkMapping) => (
+                        {crosswalkMappingsResponse?.data?.map((mapping: PendingCrosswalkMapping) => (
                           <TableRow key={mapping.id}>
                             <TableCell>
                               <Checkbox
