@@ -37,7 +37,7 @@ export function useApprovalEvents({
           // Invalidate queries related to the data set
           if (dataSetId) {
             // This is the primary query key used in reference-data-instances-page
-            console.log(`[useApprovalEvents] Invalidating query for dataSetId: ${dataSetId}`);
+            console.log(`[useApprovalEvents] Invalidating query for dataSetId: ${dataSetId} from component ${componentName}`);
             queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
             
             // Also invalidate other related queries that might be in use

@@ -315,6 +315,9 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
       
+      // Also invalidate the specific dataset query - this ensures the instances page gets refreshed
+      console.log(`[ApprovalsDashboard] Rejecting - invalidating specific dataset query: /api/reference-data/${dataSetId}`);
+      queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
       // Also invalidate filter-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
@@ -366,6 +369,16 @@ export default function ApprovalsDashboard() {
       // Also invalidate filter-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/relationships/types", { forDropdown: true }] });
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
+      // Since relationships connect datasets, we should invalidate both source and target datasets
+      console.log(`[ApprovalsDashboard] Relationship approval - invalidating related dataset queries`);
+      if (value.sourceDatasetId) {
+        console.log(`[ApprovalsDashboard] Invalidating source dataset query: /api/reference-data/${value.sourceDatasetId}`);
+        queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${value.sourceDatasetId}`] });
+      }
+      if (value.targetDatasetId) {
+        console.log(`[ApprovalsDashboard] Invalidating target dataset query: /api/reference-data/${value.targetDatasetId}`);
+        queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${value.targetDatasetId}`] });
+      }
       
       // This will invalidate the specific relationship values list that the approved item belonged to
       queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
@@ -392,6 +405,16 @@ export default function ApprovalsDashboard() {
     },
   });
 
+      // Since relationships connect datasets, we should invalidate both source and target datasets
+      console.log(`[ApprovalsDashboard] Relationship rejection - invalidating related dataset queries`);
+      if (value.sourceDatasetId) {
+        console.log(`[ApprovalsDashboard] Invalidating source dataset query: /api/reference-data/${value.sourceDatasetId}`);
+        queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${value.sourceDatasetId}`] });
+      }
+      if (value.targetDatasetId) {
+        console.log(`[ApprovalsDashboard] Invalidating target dataset query: /api/reference-data/${value.targetDatasetId}`);
+        queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${value.targetDatasetId}`] });
+      }
   // Rejection mutation for relationship values
   const rejectRelationshipMutation = useMutation({
     mutationFn: async (value: PendingRelationshipValue) => {
@@ -457,6 +480,12 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
       queryClient.invalidateQueries({ queryKey: ["/api/relationships/types", { forDropdown: true }] });
+      // Also invalidate specific dataset queries for all affected datasets
+      console.log(`[ApprovalsDashboard] Bulk approval - invalidating specific dataset queries for affected datasets`);
+      Object.keys(approvalsByDataset).forEach(dataSetId => {
+        console.log(`[ApprovalsDashboard] Invalidating dataset query: /api/reference-data/${dataSetId}`);
+        queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
+      });
       
       // Group approvals by dataset for more efficient event dispatching
       const approvalsByDataset: Record<number, string[]> = {};
