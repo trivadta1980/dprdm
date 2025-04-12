@@ -473,7 +473,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllReferenceDataTypes(): Promise<ReferenceDataType[]> {
-    return db.select().from(referenceDataTypes);
+    return db
+      .select()
+      .from(referenceDataTypes)
+      .orderBy(desc(referenceDataTypes.createdAt));
   }
 
   async getReferenceDataTypeSchemas(typeId: number): Promise<ReferenceDataTypeSchema[]> {
