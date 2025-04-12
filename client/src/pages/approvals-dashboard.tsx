@@ -32,7 +32,7 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { addDays } from "date-fns";
 import { useState, useEffect } from "react";
 import { DateRange } from "react-day-picker";
-import { eventBus, EventType, useEventListener } from "@/lib/eventBus";
+import { EventBus, dispatchApprovalStatusChange, dispatchDataUpdate, EventTypes } from "@/lib/eventBus";
 
 interface PendingApproval {
   dataSetId: number;
@@ -72,36 +72,7 @@ export default function ApprovalsDashboard() {
   const [relationshipPageSize, setRelationshipPageSize] = useState(50);
   const [selectedRelationshipValues, setSelectedRelationshipValues] = useState<Set<number>>(new Set());
   
-  // Subscribe to event bus notifications for real-time updates
-  useEventListener(EventType.INSTANCE_SUBMITTED_FOR_APPROVAL, (data) => {
-    console.log("Event received: Instance submitted for approval", data);
-    // Immediately refresh the pending approvals data when a new instance is submitted
-    queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
-    
-    // Also invalidate the filter-related queries for dataset instances
-    queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
-    queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
-    
-    // Reset filter state to ensure latest data is reflected in filters
-    setSelectedDatasetType("all");
-    setSelectedDataset("all");
-  });
-  
-  useEventListener(EventType.RELATIONSHIP_VALUE_SUBMITTED_FOR_APPROVAL, (data) => {
-    console.log("Event received: Relationship value submitted for approval", data);
-    // Immediately refresh the pending relationship values data when a new relationship value is submitted
-    queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
-    
-    // Also invalidate the filter-related queries for relationship values
-    queryClient.invalidateQueries({ queryKey: ["/api/relationships/types", { forDropdown: true }] });
-    queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
-    queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
-    
-    // Reset filter state to ensure latest data is reflected in filters
-    setSelectedRelationshipType("all");
-    setSelectedSourceDataset("all");
-    setSelectedTargetDataset("all");
-  });
+  // We're now using event dispatchers instead of listeners for approval status changes
 
   // Dataset filter states
   const [datasetSearchTerm, setDatasetSearchTerm] = useState("");
@@ -269,7 +240,7 @@ export default function ApprovalsDashboard() {
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, approval) => {
       // Invalidate all approval-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
@@ -279,6 +250,21 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
       queryClient.invalidateQueries({ queryKey: ["/api/relationships/types", { forDropdown: true }] });
+      
+      // Dispatch event to notify other components about the approval
+      dispatchApprovalStatusChange({
+        dataSetId: approval.dataSetId,
+        instanceIds: [approval.instanceId],
+        actionType: 'approve',
+        userId: undefined // Current user will be associated by backend
+      });
+      
+      // Also dispatch data update event 
+      dispatchDataUpdate(
+        approval.dataSetId,
+        [approval.instanceId],
+        'approve'
+      );
       
       toast({
         title: "Approved",
@@ -302,7 +288,7 @@ export default function ApprovalsDashboard() {
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, { dataSetId, instanceId }) => {
       // Invalidate all approval-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
@@ -312,6 +298,21 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
       queryClient.invalidateQueries({ queryKey: ["/api/relationships/types", { forDropdown: true }] });
+      
+      // Dispatch event to notify other components about the rejection
+      dispatchApprovalStatusChange({
+        dataSetId,
+        instanceIds: [instanceId],
+        actionType: 'reject',
+        userId: undefined
+      });
+      
+      // Also dispatch data update event
+      dispatchDataUpdate(
+        dataSetId,
+        [instanceId],
+        'reject'
+      );
       
       toast({
         title: "Rejected",
@@ -335,7 +336,7 @@ export default function ApprovalsDashboard() {
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, value) => {
       // Invalidate all approval-related queries and relationship values
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
@@ -347,6 +348,15 @@ export default function ApprovalsDashboard() {
       
       // This will invalidate the specific relationship values list that the approved item belonged to
       queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
+      
+      // Dispatch event to notify other components about the approval
+      dispatchApprovalStatusChange({
+        relationshipId: value.relationshipId,
+        relationshipValueIds: [value.id],
+        actionType: 'approve',
+        userId: undefined
+      });
+      
       toast({
         title: "Approved",
         description: "The relationship value has been approved successfully.",
@@ -369,7 +379,7 @@ export default function ApprovalsDashboard() {
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, value) => {
       // Invalidate all approval-related queries and relationship values
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
@@ -381,6 +391,15 @@ export default function ApprovalsDashboard() {
       
       // This will invalidate the specific relationship values list that the rejected item belonged to
       queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
+      
+      // Dispatch event to notify other components about the rejection
+      dispatchApprovalStatusChange({
+        relationshipId: value.relationshipId,
+        relationshipValueIds: [value.id],
+        actionType: 'reject',
+        userId: undefined
+      });
+      
       toast({
         title: "Rejected",
         description: "The relationship value has been rejected successfully.",
@@ -407,7 +426,7 @@ export default function ApprovalsDashboard() {
       }
       return results;
     },
-    onSuccess: () => {
+    onSuccess: (_, approvals) => {
       // Invalidate all approval-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
@@ -417,6 +436,34 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       queryClient.invalidateQueries({ queryKey: ["/api/reference-types"] });
       queryClient.invalidateQueries({ queryKey: ["/api/relationships/types", { forDropdown: true }] });
+      
+      // Group approvals by dataset for more efficient event dispatching
+      const approvalsByDataset: Record<number, string[]> = {};
+      
+      // Collect all instance IDs by dataset
+      approvals.forEach(approval => {
+        if (!approvalsByDataset[approval.dataSetId]) {
+          approvalsByDataset[approval.dataSetId] = [];
+        }
+        approvalsByDataset[approval.dataSetId].push(approval.instanceId);
+      });
+      
+      // Dispatch events for each dataset
+      Object.entries(approvalsByDataset).forEach(([dataSetId, instanceIds]) => {
+        dispatchApprovalStatusChange({
+          dataSetId: Number(dataSetId),
+          instanceIds,
+          actionType: 'approve',
+          userId: undefined
+        });
+        
+        // Also dispatch data update event
+        dispatchDataUpdate(
+          Number(dataSetId),
+          instanceIds,
+          'approve'
+        );
+      });
       
       toast({
         title: "Bulk Approval Success",
@@ -445,7 +492,7 @@ export default function ApprovalsDashboard() {
       }
       return results;
     },
-    onSuccess: () => {
+    onSuccess: (_, values) => {
       // Invalidate all approval-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
@@ -458,6 +505,27 @@ export default function ApprovalsDashboard() {
       
       // This will invalidate the specific relationship values lists
       queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
+      
+      // Group relationship values by relationship ID for more efficient event dispatching
+      const valuesByRelationship: Record<number, number[]> = {};
+      
+      // Collect all value IDs by relationship
+      values.forEach(value => {
+        if (!valuesByRelationship[value.relationshipId]) {
+          valuesByRelationship[value.relationshipId] = [];
+        }
+        valuesByRelationship[value.relationshipId].push(value.id);
+      });
+      
+      // Dispatch events for each relationship
+      Object.entries(valuesByRelationship).forEach(([relationshipId, valueIds]) => {
+        dispatchApprovalStatusChange({
+          relationshipId: Number(relationshipId),
+          relationshipValueIds: valueIds,
+          actionType: 'approve',
+          userId: undefined
+        });
+      });
       
       toast({
         title: "Bulk Approval Success",

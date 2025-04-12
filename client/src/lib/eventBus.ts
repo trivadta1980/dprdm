@@ -5,6 +5,9 @@
  * of the application without tight coupling.
  */
 
+/**
+ * Event payload type definition
+ */
 export type EventPayload = {
   dataSetId?: number;
   instanceIds?: string[];
@@ -15,27 +18,39 @@ export type EventPayload = {
   actionType: 'approve' | 'reject' | 'update' | 'delete';
 };
 
+/**
+ * Event types supported by the event bus
+ */
 export type EventTypes = 
   | 'referenceDataUpdated'   // When reference data instances are updated
   | 'relationshipUpdated'    // When relationship values are updated
   | 'approvalStatusChanged'; // When approval status changes on any entity
 
+/**
+ * Event Bus class for managing application-wide events
+ */
 export class EventBus {
   /**
    * Dispatch a custom event with a payload
    */
   static dispatch(eventName: EventTypes, payload: EventPayload): void {
-    console.log(`[EventBus] Dispatching event: ${eventName}`, payload);
+    // Add a timestamp if not provided
+    if (!payload.timestamp) {
+      payload.timestamp = new Date().toISOString();
+    }
     
-    // Create and dispatch a custom event
-    const event = new CustomEvent(eventName, {
+    console.log(`[EventBus] Dispatching ${eventName}:`, payload);
+    
+    // Create and dispatch custom event
+    const event = new CustomEvent(eventName, { 
       detail: payload,
-      bubbles: true,
+      bubbles: true
     });
     
-    document.dispatchEvent(event);
+    // Dispatch on window to ensure global access
+    window.dispatchEvent(event);
   }
-
+  
   /**
    * Subscribe to an event
    */
@@ -45,11 +60,11 @@ export class EventBus {
       callback(customEvent.detail);
     };
     
-    document.addEventListener(eventName, handler);
+    window.addEventListener(eventName, handler);
     
-    // Return an unsubscribe function
+    // Return unsubscribe function for cleanup
     return () => {
-      document.removeEventListener(eventName, handler);
+      window.removeEventListener(eventName, handler);
     };
   }
 }
@@ -58,17 +73,15 @@ export class EventBus {
  * Convenience function for dispatching data update events
  */
 export const dispatchDataUpdate = (
-  dataSetId: number, 
-  instanceIds: string[] = [], 
-  actionType: EventPayload['actionType'] = 'update',
-  userId?: string
+  dataSetId: number,
+  instanceIds: string[],
+  actionType: 'approve' | 'reject' | 'update' | 'delete'
 ): void => {
   EventBus.dispatch('referenceDataUpdated', {
     dataSetId,
     instanceIds,
     timestamp: new Date().toISOString(),
-    actionType,
-    userId
+    actionType
   });
 };
 
@@ -76,7 +89,7 @@ export const dispatchDataUpdate = (
  * Convenience function for dispatching approval status change events
  */
 export const dispatchApprovalStatusChange = (
-  payload: Partial<EventPayload> & { actionType: EventPayload['actionType'] }
+  payload: Omit<EventPayload, 'timestamp'>
 ): void => {
   EventBus.dispatch('approvalStatusChanged', {
     ...payload,
