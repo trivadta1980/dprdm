@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Plus, Pencil, Trash2, Database, GitCompare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useApprovalEvents } from "@/hooks/use-approval-events";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,7 +23,7 @@ import type {
   InsertReferenceDataSet
 } from "@shared/schema";
 import { useLocation } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function ReferenceDataPage() {
   const { toast } = useToast();
@@ -38,6 +39,54 @@ export default function ReferenceDataPage() {
   // Fetch reference data sets
   const { data: dataSets = [], isLoading } = useQuery<ReferenceDataSet[]>({
     queryKey: ["/api/reference-data"],
+  });
+  
+  // Subscribe to approval events to refresh data when instances are approved/rejected
+  useApprovalEvents({
+    onApprovalChange: (payload) => {
+      console.log("[ReferenceDataPage] Approval event received:", payload);
+
+      // Invalidate queries to refresh data
+      if (payload.dataSetId) {
+        // If we know exactly which dataset changed
+        queryClient.invalidateQueries({ 
+          queryKey: ["/api/reference-data", payload.dataSetId] 
+        });
+        
+        // Also invalidate the overall list
+        queryClient.invalidateQueries({ 
+          queryKey: ["/api/reference-data"] 
+        });
+        
+        // Show a toast notification when approval status changes
+        if (payload.actionType === 'approve') {
+          toast({
+            title: "Approval Status Changed",
+            description: "Items in dataset have been approved.",
+            variant: "default",
+          });
+        } else if (payload.actionType === 'reject') {
+          toast({
+            title: "Approval Status Changed",
+            description: "Items in dataset have been rejected.",
+            variant: "default",
+          });
+        }
+      } else if (payload.relationshipId) {
+        // If a relationship changed, we should still refresh our data as it might
+        // affect instance listings
+        queryClient.invalidateQueries({ 
+          queryKey: ["/api/reference-data"] 
+        });
+        
+        // Show a more generic toast for relationship changes
+        toast({
+          title: "Relationship Updated",
+          description: `Relationship data has been ${payload.actionType}d.`,
+          variant: "default",
+        });
+      }
+    }
   });
 
   // Fetch dependencies when dialog is shown
@@ -142,16 +191,26 @@ export default function ReferenceDataPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {dataSets.map((dataSet) => {
-                  const type = types.find((t) => t.id === dataSet.typeId);
-                  const instanceCount = Object.keys(dataSet.data || {}).length;
-                  return (
-                    <TableRow key={dataSet.id}>
-                      <TableCell>{dataSet.name}</TableCell>
-                      <TableCell>{type?.name}</TableCell>
-                      <TableCell>{dataSet.description}</TableCell>
-                      <TableCell>{instanceCount} records</TableCell>
-                      <TableCell className="text-right space-x-2">
+                {[...dataSets]
+                  // Sort datasets with newest first based on creation date
+                  .sort((a, b) => {
+                    // First try by creation date if available
+                    if (a.createdAt && b.createdAt) {
+                      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                    }
+                    // If no dates available, sort by ID (higher ID = newer)
+                    return b.id - a.id;
+                  })
+                  .map((dataSet) => {
+                    const type = types.find((t) => t.id === dataSet.typeId);
+                    const instanceCount = Object.keys(dataSet.data || {}).length;
+                    return (
+                      <TableRow key={dataSet.id}>
+                        <TableCell>{dataSet.name}</TableCell>
+                        <TableCell>{type?.name}</TableCell>
+                        <TableCell>{dataSet.description}</TableCell>
+                        <TableCell>{instanceCount} records</TableCell>
+                        <TableCell className="text-right space-x-2">
                         <Button
                           variant="outline"
                           size="sm"
