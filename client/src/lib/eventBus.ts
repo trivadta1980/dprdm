@@ -39,7 +39,13 @@ export class EventBus {
       payload.timestamp = new Date().toISOString();
     }
     
-    console.log(`[EventBus] Dispatching ${eventName}:`, payload);
+    // Enhanced logging for event diagnostics
+    console.log(`[EventBus] Dispatching ${eventName} at ${new Date().toISOString()}:`, {
+      ...payload,
+      dataSetId: payload.dataSetId || 'none',
+      instanceIds: payload.instanceIds || [],
+      relationshipId: payload.relationshipId || 'none'
+    });
     
     // Create and dispatch custom event
     const event = new CustomEvent(eventName, { 
