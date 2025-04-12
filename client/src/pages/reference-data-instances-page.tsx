@@ -287,11 +287,15 @@ export default function ReferenceDataInstancesPage() {
       queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
       
       // Publish event to notify other components (like approvals dashboard)
-      EventBus.dispatch('approvalStatusChanged', {
-        dataSetId: dataSetId!,
-        instanceIds: [instanceId],
-        timestamp: new Date().toISOString(),
-        actionType: 'update'
+      // Use dispatchApprovalStatusChange helper instead of direct dispatch
+      // This ensures consistent event dispatching across the application
+      import('@/lib/eventBus').then(({dispatchApprovalStatusChange}) => {
+        dispatchApprovalStatusChange({
+          dataSetId: dataSetId!,
+          instanceIds: [instanceId],
+          actionType: 'approve' // Changed from 'update' to match what approval handlers expect
+        });
+        console.log('[DEBUG] Dispatched approval event for instance:', instanceId);
       });
       
       toast({
@@ -606,12 +610,14 @@ export default function ReferenceDataInstancesPage() {
       queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
       
       // Publish events for each instance to notify other components (like approvals dashboard)
-      // Use new EventBus system
-      EventBus.dispatch('approvalStatusChanged', {
-        dataSetId: dataSetId!,
-        instanceIds: instanceIds,
-        timestamp: new Date().toISOString(),
-        actionType: 'update'
+      // Use dispatchApprovalStatusChange helper instead of direct dispatch
+      import('@/lib/eventBus').then(({dispatchApprovalStatusChange}) => {
+        dispatchApprovalStatusChange({
+          dataSetId: dataSetId!,
+          instanceIds: instanceIds,
+          actionType: 'approve' // Changed from 'update' to match what approval handlers expect
+        });
+        console.log('[DEBUG] Dispatched bulk approval event for instances:', instanceIds);
       });
       
       toast({
