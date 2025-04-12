@@ -501,14 +501,6 @@ export default function ApprovalsDashboard() {
         queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
       });
       
-      // Collect all instance IDs by dataset
-      approvals.forEach(approval => {
-        if (!approvalsByDataset[approval.dataSetId]) {
-          approvalsByDataset[approval.dataSetId] = [];
-        }
-        approvalsByDataset[approval.dataSetId].push(approval.instanceId);
-      });
-      
       // Dispatch events for each dataset
       Object.entries(approvalsByDataset).forEach(([dataSetId, instanceIds]) => {
         dispatchApprovalStatusChange({
