@@ -105,9 +105,19 @@ export function MappingDialog({
     try {
       setIsSubmitting(true);
       
-      // If no mappings are selected for approval, use all mappings
-      const mappingsToSubmit = mappings;
+      // Update mappings to set status to PENDING for those that are DRAFT or undefined
+      const mappingsToSubmit = mappings.map(mapping => {
+        // Only update status for DRAFT or undefined items
+        if (!mapping.status || mapping.status === 'DRAFT') {
+          return { ...mapping, status: 'PENDING' };
+        }
+        return mapping;
+      });
       
+      // Update local mappings state
+      setMappings(mappingsToSubmit);
+      
+      // Submit to the server
       await onSubmitForApproval(mappingsToSubmit);
       
       toast({

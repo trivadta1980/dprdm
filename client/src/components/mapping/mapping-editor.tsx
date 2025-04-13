@@ -715,7 +715,8 @@ export function MappingEditor({
                   <TableHead>{sourceLabel}</TableHead>
                   <TableHead>{targetLabel}</TableHead>
                   <TableHead>Confidence</TableHead>
-                  {!readOnly && <TableHead className="w-24">Actions</TableHead>}
+                  <TableHead>Status</TableHead>
+                  {!readOnly && <TableHead className="w-40">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -736,12 +737,52 @@ export function MappingEditor({
                       <TableCell>{mapping.sourceValue}</TableCell>
                       <TableCell>{mapping.targetValue}</TableCell>
                       <TableCell>{(mapping.confidence * 100).toFixed(0)}%</TableCell>
+                      <TableCell>
+                        {mapping.status ? (
+                          <div className={`px-2 py-1 rounded-full text-xs inline-flex items-center ${
+                            mapping.status === 'DRAFT' ? 'bg-gray-100 text-gray-800' :
+                            mapping.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                            mapping.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {mapping.status}
+                          </div>
+                        ) : (
+                          <div className="px-2 py-1 rounded-full text-xs inline-flex items-center bg-gray-100 text-gray-800">
+                            DRAFT
+                          </div>
+                        )}
+                      </TableCell>
                       {!readOnly && (
-                        <TableCell>
+                        <TableCell className="flex gap-2">
+                          {(!mapping.status || mapping.status === 'DRAFT') && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => {
+                                if (window.confirm("Submit this mapping for approval?")) {
+                                  // Update status and trigger onMappingsChange
+                                  const updatedMapping = { ...mapping, status: 'PENDING' };
+                                  const updatedMappings = mappings.map(m => 
+                                    m.id === mapping.id ? updatedMapping : m
+                                  );
+                                  onMappingsChange(updatedMappings);
+                                  
+                                  toast({
+                                    title: "Success",
+                                    description: "Mapping submitted for approval."
+                                  });
+                                }
+                              }}
+                            >
+                              Submit for Approval
+                            </Button>
+                          )}
                           <Button
                             variant="destructive"
                             size="sm"
                             onClick={() => handleDeleteMapping(mapping.id!)}
+                            disabled={mapping.status === 'PENDING' || mapping.status === 'APPROVED'}
                           >
                             <Trash2Icon className="h-4 w-4" />
                           </Button>
