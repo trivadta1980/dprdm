@@ -108,6 +108,7 @@ export function CrosswalkEditor({
   // State for mappings dialog
   const [mappings, setMappings] = useState<MappingItem[]>(initialData?.mappings || []);
   const [isMappingDialogOpen, setIsMappingDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Form setup
   const form = useForm<CrosswalkFormData>({
@@ -359,6 +360,56 @@ export function CrosswalkEditor({
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+  
+  // Handle submitting for approval
+  const handleSubmitForApproval = async (mappingsToSubmit: MappingItem[]) => {
+    if (!initialData?.id) {
+      toast({
+        title: "Error",
+        description: "Cannot submit for approval: Crosswalk ID is missing. Please save the crosswalk first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      
+      // Call the API to submit the crosswalk for approval
+      const response = await fetch(`/api/crosswalks/${initialData.id}/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          mappings: mappingsToSubmit,
+          comment: "Submitted for approval"
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to submit for approval");
+      }
+      
+      toast({
+        title: "Success",
+        description: "Crosswalk submitted for approval successfully.",
+      });
+      
+      // Close the dialog
+      setIsMappingDialogOpen(false);
+    } catch (error) {
+      console.error("Error submitting for approval:", error);
+      toast({
+        title: "Error",
+        description: `Failed to submit for approval: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -646,6 +697,9 @@ export function CrosswalkEditor({
           setMappings(newMappings);
           return Promise.resolve();
         }}
+        onSubmitForApproval={handleSubmitForApproval}
+        showSubmitButton={isEditMode && initialData?.id !== undefined}
+        crosswalkId={initialData?.id}
         isLoading={isLoadingSourceData || isLoadingTargetData}
       />
     </Card>
