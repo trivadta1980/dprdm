@@ -93,8 +93,6 @@ export default function ApprovalsDashboard() {
   const [relationshipPage, setRelationshipPage] = useState(1);
   const [relationshipPageSize, setRelationshipPageSize] = useState(50);
   const [selectedRelationshipValues, setSelectedRelationshipValues] = useState<Set<number>>(new Set());
-  const [crosswalkPage, setCrosswalkPage] = useState(1);
-  const [crosswalkPageSize, setCrosswalkPageSize] = useState(50);
   const [selectedCrosswalkMappings, setSelectedCrosswalkMappings] = useState<Set<number>>(new Set());
   
   // We use the useApprovalEvents hook to listen for approval events from other components
@@ -141,6 +139,8 @@ export default function ApprovalsDashboard() {
   const [selectedSourceSystem, setSelectedSourceSystem] = useState("all");
   const [selectedTargetSystem, setSelectedTargetSystem] = useState("all"); 
   const [crosswalkDateRange, setCrosswalkDateRange] = useState<DateRange | undefined>();
+  const [crosswalkPage, setCrosswalkPage] = useState(1);
+  const [crosswalkPageSize, setCrosswalkPageSize] = useState(50);
 
   // Fetch relationship types for dropdown
   const { data: relationshipTypes = [] } = useQuery({
