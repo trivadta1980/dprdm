@@ -80,6 +80,32 @@ interface PendingCrosswalkMapping {
   rejectedAt: string | null;
   rejectedBy: number | null;
   changeHistory?: any[];
+  mappingData?: {
+    mappings: Array<{
+      sourceValue: string;
+      targetValue: string;
+      confidence: number;
+      status: string;
+    }>;
+    sourceAttribute: string;
+    targetAttribute: string;
+  };
+}
+
+// Interface for individual pending mapping items
+interface PendingMappingItem {
+  id: string;
+  crosswalkId: number;
+  crosswalkName: string;
+  sourceSystemName: string;
+  targetSystemName: string;
+  sourceValue: string;
+  targetValue: string;
+  confidence: number;
+  status: string;
+  sourceAttribute: string;
+  targetAttribute: string;
+  submittedAt: string | null;
 }
 
 export default function ApprovalsDashboard() {
@@ -322,16 +348,50 @@ export default function ApprovalsDashboard() {
       const data = await response.json();
       console.log('DEBUG PENDING CROSSWALKS:', data);
       
-      // Handle case where the response is an array instead of an object with data property
+      // Convert crosswalk mappings into individual mapping items
+      let allMappings: PendingMappingItem[] = [];
+      let originalMappings: PendingCrosswalkMapping[] = [];
+      
       if (Array.isArray(data)) {
-        console.log('Converting array response to expected format');
+        originalMappings = data;
+        
+        // Process each crosswalk to extract individual mapping items
+        data.forEach(crosswalk => {
+          if (crosswalk.mappingData && Array.isArray(crosswalk.mappingData.mappings)) {
+            // Extract pending individual mappings
+            const pendingMappings = crosswalk.mappingData.mappings.filter(
+              mapping => mapping.status === "PENDING"
+            );
+            
+            // Convert each mapping to a PendingMappingItem
+            pendingMappings.forEach(mapping => {
+              allMappings.push({
+                id: `${crosswalk.id}-${mapping.sourceValue}-${mapping.targetValue}`,
+                crosswalkId: crosswalk.id,
+                crosswalkName: crosswalk.name,
+                sourceSystemName: crosswalk.sourceSystemName,
+                targetSystemName: crosswalk.targetSystemName,
+                sourceValue: mapping.sourceValue,
+                targetValue: mapping.targetValue,
+                confidence: mapping.confidence,
+                status: mapping.status,
+                sourceAttribute: crosswalk.mappingData.sourceAttribute,
+                targetAttribute: crosswalk.mappingData.targetAttribute,
+                submittedAt: crosswalk.submittedAt
+              });
+            });
+          }
+        });
+        
+        // Return both the flattened individual mappings and original crosswalk data
         return {
-          data: data,
+          data: allMappings,
+          originalMappings: originalMappings,
           metadata: {
-            totalCount: data.length,
+            totalCount: allMappings.length,
             currentPage: 1,
             pageSize: 50,
-            totalPages: 1
+            totalPages: Math.ceil(allMappings.length / 50) || 1
           }
         };
       }
@@ -422,17 +482,41 @@ export default function ApprovalsDashboard() {
   
   // Bulk approval for crosswalk mappings
   const bulkApproveCrosswalksMutation = useMutation({
-    mutationFn: async (mappings: PendingCrosswalkMapping[]) => {
+    mutationFn: async (mappingIds: string[]) => {
+      // Get the original crosswalk mappings based on the selected item IDs
       const results = [];
-      for (const mapping of mappings) {
-        const response = await apiRequest(`/api/crosswalks/${mapping.id}/approve`, {
-          method: "POST"
-        });
-        results.push(await response.json());
+      const processedCrosswalkIds = new Set<number>();
+      
+      for (const mappingId of mappingIds) {
+        // Parse the mapping ID to get the crosswalk ID
+        // ID format is "{crosswalkId}-{sourceValue}-{targetValue}"
+        const crosswalkId = parseInt(mappingId.split('-')[0]);
+        
+        // Skip if we've already processed this crosswalk
+        if (processedCrosswalkIds.has(crosswalkId)) {
+          continue;
+        }
+        
+        // Find the original crosswalk mapping
+        const originalMapping = crosswalkMappingsResponse.originalMappings?.find(
+          (m) => m.id === crosswalkId
+        );
+        
+        if (originalMapping) {
+          processedCrosswalkIds.add(crosswalkId);
+          const response = await apiRequest(`/api/crosswalks/${crosswalkId}/approve`, {
+            method: "POST"
+          });
+          results.push(await response.json());
+        }
       }
-      return results;
+      
+      return {
+        results,
+        processedCrosswalkIds: Array.from(processedCrosswalkIds)
+      };
     },
-    onSuccess: (_, mappings) => {
+    onSuccess: ({ processedCrosswalkIds }) => {
       // Invalidate all approval-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/crosswalk-mappings/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
@@ -442,14 +526,14 @@ export default function ApprovalsDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/crosswalks"] });
       
       // Invalidate specific crosswalk queries for all affected crosswalks
-      mappings.forEach(mapping => {
-        queryClient.invalidateQueries({ queryKey: [`/api/crosswalks/${mapping.id}`] });
+      processedCrosswalkIds.forEach(id => {
+        queryClient.invalidateQueries({ queryKey: [`/api/crosswalks/${id}`] });
       });
       
       // Dispatch events for each crosswalk
-      mappings.forEach(mapping => {
+      processedCrosswalkIds.forEach(id => {
         dispatchApprovalStatusChange({
-          crosswalkMappingId: mapping.id,
+          crosswalkMappingId: id,
           actionType: 'approve',
           userId: undefined
         });
@@ -1546,8 +1630,8 @@ export default function ApprovalsDashboard() {
                               onCheckedChange={(checked) => {
                                 if (checked) {
                                   // Select all visible mappings
-                                  const allIds = new Set<number>();
-                                  crosswalkMappingsResponse?.data?.forEach((mapping: PendingCrosswalkMapping) => {
+                                  const allIds = new Set<string>();
+                                  crosswalkMappingsResponse?.data?.forEach((mapping: PendingMappingItem) => {
                                     allIds.add(mapping.id);
                                   });
                                   setSelectedCrosswalkMappings(allIds);
@@ -1558,17 +1642,18 @@ export default function ApprovalsDashboard() {
                               }}
                             />
                           </TableHead>
-                          <TableHead>Name</TableHead>
+                          <TableHead>Crosswalk</TableHead>
                           <TableHead>Source System</TableHead>
+                          <TableHead>Source Value</TableHead>
                           <TableHead>Target System</TableHead>
+                          <TableHead>Target Value</TableHead>
+                          <TableHead>Confidence</TableHead>
                           <TableHead>Status</TableHead>
-                          <TableHead>Submitted</TableHead>
-                          <TableHead>Submitted By</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {crosswalkMappingsResponse?.data?.map((mapping: PendingCrosswalkMapping) => (
+                        {crosswalkMappingsResponse?.data?.map((mapping: PendingMappingItem) => (
                           <TableRow key={mapping.id}>
                             <TableCell>
                               <Checkbox
@@ -1584,21 +1669,38 @@ export default function ApprovalsDashboard() {
                                 }}
                               />
                             </TableCell>
-                            <TableCell>{mapping.name}</TableCell>
+                            <TableCell>{mapping.crosswalkName}</TableCell>
                             <TableCell>{mapping.sourceSystemName}</TableCell>
+                            <TableCell>
+                              <span className="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
+                                {mapping.sourceValue}
+                              </span>
+                            </TableCell>
                             <TableCell>{mapping.targetSystemName}</TableCell>
+                            <TableCell>
+                              <span className="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
+                                {mapping.targetValue}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              {(mapping.confidence * 100).toFixed(0)}%
+                            </TableCell>
                             <TableCell>
                               <Badge variant="outline">Pending Approval</Badge>
                             </TableCell>
-                            <TableCell>{new Date(mapping.submittedAt || mapping.createdAt).toLocaleDateString()}</TableCell>
-                            <TableCell>User ID: {mapping.submittedBy || mapping.createdBy}</TableCell>
                             <TableCell className="text-right space-x-2">
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => {
-                                  setSelectedCrosswalkMapping(mapping);
-                                  setHistoryDialogOpen(true);
+                                  // Find the original crosswalk mapping for this item
+                                  const originalMapping = crosswalkMappingsResponse.originalMappings?.find(
+                                    (m) => m.id === mapping.crosswalkId
+                                  );
+                                  if (originalMapping) {
+                                    setSelectedCrosswalkMapping(originalMapping);
+                                    setHistoryDialogOpen(true);
+                                  }
                                 }}
                               >
                                 <History className="h-4 w-4 mr-2" />
@@ -1607,7 +1709,15 @@ export default function ApprovalsDashboard() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => approveCrosswalkMutation.mutate(mapping)}
+                                onClick={() => {
+                                  // Find the original crosswalk mapping for this item
+                                  const originalMapping = crosswalkMappingsResponse.originalMappings?.find(
+                                    (m) => m.id === mapping.crosswalkId
+                                  );
+                                  if (originalMapping) {
+                                    approveCrosswalkMutation.mutate(originalMapping);
+                                  }
+                                }}
                                 disabled={approveCrosswalkMutation.isPending}
                               >
                                 <Check className="h-4 w-4 mr-2" />
@@ -1616,7 +1726,15 @@ export default function ApprovalsDashboard() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => rejectCrosswalkMutation.mutate(mapping)}
+                                onClick={() => {
+                                  // Find the original crosswalk mapping for this item
+                                  const originalMapping = crosswalkMappingsResponse.originalMappings?.find(
+                                    (m) => m.id === mapping.crosswalkId
+                                  );
+                                  if (originalMapping) {
+                                    rejectCrosswalkMutation.mutate(originalMapping);
+                                  }
+                                }}
                                 disabled={rejectCrosswalkMutation.isPending}
                               >
                                 <X className="h-4 w-4 mr-2" />
