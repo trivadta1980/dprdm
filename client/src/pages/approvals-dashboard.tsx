@@ -318,7 +318,25 @@ export default function ApprovalsDashboard() {
       if (!response.ok) {
         throw new Error("Failed to fetch pending crosswalk mappings");
       }
-      return response.json();
+      
+      const data = await response.json();
+      console.log('DEBUG PENDING CROSSWALKS:', data);
+      
+      // Handle case where the response is an array instead of an object with data property
+      if (Array.isArray(data)) {
+        console.log('Converting array response to expected format');
+        return {
+          data: data,
+          metadata: {
+            totalCount: data.length,
+            currentPage: 1,
+            pageSize: 50,
+            totalPages: 1
+          }
+        };
+      }
+      
+      return data;
     }
   });
   
