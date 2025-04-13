@@ -798,12 +798,12 @@ export function MappingEditor({
                       </TableCell>
                       {!readOnly && (
                         <TableCell className="flex gap-2">
-                          {/* Edit button - only enabled for DRAFT status */}
+                          {/* Edit button - only disabled for PENDING status */}
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleEditMapping(mapping)}
-                            disabled={mapping.status === 'PENDING' || mapping.status === 'APPROVED' || mapping.status === 'REJECTED'}
+                            disabled={mapping.status === 'PENDING'}
                           >
                             Edit
                           </Button>
