@@ -2396,6 +2396,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get pending crosswalk mappings
       const pendingMappings = await storage.getPendingCrosswalkMappings();
+      console.log('Pending mappings count:', pendingMappings.length);
+      
+      // Force-log the entire mappings for debugging
+      console.log('Pending mappings data:', JSON.stringify(pendingMappings));
       
       // Enhance with source and target system names
       const enhancedMappings = await Promise.all(
@@ -2412,6 +2416,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       console.log('GET /api/approvals/crosswalk-mappings/pending - Mappings fetched successfully:', enhancedMappings.length);
+      console.log('Enhanced mapping results:', JSON.stringify(enhancedMappings.map(m => ({
+        id: m.id,
+        name: m.name,
+        sourceSystem: m.sourceSystemName,
+        targetSystem: m.targetSystemName,
+        mappingCount: m.mappingData?.mappings?.length || 0,
+        pendingCount: m.mappingData?.mappings?.filter(item => item.status === "PENDING").length || 0
+      }))));
+      
       res.json(enhancedMappings);
     } catch (error) {
       console.error('GET /api/approvals/crosswalk-mappings/pending - Error:', error);

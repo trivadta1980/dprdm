@@ -991,20 +991,43 @@ export class DatabaseStorage implements IStorage {
 
   // Crosswalk mapping approval methods
   async getPendingCrosswalkMappings(): Promise<CrosswalkMapping[]> {
+    console.log('getPendingCrosswalkMappings - Starting');
+    
     // First, get all crosswalk mappings
     const allMappings = await db
       .select()
       .from(crosswalkMappings)
       .orderBy(desc(crosswalkMappings.createdAt));
     
+    console.log(`getPendingCrosswalkMappings - Retrieved ${allMappings.length} total mappings`);
+    
     // Then filter them to get only the ones that have at least one mapping with "PENDING" status
-    return allMappings.filter(mapping => {
-      if (!mapping.mappingData || !mapping.mappingData.mappings || !Array.isArray(mapping.mappingData.mappings)) {
+    const pendingMappings = allMappings.filter(mapping => {
+      try {
+        console.log(`Checking mapping ID ${mapping.id}`);
+        console.log(`Mapping data: ${JSON.stringify(mapping.mappingData)}`);
+        
+        if (!mapping.mappingData || !mapping.mappingData.mappings || !Array.isArray(mapping.mappingData.mappings)) {
+          console.log(`Mapping ${mapping.id} has no valid mappings array`);
+          return false;
+        }
+        
+        // Check if any mapping has a "PENDING" status
+        const hasPendingItems = mapping.mappingData.mappings.some(item => {
+          console.log(`Checking item status: ${item.status}`);
+          return item.status === "PENDING";
+        });
+        
+        console.log(`Mapping ${mapping.id} has pending items: ${hasPendingItems}`);
+        return hasPendingItems;
+      } catch (error) {
+        console.error(`Error processing mapping ${mapping.id}:`, error);
         return false;
       }
-      // Check if any mapping has a "PENDING" status
-      return mapping.mappingData.mappings.some(item => item.status === "PENDING");
     });
+    
+    console.log(`getPendingCrosswalkMappings - Found ${pendingMappings.length} mappings with pending items`);
+    return pendingMappings;
   }
 
   async approveCrosswalkMapping(id: number, userId: number, comment?: string): Promise<CrosswalkMapping> {
