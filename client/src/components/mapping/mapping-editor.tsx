@@ -79,6 +79,8 @@ export function MappingEditor({
   const [confidenceValue, setConfidenceValue] = useState<string>("");
   const [filteredMappings, setFilteredMappings] = useState<MappingItem[]>(mappings);
   const [activeTab, setActiveTab] = useState<string>("manual");
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [editingItemId, setEditingItemId] = useState<string | undefined>(undefined);
   
   // Update filtered mappings when mappings or filters change
   useEffect(() => {
