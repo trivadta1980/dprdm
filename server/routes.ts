@@ -2516,6 +2516,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId
       });
       
+      // Invalidate the approvals dashboard cache for bulk submissions
+      res.app.emit('approvalsUpdated', {
+        type: 'crosswalk',
+        action: 'bulk-submit',
+        ids: ids
+      });
+      
       res.json(mappings);
     } catch (error) {
       console.error('POST /api/crosswalks/bulk-submit - Error:', error);

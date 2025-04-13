@@ -79,10 +79,56 @@ export function useApprovalEvents({
       }
     );
 
+    // Listen for approvals dashboard updates
+    const unsubscribeApprovalsUpdate = EventBus.subscribe(
+      'approvalsUpdated',
+      (payload: EventPayload) => {
+        console.log('[useApprovalEvents] Approvals updated event received:', payload);
+        
+        // Invalidate all approval-related queries
+        queryClient.invalidateQueries({ queryKey: ["/api/approvals/pending"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
+        
+        // Invalidate specific approval category queries based on the type
+        if (payload.type === 'crosswalk') {
+          console.log('[useApprovalEvents] Invalidating crosswalk approvals queries');
+          queryClient.invalidateQueries({ queryKey: ["/api/approvals/crosswalk-mappings/pending"] });
+          
+          // Invalidate specific crosswalk mappings
+          if (payload.ids && Array.isArray(payload.ids)) {
+            payload.ids.forEach(id => {
+              queryClient.invalidateQueries({ queryKey: [`/api/crosswalks/${id}`] });
+            });
+          }
+          
+          // Also invalidate all crosswalks
+          queryClient.invalidateQueries({ queryKey: ["/api/crosswalks"] });
+        } else if (payload.type === 'relationship') {
+          console.log('[useApprovalEvents] Invalidating relationship values approvals queries');
+          queryClient.invalidateQueries({ queryKey: ["/api/approvals/relationship-values/pending"] });
+          
+          // Invalidate all relationships
+          queryClient.invalidateQueries({ queryKey: ["/api/relationships"] });
+        } else if (payload.type === 'dataset') {
+          console.log('[useApprovalEvents] Invalidating dataset instances approvals queries');
+          queryClient.invalidateQueries({ queryKey: ["/api/approvals/dataset-instances/pending"] });
+          
+          // Invalidate all datasets
+          queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
+        }
+        
+        // Optional callback for custom handling
+        if (onApprovalChange) {
+          onApprovalChange(payload);
+        }
+      }
+    );
+    
     // Return a cleanup function
     return () => {
       unsubscribeApproval();
       unsubscribeDataUpdate();
+      unsubscribeApprovalsUpdate();
     };
   }, [dataSetId, queryClient, onApprovalChange]);
 }
