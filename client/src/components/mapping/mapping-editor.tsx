@@ -122,13 +122,47 @@ export function MappingEditor({
     setFilteredMappings(filtered);
   }, [mappings, sourceFilter, targetFilter, confidenceOperator, confidenceValue]);
   
-  // Add new mapping
+  // Handle edit mode
+  const handleEditMapping = (mapping: MappingItem) => {
+    setNewSourceValue(mapping.sourceValue);
+    setNewTargetValue(mapping.targetValue);
+    setIsEditing(true);
+    setEditingItemId(mapping.id);
+  };
+  
+  // Add new mapping or update existing mapping
   const handleAddMapping = () => {
     if (!newSourceValue || !newTargetValue) {
       toast({
         title: "Error",
         description: "Both source and target values are required.",
         variant: "destructive",
+      });
+      return;
+    }
+    
+    // If we're in edit mode, update the existing mapping
+    if (isEditing && editingItemId) {
+      const updatedMappings = mappings.map((mapping) => {
+        if (mapping.id === editingItemId) {
+          return {
+            ...mapping,
+            sourceValue: newSourceValue,
+            targetValue: newTargetValue,
+          };
+        }
+        return mapping;
+      });
+      
+      onMappingsChange(updatedMappings);
+      setIsEditing(false);
+      setEditingItemId(undefined);
+      setNewSourceValue("");
+      setNewTargetValue("");
+      
+      toast({
+        title: "Success",
+        description: "Mapping updated successfully.",
       });
       return;
     }
@@ -505,8 +539,8 @@ export function MappingEditor({
           {/* Manual entry form */}
           <Card>
             <CardHeader className="p-4 pb-2">
-              <CardTitle className="text-base">Add New Mapping</CardTitle>
-              <CardDescription>Create a mapping between source and target values</CardDescription>
+              <CardTitle className="text-base">{isEditing ? 'Edit Mapping' : 'Add New Mapping'}</CardTitle>
+              <CardDescription>{isEditing ? 'Update an existing mapping' : 'Create a mapping between source and target values'}</CardDescription>
             </CardHeader>
             <CardContent className="p-4 pb-2">
               <div className="grid grid-cols-2 gap-4 mb-4">
@@ -565,8 +599,14 @@ export function MappingEditor({
                 disabled={readOnly || !newSourceValue || !newTargetValue}
                 onClick={handleAddMapping}
               >
-                <PlusIcon className="h-4 w-4 mr-2" />
-                Add Mapping
+                {isEditing ? (
+                  <>Update Mapping</>
+                ) : (
+                  <>
+                    <PlusIcon className="h-4 w-4 mr-2" />
+                    Add Mapping
+                  </>
+                )}
               </Button>
             </CardFooter>
           </Card>
@@ -758,6 +798,17 @@ export function MappingEditor({
                       </TableCell>
                       {!readOnly && (
                         <TableCell className="flex gap-2">
+                          {/* Edit button - only enabled for DRAFT status */}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditMapping(mapping)}
+                            disabled={mapping.status === 'PENDING' || mapping.status === 'APPROVED' || mapping.status === 'REJECTED'}
+                          >
+                            Edit
+                          </Button>
+                          
+                          {/* Submit for Approval button - only for DRAFT status */}
                           {(!mapping.status || mapping.status === 'DRAFT') && (
                             <Button
                               variant="secondary"
@@ -781,6 +832,8 @@ export function MappingEditor({
                               Submit for Approval
                             </Button>
                           )}
+                          
+                          {/* Delete button - disabled for PENDING and APPROVED status */}
                           <Button
                             variant="destructive"
                             size="sm"
