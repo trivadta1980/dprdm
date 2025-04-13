@@ -36,6 +36,7 @@ export interface MappingItem {
   targetValue: string;
   confidence: number;
   id?: string; // Optional unique identifier
+  status?: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED'; // Approval status
 }
 
 export interface MappingEditorProps {
