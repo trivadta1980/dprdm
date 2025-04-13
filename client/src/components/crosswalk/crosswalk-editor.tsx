@@ -384,7 +384,7 @@ export function CrosswalkEditor({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          mappings: mappingsToSubmit,
+          mappings: mappingsToSubmit, // This may include all mappings or a subset (for bulk operations)
           comment: "Submitted for approval"
         }),
       });
@@ -393,6 +393,9 @@ export function CrosswalkEditor({
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to submit for approval");
       }
+      
+      // Update the UI to show the latest mappings 
+      setMappings(mappingsToSubmit);
       
       toast({
         title: "Success",
