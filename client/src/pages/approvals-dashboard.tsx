@@ -119,7 +119,7 @@ export default function ApprovalsDashboard() {
   const [relationshipPage, setRelationshipPage] = useState(1);
   const [relationshipPageSize, setRelationshipPageSize] = useState(50);
   const [selectedRelationshipValues, setSelectedRelationshipValues] = useState<Set<number>>(new Set());
-  const [selectedCrosswalkMappings, setSelectedCrosswalkMappings] = useState<Set<number>>(new Set());
+  const [selectedCrosswalkMappings, setSelectedCrosswalkMappings] = useState<Set<string>>(new Set());
   
   // We use the useApprovalEvents hook to listen for approval events from other components
   useApprovalEvents({
@@ -1602,11 +1602,10 @@ export default function ApprovalsDashboard() {
                       </div>
                       <Button
                         onClick={() => {
-                          const selectedMappings = crosswalkMappingsResponse?.data?.filter(
-                            (mapping: PendingCrosswalkMapping) => selectedCrosswalkMappings.has(mapping.id)
-                          ) || [];
-                          if (selectedMappings.length > 0) {
-                            bulkApproveCrosswalksMutation.mutate(selectedMappings);
+                          // Convert the Set to an array of selected IDs
+                          const selectedMappingIds = Array.from(selectedCrosswalkMappings);
+                          if (selectedMappingIds.length > 0) {
+                            bulkApproveCrosswalksMutation.mutate(selectedMappingIds);
                           }
                         }}
                         disabled={selectedCrosswalkMappings.size === 0 || bulkApproveCrosswalksMutation.isPending}
