@@ -1109,6 +1109,22 @@ export class DatabaseStorage implements IStorage {
       updates.approvedAt = new Date();
     }
 
+    // IMPORTANT FIX: Update the status in the individual mappings inside mappingData
+    let mappingData = {...currentMapping.mappingData};
+    
+    // If mappingData contains a mappings array, update the status of each mapping
+    if (mappingData.mappings && Array.isArray(mappingData.mappings)) {
+      mappingData.mappings = mappingData.mappings.map((mapping: any) => {
+        return {
+          ...mapping,
+          status: status // Set the status of each individual mapping
+        };
+      });
+      
+      // Add the updated mappingData to the updates
+      updates.mappingData = mappingData;
+    }
+
     // Apply the updates
     const [updatedMapping] = await db
       .update(crosswalkMappings)

@@ -115,7 +115,7 @@ export function MappingDialog({
       });
       
       // Update local mappings state
-      setMappings(mappingsToSubmit);
+      setAllMappings(mappingsToSubmit);
       
       // Submit to the server
       await onSubmitForApproval(mappingsToSubmit);
