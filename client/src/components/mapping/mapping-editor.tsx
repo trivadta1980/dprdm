@@ -135,8 +135,9 @@ export function MappingEditor({
   };
   
   // Handle select all toggle
-  const handleSelectAll = () => {
-    if (selectAll) {
+  const handleSelectAll = (checked: boolean) => {
+    setSelectAll(checked);
+    if (!checked) {
       // Deselect all
       setSelectedItems([]);
     } else {
@@ -147,7 +148,6 @@ export function MappingEditor({
         .filter(id => id !== undefined);
       setSelectedItems(eligibleIds);
     }
-    setSelectAll(!selectAll);
   };
   
   // Submit selected items for approval
