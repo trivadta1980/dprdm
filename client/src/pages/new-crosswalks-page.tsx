@@ -170,6 +170,7 @@ export default function NewCrosswalksPage() {
               sourceValue: m.sourceValue,
               targetValue: m.targetValue,
               confidence: m.confidence,
+              status: m.status || "DRAFT", // Ensure status is set, default to DRAFT if missing
             })),
           },
         },
@@ -212,6 +213,7 @@ export default function NewCrosswalksPage() {
               sourceValue: m.sourceValue,
               targetValue: m.targetValue,
               confidence: m.confidence,
+              status: m.status || "DRAFT", // Preserve the status field, default to DRAFT if missing
             })),
           },
         },
@@ -455,6 +457,7 @@ export default function NewCrosswalksPage() {
                             sourceValue: m.sourceValue,
                             targetValue: m.targetValue,
                             confidence: m.confidence,
+                            status: m.status || "DRAFT", // Preserve the status field, default to DRAFT if missing
                             id: `${m.sourceValue}-${m.targetValue}`,
                           })),
                         }
