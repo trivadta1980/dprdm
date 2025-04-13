@@ -1783,7 +1783,7 @@ export default function ApprovalsDashboard() {
                     {new Date(entry.timestamp).toLocaleString()}
                   </div>
                   <div className="space-y-2">
-                    {entry.changes.map((change, changeIndex) => (
+                    {entry.changes && Array.isArray(entry.changes) && entry.changes.map((change, changeIndex) => (
                       <div key={changeIndex} className="text-sm">
                         <span className="font-medium">{change.field}:</span>{" "}
                         <span className="text-destructive">{change.oldValue}</span>{" "}
