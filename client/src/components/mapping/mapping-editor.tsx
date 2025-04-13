@@ -179,6 +179,7 @@ export function MappingEditor({
       targetValue: newTargetValue,
       confidence: calculatedConfidence,
       id: Date.now().toString(),
+      status: "DRAFT", // Set default status for new mappings
     };
     
     const updatedMappings = [...mappings, newMapping];
