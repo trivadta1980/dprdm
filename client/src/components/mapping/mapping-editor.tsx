@@ -82,6 +82,8 @@ export function MappingEditor({
   const [activeTab, setActiveTab] = useState<string>("manual");
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editingItemId, setEditingItemId] = useState<string | undefined>(undefined);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [selectAll, setSelectAll] = useState<boolean>(false);
   
   // Update filtered mappings when mappings or filters change
   useEffect(() => {
@@ -122,6 +124,64 @@ export function MappingEditor({
     
     setFilteredMappings(filtered);
   }, [mappings, sourceFilter, targetFilter, confidenceOperator, confidenceValue]);
+  
+  // Handle item selection
+  const handleItemSelect = (id: string) => {
+    setSelectedItems(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id) 
+        : [...prev, id]
+    );
+  };
+  
+  // Handle select all toggle
+  const handleSelectAll = () => {
+    if (selectAll) {
+      // Deselect all
+      setSelectedItems([]);
+    } else {
+      // Select all filterable and eligible items (DRAFT status)
+      const eligibleIds = filteredMappings
+        .filter(mapping => !mapping.status || mapping.status === 'DRAFT')
+        .map(mapping => mapping.id!)
+        .filter(id => id !== undefined);
+      setSelectedItems(eligibleIds);
+    }
+    setSelectAll(!selectAll);
+  };
+  
+  // Submit selected items for approval
+  const handleBulkSubmitForApproval = () => {
+    if (selectedItems.length === 0) {
+      toast({
+        title: "Warning",
+        description: "No items selected for submission.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (window.confirm(`Submit ${selectedItems.length} mapping(s) for approval?`)) {
+      // Update the status of selected items to PENDING
+      const updatedMappings = mappings.map(mapping => {
+        if (mapping.id && selectedItems.includes(mapping.id)) {
+          return { ...mapping, status: 'PENDING' };
+        }
+        return mapping;
+      });
+      
+      onMappingsChange(updatedMappings);
+      
+      toast({
+        title: "Success",
+        description: `${selectedItems.length} mapping(s) submitted for approval.`,
+      });
+      
+      // Clear selections after submission
+      setSelectedItems([]);
+      setSelectAll(false);
+    }
+  };
   
   // Handle edit mode
   const handleEditMapping = (mapping: MappingItem) => {
@@ -763,6 +823,15 @@ export function MappingEditor({
             <Table>
               <TableHeader>
                 <TableRow>
+                  {!readOnly && (
+                    <TableHead className="w-12">
+                      <Checkbox 
+                        checked={selectAll} 
+                        onCheckedChange={handleSelectAll}
+                        aria-label="Select all mappings"
+                      />
+                    </TableHead>
+                  )}
                   <TableHead>{sourceLabel}</TableHead>
                   <TableHead>{targetLabel}</TableHead>
                   <TableHead>Confidence</TableHead>
@@ -773,7 +842,7 @@ export function MappingEditor({
               <TableBody>
                 {filteredMappings.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={readOnly ? 3 : 4} className="h-32 text-center">
+                    <TableCell colSpan={readOnly ? 4 : 6} className="h-32 text-center">
                       No mappings found.
                       {(sourceFilter || targetFilter || confidenceValue) && (
                         <p className="text-sm text-muted-foreground mt-1">
@@ -785,6 +854,16 @@ export function MappingEditor({
                 ) : (
                   filteredMappings.map((mapping) => (
                     <TableRow key={mapping.id}>
+                      {!readOnly && (
+                        <TableCell className="w-12">
+                          <Checkbox 
+                            checked={selectedItems.includes(mapping.id!)}
+                            onCheckedChange={() => handleItemSelect(mapping.id!)}
+                            disabled={mapping.status === 'PENDING' || mapping.status === 'APPROVED' || mapping.status === 'REJECTED'}
+                            aria-label={`Select mapping ${mapping.sourceValue} to ${mapping.targetValue}`}
+                          />
+                        </TableCell>
+                      )}
                       <TableCell>{mapping.sourceValue}</TableCell>
                       <TableCell>{mapping.targetValue}</TableCell>
                       <TableCell>{(mapping.confidence * 100).toFixed(0)}%</TableCell>
@@ -863,7 +942,21 @@ export function MappingEditor({
         <CardFooter className="p-4 justify-between">
           <div className="text-sm text-muted-foreground">
             Showing {filteredMappings.length} of {mappings.length} mappings
+            {selectedItems.length > 0 && (
+              <span className="ml-2 font-medium">
+                ({selectedItems.length} selected)
+              </span>
+            )}
           </div>
+          
+          {!readOnly && selectedItems.length > 0 && (
+            <Button
+              variant="secondary"
+              onClick={handleBulkSubmitForApproval}
+            >
+              Submit {selectedItems.length} Item{selectedItems.length !== 1 ? 's' : ''} for Approval
+            </Button>
+          )}
         </CardFooter>
       </Card>
     </div>
