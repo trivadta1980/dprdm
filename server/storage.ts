@@ -991,19 +991,134 @@ export class DatabaseStorage implements IStorage {
 
   // Crosswalk mapping approval methods
   async getPendingCrosswalkMappings(): Promise<CrosswalkMapping[]> {
-    return db
+    // First, get all crosswalk mappings
+    const allMappings = await db
       .select()
       .from(crosswalkMappings)
-      .where(eq(crosswalkMappings.approvalStatus, "PENDING"))
       .orderBy(desc(crosswalkMappings.createdAt));
+    
+    // Then filter them to get only the ones that have at least one mapping with "PENDING" status
+    return allMappings.filter(mapping => {
+      if (!mapping.mappingData || !mapping.mappingData.mappings || !Array.isArray(mapping.mappingData.mappings)) {
+        return false;
+      }
+      // Check if any mapping has a "PENDING" status
+      return mapping.mappingData.mappings.some(item => item.status === "PENDING");
+    });
   }
 
   async approveCrosswalkMapping(id: number, userId: number, comment?: string): Promise<CrosswalkMapping> {
-    return this.updateCrosswalkMappingStatus(id, "APPROVED", userId, comment);
+    // Get the current mapping first
+    const currentMapping = await this.getCrosswalkMapping(id);
+    if (!currentMapping) {
+      throw new Error(`Crosswalk mapping with ID ${id} not found`);
+    }
+
+    // Update the status of all pending mappings to approved
+    if (currentMapping.mappingData && currentMapping.mappingData.mappings && Array.isArray(currentMapping.mappingData.mappings)) {
+      let mappingData = {...currentMapping.mappingData};
+      let hasChanges = false;
+      
+      mappingData.mappings = mappingData.mappings.map(mapping => {
+        if (mapping.status === "PENDING") {
+          hasChanges = true;
+          return {
+            ...mapping,
+            status: "APPROVED"
+          };
+        }
+        return mapping;
+      });
+      
+      if (hasChanges) {
+        // Create a history entry
+        const timestamp = new Date().toISOString();
+        const historyEntry: ChangeHistoryEntry = {
+          timestamp,
+          prevStatus: "PENDING",
+          newStatus: "APPROVED",
+          userId,
+          comment: comment || "Approved mappings"
+        };
+        
+        // Get current history or initialize empty array
+        const currentHistory = currentMapping.changeHistory as ChangeHistoryEntry[] || [];
+        const updatedHistory = [...currentHistory, historyEntry];
+        
+        // Apply the updates
+        const [updatedMapping] = await db
+          .update(crosswalkMappings)
+          .set({
+            mappingData,
+            changeHistory: updatedHistory,
+            updatedAt: new Date()
+          })
+          .where(eq(crosswalkMappings.id, id))
+          .returning();
+          
+        return updatedMapping;
+      }
+    }
+    
+    // If no changes were made, return the current mapping
+    return currentMapping;
   }
 
   async rejectCrosswalkMapping(id: number, userId: number, comment?: string): Promise<CrosswalkMapping> {
-    return this.updateCrosswalkMappingStatus(id, "REJECTED", userId, comment);
+    // Get the current mapping first
+    const currentMapping = await this.getCrosswalkMapping(id);
+    if (!currentMapping) {
+      throw new Error(`Crosswalk mapping with ID ${id} not found`);
+    }
+
+    // Update the status of all pending mappings to rejected
+    if (currentMapping.mappingData && currentMapping.mappingData.mappings && Array.isArray(currentMapping.mappingData.mappings)) {
+      let mappingData = {...currentMapping.mappingData};
+      let hasChanges = false;
+      
+      mappingData.mappings = mappingData.mappings.map(mapping => {
+        if (mapping.status === "PENDING") {
+          hasChanges = true;
+          return {
+            ...mapping,
+            status: "REJECTED"
+          };
+        }
+        return mapping;
+      });
+      
+      if (hasChanges) {
+        // Create a history entry
+        const timestamp = new Date().toISOString();
+        const historyEntry: ChangeHistoryEntry = {
+          timestamp,
+          prevStatus: "PENDING",
+          newStatus: "REJECTED",
+          userId,
+          comment: comment || "Rejected mappings"
+        };
+        
+        // Get current history or initialize empty array
+        const currentHistory = currentMapping.changeHistory as ChangeHistoryEntry[] || [];
+        const updatedHistory = [...currentHistory, historyEntry];
+        
+        // Apply the updates
+        const [updatedMapping] = await db
+          .update(crosswalkMappings)
+          .set({
+            mappingData,
+            changeHistory: updatedHistory,
+            updatedAt: new Date()
+          })
+          .where(eq(crosswalkMappings.id, id))
+          .returning();
+          
+        return updatedMapping;
+      }
+    }
+    
+    // If no changes were made, return the current mapping
+    return currentMapping;
   }
   
   async submitCrosswalkMappingForApproval(id: number, userId: number, comment?: string): Promise<CrosswalkMapping> {
@@ -1013,12 +1128,54 @@ export class DatabaseStorage implements IStorage {
       throw new Error(`Crosswalk mapping with ID ${id} not found`);
     }
     
-    // Only draft mappings can be submitted for approval
-    if (currentMapping.approvalStatus !== "DRAFT") {
-      throw new Error(`Only draft mappings can be submitted for approval. Current status: ${currentMapping.approvalStatus}`);
+    // Update the status of all DRAFT mappings to PENDING
+    if (currentMapping.mappingData && currentMapping.mappingData.mappings && Array.isArray(currentMapping.mappingData.mappings)) {
+      let mappingData = {...currentMapping.mappingData};
+      let hasChanges = false;
+      
+      mappingData.mappings = mappingData.mappings.map(mapping => {
+        if (mapping.status === "DRAFT") {
+          hasChanges = true;
+          return {
+            ...mapping,
+            status: "PENDING"
+          };
+        }
+        return mapping;
+      });
+      
+      if (hasChanges) {
+        // Create a history entry
+        const timestamp = new Date().toISOString();
+        const historyEntry: ChangeHistoryEntry = {
+          timestamp,
+          prevStatus: "DRAFT",
+          newStatus: "PENDING",
+          userId,
+          comment: comment || "Submitted for approval"
+        };
+        
+        // Get current history or initialize empty array
+        const currentHistory = currentMapping.changeHistory as ChangeHistoryEntry[] || [];
+        const updatedHistory = [...currentHistory, historyEntry];
+        
+        // Apply the updates
+        const [updatedMapping] = await db
+          .update(crosswalkMappings)
+          .set({
+            mappingData,
+            changeHistory: updatedHistory,
+            updatedAt: new Date()
+          })
+          .where(eq(crosswalkMappings.id, id))
+          .returning();
+          
+        return updatedMapping;
+      }
     }
     
-    return this.updateCrosswalkMappingStatus(id, "PENDING", userId, comment || "Submitted for approval");
+    // If no changes were made, return the current mapping
+    return currentMapping;
   }
   
   async bulkApproveCrosswalkMappings(ids: number[], userId: number, comment?: string): Promise<CrosswalkMapping[]> {
