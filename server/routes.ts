@@ -2448,6 +2448,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: String(error) });
     }
   });
+  
+  app.post("/api/crosswalks/:id/submit", async (req, res) => {
+    console.log('POST /api/crosswalks/:id/submit - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/crosswalks/:id/submit - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      const mappingId = parseInt(req.params.id);
+      const userId = req.user.id;
+      const comment = req.body.comment;
+
+      const mapping = await storage.submitCrosswalkMappingForApproval(mappingId, userId, comment);
+      
+      // Log and dispatch event for UI refresh
+      console.log('POST /api/crosswalks/:id/submit - Mapping submitted successfully');
+      
+      // Broadcast submission event to update UI components
+      res.app.emit('crosswalkMappingSubmitted', {
+        crosswalkMappingId: mappingId,
+        actionType: 'submit',
+        userId
+      });
+      
+      res.json(mapping);
+    } catch (error) {
+      console.error('POST /api/crosswalks/:id/submit - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+  
+  app.post("/api/crosswalks/bulk-submit", async (req, res) => {
+    console.log('POST /api/crosswalks/bulk-submit - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/crosswalks/bulk-submit - Unauthorized access');
+      return res.sendStatus(401);
+    }
+
+    try {
+      const { ids, comment } = req.body;
+      const userId = req.user.id;
+      
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: "No valid crosswalk mapping IDs provided" });
+      }
+
+      const mappings = await storage.bulkSubmitCrosswalkMappingsForApproval(ids, userId, comment);
+      
+      // Log and dispatch event for UI refresh
+      console.log(`POST /api/crosswalks/bulk-submit - ${mappings.length} mappings submitted successfully`);
+      
+      // Broadcast bulk submission event to update UI components
+      res.app.emit('crosswalkMappingBulkSubmitted', {
+        crosswalkMappingIds: ids,
+        actionType: 'bulk-submit',
+        userId
+      });
+      
+      res.json(mappings);
+    } catch (error) {
+      console.error('POST /api/crosswalks/bulk-submit - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
 
   // Add bulk approval endpoint for crosswalk mappings
   app.post("/api/approvals/crosswalk-mappings/bulk-approve", async (req, res) => {

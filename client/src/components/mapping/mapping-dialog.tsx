@@ -24,8 +24,11 @@ export interface MappingDialogProps {
   sourceValues: string[];
   targetValues: string[];
   onSave: (mappings: MappingItem[]) => Promise<void> | void;
+  onSubmitForApproval?: (mappings: MappingItem[]) => Promise<void> | void;
   isLoading?: boolean;
   readOnly?: boolean;
+  showSubmitButton?: boolean;
+  crosswalkId?: number;
 }
 
 /**
@@ -43,11 +46,15 @@ export function MappingDialog({
   sourceValues,
   targetValues,
   onSave,
+  onSubmitForApproval,
   isLoading = false,
   readOnly = false,
+  showSubmitButton = false,
+  crosswalkId,
 }: MappingDialogProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Use the mapping manager hook to handle mapping operations
   const {
@@ -91,6 +98,32 @@ export function MappingDialog({
     }
   };
   
+  // Handle submit for approval
+  const handleSubmitForApproval = async () => {
+    if (!onSubmitForApproval) return;
+    
+    try {
+      setIsSubmitting(true);
+      await onSubmitForApproval(mappings);
+      
+      toast({
+        title: "Success",
+        description: "Mappings submitted for approval successfully.",
+      });
+      
+      resetChanges();
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to submit mappings for approval: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
@@ -111,19 +144,30 @@ export function MappingDialog({
           />
         </div>
         
-        <DialogFooter>
+        <DialogFooter className="flex flex-row gap-2 justify-end">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={isSaving}
+            disabled={isSaving || isSubmitting}
           >
             Cancel
           </Button>
           
+          {!readOnly && showSubmitButton && onSubmitForApproval && (
+            <Button 
+              variant="secondary"
+              onClick={handleSubmitForApproval}
+              disabled={isLoading || isSaving || isSubmitting}
+            >
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Submit for Approval
+            </Button>
+          )}
+          
           {!readOnly && (
             <Button 
               onClick={handleSave}
-              disabled={!hasChanges || isLoading || isSaving}
+              disabled={!hasChanges || isLoading || isSaving || isSubmitting}
             >
               {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes

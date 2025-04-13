@@ -1006,6 +1006,21 @@ export class DatabaseStorage implements IStorage {
     return this.updateCrosswalkMappingStatus(id, "REJECTED", userId, comment);
   }
   
+  async submitCrosswalkMappingForApproval(id: number, userId: number, comment?: string): Promise<CrosswalkMapping> {
+    // Get the current mapping first
+    const currentMapping = await this.getCrosswalkMapping(id);
+    if (!currentMapping) {
+      throw new Error(`Crosswalk mapping with ID ${id} not found`);
+    }
+    
+    // Only draft mappings can be submitted for approval
+    if (currentMapping.approvalStatus !== "DRAFT") {
+      throw new Error(`Only draft mappings can be submitted for approval. Current status: ${currentMapping.approvalStatus}`);
+    }
+    
+    return this.updateCrosswalkMappingStatus(id, "PENDING", userId, comment || "Submitted for approval");
+  }
+  
   async bulkApproveCrosswalkMappings(ids: number[], userId: number, comment?: string): Promise<CrosswalkMapping[]> {
     const results: CrosswalkMapping[] = [];
     
@@ -1031,6 +1046,22 @@ export class DatabaseStorage implements IStorage {
         results.push(mapping);
       } catch (error) {
         console.error(`Error rejecting crosswalk mapping ${id}:`, error);
+        // Continue with other mappings even if one fails
+      }
+    }
+    
+    return results;
+  }
+  
+  async bulkSubmitCrosswalkMappingsForApproval(ids: number[], userId: number, comment?: string): Promise<CrosswalkMapping[]> {
+    const results: CrosswalkMapping[] = [];
+    
+    for (const id of ids) {
+      try {
+        const mapping = await this.submitCrosswalkMappingForApproval(id, userId, comment);
+        results.push(mapping);
+      } catch (error) {
+        console.error(`Error submitting crosswalk mapping ${id} for approval:`, error);
         // Continue with other mappings even if one fails
       }
     }
