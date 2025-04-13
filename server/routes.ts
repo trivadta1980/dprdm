@@ -2461,7 +2461,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const comment = req.body.comment || "Submitted for approval";
 
-      // Submit the mapping for approval
+      // Get the current mapping first to update the JSON mappingData
+      const currentMapping = await storage.getCrosswalkMapping(mappingId);
+      if (!currentMapping) {
+        return res.status(404).json({ error: `Crosswalk mapping with ID ${mappingId} not found` });
+      }
+
+      // Check if we need to update the mappingData
+      if (currentMapping.mappingData && currentMapping.mappingData.mappings) {
+        // Update the status for each mapping in the JSON
+        const updatedMappingData = {
+          ...currentMapping.mappingData,
+          mappings: currentMapping.mappingData.mappings.map((mapping) => ({
+            ...mapping,
+            status: "PENDING"  // Update status to PENDING
+          }))
+        };
+
+        // Update the mappingData in the database
+        await storage.updateCrosswalkMapping(mappingId, {
+          mappingData: updatedMappingData
+        });
+      }
+
+      // Submit the mapping for approval (updates the overall status)
       console.log(`Submitting crosswalk mapping ${mappingId} for approval. User: ${userId}`);
       const mapping = await storage.submitCrosswalkMappingForApproval(mappingId, userId, comment);
       
@@ -2504,6 +2527,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No valid crosswalk mapping IDs provided" });
       }
 
+      // First update each mapping's JSON data to set status on individual mappings
+      for (const mappingId of ids) {
+        // Get the current mapping
+        const currentMapping = await storage.getCrosswalkMapping(mappingId);
+        if (!currentMapping) {
+          console.log(`Mapping ID ${mappingId} not found, skipping`);
+          continue;
+        }
+
+        // Update the mappingData JSON
+        if (currentMapping.mappingData && currentMapping.mappingData.mappings) {
+          const updatedMappingData = {
+            ...currentMapping.mappingData,
+            mappings: currentMapping.mappingData.mappings.map((mapping) => ({
+              ...mapping,
+              status: "PENDING"  // Update status to PENDING
+            }))
+          };
+
+          // Update the mappingData in the database
+          await storage.updateCrosswalkMapping(mappingId, {
+            mappingData: updatedMappingData
+          });
+        }
+      }
+
+      // Now call the bulk submission function to update the approval status
       const mappings = await storage.bulkSubmitCrosswalkMappingsForApproval(ids, userId, comment);
       
       // Log and dispatch event for UI refresh

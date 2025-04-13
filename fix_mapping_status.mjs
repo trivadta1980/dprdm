@@ -6,8 +6,8 @@
  * of the crosswalk mapping record.
  */
 
-import { db } from './server/db.ts';
-import { crosswalkMappings, eq } from './shared/schema.ts';
+import { db } from './server/db.js';
+import { crosswalkMappings, eq } from './shared/schema.js';
 
 async function fixMappingStatus() {
   console.log('Starting to fix mapping status in JSON data...');
