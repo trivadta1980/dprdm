@@ -2459,8 +2459,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const mappingId = parseInt(req.params.id);
       const userId = req.user.id;
-      const comment = req.body.comment;
+      const comment = req.body.comment || "Submitted for approval";
 
+      // Submit the mapping for approval
+      console.log(`Submitting crosswalk mapping ${mappingId} for approval. User: ${userId}`);
       const mapping = await storage.submitCrosswalkMappingForApproval(mappingId, userId, comment);
       
       // Log and dispatch event for UI refresh
@@ -2471,6 +2473,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         crosswalkMappingId: mappingId,
         actionType: 'submit',
         userId
+      });
+      
+      // Invalidate the approvals dashboard cache
+      res.app.emit('approvalsUpdated', {
+        type: 'crosswalk',
+        action: 'submit',
+        ids: [mappingId]
       });
       
       res.json(mapping);

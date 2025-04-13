@@ -104,7 +104,11 @@ export function MappingDialog({
     
     try {
       setIsSubmitting(true);
-      await onSubmitForApproval(mappings);
+      
+      // If no mappings are selected for approval, use all mappings
+      const mappingsToSubmit = mappings;
+      
+      await onSubmitForApproval(mappingsToSubmit);
       
       toast({
         title: "Success",
@@ -114,6 +118,7 @@ export function MappingDialog({
       resetChanges();
       onOpenChange(false);
     } catch (error) {
+      console.error("Error submitting for approval:", error);
       toast({
         title: "Error",
         description: `Failed to submit mappings for approval: ${error instanceof Error ? error.message : 'Unknown error'}`,
