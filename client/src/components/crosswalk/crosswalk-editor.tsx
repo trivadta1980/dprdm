@@ -341,11 +341,21 @@ export function CrosswalkEditor({
   const onSubmit = async (data: CrosswalkFormData) => {
     try {
       setIsSaving(true);
+
+      // Ensure each mapping has a status field before saving
+      const updatedMappings = mappings.map(mapping => ({
+        ...mapping,
+        // If status is missing, set to DRAFT
+        status: mapping.status || "DRAFT"
+      }));
       
-      // Submit both form data and mappings
+      // Update the local state with status-enhanced mappings
+      setMappings(updatedMappings);
+      
+      // Submit both form data and enhanced mappings
       await onSave({
         ...data,
-        mappings
+        mappings: updatedMappings
       });
       
       toast({
@@ -377,6 +387,12 @@ export function CrosswalkEditor({
     try {
       setIsSubmitting(true);
       
+      // Ensure all mappings have status set to PENDING before submission
+      const enhancedMappings = mappingsToSubmit.map(mapping => ({
+        ...mapping,
+        status: "PENDING" // Set status to PENDING for submission
+      }));
+      
       // Call the API to submit the crosswalk for approval
       const response = await fetch(`/api/crosswalks/${initialData.id}/submit`, {
         method: 'POST',
@@ -384,7 +400,7 @@ export function CrosswalkEditor({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          mappings: mappingsToSubmit, // This may include all mappings or a subset (for bulk operations)
+          mappings: enhancedMappings,
           comment: "Submitted for approval"
         }),
       });
@@ -394,8 +410,8 @@ export function CrosswalkEditor({
         throw new Error(errorData.error || "Failed to submit for approval");
       }
       
-      // Update the UI to show the latest mappings 
-      setMappings(mappingsToSubmit);
+      // Update the UI to show the latest mappings with PENDING status
+      setMappings(enhancedMappings);
       
       toast({
         title: "Success",
