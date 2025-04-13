@@ -155,6 +155,7 @@ export function MappingEditor({
             ...mapping,
             sourceValue: newSourceValue,
             targetValue: newTargetValue,
+            status: "DRAFT", // Reset status to DRAFT when edited
           };
         }
         return mapping;
@@ -168,7 +169,7 @@ export function MappingEditor({
       
       toast({
         title: "Success",
-        description: "Mapping updated successfully.",
+        description: "Mapping updated successfully and status set to DRAFT.",
       });
       return;
     }
