@@ -29,6 +29,7 @@ import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SearchIcon, PlusIcon, Trash2Icon, FileIcon, Download, Upload } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import Papa from "papaparse";
 
 export interface MappingItem {
