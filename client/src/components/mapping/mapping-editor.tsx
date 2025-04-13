@@ -124,10 +124,16 @@ export function MappingEditor({
   
   // Handle edit mode
   const handleEditMapping = (mapping: MappingItem) => {
+    console.log("Edit button clicked for mapping:", mapping);
+    // Set the active tab to manual entry
+    setActiveTab("manual");
+    // Set the form values
     setNewSourceValue(mapping.sourceValue);
     setNewTargetValue(mapping.targetValue);
+    // Enable edit mode
     setIsEditing(true);
     setEditingItemId(mapping.id);
+    console.log("Edit mode activated. isEditing:", true, "editingItemId:", mapping.id);
   };
   
   // Add new mapping or update existing mapping
