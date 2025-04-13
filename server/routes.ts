@@ -1650,9 +1650,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(401);
     }
     try {
+      // First, get the current mapping to ensure we have the approval status
+      const mappingId = Number(req.params.id);
+      const currentMapping = await storage.getCrosswalkMapping(mappingId);
+      if (!currentMapping) {
+        return res.status(404).json({ error: "Crosswalk mapping not found" });
+      }
+      
+      // Check if we're updating the mappingData
+      let updatedData = { ...req.body };
+      
+      if (req.body.mappingData && req.body.mappingData.mappings && Array.isArray(req.body.mappingData.mappings)) {
+        // Ensure each mapping in the array has a status field
+        // that matches the current crosswalk's approval status
+        const status = currentMapping.approvalStatus || "DRAFT";
+        
+        const updatedMappings = req.body.mappingData.mappings.map(mapping => {
+          if (!mapping.status) {
+            return {
+              ...mapping,
+              status: status
+            };
+          }
+          return mapping;
+        });
+        
+        // Update the mappingData with the status-enhanced mappings
+        updatedData.mappingData = {
+          ...req.body.mappingData,
+          mappings: updatedMappings
+        };
+      }
+      
       const mapping = await storage.updateCrosswalkMapping(
-        Number(req.params.id),
-        req.body
+        mappingId,
+        updatedData
       );
       console.log('PATCH /api/crosswalks/:id - Mapping updated successfully');
       // Sync with Neo4j if available
