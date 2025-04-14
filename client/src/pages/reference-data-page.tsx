@@ -19,13 +19,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
 import type {
   ReferenceDataType,
   ReferenceDataSet,
   InsertReferenceDataSet
 } from "@shared/schema";
-import { useLocation } from "wouter";
-import { useState, useEffect } from "react";
+
+// Define the structure of the dependencies response
+interface Dependencies {
+  relationships: Array<any>;
+  crosswalks: Array<any>;
+  canDelete: boolean;
+}
 
 export default function ReferenceDataPage() {
   const { toast } = useToast();
@@ -96,7 +103,7 @@ export default function ReferenceDataPage() {
   });
 
   // Fetch dependencies when dialog is shown
-  const { data: dependencies, isLoading: loadingDependencies } = useQuery({
+  const { data: dependencies, isLoading: loadingDependencies } = useQuery<Dependencies>({
     queryKey: [`/api/reference-data/${dataSetToDelete?.id}/dependencies`],
     enabled: !!dataSetToDelete,
   });
@@ -192,11 +199,31 @@ export default function ReferenceDataPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Instances</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>
+                    <EnhancedTooltip content="The name of the reference data set">
+                      <span>Name</span>
+                    </EnhancedTooltip>
+                  </TableHead>
+                  <TableHead>
+                    <EnhancedTooltip content="The schema type that defines the structure of this data">
+                      <span>Type</span>
+                    </EnhancedTooltip>
+                  </TableHead>
+                  <TableHead>
+                    <EnhancedTooltip content="Brief information about the data set's purpose">
+                      <span>Description</span>
+                    </EnhancedTooltip>
+                  </TableHead>
+                  <TableHead>
+                    <EnhancedTooltip content="Number of individual data records in this set">
+                      <span>Instances</span>
+                    </EnhancedTooltip>
+                  </TableHead>
+                  <TableHead className="text-right">
+                    <EnhancedTooltip content="Operations you can perform on this data set">
+                      <span>Actions</span>
+                    </EnhancedTooltip>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -279,13 +306,13 @@ export default function ReferenceDataPage() {
               ) : dependencies ? (
                 <div className="space-y-2">
                   <p>This action cannot be undone.</p>
-                  {dependencies.relationships.length > 0 && (
-                    <p>⚠️ This dataset is used in {dependencies.relationships.length} relationship(s)</p>
+                  {(dependencies as Dependencies).relationships.length > 0 && (
+                    <p>⚠️ This dataset is used in {(dependencies as Dependencies).relationships.length} relationship(s)</p>
                   )}
-                  {dependencies.crosswalks.length > 0 && (
-                    <p>⚠️ This dataset is used in {dependencies.crosswalks.length} crosswalk mapping(s)</p>
+                  {(dependencies as Dependencies).crosswalks.length > 0 && (
+                    <p>⚠️ This dataset is used in {(dependencies as Dependencies).crosswalks.length} crosswalk mapping(s)</p>
                   )}
-                  {dependencies.canDelete ? (
+                  {(dependencies as Dependencies).canDelete ? (
                     <p>No blocking dependencies found. You can safely delete this dataset.</p>
                   ) : (
                     <p className="text-red-500">
@@ -313,7 +340,7 @@ export default function ReferenceDataPage() {
                 console.log('Dependencies:', dependencies);
                 handleConfirmDelete();
               }}
-              disabled={dependencies && !dependencies.canDelete}
+              disabled={dependencies && !(dependencies as Dependencies).canDelete}
             >
               Delete
             </AlertDialogAction>
