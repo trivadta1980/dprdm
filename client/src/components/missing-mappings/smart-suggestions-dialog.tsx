@@ -251,14 +251,26 @@ export function SmartSuggestionsDialog({
         targetAttribute: currentMapping.targetAttribute || ''
       };
       
+      // Console log to debug
+      console.log('Current mappingData structure:', JSON.stringify(currentMapping.mappingData, null, 2));
+      console.log('Existing mappings:', existingMappingData.mappings?.length || 0);
+      
+      // Make sure we have a valid array to work with
+      const existingMappings = Array.isArray(existingMappingData.mappings) 
+        ? existingMappingData.mappings 
+        : [];
+      
       // Update the crosswalk with new mappings
       const updatedMappingData = {
         ...existingMappingData,
         mappings: [
-          ...(existingMappingData.mappings || []),
+          ...existingMappings,
           ...newMappings
         ]
       }
+      
+      // Debug the result
+      console.log('Updated mappings count:', updatedMappingData.mappings.length);
       
       await apiRequest(`/api/crosswalks/${mapping.crosswalkId}`, {
         method: 'PATCH',

@@ -76,10 +76,19 @@ export function AddToCrosswalkDialog({
         targetAttribute: currentMapping.targetAttribute || ''
       };
       
+      // Console log to debug
+      console.log('Current mappingData structure:', JSON.stringify(currentMapping.mappingData, null, 2));
+      console.log('Existing mappings:', existingMappingData.mappings?.length || 0);
+      
+      // Make sure we have a valid array to work with
+      const existingMappings = Array.isArray(existingMappingData.mappings) 
+        ? existingMappingData.mappings 
+        : [];
+      
       const updatedMappingData = {
         ...existingMappingData,
         mappings: [
-          ...(existingMappingData.mappings || []),
+          ...existingMappings,
           {
             sourceValue: mapping.sourceValue,
             targetValue: targetValue.trim(),
@@ -88,6 +97,9 @@ export function AddToCrosswalkDialog({
           }
         ]
       }
+      
+      // Debug the result
+      console.log('Updated mappings count:', updatedMappingData.mappings.length);
 
       // Update the crosswalk with the new mapping
       // The API expects data rather than body

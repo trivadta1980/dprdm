@@ -148,14 +148,26 @@ export function BatchAddDialog({
             targetAttribute: currentMapping.targetAttribute || ''
           };
           
+          // Console log to debug
+          console.log(`Crosswalk ${crosswalkId} - Current mappingData:`, JSON.stringify(currentMapping.mappingData, null, 2));
+          console.log(`Crosswalk ${crosswalkId} - Existing mappings:`, existingMappingData.mappings?.length || 0);
+          
+          // Make sure we have a valid array to work with
+          const existingMappings = Array.isArray(existingMappingData.mappings) 
+            ? existingMappingData.mappings 
+            : [];
+          
           // Prepare updated mapping data
           const updatedMappingData = {
             ...existingMappingData,
             mappings: [
-              ...(existingMappingData.mappings || []),
+              ...existingMappings,
               ...newMappings
             ]
           }
+          
+          // Debug the result
+          console.log(`Crosswalk ${crosswalkId} - Updated mappings count:`, updatedMappingData.mappings.length);
 
           // Update the crosswalk - using data instead of body parameter
           await apiRequest(`/api/crosswalks/${crosswalkId}`, {
