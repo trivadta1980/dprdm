@@ -20,8 +20,20 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Checkbox } from '@/components/ui/checkbox'
 import { formatDistance } from 'date-fns'
-import { MoreHorizontal, AlertTriangle, Trash, Filter } from 'lucide-react'
+import { 
+  MoreHorizontal, 
+  AlertTriangle, 
+  Trash, 
+  Filter, 
+  Plus,
+  Sparkles, 
+  Layers 
+} from 'lucide-react'
+import { AddToCrosswalkDialog } from './add-to-crosswalk-dialog'
+import { BatchAddDialog } from './batch-add-dialog'
+import { SmartSuggestionsDialog } from './smart-suggestions-dialog'
 
 interface MissingMappingsTableProps {
   crosswalkId?: number
@@ -46,10 +58,50 @@ export const MissingMappingsTable = ({
   
   const [selectedMapping, setSelectedMapping] = useState<MissingMapping | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showAddDialog, setShowAddDialog] = useState(false)
+  const [showSmartSuggestionsDialog, setShowSmartSuggestionsDialog] = useState(false)
+  const [showBatchAddDialog, setShowBatchAddDialog] = useState(false)
+  
+  // State for selecting multiple items
+  const [selectedMappings, setSelectedMappings] = useState<MissingMapping[]>([])
+  const [selectMode, setSelectMode] = useState(false)
   
   // If there are no mappings and we don't want to show empty state
   const mappingsArray = Array.isArray(missingMappings) ? missingMappings : []
   const dataToShow = limit ? mappingsArray.slice(0, limit) : mappingsArray
+  
+  // Toggle selection of a mapping
+  const toggleMappingSelection = (mapping: MissingMapping) => {
+    setSelectedMappings(prev => {
+      const isSelected = prev.some(m => m.id === mapping.id)
+      if (isSelected) {
+        return prev.filter(m => m.id !== mapping.id)
+      } else {
+        return [...prev, mapping]
+      }
+    })
+  }
+  
+  // Check if a mapping is selected
+  const isMappingSelected = (id: number) => {
+    return selectedMappings.some(m => m.id === id)
+  }
+  
+  // Toggle select mode
+  const toggleSelectMode = () => {
+    if (selectMode) {
+      // If turning off select mode, clear selections
+      setSelectedMappings([])
+    }
+    setSelectMode(!selectMode)
+  }
+  
+  // Handle batch action
+  const handleBatchAdd = () => {
+    if (selectedMappings.length > 0) {
+      setShowBatchAddDialog(true)
+    }
+  }
   
   if (isLoading) {
     return (
@@ -104,11 +156,35 @@ export const MissingMappingsTable = ({
   return (
     <>
       <Card>
-        <CardHeader>
-          <CardTitle>Missing Mappings</CardTitle>
-          <CardDescription>
-            Values that were requested but not found in crosswalk mappings
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Missing Mappings</CardTitle>
+            <CardDescription>
+              Values that were requested but not found in crosswalk mappings
+            </CardDescription>
+          </div>
+          {mappingsArray.length > 0 && (
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleSelectMode}
+              >
+                {selectMode ? 'Cancel Selection' : 'Select Multiple'}
+              </Button>
+              
+              {selectMode && selectedMappings.length > 0 && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleBatchAdd}
+                >
+                  <Layers className="h-4 w-4 mr-2" />
+                  Add {selectedMappings.length} to Crosswalk
+                </Button>
+              )}
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {mappingsArray.length === 0 ? (
@@ -126,17 +202,26 @@ export const MissingMappingsTable = ({
               <Table>
                 <TableHeader>
                   <TableRow>
+                    {selectMode && <TableHead className="w-[40px]"></TableHead>}
                     <TableHead>Source Value</TableHead>
                     {showCrosswalk && <TableHead>Crosswalk</TableHead>}
                     <TableHead>Requested</TableHead>
                     <TableHead>Count</TableHead>
                     <TableHead>Last Request</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
+                    <TableHead className="w-[100px] text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {dataToShow.map((mapping) => (
                     <TableRow key={mapping.id}>
+                      {selectMode && (
+                        <TableCell className="pr-0 w-[40px]">
+                          <Checkbox
+                            checked={isMappingSelected(mapping.id)}
+                            onCheckedChange={() => toggleMappingSelection(mapping)}
+                          />
+                        </TableCell>
+                      )}
                       <TableCell className="font-medium">{mapping.sourceValue}</TableCell>
                       {showCrosswalk && <TableCell>{mapping.crosswalkName}</TableCell>}
                       <TableCell>
@@ -157,34 +242,80 @@ export const MissingMappingsTable = ({
                           addSuffix: true,
                         })}
                       </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Open menu</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem 
-                              onClick={() => {
-                                setSelectedMapping(mapping)
-                                setShowDeleteDialog(true)
-                              }}
-                              className="text-destructive"
-                            >
-                              <Trash className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setSelectedMapping(mapping)
+                              setShowSmartSuggestionsDialog(true)
+                            }}
+                            title="AI Suggestions"
+                          >
+                            <Sparkles className="h-4 w-4 text-yellow-500" />
+                            <span className="sr-only">AI Suggestions</span>
+                          </Button>
+                          
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setSelectedMapping(mapping)
+                              setShowAddDialog(true)
+                            }}
+                            title="Add to Crosswalk"
+                          >
+                            <Plus className="h-4 w-4" />
+                            <span className="sr-only">Add to Crosswalk</span>
+                          </Button>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Open menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem 
+                                onClick={() => {
+                                  setSelectedMapping(mapping)
+                                  setShowAddDialog(true)
+                                }}
+                              >
+                                <Plus className="mr-2 h-4 w-4" />
+                                Add to Crosswalk
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => {
+                                  setSelectedMapping(mapping)
+                                  setShowSmartSuggestionsDialog(true)
+                                }}
+                              >
+                                <Sparkles className="mr-2 h-4 w-4 text-yellow-500" />
+                                Smart Suggestions
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => {
+                                  setSelectedMapping(mapping)
+                                  setShowDeleteDialog(true)
+                                }}
+                                className="text-destructive"
+                              >
+                                <Trash className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </ScrollArea>
-          )}
+          )
         </CardContent>
       </Card>
 
@@ -208,6 +339,34 @@ export const MissingMappingsTable = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Add to Crosswalk Dialog */}
+      <AddToCrosswalkDialog
+        isOpen={showAddDialog}
+        onClose={() => setShowAddDialog(false)}
+        mapping={selectedMapping}
+        onSuccess={() => refetch()}
+      />
+      
+      {/* Smart Suggestions Dialog */}
+      <SmartSuggestionsDialog
+        isOpen={showSmartSuggestionsDialog}
+        onClose={() => setShowSmartSuggestionsDialog(false)}
+        mapping={selectedMapping}
+        onSuccess={() => refetch()}
+      />
+      
+      {/* Batch Add Dialog */}
+      <BatchAddDialog
+        isOpen={showBatchAddDialog}
+        onClose={() => {
+          setShowBatchAddDialog(false)
+          setSelectedMappings([])
+          setSelectMode(false)
+        }}
+        mappings={selectedMappings}
+        onSuccess={() => refetch()}
+      />
     </>
   )
 }
