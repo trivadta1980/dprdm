@@ -413,6 +413,16 @@ export function CrosswalkEditor({
       // Update the UI to show the latest mappings with PENDING status
       setMappings(enhancedMappings);
       
+      // Dispatch an event to notify the approvals dashboard about the status change
+      import("@/lib/eventBus").then(({ dispatchApprovalStatusChange }) => {
+        console.log(`[CrosswalkEditor] Dispatching approval status change event for crosswalk ${initialData.id}`);
+        dispatchApprovalStatusChange({
+          crosswalkMappingId: initialData.id,
+          actionType: 'update',
+          userId: undefined // Will be set by the server
+        });
+      });
+      
       toast({
         title: "Success",
         description: "Crosswalk submitted for approval successfully.",
