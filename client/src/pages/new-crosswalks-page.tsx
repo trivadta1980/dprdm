@@ -34,7 +34,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { PlusIcon, Pencil, Trash2, AlertCircle } from "lucide-react";
+import { PlusIcon, Pencil, Trash2, AlertCircle, Info } from "lucide-react";
+import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { z } from "zod";
 
 // Define types for the data
@@ -344,25 +345,34 @@ export default function NewCrosswalksPage() {
     <MainLayout>
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold tracking-tight">Crosswalk Mappings</h1>
+          <div className="flex items-center">
+            <h1 className="text-3xl font-bold tracking-tight">Crosswalk Mappings</h1>
+            <EnhancedTooltip content="Crosswalks are mappings between values from different reference data sets">
+              <Info className="h-4 w-4 text-muted-foreground ml-2 mt-1" />
+            </EnhancedTooltip>
+          </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" asChild>
-              <a href="/missing-mappings" className="flex items-center">
-                <AlertCircle className="h-4 w-4 mr-2" />
-                Missing Mappings
-                {isLoadingMissingMappings ? (
-                  <Badge variant="outline" className="ml-2">...</Badge>
-                ) : missingMappingsStats?.totalCount ? (
-                  <Badge variant="destructive" className="ml-2">
-                    {missingMappingsStats.totalCount}
-                  </Badge>
-                ) : null}
-              </a>
-            </Button>
-            <Button onClick={handleCreateCrosswalk}>
-              <PlusIcon className="h-4 w-4 mr-2" />
-              Create Crosswalk
-            </Button>
+            <EnhancedTooltip content="View and manage values that weren't found in existing crosswalks">
+              <Button variant="outline" asChild>
+                <a href="/missing-mappings" className="flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  Missing Mappings
+                  {isLoadingMissingMappings ? (
+                    <Badge variant="outline" className="ml-2">...</Badge>
+                  ) : missingMappingsStats?.totalCount ? (
+                    <Badge variant="destructive" className="ml-2">
+                      {missingMappingsStats.totalCount}
+                    </Badge>
+                  ) : null}
+                </a>
+              </Button>
+            </EnhancedTooltip>
+            <EnhancedTooltip content="Create a new mapping between two reference data sets">
+              <Button onClick={handleCreateCrosswalk}>
+                <PlusIcon className="h-4 w-4 mr-2" />
+                Create Crosswalk
+              </Button>
+            </EnhancedTooltip>
           </div>
         </div>
 
@@ -392,12 +402,36 @@ export default function NewCrosswalksPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Source System</TableHead>
-                    <TableHead>Target System</TableHead>
-                    <TableHead>Mappings</TableHead>
-                    <TableHead className="w-[100px]">Actions</TableHead>
+                    <TableHead>
+                      <EnhancedTooltip content="The unique name of this crosswalk mapping">
+                        Name
+                      </EnhancedTooltip>
+                    </TableHead>
+                    <TableHead>
+                      <EnhancedTooltip content="Additional information about the mapping's purpose">
+                        Description
+                      </EnhancedTooltip>
+                    </TableHead>
+                    <TableHead>
+                      <EnhancedTooltip content="The origin reference data set to map from">
+                        Source System
+                      </EnhancedTooltip>
+                    </TableHead>
+                    <TableHead>
+                      <EnhancedTooltip content="The destination reference data set to map to">
+                        Target System
+                      </EnhancedTooltip>
+                    </TableHead>
+                    <TableHead>
+                      <EnhancedTooltip content="Number of individual value mappings defined">
+                        Mappings
+                      </EnhancedTooltip>
+                    </TableHead>
+                    <TableHead className="w-[100px]">
+                      <EnhancedTooltip content="Operations you can perform on this crosswalk">
+                        Actions
+                      </EnhancedTooltip>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -436,20 +470,24 @@ export default function NewCrosswalksPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEdit(crosswalk)}
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDelete(crosswalk.id)}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
+                            <EnhancedTooltip content="Edit this crosswalk mapping">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEdit(crosswalk)}
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                            </EnhancedTooltip>
+                            <EnhancedTooltip content="Delete this crosswalk mapping">
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDelete(crosswalk.id)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </EnhancedTooltip>
                           </div>
                         </TableCell>
                       </TableRow>
