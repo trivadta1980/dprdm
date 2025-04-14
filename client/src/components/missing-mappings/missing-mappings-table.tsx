@@ -315,7 +315,7 @@ export const MissingMappingsTable = ({
                 </TableBody>
               </Table>
             </ScrollArea>
-          )
+          )}
         </CardContent>
       </Card>
 
