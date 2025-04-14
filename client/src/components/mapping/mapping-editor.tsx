@@ -941,11 +941,11 @@ export function MappingEditor({
                               onClick={() => {
                                 if (window.confirm("Submit this mapping for approval?")) {
                                   // Update status and trigger onMappingsChange
-                                  const updatedMapping = { ...mapping, status: 'PENDING' };
+                                  const updatedMapping = { ...mapping, status: 'PENDING' as const };
                                   const updatedMappings = mappings.map(m => 
                                     m.id === mapping.id ? updatedMapping : m
                                   );
-                                  onMappingsChange(updatedMappings);
+                                  onMappingsChange(updatedMappings as MappingItem[]);
                                   
                                   toast({
                                     title: "Success",

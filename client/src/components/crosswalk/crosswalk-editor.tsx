@@ -390,7 +390,7 @@ export function CrosswalkEditor({
       // Ensure all mappings have status set to PENDING before submission
       const enhancedMappings = mappingsToSubmit.map(mapping => ({
         ...mapping,
-        status: "PENDING" // Set status to PENDING for submission
+        status: "PENDING" as const // Set status to PENDING for submission with type assertion
       }));
       
       // Call the API to submit the crosswalk for approval
@@ -411,7 +411,7 @@ export function CrosswalkEditor({
       }
       
       // Update the UI to show the latest mappings with PENDING status
-      setMappings(enhancedMappings);
+      setMappings(enhancedMappings as MappingItem[]);
       
       // Dispatch an event to notify the approvals dashboard about the status change
       import("@/lib/eventBus").then(({ dispatchApprovalStatusChange }) => {
