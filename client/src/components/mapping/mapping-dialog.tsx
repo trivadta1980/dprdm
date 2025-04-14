@@ -106,12 +106,22 @@ export function MappingDialog({
       setIsSubmitting(true);
       
       // Update mappings to set status to PENDING for those that are DRAFT or undefined
+  // Also ensure crosswalkId is propagated to all mappings
       const mappingsToSubmit = mappings.map(mapping => {
         // Only update status for DRAFT or undefined items
         if (!mapping.status || mapping.status === 'DRAFT') {
-          return { ...mapping, status: 'PENDING' };
+          return { 
+            ...mapping, 
+            status: 'PENDING' as const,
+            // Add crosswalkId if it exists and is not already assigned
+            ...(crosswalkId && !mapping.crosswalkId ? { crosswalkId } : {})
+          };
         }
-        return mapping;
+        // For other items, just ensure crosswalkId is set if needed
+        return { 
+          ...mapping,
+          ...(crosswalkId && !mapping.crosswalkId ? { crosswalkId } : {})
+        };
       });
       
       // Update local mappings state

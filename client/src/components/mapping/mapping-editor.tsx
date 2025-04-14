@@ -296,12 +296,18 @@ export function MappingEditor({
       }
     }
     
+    // Look for a crosswalkId in existing mappings (inherit from other mappings in the collection)
+    const existingCrosswalkId = mappings.length > 0 && mappings[0].crosswalkId 
+      ? mappings[0].crosswalkId 
+      : undefined;
+    
     const newMapping: MappingItem = {
       sourceValue: newSourceValue,
       targetValue: newTargetValue,
       confidence: calculatedConfidence,
       id: Date.now().toString(),
-      status: "DRAFT", // Set default status for new mappings
+      status: "DRAFT" as const, // Set default status for new mappings
+      crosswalkId: existingCrosswalkId // Add crosswalkId if available from existing mappings
     };
     
     const updatedMappings = [...mappings, newMapping];
@@ -403,11 +409,18 @@ export function MappingEditor({
         { sourceValue: "Dublin", targetValue: "Dub", confidence: "0.8" }
       ];
       
+      // Look for a crosswalkId in existing mappings (inherit from other mappings in the collection)
+      const existingCrosswalkId = mappings.length > 0 && mappings[0].crosswalkId 
+        ? mappings[0].crosswalkId 
+        : undefined;
+        
       const newMappings: MappingItem[] = manualResults.map((row, index) => ({
         sourceValue: row.sourceValue,
         targetValue: row.targetValue,
         confidence: parseFloat(row.confidence),
-        id: Date.now().toString() + index
+        id: Date.now().toString() + index,
+        status: "DRAFT" as const, // Set default status for imported mappings
+        crosswalkId: existingCrosswalkId // Add crosswalkId if available from existing mappings
       }));
       
       // Add the new mappings
@@ -524,11 +537,18 @@ export function MappingEditor({
             errors.push(`Row ${index + 1}: Invalid confidence value. Using default 0.7.`);
           }
           
+          // Look for a crosswalkId in existing mappings (inherit from other mappings in the collection)
+          const existingCrosswalkId = mappings.length > 0 && mappings[0].crosswalkId 
+            ? mappings[0].crosswalkId 
+            : undefined;
+            
           newMappings.push({
             sourceValue,
             targetValue,
             confidence: isNaN(confidence) ? 0.7 : confidence,
             id: Date.now().toString() + index,
+            status: "DRAFT" as const, // Set default status for imported mappings
+            crosswalkId: existingCrosswalkId // Add crosswalkId if available from existing mappings
           });
         });
         
