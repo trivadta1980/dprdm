@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import {
   Users,
   UserCog,
@@ -54,12 +55,14 @@ export function Sidebar({ className }: SidebarProps) {
         href: "/manage-users",
         icon: Users,
         requiresPermission: true,
+        tooltip: "Create, edit, and manage user accounts and permissions"
       },
       {
         title: "Manage Roles",
         href: "/roles",
         icon: UserCog,
         requiresPermission: true,
+        tooltip: "Configure role-based access control for users"
       },
     ] : []),
     // Approver-specific items
@@ -69,6 +72,7 @@ export function Sidebar({ className }: SidebarProps) {
         href: "/approvals",
         icon: CheckSquare,
         requiresPermission: true,
+        tooltip: "Review and approve data mapping submissions"
       },
     ] : []),
     // Common items based on permissions
@@ -77,24 +81,28 @@ export function Sidebar({ className }: SidebarProps) {
       href: "/reference-types",
       icon: FileJson,
       requiresPermission: true,
+      tooltip: "Define schemas and formats for reference data"
     },
     {
       title: "Reference Data",
       href: "/reference-data",
       icon: Database,
       requiresPermission: true,
+      tooltip: "Manage core reference data sets and instances"
     },
     {
       title: "Relationships",
       href: "/relationships",
       icon: GitFork,
       requiresPermission: true,
+      tooltip: "Define and manage relationships between data entities"
     },
     {
       title: "Crosswalks",
       href: "/crosswalks",
       icon: ArrowRightLeft,
       requiresPermission: true,
+      tooltip: "Create and manage data mapping between different systems"
     },
     ...(isAdmin ? [
       {
@@ -102,12 +110,14 @@ export function Sidebar({ className }: SidebarProps) {
         href: "/api-keys",
         icon: Key,
         requiresPermission: true,
+        tooltip: "Manage API keys for external system integration"
       },
       {
         title: "Testing",
         href: "/api-test",
         icon: TestTube2,
         requiresPermission: true,
+        tooltip: "Test and validate API functionality"
       },
       // Temporarily hiding Graph Visualization and Supply Chain Paths as requested
       // {
@@ -170,17 +180,23 @@ export function Sidebar({ className }: SidebarProps) {
               {filteredMenuItems.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <Button
+                  <EnhancedTooltip
                     key={item.href}
-                    variant={location === item.href ? "secondary" : "ghost"}
-                    className="w-full justify-start"
-                    asChild
+                    content={item.tooltip || item.title}
+                    side="right"
+                    align="center"
                   >
-                    <Link href={item.href}>
-                      <Icon className="mr-2 h-4 w-4" />
-                      {item.title}
-                    </Link>
-                  </Button>
+                    <Button
+                      variant={location === item.href ? "secondary" : "ghost"}
+                      className="w-full justify-start"
+                      asChild
+                    >
+                      <Link href={item.href}>
+                        <Icon className="mr-2 h-4 w-4" />
+                        {item.title}
+                      </Link>
+                    </Button>
+                  </EnhancedTooltip>
                 );
               })}
             </div>
@@ -190,15 +206,21 @@ export function Sidebar({ className }: SidebarProps) {
 
       <div className="px-3 py-2">
         <Separator className="my-2" />
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-          onClick={() => logoutMutation.mutate()}
-          disabled={logoutMutation.isPending}
+        <EnhancedTooltip
+          content="Sign out from your account"
+          side="right"
+          align="center"
         >
-          <LogOut className="mr-2 h-4 w-4" />
-          Logout
-        </Button>
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+            onClick={() => logoutMutation.mutate()}
+            disabled={logoutMutation.isPending}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </Button>
+        </EnhancedTooltip>
       </div>
     </div>
   );

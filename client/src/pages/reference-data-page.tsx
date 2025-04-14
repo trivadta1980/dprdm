@@ -7,6 +7,8 @@ import { Loader2, Plus, Pencil, Trash2, Database, GitCompare } from "lucide-reac
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useApprovalEvents } from "@/hooks/use-approval-events";
+import { TooltipButton } from "@/components/ui/tooltip-button";
+import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -178,10 +180,13 @@ export default function ReferenceDataPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Reference Data Sets</CardTitle>
-            <Button onClick={handleCreateNew}>
+            <TooltipButton 
+              onClick={handleCreateNew}
+              tooltip="Create a new reference data set"
+            >
               <Plus className="h-4 w-4 mr-2" />
               New Data Set
-            </Button>
+            </TooltipButton>
           </CardHeader>
           <CardContent>
             <Table>
@@ -215,36 +220,43 @@ export default function ReferenceDataPage() {
                         <TableCell>{dataSet.description}</TableCell>
                         <TableCell>{instanceCount} records</TableCell>
                         <TableCell className="text-right space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleManageInstances(dataSet)}
-                        >
-                          <Database className="h-4 w-4 mr-2" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleCompareView(dataSet)}
-                        >
-                          <GitCompare className="h-4 w-4 mr-2" />
-                          
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(dataSet)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(dataSet)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
+                          <EnhancedTooltip content="Manage data instances">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleManageInstances(dataSet)}
+                            >
+                              <Database className="h-4 w-4 mr-2" />
+                            </Button>
+                          </EnhancedTooltip>
+                          <EnhancedTooltip content="Compare with other datasets">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleCompareView(dataSet)}
+                            >
+                              <GitCompare className="h-4 w-4 mr-2" />
+                            </Button>
+                          </EnhancedTooltip>
+                          <EnhancedTooltip content="Edit dataset details">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(dataSet)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </EnhancedTooltip>
+                          <EnhancedTooltip content="Delete this dataset">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(dataSet)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </EnhancedTooltip>
+                        </TableCell>
                     </TableRow>
                   );
                 })}
