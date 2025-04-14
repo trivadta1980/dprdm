@@ -403,34 +403,52 @@ export default function NewCrosswalksPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>
-                      <EnhancedTooltip content="The unique name of this crosswalk mapping">
+                      <div className="flex items-center">
                         Name
-                      </EnhancedTooltip>
+                        <EnhancedTooltip content="The unique name of this crosswalk mapping">
+                          <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                        </EnhancedTooltip>
+                      </div>
                     </TableHead>
                     <TableHead>
-                      <EnhancedTooltip content="Additional information about the mapping's purpose">
+                      <div className="flex items-center">
                         Description
-                      </EnhancedTooltip>
+                        <EnhancedTooltip content="Additional information about the mapping's purpose">
+                          <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                        </EnhancedTooltip>
+                      </div>
                     </TableHead>
                     <TableHead>
-                      <EnhancedTooltip content="The origin reference data set to map from">
+                      <div className="flex items-center">
                         Source System
-                      </EnhancedTooltip>
+                        <EnhancedTooltip content="The origin reference data set to map from">
+                          <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                        </EnhancedTooltip>
+                      </div>
                     </TableHead>
                     <TableHead>
-                      <EnhancedTooltip content="The destination reference data set to map to">
+                      <div className="flex items-center">
                         Target System
-                      </EnhancedTooltip>
+                        <EnhancedTooltip content="The destination reference data set to map to">
+                          <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                        </EnhancedTooltip>
+                      </div>
                     </TableHead>
                     <TableHead>
-                      <EnhancedTooltip content="Number of individual value mappings defined">
+                      <div className="flex items-center">
                         Mappings
-                      </EnhancedTooltip>
+                        <EnhancedTooltip content="Number of individual value mappings defined">
+                          <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                        </EnhancedTooltip>
+                      </div>
                     </TableHead>
                     <TableHead className="w-[100px]">
-                      <EnhancedTooltip content="Operations you can perform on this crosswalk">
+                      <div className="flex items-center">
                         Actions
-                      </EnhancedTooltip>
+                        <EnhancedTooltip content="Operations you can perform on this crosswalk">
+                          <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                        </EnhancedTooltip>
+                      </div>
                     </TableHead>
                   </TableRow>
                 </TableHeader>

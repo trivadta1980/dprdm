@@ -888,44 +888,68 @@ export default function RelationshipsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>
-                      <EnhancedTooltip content="Unique name of the relationship">
+                      <div className="flex items-center">
                         Name
-                      </EnhancedTooltip>
+                        <EnhancedTooltip content="Unique name of the relationship">
+                          <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                        </EnhancedTooltip>
+                      </div>
                     </TableHead>
                     <TableHead>
-                      <EnhancedTooltip content="The source dataset that contains the data to be linked">
+                      <div className="flex items-center">
                         Source Dataset
-                      </EnhancedTooltip>
+                        <EnhancedTooltip content="The source dataset that contains the data to be linked">
+                          <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                        </EnhancedTooltip>
+                      </div>
                     </TableHead>
                     <TableHead>
-                      <EnhancedTooltip content="The field in the source dataset used for the relationship">
+                      <div className="flex items-center">
                         Source Field
-                      </EnhancedTooltip>
+                        <EnhancedTooltip content="The field in the source dataset used for the relationship">
+                          <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                        </EnhancedTooltip>
+                      </div>
                     </TableHead>
                     <TableHead className="w-[100px]">
-                      <EnhancedTooltip content="The type of relationship (parent-child, reference, or association)">
+                      <div className="flex items-center">
                         Relationship
-                      </EnhancedTooltip>
+                        <EnhancedTooltip content="The type of relationship (parent-child, reference, or association)">
+                          <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                        </EnhancedTooltip>
+                      </div>
                     </TableHead>
                     <TableHead>
-                      <EnhancedTooltip content="The target dataset that the source relates to">
+                      <div className="flex items-center">
                         Target Dataset
-                      </EnhancedTooltip>
+                        <EnhancedTooltip content="The target dataset that the source relates to">
+                          <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                        </EnhancedTooltip>
+                      </div>
                     </TableHead>
                     <TableHead>
-                      <EnhancedTooltip content="The field in the target dataset that matches to the source field">
+                      <div className="flex items-center">
                         Target Field
-                      </EnhancedTooltip>
+                        <EnhancedTooltip content="The field in the target dataset that matches to the source field">
+                          <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                        </EnhancedTooltip>
+                      </div>
                     </TableHead>
                     <TableHead>
-                      <EnhancedTooltip content="The relationship multiplicity (one-to-one, one-to-many, or many-to-many)">
+                      <div className="flex items-center">
                         Cardinality
-                      </EnhancedTooltip>
+                        <EnhancedTooltip content="The relationship multiplicity (one-to-one, one-to-many, or many-to-many)">
+                          <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                        </EnhancedTooltip>
+                      </div>
                     </TableHead>
                     <TableHead className="text-right">
-                      <EnhancedTooltip content="Operations you can perform on this relationship">
+                      <div className="flex items-center justify-end">
                         Actions
-                      </EnhancedTooltip>
+                        <EnhancedTooltip content="Operations you can perform on this relationship">
+                          <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                        </EnhancedTooltip>
+                      </div>
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1108,29 +1132,44 @@ export default function RelationshipsPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>
-                          <EnhancedTooltip content="The name of this relationship attribute">
+                          <div className="flex items-center">
                             Name
-                          </EnhancedTooltip>
+                            <EnhancedTooltip content="The name of this relationship attribute">
+                              <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                            </EnhancedTooltip>
+                          </div>
                         </TableHead>
                         <TableHead>
-                          <EnhancedTooltip content="The data type of this attribute (string, number, boolean, date)">
+                          <div className="flex items-center">
                             Type
-                          </EnhancedTooltip>
+                            <EnhancedTooltip content="The data type of this attribute (string, number, boolean, date)">
+                              <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                            </EnhancedTooltip>
+                          </div>
                         </TableHead>
                         <TableHead>
-                          <EnhancedTooltip content="Whether this attribute is required when defining relationship values">
+                          <div className="flex items-center">
                             Required
-                          </EnhancedTooltip>
+                            <EnhancedTooltip content="Whether this attribute is required when defining relationship values">
+                              <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                            </EnhancedTooltip>
+                          </div>
                         </TableHead>
                         <TableHead>
-                          <EnhancedTooltip content="A description of what this attribute represents">
+                          <div className="flex items-center">
                             Description
-                          </EnhancedTooltip>
+                            <EnhancedTooltip content="A description of what this attribute represents">
+                              <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                            </EnhancedTooltip>
+                          </div>
                         </TableHead>
                         <TableHead className="text-right">
-                          <EnhancedTooltip content="Operations you can perform on this attribute">
+                          <div className="flex items-center justify-end">
                             Actions
-                          </EnhancedTooltip>
+                            <EnhancedTooltip content="Operations you can perform on this attribute">
+                              <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                            </EnhancedTooltip>
+                          </div>
                         </TableHead>
                       </TableRow>
                     </TableHeader>
