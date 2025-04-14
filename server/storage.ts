@@ -1,6 +1,6 @@
 import { users, roles, type User, type InsertUser, type Role, type InsertRole, type UpdateUser } from "@shared/schema";
 import { db } from "./db";
-import { eq, or, and, sql, desc, count } from "drizzle-orm";
+import { eq, or, and, sql, desc, count, inArray } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { Pool } from '@neondatabase/serverless';
@@ -1806,12 +1806,17 @@ export class DatabaseStorage implements IStorage {
       
       // Get crosswalk names
       const crosswalkIds = crosswalkResults.map(result => result.crosswalkId);
-      const crosswalks = await db
-        .select()
-        .from(crosswalkMappings)
-        .where(
-          sql`${crosswalkMappings.id} IN (${sql.join(crosswalkIds, sql`, `)})`
-        );
+      
+      // Handle the case when there are no missing mappings
+      let crosswalks = [];
+      if (crosswalkIds.length > 0) {
+        crosswalks = await db
+          .select()
+          .from(crosswalkMappings)
+          .where(
+            inArray(crosswalkMappings.id, crosswalkIds)
+          );
+      }
       
       // Map crosswalk names to results
       const crosswalkCounts = crosswalkResults.map(result => {

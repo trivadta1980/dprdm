@@ -82,14 +82,14 @@ export default function MissingMappingsPage() {
               <div className="space-y-2">
                 <Label htmlFor="crosswalk">Crosswalk</Label>
                 <Select 
-                  value={selectedCrosswalkId?.toString() || ''} 
-                  onValueChange={(value) => setSelectedCrosswalkId(value ? Number(value) : undefined)}
+                  value={selectedCrosswalkId?.toString() || "all"} 
+                  onValueChange={(value) => setSelectedCrosswalkId(value !== "all" ? Number(value) : undefined)}
                 >
                   <SelectTrigger id="crosswalk">
                     <SelectValue placeholder="All Crosswalks" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Crosswalks</SelectItem>
+                    <SelectItem value="all">All Crosswalks</SelectItem>
                     {crosswalks.map((crosswalk) => (
                       <SelectItem key={crosswalk.id} value={crosswalk.id.toString()}>
                         {crosswalk.name}
