@@ -157,10 +157,10 @@ export function BatchAddDialog({
             ]
           }
 
-          // Update the crosswalk
+          // Update the crosswalk - using data instead of body parameter
           await apiRequest(`/api/crosswalks/${crosswalkId}`, {
             method: 'PATCH',
-            body: {
+            data: {
               mappingData: updatedMappingData
             }
           })

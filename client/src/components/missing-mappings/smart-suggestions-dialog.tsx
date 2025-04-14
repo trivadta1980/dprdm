@@ -262,7 +262,7 @@ export function SmartSuggestionsDialog({
       
       await apiRequest(`/api/crosswalks/${mapping.crosswalkId}`, {
         method: 'PATCH',
-        body: {
+        data: {
           mappingData: updatedMappingData
         }
       })

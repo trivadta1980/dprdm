@@ -90,9 +90,10 @@ export function AddToCrosswalkDialog({
       }
 
       // Update the crosswalk with the new mapping
+      // The API expects data rather than body
       await apiRequest(`/api/crosswalks/${mapping.crosswalkId}`, {
         method: 'PATCH',
-        body: {
+        data: {
           mappingData: updatedMappingData
         }
       })
