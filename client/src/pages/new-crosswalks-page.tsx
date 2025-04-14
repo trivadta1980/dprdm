@@ -281,6 +281,7 @@ export default function NewCrosswalksPage() {
       });
       
       queryClient.invalidateQueries({ queryKey: ["/api/crosswalks"] });
+      queryClient.invalidateQueries({ queryKey: ["missing-mappings-statistics"] });
       setIsDeleteDialogOpen(false);
       setDeletingCrosswalkId(null);
     },
