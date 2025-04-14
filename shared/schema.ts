@@ -453,6 +453,43 @@ export const insertRelationshipAttributeDefinitionSchema = createInsertSchema(re
   description: z.string().optional(),
 });
 
+// Missing Mappings table to track when crosswalk lookups fail
+export const missingMappings = pgTable("missing_mappings", {
+  id: serial("id").primaryKey(),
+  crosswalkId: integer("crosswalk_id")
+    .references(() => crosswalkMappings.id)
+    .notNull(),
+  sourceValue: text("source_value").notNull(),
+  requestUserId: integer("request_user_id").references(() => users.id),
+  requestContext: text("request_context"),
+  requestedAt: timestamp("requested_at").defaultNow().notNull(),
+  requestCount: integer("request_count").default(1).notNull(),
+  lastRequestedAt: timestamp("last_requested_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Missing Mappings relations
+export const missingMappingsRelations = relations(missingMappings, ({ one }) => ({
+  crosswalk: one(crosswalkMappings, {
+    fields: [missingMappings.crosswalkId],
+    references: [crosswalkMappings.id],
+  }),
+  requestUser: one(users, {
+    fields: [missingMappings.requestUserId],
+    references: [users.id],
+  }),
+}));
+
+// Schema for inserting a missing mapping
+export const insertMissingMappingSchema = createInsertSchema(missingMappings).extend({
+  crosswalkId: z.coerce.number(),
+  sourceValue: z.string().min(1, "Source value is required"),
+});
+
+export type MissingMapping = typeof missingMappings.$inferSelect;
+export type InsertMissingMapping = z.infer<typeof insertMissingMappingSchema>;
+
 export const insertRelationshipAttributeValueSchema = createInsertSchema(relationshipAttributeValues).extend({
   relationshipValueId: z.coerce.number(),
   attributeDefinitionId: z.coerce.number(),

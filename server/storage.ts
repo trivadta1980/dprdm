@@ -19,6 +19,8 @@ import { type RelationshipAttributeValue, type InsertRelationshipAttributeValue 
 import { relationshipAttributeValues } from "@shared/schema";
 import { type ApiKey, type InsertApiKey } from "@shared/schema";
 import { apiKeys } from "@shared/schema";
+import { type MissingMapping, type InsertMissingMapping } from "@shared/schema";
+import { missingMappings } from "@shared/schema";
 import crypto from 'crypto';
 
 
@@ -158,6 +160,16 @@ export interface IStorage {
   getPendingRelationshipValues(): Promise<RelationshipValue[]>;
   getDraftRelationshipValues(): Promise<RelationshipValue[]>;
   getRelationshipValuesByStatus(status: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED"): Promise<RelationshipValue[]>;
+  
+  // Missing mappings methods
+  logMissingMapping(mapping: InsertMissingMapping): Promise<MissingMapping>;
+  getMissingMappings(crosswalkId?: number): Promise<MissingMapping[]>;
+  getMissingMappingStatistics(): Promise<{
+    totalCount: number;
+    crosswalkCounts: {crosswalkId: number; crosswalkName: string; count: number}[];
+  }>;
+  deleteMissingMapping(id: number): Promise<boolean>;
+  updateMissingMapping(id: number, updates: Partial<InsertMissingMapping>): Promise<MissingMapping>;
 }
 
 interface ChangeHistoryEntry {
