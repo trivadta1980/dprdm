@@ -33,7 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Plus, GitFork, Pencil, Trash2, ArrowRight, Settings } from "lucide-react";
+import { Plus, GitFork, Pencil, Trash2, ArrowRight, Settings, Info, Link as LinkIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,7 +48,6 @@ import type {
 } from "@shared/schema";
 import { useState } from "react";
 import { Link } from "wouter";
-import { Link as LinkIcon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 
@@ -651,8 +650,9 @@ export default function RelationshipsPage() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <GitFork className="h-5 w-5" />
+              Relationship Management
               <EnhancedTooltip content="Define connections between different reference data sets to establish data relationships">
-                Relationship Management
+                <Info className="h-4 w-4 text-muted-foreground ml-1" />
               </EnhancedTooltip>
             </CardTitle>
             <Dialog
