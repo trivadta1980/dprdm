@@ -122,11 +122,12 @@ export function AddToCrosswalkDialog({
       console.log('Updated mappings count:', updatedMappingData.mappings.length);
 
       // Update the crosswalk with the new mapping
-      // The API expects data rather than body
+      // Tell the server to merge our mappings with existing ones
       await apiRequest(`/api/crosswalks/${mapping.crosswalkId}`, {
         method: 'PATCH',
         data: {
-          mappingData: updatedMappingData
+          mappingData: updatedMappingData,
+          mergeStrategy: 'merge' // This tells the server to merge, not replace
         }
       })
 

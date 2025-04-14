@@ -1737,9 +1737,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ? currentMappingData.mappings 
           : [];
         
-        // Log before merging for debugging
+        // Log before processing for debugging
         console.log('PATCH /api/crosswalks/:id - Current mappings count:', existingMappings.length);
-        console.log('PATCH /api/crosswalks/:id - New mappings count:', Array.isArray(req.body.mappingData.mappings) ? req.body.mappingData.mappings.length : 0);
+        console.log('PATCH /api/crosswalks/:id - New mappings data count:', Array.isArray(req.body.mappingData.mappings) ? req.body.mappingData.mappings.length : 0);
+        
+        // Check if this is a complete replacement of mappings or a merge request
+        const isMergeRequest = req.body.mergeStrategy === 'merge';
+        console.log('PATCH /api/crosswalks/:id - Merge strategy:', isMergeRequest ? 'merge' : 'replace');
         
         // Get the status for new mappings
         const status = currentMapping.approvalStatus || "DRAFT";
@@ -1757,19 +1761,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
             })
           : [];
           
-        // Now merge the existing mappings with the updated mappings
-        const mergedMappings = [
-          ...existingMappings,
-          ...updatedMappings
-        ];
+        // Based on merge strategy, either replace or merge mappings
+        let finalMappings;
+        if (isMergeRequest) {
+          // Create a helper function to check for duplicates
+          const isDuplicate = (existing, newMapping) => {
+            return existing.some(m => 
+              m.sourceValue === newMapping.sourceValue && 
+              m.targetValue === newMapping.targetValue
+            );
+          };
+          
+          // Filter out any duplicates before merging
+          const uniqueNewMappings = updatedMappings.filter(
+            newMapping => !isDuplicate(existingMappings, newMapping)
+          );
+          
+          // Now merge without duplicates
+          finalMappings = [
+            ...existingMappings,
+            ...uniqueNewMappings
+          ];
+          
+          console.log('PATCH /api/crosswalks/:id - Unique new mappings count:', uniqueNewMappings.length);
+        } else {
+          // Complete replacement
+          finalMappings = updatedMappings;
+        }
         
-        // Log after merging
-        console.log('PATCH /api/crosswalks/:id - Merged mappings count:', mergedMappings.length);
+        // Log after processing
+        console.log('PATCH /api/crosswalks/:id - Final mappings count:', finalMappings.length);
         
-        // Update the mappingData with the merged mappings
+        // Update the mappingData with the processed mappings
         updatedData.mappingData = {
           ...req.body.mappingData,
-          mappings: mergedMappings
+          mappings: finalMappings
         };
       }
       

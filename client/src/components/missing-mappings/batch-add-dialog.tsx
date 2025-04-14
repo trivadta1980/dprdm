@@ -189,10 +189,12 @@ export function BatchAddDialog({
           console.log(`Crosswalk ${crosswalkId} - Updated mappings count:`, updatedMappingData.mappings.length);
 
           // Update the crosswalk - using data instead of body parameter
+          // Tell the server to merge our mappings with existing ones
           await apiRequest(`/api/crosswalks/${crosswalkId}`, {
             method: 'PATCH',
             data: {
-              mappingData: updatedMappingData
+              mappingData: updatedMappingData,
+              mergeStrategy: 'merge' // This tells the server to merge, not replace
             }
           })
 

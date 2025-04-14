@@ -294,7 +294,8 @@ export function SmartSuggestionsDialog({
       await apiRequest(`/api/crosswalks/${mapping.crosswalkId}`, {
         method: 'PATCH',
         data: {
-          mappingData: updatedMappingData
+          mappingData: updatedMappingData,
+          mergeStrategy: 'merge' // This tells the server to merge, not replace
         }
       })
       
