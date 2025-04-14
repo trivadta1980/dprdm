@@ -1726,6 +1726,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Missing Mappings Routes
+  
+  // Log a missing mapping
+  app.post("/api/missing-mappings", async (req, res) => {
+    console.log('POST /api/missing-mappings - Request received');
+    
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/missing-mappings - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const result = insertMissingMappingSchema.safeParse(req.body);
+      
+      if (!result.success) {
+        console.log('POST /api/missing-mappings - Invalid data:', result.error);
+        return res.status(400).json({ error: result.error });
+      }
+      
+      // Add user information to the missing mapping
+      const missingMapping = await storage.logMissingMapping({
+        ...result.data,
+        requestUserId: req.user.id,
+        requestContext: req.body.requestContext || 'API request'
+      });
+      
+      console.log('POST /api/missing-mappings - Missing mapping logged successfully');
+      res.status(201).json(missingMapping);
+    } catch (error) {
+      console.error('POST /api/missing-mappings - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+  
+  // Get all missing mappings or filtered by crosswalk
+  app.get("/api/missing-mappings", async (req, res) => {
+    console.log('GET /api/missing-mappings - Request received');
+    
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/missing-mappings - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const crosswalkId = req.query.crosswalkId ? Number(req.query.crosswalkId) : undefined;
+      console.log('GET /api/missing-mappings - Filter by crosswalk:', crosswalkId);
+      
+      const missingMappings = await storage.getMissingMappings(crosswalkId);
+      console.log('GET /api/missing-mappings - Missing mappings fetched successfully, count:', missingMappings.length);
+      
+      res.json(missingMappings);
+    } catch (error) {
+      console.error('GET /api/missing-mappings - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+  
+  // Get statistics for missing mappings
+  app.get("/api/missing-mappings/statistics", async (req, res) => {
+    console.log('GET /api/missing-mappings/statistics - Request received');
+    
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/missing-mappings/statistics - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const statistics = await storage.getMissingMappingStatistics();
+      console.log('GET /api/missing-mappings/statistics - Statistics fetched successfully');
+      
+      res.json(statistics);
+    } catch (error) {
+      console.error('GET /api/missing-mappings/statistics - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+  
+  // Delete a missing mapping
+  app.delete("/api/missing-mappings/:id", async (req, res) => {
+    console.log('DELETE /api/missing-mappings/:id - Request received');
+    
+    if (!req.isAuthenticated()) {
+      console.log('DELETE /api/missing-mappings/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const success = await storage.deleteMissingMapping(Number(req.params.id));
+      
+      if (success) {
+        console.log('DELETE /api/missing-mappings/:id - Missing mapping deleted successfully');
+        res.json({ success: true });
+      } else {
+        console.log('DELETE /api/missing-mappings/:id - Missing mapping not found');
+        res.status(404).json({ error: "Missing mapping not found" });
+      }
+    } catch (error) {
+      console.error('DELETE /api/missing-mappings/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   // Add endpoints for approving/rejecting reference data instances
   app.post("/api/reference-data/:id/instances/:instanceId/approve", async (req, res) => {
     console.log('POST /api/reference-data/:id/instances/:instanceId/approve - Request received');
