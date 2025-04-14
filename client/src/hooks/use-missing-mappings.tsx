@@ -40,17 +40,26 @@ export const useMissingMappings = (crosswalkId?: number) => {
     queryKey: ['missing-mappings', crosswalkId],
     queryFn: async () => {
       try {
+        console.log('Fetching missing mappings', crosswalkId ? `for crosswalk ${crosswalkId}` : 'for all crosswalks');
         const url = crosswalkId 
           ? `/api/missing-mappings?crosswalkId=${crosswalkId}` 
           : '/api/missing-mappings';
         const response = await apiRequest({ url });
+        console.log('Missing mappings API response:', response);
+        
         // Ensure the response is an array
-        return Array.isArray(response) ? response : [];
+        if (!Array.isArray(response)) {
+          console.warn('Missing mappings response is not an array:', response);
+          return [];
+        }
+        
+        return response;
       } catch (err) {
         console.error('Error fetching missing mappings:', err);
         throw err;
       }
-    }
+    },
+    retry: 1 // Only retry once to avoid flooding logs
   });
   
   // Fetch missing mappings statistics
@@ -62,7 +71,10 @@ export const useMissingMappings = (crosswalkId?: number) => {
     queryKey: ['missing-mappings-statistics'],
     queryFn: async () => {
       try {
+        console.log('Fetching missing mappings statistics');
         const response = await apiRequest({ url: '/api/missing-mappings/statistics' });
+        console.log('Missing mappings statistics API response:', response);
+        
         // Ensure response has the expected shape
         if (response && typeof response === 'object') {
           const stats: MissingMappingStatistics = {
@@ -71,13 +83,16 @@ export const useMissingMappings = (crosswalkId?: number) => {
           };
           return stats;
         }
+        
+        console.warn('Missing mappings statistics response has unexpected format:', response);
         // Default fallback
         return { totalCount: 0, crosswalkCounts: [] };
       } catch (err) {
         console.error('Error fetching missing mappings statistics:', err);
         throw err;
       }
-    }
+    },
+    retry: 1 // Only retry once to avoid flooding logs
   });
   
   // Log a new missing mapping
