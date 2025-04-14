@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useMissingMappings } from "@/hooks/use-missing-mappings";
 
 interface CrosswalkMapping {
   id: number;
@@ -59,6 +60,9 @@ export function CrosswalkTransformer() {
   
   // State for mapping columns
   const [columnMapping, setColumnMapping] = useState<string>("");
+  
+  // Missing mappings functionality
+  const { logMissingMapping } = useMissingMappings();
   
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -167,6 +171,10 @@ export function CrosswalkTransformer() {
     
     // Get the mapping data
     const { mappings, sourceAttribute, targetAttribute } = selectedCrosswalk.mappingData;
+    const crosswalkId = parseInt(selectedCrosswalkId, 10);
+    
+    // Track unmapped values to log
+    const unmappedValues = new Set<string>();
     
     // Transform each record
     const transformed = csvData.map(record => {
@@ -189,6 +197,11 @@ export function CrosswalkTransformer() {
           mapped: true
         };
       } else {
+        // Record unmapped value for logging
+        if (sourceValue && sourceValue.trim() !== '') {
+          unmappedValues.add(sourceValue);
+        }
+        
         transformedRecord.transformations[columnMapping] = {
           originalValue: sourceValue,
           newValue: sourceValue,
@@ -201,6 +214,25 @@ export function CrosswalkTransformer() {
     });
     
     setTransformedData(transformed);
+    
+    // Log unmapped values to missing mappings database
+    if (unmappedValues.size > 0) {
+      console.log(`Logging ${unmappedValues.size} unmapped values to missing mappings database`);
+      
+      unmappedValues.forEach(sourceValue => {
+        logMissingMapping({
+          crosswalkId: crosswalkId,
+          sourceValue: sourceValue,
+          requestContext: `Transformation demo - CSV upload for ${selectedCrosswalk.name}`
+        });
+      });
+      
+      toast({
+        title: "Missing Mappings Logged",
+        description: `${unmappedValues.size} unmapped values have been logged for tracking`,
+        variant: "info",
+      });
+    }
     
     toast({
       title: "Transformation Applied",
