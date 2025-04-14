@@ -1694,6 +1694,176 @@ export class DatabaseStorage implements IStorage {
       .where(eq(relationshipValues.approvalStatus, status))
       .orderBy(desc(relationshipValues.createdAt));
   }
+
+  // Missing mappings implementation
+  async logMissingMapping(mapping: InsertMissingMapping): Promise<MissingMapping> {
+    console.log('Storage: Logging missing mapping:', mapping);
+    
+    try {
+      // Check if a similar request already exists
+      const existingMappings = await db
+        .select()
+        .from(missingMappings)
+        .where(
+          and(
+            eq(missingMappings.crosswalkId, mapping.crosswalkId),
+            eq(missingMappings.sourceValue, mapping.sourceValue)
+          )
+        );
+      
+      if (existingMappings.length > 0) {
+        // Update existing record
+        const existingMapping = existingMappings[0];
+        console.log('Storage: Found existing missing mapping, updating count');
+        
+        const [updatedMapping] = await db
+          .update(missingMappings)
+          .set({
+            requestCount: existingMapping.requestCount + 1,
+            lastRequestedAt: new Date(),
+            updatedAt: new Date(),
+            requestUserId: mapping.requestUserId || existingMapping.requestUserId,
+            requestContext: mapping.requestContext || existingMapping.requestContext
+          })
+          .where(eq(missingMappings.id, existingMapping.id))
+          .returning();
+        
+        return updatedMapping;
+      } else {
+        // Create new record
+        console.log('Storage: Creating new missing mapping record');
+        const [newMapping] = await db
+          .insert(missingMappings)
+          .values({
+            ...mapping,
+            requestedAt: new Date(),
+            lastRequestedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date()
+          })
+          .returning();
+        
+        return newMapping;
+      }
+    } catch (error) {
+      console.error('Storage: Error logging missing mapping:', error);
+      throw error;
+    }
+  }
+
+  async getMissingMappings(crosswalkId?: number): Promise<MissingMapping[]> {
+    try {
+      let query = db
+        .select({
+          missingMapping: missingMappings,
+          crosswalk: crosswalkMappings,
+          user: users
+        })
+        .from(missingMappings)
+        .leftJoin(crosswalkMappings, eq(missingMappings.crosswalkId, crosswalkMappings.id))
+        .leftJoin(users, eq(missingMappings.requestUserId, users.id))
+        .orderBy(desc(missingMappings.lastRequestedAt));
+      
+      // Apply crosswalk filter if provided
+      if (crosswalkId) {
+        query = query.where(eq(missingMappings.crosswalkId, crosswalkId));
+      }
+      
+      const results = await query;
+      
+      // Format the results
+      return results.map(row => ({
+        ...row.missingMapping,
+        crosswalkName: row.crosswalk?.name || 'Unknown Crosswalk',
+        userName: row.user?.username || 'Unknown User'
+      }));
+    } catch (error) {
+      console.error('Storage: Error fetching missing mappings:', error);
+      throw error;
+    }
+  }
+
+  async getMissingMappingStatistics(): Promise<{
+    totalCount: number;
+    crosswalkCounts: { crosswalkId: number; crosswalkName: string; count: number }[];
+  }> {
+    try {
+      // Get total count
+      const totalCountResult = await db
+        .select({ count: count() })
+        .from(missingMappings);
+      
+      const totalCount = totalCountResult[0]?.count || 0;
+      
+      // Get counts by crosswalk
+      const crosswalkResults = await db
+        .select({
+          crosswalkId: missingMappings.crosswalkId,
+          count: count(),
+        })
+        .from(missingMappings)
+        .groupBy(missingMappings.crosswalkId);
+      
+      // Get crosswalk names
+      const crosswalkIds = crosswalkResults.map(result => result.crosswalkId);
+      const crosswalks = await db
+        .select()
+        .from(crosswalkMappings)
+        .where(
+          sql`${crosswalkMappings.id} IN (${sql.join(crosswalkIds, sql`, `)})`
+        );
+      
+      // Map crosswalk names to results
+      const crosswalkCounts = crosswalkResults.map(result => {
+        const crosswalk = crosswalks.find(c => c.id === result.crosswalkId);
+        return {
+          crosswalkId: result.crosswalkId,
+          crosswalkName: crosswalk?.name || 'Unknown Crosswalk',
+          count: Number(result.count)
+        };
+      });
+      
+      return {
+        totalCount,
+        crosswalkCounts
+      };
+    } catch (error) {
+      console.error('Storage: Error getting missing mapping statistics:', error);
+      throw error;
+    }
+  }
+
+  async deleteMissingMapping(id: number): Promise<boolean> {
+    try {
+      const [deleted] = await db
+        .delete(missingMappings)
+        .where(eq(missingMappings.id, id))
+        .returning();
+      
+      return !!deleted;
+    } catch (error) {
+      console.error('Storage: Error deleting missing mapping:', error);
+      throw error;
+    }
+  }
+
+  async updateMissingMapping(id: number, updates: Partial<InsertMissingMapping>): Promise<MissingMapping> {
+    try {
+      const [updated] = await db
+        .update(missingMappings)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        })
+        .where(eq(missingMappings.id, id))
+        .returning();
+      
+      return updated;
+    } catch (error) {
+      console.error('Storage: Error updating missing mapping:', error);
+      throw error;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

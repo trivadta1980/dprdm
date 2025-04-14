@@ -12,9 +12,11 @@ import {
   insertCrosswalkMappingSchema,
   insertRelationshipAttributeDefinitionSchema,
   insertRelationshipAttributeValueSchema,
+  insertMissingMappingSchema,
   relationships,
   crosswalkMappings,
-  relationshipValues
+  relationshipValues,
+  missingMappings
 } from "@shared/schema";
 import { sql, eq, and, or, inArray } from "drizzle-orm";
 import { scrypt, randomBytes } from "crypto";
