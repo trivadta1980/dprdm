@@ -97,7 +97,8 @@ export function SmartSuggestionsDialog({
       setProgress(30)
       
       // Get existing mappings to analyze patterns
-      const existingMappings = crosswalk.mappingData?.mappings || []
+      const existingMappingData = crosswalk.mappingData || { mappings: [] }
+      const existingMappings = existingMappingData.mappings || []
       
       // Create a basic suggestion generator based on existing patterns
       // This is a simple implementation; a real system would use more sophisticated algorithms
@@ -243,11 +244,18 @@ export function SmartSuggestionsDialog({
         isAiGenerated: true // Flag to indicate AI generation
       }))
       
+      // Prepare updated mapping data, ensuring we handle missing structure
+      const existingMappingData = currentMapping.mappingData || { 
+        mappings: [],
+        sourceAttribute: currentMapping.sourceAttribute || '',
+        targetAttribute: currentMapping.targetAttribute || ''
+      };
+      
       // Update the crosswalk with new mappings
       const updatedMappingData = {
-        ...currentMapping.mappingData,
+        ...existingMappingData,
         mappings: [
-          ...currentMapping.mappingData.mappings,
+          ...(existingMappingData.mappings || []),
           ...newMappings
         ]
       }

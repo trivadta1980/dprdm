@@ -141,11 +141,18 @@ export function BatchAddDialog({
             status: 'PENDING' // New mappings are pending by default
           }))
 
+          // Prepare updated mapping data, ensuring we handle missing structure
+          const existingMappingData = currentMapping.mappingData || { 
+            mappings: [],
+            sourceAttribute: currentMapping.sourceAttribute || '',
+            targetAttribute: currentMapping.targetAttribute || ''
+          };
+          
           // Prepare updated mapping data
           const updatedMappingData = {
-            ...currentMapping.mappingData,
+            ...existingMappingData,
             mappings: [
-              ...currentMapping.mappingData.mappings,
+              ...(existingMappingData.mappings || []),
               ...newMappings
             ]
           }

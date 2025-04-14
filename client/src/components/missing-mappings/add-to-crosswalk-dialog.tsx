@@ -69,11 +69,17 @@ export function AddToCrosswalkDialog({
         method: 'GET'
       })
 
-      // Prepare the updated mapping
+      // Prepare the updated mapping data, ensuring we handle missing structure
+      const existingMappingData = currentMapping.mappingData || { 
+        mappings: [],
+        sourceAttribute: currentMapping.sourceAttribute || '',
+        targetAttribute: currentMapping.targetAttribute || ''
+      };
+      
       const updatedMappingData = {
-        ...currentMapping.mappingData,
+        ...existingMappingData,
         mappings: [
-          ...currentMapping.mappingData.mappings,
+          ...(existingMappingData.mappings || []),
           {
             sourceValue: mapping.sourceValue,
             targetValue: targetValue.trim(),
