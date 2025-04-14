@@ -24,7 +24,14 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { apiRequest } from '@/lib/queryClient'
 import { useMissingMappings } from '@/hooks/use-missing-mappings'
-import { CrosswalkMapping } from '@/types/crosswalk-types'
+// Import correct types
+interface CrosswalkOption {
+  id: number;
+  name: string;
+  description: string;
+  sourceSystemId: number;
+  targetSystemId: number;
+}
 import { MainLayout } from '@/components/layout/main-layout'
 
 export default function MissingMappingsPage() {
@@ -36,9 +43,11 @@ export default function MissingMappingsPage() {
   
   // Fetch all crosswalks for the filter dropdown
   const { data: crosswalks = [] } = useQuery({
-    queryKey: ['/api/crosswalks'],
+    queryKey: ['crosswalks'],
     queryFn: async () => {
-      return apiRequest<CrosswalkMapping[]>({ url: '/api/crosswalks' });
+      const response = await apiRequest<CrosswalkOption[]>({ url: '/api/crosswalks' });
+      console.log('Crosswalks response:', response);
+      return response;
     }
   });
   
