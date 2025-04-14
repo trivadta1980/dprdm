@@ -1493,6 +1493,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Lookup a value in a crosswalk mapping
+  app.get("/api/crosswalks/:id/lookup/:sourceValue", async (req, res) => {
+    console.log(`GET /api/crosswalks/:id/lookup/:sourceValue - Request received`);
+    if (!req.isAuthenticated()) {
+      console.log(`GET /api/crosswalks/:id/lookup/:sourceValue - Unauthorized access`);
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const crosswalkId = parseInt(req.params.id);
+      const sourceValue = req.params.sourceValue;
+      const requestContext = req.query.context || 'API lookup';
+      
+      if (isNaN(crosswalkId)) {
+        return res.status(400).json({ error: "Invalid crosswalk ID" });
+      }
+      
+      // Get the crosswalk mapping
+      const crosswalk = await storage.getCrosswalkMapping(crosswalkId);
+      if (!crosswalk) {
+        return res.status(404).json({ error: "Crosswalk mapping not found" });
+      }
+      
+      // Look up the source value in the mappings
+      const mapping = crosswalk.mappingData?.mappings?.find(m => m.sourceValue === sourceValue);
+      
+      if (mapping) {
+        // If found, return the target value
+        console.log(`GET /api/crosswalks/:id/lookup/:sourceValue - Mapping found for value: ${sourceValue}`);
+        return res.json({
+          found: true,
+          sourceValue: sourceValue,
+          targetValue: mapping.targetValue,
+          confidence: mapping.confidence
+        });
+      } else {
+        // If not found, log the missing mapping and return not found
+        console.log(`GET /api/crosswalks/:id/lookup/:sourceValue - Mapping not found for value: ${sourceValue}, logging missing mapping`);
+        
+        // Log the missing mapping
+        await storage.logMissingMapping({
+          crosswalkId,
+          sourceValue,
+          requestContext: String(requestContext),
+          userId: req.user.id
+        });
+        
+        return res.json({
+          found: false,
+          sourceValue: sourceValue,
+          message: "No mapping found for this source value"
+        });
+      }
+    } catch (error) {
+      console.error(`GET /api/crosswalks/:id/lookup/:sourceValue - Error:`, error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+  
   // DIAGNOSTIC ROUTES - Not included in navigation, for debugging only
   // These routes help diagnose authentication issues in production
   app.use('/api/diagnostics', (req, res, next) => {
