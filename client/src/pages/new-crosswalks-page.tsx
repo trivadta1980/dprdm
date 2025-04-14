@@ -5,6 +5,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { MappingItem } from "@/components/mapping/mapping-editor";
 import { CrosswalkEditor } from "@/components/crosswalk/crosswalk-editor";
 import { MainLayout } from "@/components/layout/main-layout";
+import { useMissingMappings } from "@/hooks/use-missing-mappings";
 import {
   Table,
   TableBody,
@@ -32,7 +33,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { PlusIcon, Pencil, Trash2 } from "lucide-react";
+import { PlusIcon, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { z } from "zod";
 
 // Define types for the data
@@ -49,6 +50,7 @@ interface CrosswalkMapping {
       sourceValue: string;
       targetValue: string;
       confidence: number;
+      status?: string;
     }>;
   };
 }
@@ -324,10 +326,18 @@ export default function NewCrosswalksPage() {
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold tracking-tight">Crosswalk Mappings</h1>
-          <Button onClick={handleCreateCrosswalk}>
-            <PlusIcon className="h-4 w-4 mr-2" />
-            Create Crosswalk
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" asChild>
+              <a href="/missing-mappings">
+                <AlertCircle className="h-4 w-4 mr-2" />
+                Missing Mappings
+              </a>
+            </Button>
+            <Button onClick={handleCreateCrosswalk}>
+              <PlusIcon className="h-4 w-4 mr-2" />
+              Create Crosswalk
+            </Button>
+          </div>
         </div>
 
         <Card>
