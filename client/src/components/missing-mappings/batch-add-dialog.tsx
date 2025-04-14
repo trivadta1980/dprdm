@@ -141,12 +141,31 @@ export function BatchAddDialog({
             status: 'PENDING' // New mappings are pending by default
           }))
 
-          // Prepare updated mapping data, ensuring we handle missing structure
+          // Prepare updated mapping data, ensuring we properly handle missing structure
           const existingMappingData = currentMapping.mappingData || { 
             mappings: [],
-            sourceAttribute: currentMapping.sourceAttribute || '',
-            targetAttribute: currentMapping.targetAttribute || ''
+            sourceAttribute: '',
+            targetAttribute: ''
           };
+          
+          // If sourceAttribute/targetAttribute aren't in mappingData, we need to ensure they're included
+          if (!existingMappingData.sourceAttribute) {
+            existingMappingData.sourceAttribute = currentMapping.sourceAttribute || '';
+          }
+          
+          if (!existingMappingData.targetAttribute) {
+            existingMappingData.targetAttribute = currentMapping.targetAttribute || '';
+          }
+          
+          // Add extra debug logs to help identify the issue
+          console.log(`Crosswalk ${crosswalkId} - Data:`, {
+            id: currentMapping.id,
+            name: currentMapping.name,
+            sourceAttribute: currentMapping.sourceAttribute,
+            targetAttribute: currentMapping.targetAttribute,
+            mappingDataSourceAttr: existingMappingData.sourceAttribute,
+            mappingDataTargetAttr: existingMappingData.targetAttribute
+          });
           
           // Console log to debug
           console.log(`Crosswalk ${crosswalkId} - Current mappingData:`, JSON.stringify(currentMapping.mappingData, null, 2));

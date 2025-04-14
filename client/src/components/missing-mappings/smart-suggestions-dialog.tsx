@@ -244,12 +244,31 @@ export function SmartSuggestionsDialog({
         isAiGenerated: true // Flag to indicate AI generation
       }))
       
-      // Prepare updated mapping data, ensuring we handle missing structure
+      // Prepare updated mapping data, ensuring we properly handle missing structure
       const existingMappingData = currentMapping.mappingData || { 
         mappings: [],
-        sourceAttribute: currentMapping.sourceAttribute || '',
-        targetAttribute: currentMapping.targetAttribute || ''
+        sourceAttribute: '',
+        targetAttribute: ''
       };
+      
+      // If sourceAttribute/targetAttribute aren't in mappingData, we need to ensure they're included
+      if (!existingMappingData.sourceAttribute) {
+        existingMappingData.sourceAttribute = currentMapping.sourceAttribute || '';
+      }
+      
+      if (!existingMappingData.targetAttribute) {
+        existingMappingData.targetAttribute = currentMapping.targetAttribute || '';
+      }
+      
+      // Add extra debug logs to help identify the issue
+      console.log('Smart Suggestions - Crosswalk data:', {
+        id: currentMapping.id,
+        name: currentMapping.name,
+        sourceAttribute: currentMapping.sourceAttribute,
+        targetAttribute: currentMapping.targetAttribute,
+        mappingDataSourceAttr: existingMappingData.sourceAttribute,
+        mappingDataTargetAttr: existingMappingData.targetAttribute
+      });
       
       // Console log to debug
       console.log('Current mappingData structure:', JSON.stringify(currentMapping.mappingData, null, 2));
