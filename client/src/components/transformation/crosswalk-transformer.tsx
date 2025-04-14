@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useQueryClient } from "@tanstack/react-query";
 import { useMissingMappings } from "@/hooks/use-missing-mappings";
 
 interface CrosswalkMapping {
@@ -158,8 +159,11 @@ export function CrosswalkTransformer() {
     setTransformedData([]);
   };
   
+  // Get React Query client
+  const queryClient = useQueryClient();
+  
   // Apply transformation
-  const applyTransformation = () => {
+  const applyTransformation = async () => {
     if (!selectedCrosswalk || !columnMapping || csvData.length === 0) {
       toast({
         title: "Missing Information",
@@ -169,74 +173,94 @@ export function CrosswalkTransformer() {
       return;
     }
     
-    // Get the mapping data
-    const { mappings, sourceAttribute, targetAttribute } = selectedCrosswalk.mappingData;
+    // Get the crosswalk ID
     const crosswalkId = parseInt(selectedCrosswalkId, 10);
     
-    // Track unmapped values to log
-    const unmappedValues = new Set<string>();
+    // Transform each record by looking up values via the API
+    const transformedRecords: TransformedRecord[] = [];
     
-    // Transform each record
-    const transformed = csvData.map(record => {
+    // Process each record individually to use the API for lookups
+    for (const record of csvData) {
       const sourceValue = record[columnMapping];
-      const mapping = mappings.find(m => m.sourceValue === sourceValue);
       
-      const transformedRecord: TransformedRecord = {
-        original: { ...record },
-        transformed: { ...record },
-        transformations: {}
-      };
-      
-      // If we have a mapping, apply the transformation
-      if (mapping) {
-        transformedRecord.transformed[columnMapping] = mapping.targetValue;
-        transformedRecord.transformations[columnMapping] = {
-          originalValue: sourceValue,
-          newValue: mapping.targetValue,
-          confidence: mapping.confidence,
-          mapped: true
+      // Skip empty values
+      if (!sourceValue || sourceValue.trim() === '') {
+        const transformedRecord: TransformedRecord = {
+          original: { ...record },
+          transformed: { ...record },
+          transformations: {
+            [columnMapping]: {
+              originalValue: sourceValue,
+              newValue: sourceValue,
+              confidence: 0,
+              mapped: false
+            }
+          }
         };
-      } else {
-        // Record unmapped value for logging
-        if (sourceValue && sourceValue.trim() !== '') {
-          unmappedValues.add(sourceValue);
-        }
-        
-        transformedRecord.transformations[columnMapping] = {
-          originalValue: sourceValue,
-          newValue: sourceValue,
-          confidence: 0,
-          mapped: false
-        };
+        transformedRecords.push(transformedRecord);
+        continue;
       }
       
-      return transformedRecord;
-    });
-    
-    setTransformedData(transformed);
-    
-    // Log unmapped values to missing mappings database
-    if (unmappedValues.size > 0) {
-      console.log(`Logging ${unmappedValues.size} unmapped values to missing mappings database`);
-      
-      unmappedValues.forEach(sourceValue => {
-        logMissingMapping({
-          crosswalkId: crosswalkId,
-          sourceValue: sourceValue,
-          requestContext: `Transformation demo - CSV upload for ${selectedCrosswalk.name}`
-        });
-      });
-      
-      toast({
-        title: "Missing Mappings Logged",
-        description: `${unmappedValues.size} unmapped values have been logged for tracking`,
-        variant: "info",
-      });
+      try {
+        // Use API to look up value (this will automatically log missing mappings)
+        const response = await apiRequest(`/api/crosswalks/${crosswalkId}/lookup/${encodeURIComponent(sourceValue)}?context=${encodeURIComponent(`Transformation demo - CSV upload for ${selectedCrosswalk.name}`)}`);
+        const lookupResult = await response.json();
+        
+        const transformedRecord: TransformedRecord = {
+          original: { ...record },
+          transformed: { ...record },
+          transformations: {}
+        };
+        
+        if (lookupResult.found) {
+          // If the mapping is found, apply the transformation
+          transformedRecord.transformed[columnMapping] = lookupResult.targetValue;
+          transformedRecord.transformations[columnMapping] = {
+            originalValue: sourceValue,
+            newValue: lookupResult.targetValue,
+            confidence: lookupResult.confidence,
+            mapped: true
+          };
+        } else {
+          // If the mapping is not found, keep the original value
+          // (the API endpoint has already logged this as a missing mapping)
+          transformedRecord.transformations[columnMapping] = {
+            originalValue: sourceValue,
+            newValue: sourceValue,
+            confidence: 0,
+            mapped: false
+          };
+        }
+        
+        transformedRecords.push(transformedRecord);
+      } catch (error) {
+        console.error(`Error looking up value ${sourceValue}:`, error);
+        
+        // Add the record with error information
+        const transformedRecord: TransformedRecord = {
+          original: { ...record },
+          transformed: { ...record },
+          transformations: {
+            [columnMapping]: {
+              originalValue: sourceValue,
+              newValue: sourceValue,
+              confidence: 0,
+              mapped: false
+            }
+          }
+        };
+        transformedRecords.push(transformedRecord);
+      }
     }
     
+    setTransformedData(transformedRecords);
+    
+    // Refresh statistics
+    queryClient.invalidateQueries({ queryKey: ['missing-mappings-statistics'] });
+    
     toast({
-      title: "Transformation Applied",
-      description: `Transformed ${transformed.length} records using ${selectedCrosswalk.name}`,
+      title: "Transformation Complete",
+      description: `Processed ${transformedRecords.length} records using ${selectedCrosswalk.name}`,
       variant: "default",
     });
   };
