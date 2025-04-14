@@ -38,6 +38,7 @@ export interface MappingItem {
   confidence: number;
   id?: string; // Optional unique identifier
   status?: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED'; // Approval status
+  crosswalkId?: number; // Reference to parent crosswalk
 }
 
 export interface MappingEditorProps {
@@ -165,12 +166,29 @@ export function MappingEditor({
       // Update the status of selected items to PENDING
       const updatedMappings = mappings.map(mapping => {
         if (mapping.id && selectedItems.includes(mapping.id)) {
-          return { ...mapping, status: 'PENDING' };
+          return { 
+            ...mapping, 
+            status: 'PENDING' as const  // Type assertion to make TypeScript happy
+          };
         }
         return mapping;
       });
       
+      // Update the UI with the new statuses
       onMappingsChange(updatedMappings);
+      
+      // Dispatch event to notify the approvals dashboard
+      const crosswalkId = updatedMappings.length > 0 ? updatedMappings[0].crosswalkId : undefined;
+      if (crosswalkId) {
+        import("@/lib/eventBus").then(({ dispatchApprovalStatusChange }) => {
+          console.log(`[MappingEditor] Dispatching bulk approval status change event for crosswalk ${crosswalkId}`);
+          dispatchApprovalStatusChange({
+            crosswalkMappingId: crosswalkId,
+            actionType: 'update',
+            userId: undefined // Will be set by the server
+          });
+        });
+      }
       
       toast({
         title: "Success",
@@ -216,7 +234,7 @@ export function MappingEditor({
             ...mapping,
             sourceValue: newSourceValue,
             targetValue: newTargetValue,
-            status: "DRAFT", // Reset status to DRAFT when edited
+            status: "DRAFT" as const, // Reset status to DRAFT when edited
           };
         }
         return mapping;
