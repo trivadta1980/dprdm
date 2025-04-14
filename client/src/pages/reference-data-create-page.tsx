@@ -34,7 +34,14 @@ export default function ReferenceDataCreatePage() {
   const [_, setLocation] = useLocation();
   const [selectedTypeId, setSelectedTypeId] = useState<number | undefined>(undefined);
   const [selectedTypeName, setSelectedTypeName] = useState<string | undefined>(undefined);
-  const [debugInfo, setDebugInfo] = useState({
+  // Define interfaces for debug info state
+  interface DebugInfoState {
+    request: any;
+    response: any;
+    error: any;
+  }
+  
+  const [debugInfo, setDebugInfo] = useState<DebugInfoState>({
     request: null,
     response: null,
     error: null
@@ -113,8 +120,8 @@ export default function ReferenceDataCreatePage() {
           setDebugInfo(prev => ({ 
             ...prev, 
             error: {
-              message: error.message || "Unknown error",
-              stack: error.stack
+              message: error instanceof Error ? error.message : "Unknown error",
+              stack: error instanceof Error ? error.stack : undefined
             }
           }));
         }
@@ -197,9 +204,13 @@ export default function ReferenceDataCreatePage() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter reference data set name" {...field} />
+                        <TooltipInput
+                          label="Name"
+                          tooltip="A unique identifier for the reference data set"
+                          placeholder="Enter reference data set name"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -212,11 +223,19 @@ export default function ReferenceDataCreatePage() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>
+                        <EnhancedTooltip content="A brief explanation of what this data set represents">
+                          <span>Description</span>
+                        </EnhancedTooltip>
+                      </FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Enter description (optional)"
-                          {...field}
+                          value={field.value || ""}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
                         />
                       </FormControl>
                       <FormMessage />
@@ -230,7 +249,11 @@ export default function ReferenceDataCreatePage() {
                   name="typeId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Reference Data Type</FormLabel>
+                      <FormLabel>
+                        <EnhancedTooltip content="The schema that defines what attributes this data can have">
+                          <span>Reference Data Type</span>
+                        </EnhancedTooltip>
+                      </FormLabel>
                       <Select
                         onValueChange={(value) => {
                           const numValue = Number(value);
@@ -261,16 +284,18 @@ export default function ReferenceDataCreatePage() {
 
                 {/* Type selection confirmation is shown here */}
 
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={createMutation.isPending}
-                >
-                  {createMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Create Reference Data Set
-                </Button>
+                <EnhancedTooltip content="Save this reference data set and continue">
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={createMutation.isPending}
+                  >
+                    {createMutation.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Create Reference Data Set
+                  </Button>
+                </EnhancedTooltip>
               </form>
             </Form>
           </CardContent>
