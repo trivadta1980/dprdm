@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -433,12 +434,18 @@ export default function ReferenceTypesListPage() {
       <div className="max-w-6xl mx-auto space-y-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Reference Data Types</CardTitle>
+            <CardTitle>
+              <EnhancedTooltip content="Data schemas that define how reference data is structured">
+                <span>Reference Data Types</span>
+              </EnhancedTooltip>
+            </CardTitle>
             <div className="flex space-x-2">
-              <Button variant="default" onClick={() => setIsAddDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add New Type
-              </Button>
+              <EnhancedTooltip content="Create a new reference data schema definition">
+                <Button variant="default" onClick={() => setIsAddDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add New Type
+                </Button>
+              </EnhancedTooltip>
             </div>
           </CardHeader>
           <CardContent>
@@ -454,12 +461,36 @@ export default function ReferenceTypesListPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Schema Count</TableHead>
-                  <TableHead>Schema Details</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>
+                    <EnhancedTooltip content="Unique identifier for this reference data type">
+                      <span>ID</span>
+                    </EnhancedTooltip>
+                  </TableHead>
+                  <TableHead>
+                    <EnhancedTooltip content="Name of the reference data type">
+                      <span>Name</span>
+                    </EnhancedTooltip>
+                  </TableHead>
+                  <TableHead>
+                    <EnhancedTooltip content="Description providing details about this reference data type">
+                      <span>Description</span>
+                    </EnhancedTooltip>
+                  </TableHead>
+                  <TableHead>
+                    <EnhancedTooltip content="Number of attributes defined in this schema">
+                      <span>Schema Count</span>
+                    </EnhancedTooltip>
+                  </TableHead>
+                  <TableHead>
+                    <EnhancedTooltip content="List of attributes with their data types">
+                      <span>Schema Details</span>
+                    </EnhancedTooltip>
+                  </TableHead>
+                  <TableHead>
+                    <EnhancedTooltip content="Edit or delete this reference data type">
+                      <span>Actions</span>
+                    </EnhancedTooltip>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
