@@ -1718,28 +1718,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Crosswalk mapping not found" });
       }
       
-      // Check if we're updating the mappingData
+      // Init with a deep copy of the request body
       let updatedData = { ...req.body };
       
-      if (req.body.mappingData && req.body.mappingData.mappings && Array.isArray(req.body.mappingData.mappings)) {
-        // Ensure each mapping in the array has a status field
-        // that matches the current crosswalk's approval status
+      // If we're updating mappingData, we need to handle merging properly
+      if (req.body.mappingData) {
+        console.log('PATCH /api/crosswalks/:id - Updating mappingData');
+        
+        // Make sure we have valid structures to work with
+        const currentMappingData = currentMapping.mappingData || { 
+          mappings: [],
+          sourceAttribute: currentMapping.sourceAttribute || '',
+          targetAttribute: currentMapping.targetAttribute || ''
+        };
+        
+        // Get the existing mappings
+        const existingMappings = Array.isArray(currentMappingData.mappings) 
+          ? currentMappingData.mappings 
+          : [];
+        
+        // Log before merging for debugging
+        console.log('PATCH /api/crosswalks/:id - Current mappings count:', existingMappings.length);
+        console.log('PATCH /api/crosswalks/:id - New mappings count:', Array.isArray(req.body.mappingData.mappings) ? req.body.mappingData.mappings.length : 0);
+        
+        // Get the status for new mappings
         const status = currentMapping.approvalStatus || "DRAFT";
         
-        const updatedMappings = req.body.mappingData.mappings.map(mapping => {
-          if (!mapping.status) {
-            return {
-              ...mapping,
-              status: status
-            };
-          }
-          return mapping;
-        });
+        // Prepare updated mappings, ensuring they have a status
+        let updatedMappings = Array.isArray(req.body.mappingData.mappings) 
+          ? req.body.mappingData.mappings.map(mapping => {
+              if (!mapping.status) {
+                return {
+                  ...mapping,
+                  status: status
+                };
+              }
+              return mapping;
+            })
+          : [];
+          
+        // Now merge the existing mappings with the updated mappings
+        const mergedMappings = [
+          ...existingMappings,
+          ...updatedMappings
+        ];
         
-        // Update the mappingData with the status-enhanced mappings
+        // Log after merging
+        console.log('PATCH /api/crosswalks/:id - Merged mappings count:', mergedMappings.length);
+        
+        // Update the mappingData with the merged mappings
         updatedData.mappingData = {
           ...req.body.mappingData,
-          mappings: updatedMappings
+          mappings: mergedMappings
         };
       }
       
