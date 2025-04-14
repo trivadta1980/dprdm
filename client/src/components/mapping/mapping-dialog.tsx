@@ -178,16 +178,6 @@ export function MappingDialog({
             Cancel
           </Button>
           
-          {!readOnly && showSubmitButton && onSubmitForApproval && (
-            <Button 
-              variant="secondary"
-              onClick={handleSubmitForApproval}
-              disabled={isLoading || isSaving || isSubmitting}
-            >
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Submit for Approval
-            </Button>
-          )}
           
           {!readOnly && (
             <Button 
