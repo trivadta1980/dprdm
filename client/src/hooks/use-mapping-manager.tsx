@@ -160,14 +160,16 @@ export function useMappingManager({
       m => !existingIds.has(`${m.sourceValue}|${m.targetValue}`)
     ).map(m => ({
       ...m,
-      id: m.id || Date.now().toString() + Math.random().toString(36).substr(2, 9)
-    }));
+      id: m.id || Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      // Ensure status is a valid enum value if it exists
+      ...(m.status ? { status: m.status as 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' } : {})
+    })) as MappingItem[];
     
     if (uniqueMappings.length === 0) {
       return { added: 0, duplicates: newMappings.length };
     }
     
-    const updatedMappings = [...mappings, ...uniqueMappings];
+    const updatedMappings = [...mappings, ...uniqueMappings] as MappingItem[];
     setMappings(updatedMappings);
     setHasChanges(true);
     if (onChange) {
