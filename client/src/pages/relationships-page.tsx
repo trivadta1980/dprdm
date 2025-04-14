@@ -50,6 +50,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Link as LinkIcon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 
 // Form schema for relationships
 const relationshipSchema = z.object({
