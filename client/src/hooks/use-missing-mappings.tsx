@@ -44,16 +44,17 @@ export const useMissingMappings = (crosswalkId?: number) => {
         const url = crosswalkId 
           ? `/api/missing-mappings?crosswalkId=${crosswalkId}` 
           : '/api/missing-mappings';
-        const response = await apiRequest({ url });
-        console.log('Missing mappings API response:', response);
+        const response = await apiRequest(url);
+        const data = await response.json();
+        console.log('Missing mappings API response:', data);
         
         // Ensure the response is an array
-        if (!Array.isArray(response)) {
-          console.warn('Missing mappings response is not an array:', response);
+        if (!Array.isArray(data)) {
+          console.warn('Missing mappings response is not an array:', data);
           return [];
         }
         
-        return response;
+        return data;
       } catch (err) {
         console.error('Error fetching missing mappings:', err);
         throw err;
@@ -72,14 +73,15 @@ export const useMissingMappings = (crosswalkId?: number) => {
     queryFn: async () => {
       try {
         console.log('Fetching missing mappings statistics');
-        const response = await apiRequest({ url: '/api/missing-mappings/statistics' });
-        console.log('Missing mappings statistics API response:', response);
+        const response = await apiRequest('/api/missing-mappings/statistics');
+        const data = await response.json();
+        console.log('Missing mappings statistics API response:', data);
         
         // Ensure response has the expected shape
-        if (response && typeof response === 'object') {
+        if (data && typeof data === 'object') {
           const stats: MissingMappingStatistics = {
-            totalCount: typeof response.totalCount === 'number' ? response.totalCount : 0,
-            crosswalkCounts: Array.isArray(response.crosswalkCounts) ? response.crosswalkCounts : []
+            totalCount: typeof data.totalCount === 'number' ? data.totalCount : 0,
+            crosswalkCounts: Array.isArray(data.crosswalkCounts) ? data.crosswalkCounts : []
           };
           return stats;
         }
@@ -102,10 +104,12 @@ export const useMissingMappings = (crosswalkId?: number) => {
       sourceValue: string;
       requestContext?: string;
     }) => {
-      return apiRequest<MissingMapping>({
-        url: '/api/missing-mappings',
+      return apiRequest('/api/missing-mappings', {
         method: 'POST',
-        data: mapping
+        body: JSON.stringify(mapping),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
     },
     onSuccess: () => {
@@ -131,8 +135,7 @@ export const useMissingMappings = (crosswalkId?: number) => {
   // Delete a missing mapping
   const { mutate: deleteMissingMapping } = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest({
-        url: `/api/missing-mappings/${id}`,
+      return apiRequest(`/api/missing-mappings/${id}`, {
         method: 'DELETE'
       });
     },
