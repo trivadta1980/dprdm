@@ -39,10 +39,17 @@ export const useMissingMappings = (crosswalkId?: number) => {
   } = useQuery({
     queryKey: ['missing-mappings', crosswalkId],
     queryFn: async () => {
-      const url = crosswalkId 
-        ? `/api/missing-mappings?crosswalkId=${crosswalkId}` 
-        : '/api/missing-mappings';
-      return apiRequest<MissingMapping[]>({ url });
+      try {
+        const url = crosswalkId 
+          ? `/api/missing-mappings?crosswalkId=${crosswalkId}` 
+          : '/api/missing-mappings';
+        const response = await apiRequest({ url });
+        // Ensure the response is an array
+        return Array.isArray(response) ? response : [];
+      } catch (err) {
+        console.error('Error fetching missing mappings:', err);
+        throw err;
+      }
     }
   });
   
@@ -54,7 +61,22 @@ export const useMissingMappings = (crosswalkId?: number) => {
   } = useQuery({
     queryKey: ['missing-mappings-statistics'],
     queryFn: async () => {
-      return apiRequest<MissingMappingStatistics>({ url: '/api/missing-mappings/statistics' });
+      try {
+        const response = await apiRequest({ url: '/api/missing-mappings/statistics' });
+        // Ensure response has the expected shape
+        if (response && typeof response === 'object') {
+          const stats: MissingMappingStatistics = {
+            totalCount: typeof response.totalCount === 'number' ? response.totalCount : 0,
+            crosswalkCounts: Array.isArray(response.crosswalkCounts) ? response.crosswalkCounts : []
+          };
+          return stats;
+        }
+        // Default fallback
+        return { totalCount: 0, crosswalkCounts: [] };
+      } catch (err) {
+        console.error('Error fetching missing mappings statistics:', err);
+        throw err;
+      }
     }
   });
   
