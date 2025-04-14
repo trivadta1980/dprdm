@@ -175,7 +175,7 @@ export function MappingEditor({
       });
       
       // Update the UI with the new statuses
-      onMappingsChange(updatedMappings);
+      onMappingsChange(updatedMappings as MappingItem[]);
       
       // Dispatch event to notify the approvals dashboard
       const crosswalkId = updatedMappings.length > 0 ? updatedMappings[0].crosswalkId : undefined;
@@ -240,7 +240,7 @@ export function MappingEditor({
         return mapping;
       });
       
-      onMappingsChange(updatedMappings);
+      onMappingsChange(updatedMappings as MappingItem[]);
       setIsEditing(false);
       setEditingItemId(undefined);
       setNewSourceValue("");
@@ -311,7 +311,7 @@ export function MappingEditor({
     };
     
     const updatedMappings = [...mappings, newMapping];
-    onMappingsChange(updatedMappings);
+    onMappingsChange(updatedMappings as MappingItem[]);
     
     // Reset form
     setNewSourceValue("");
@@ -326,7 +326,7 @@ export function MappingEditor({
   // Delete mapping
   const handleDeleteMapping = (id: string) => {
     const updatedMappings = mappings.filter((m) => m.id !== id);
-    onMappingsChange(updatedMappings);
+    onMappingsChange(updatedMappings as MappingItem[]);
     
     toast({
       title: "Success",
@@ -425,7 +425,7 @@ export function MappingEditor({
       
       // Add the new mappings
       console.log("CSV Import - Manually created mappings:", newMappings);
-      onMappingsChange([...mappings, ...newMappings]);
+      onMappingsChange([...mappings, ...newMappings] as MappingItem[]);
       
       toast({
         title: "Success",
@@ -596,7 +596,7 @@ export function MappingEditor({
         }
         
         const updatedMappings = [...mappings, ...uniqueNewMappings];
-        onMappingsChange(updatedMappings);
+        onMappingsChange(updatedMappings as MappingItem[]);
         
         toast({
           title: "Success",
@@ -619,7 +619,7 @@ export function MappingEditor({
   // Clear all mappings
   const handleClearAll = () => {
     if (window.confirm("Are you sure you want to delete all mappings?")) {
-      onMappingsChange([]);
+      onMappingsChange([] as MappingItem[]);
       toast({
         title: "Success",
         description: "All mappings cleared successfully.",
