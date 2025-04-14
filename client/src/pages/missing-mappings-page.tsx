@@ -22,17 +22,15 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
 import { useQuery } from '@tanstack/react-query'
-import { apiRequest } from '@/lib/queryClient'
 import { useMissingMappings } from '@/hooks/use-missing-mappings'
-// Import correct types
+import { MainLayout } from '@/components/layout/main-layout'
+
+// Define the type for crosswalk options
 interface CrosswalkOption {
   id: number;
   name: string;
-  description: string;
-  sourceSystemId: number;
-  targetSystemId: number;
+  description: string | null;
 }
-import { MainLayout } from '@/components/layout/main-layout'
 
 export default function MissingMappingsPage() {
   const [selectedCrosswalkId, setSelectedCrosswalkId] = useState<number | undefined>(undefined);
@@ -45,9 +43,22 @@ export default function MissingMappingsPage() {
   const { data: crosswalks = [] } = useQuery({
     queryKey: ['crosswalks'],
     queryFn: async () => {
-      const response = await apiRequest<CrosswalkOption[]>({ url: '/api/crosswalks' });
-      console.log('Crosswalks response:', response);
-      return response;
+      try {
+        const response = await fetch('/api/crosswalks', {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch crosswalks');
+        }
+        
+        const data = await response.json();
+        console.log('Crosswalks response:', data);
+        return data as CrosswalkOption[];
+      } catch (error) {
+        console.error('Error fetching crosswalks:', error);
+        return [];
+      }
     }
   });
   
@@ -101,11 +112,11 @@ export default function MissingMappingsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Crosswalks</SelectItem>
-                      {Array.isArray(crosswalks) && crosswalks.length > 0 ? crosswalks.map((crosswalk) => (
+                      {crosswalks && crosswalks.map((crosswalk: CrosswalkOption) => (
                         <SelectItem key={crosswalk.id} value={crosswalk.id.toString()}>
                           {crosswalk.name}
                         </SelectItem>
-                      )) : null}
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

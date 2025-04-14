@@ -1,5 +1,4 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
 import { toast } from '@/hooks/use-toast';
 
 export interface MissingMapping {
@@ -44,7 +43,18 @@ export const useMissingMappings = (crosswalkId?: number) => {
         const url = crosswalkId 
           ? `/api/missing-mappings?crosswalkId=${crosswalkId}` 
           : '/api/missing-mappings';
-        const response = await apiRequest(url);
+        
+        const response = await fetch(url, {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         console.log('Missing mappings API response:', data);
         
@@ -54,7 +64,7 @@ export const useMissingMappings = (crosswalkId?: number) => {
           return [];
         }
         
-        return data;
+        return data as MissingMapping[];
       } catch (err) {
         console.error('Error fetching missing mappings:', err);
         throw err;
@@ -73,7 +83,18 @@ export const useMissingMappings = (crosswalkId?: number) => {
     queryFn: async () => {
       try {
         console.log('Fetching missing mappings statistics');
-        const response = await apiRequest('/api/missing-mappings/statistics');
+        
+        const response = await fetch('/api/missing-mappings/statistics', {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         console.log('Missing mappings statistics API response:', data);
         
@@ -86,7 +107,7 @@ export const useMissingMappings = (crosswalkId?: number) => {
           return stats;
         }
         
-        console.warn('Missing mappings statistics response has unexpected format:', response);
+        console.warn('Missing mappings statistics response has unexpected format:', data);
         // Default fallback
         return { totalCount: 0, crosswalkCounts: [] };
       } catch (err) {
@@ -104,13 +125,21 @@ export const useMissingMappings = (crosswalkId?: number) => {
       sourceValue: string;
       requestContext?: string;
     }) => {
-      return apiRequest('/api/missing-mappings', {
+      const response = await fetch('/api/missing-mappings', {
         method: 'POST',
-        body: JSON.stringify(mapping),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(mapping),
+        credentials: 'include'
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       // Invalidate missing mappings queries
@@ -135,9 +164,19 @@ export const useMissingMappings = (crosswalkId?: number) => {
   // Delete a missing mapping
   const { mutate: deleteMissingMapping } = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/missing-mappings/${id}`, {
-        method: 'DELETE'
+      const response = await fetch(`/api/missing-mappings/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json'
+        }
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       // Invalidate missing mappings queries
