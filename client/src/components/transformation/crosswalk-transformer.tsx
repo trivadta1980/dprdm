@@ -58,6 +58,8 @@ export function CrosswalkTransformer() {
   const [selectedCrosswalkId, setSelectedCrosswalkId] = useState<string>("");
   const [selectedCrosswalk, setSelectedCrosswalk] = useState<CrosswalkMapping | null>(null);
   const [isLoadingCrosswalks, setIsLoadingCrosswalks] = useState(false);
+  const [isApplyingTransformation, setIsApplyingTransformation] = useState(false);
+  const [transformationProgress, setTransformationProgress] = useState<number>(0);
   
   // State for mapping columns
   const [columnMapping, setColumnMapping] = useState<string>("");
@@ -173,96 +175,158 @@ export function CrosswalkTransformer() {
       return;
     }
     
+    // Show loading state
+    setIsApplyingTransformation(true);
+    setTransformationProgress(0);
+    
     // Get the crosswalk ID
     const crosswalkId = parseInt(selectedCrosswalkId, 10);
+    
+    // Show a toast notification at the start of transformation
+    toast({
+      title: "Starting transformation...",
+      description: "Processing records",
+      variant: "default",
+    });
     
     // Transform each record by looking up values via the API
     const transformedRecords: TransformedRecord[] = [];
     
-    // Process each record individually to use the API for lookups
-    for (const record of csvData) {
-      const sourceValue = record[columnMapping];
+    try {
+      // Process records in small batches to avoid overwhelming the server
+      // and to provide progress updates
+      const totalRecords = csvData.length;
+      const batchSize = 10; // Process 10 records at a time
       
-      // Skip empty values
-      if (!sourceValue || sourceValue.trim() === '') {
-        const transformedRecord: TransformedRecord = {
-          original: { ...record },
-          transformed: { ...record },
-          transformations: {
-            [columnMapping]: {
-              originalValue: sourceValue,
-              newValue: sourceValue,
-              confidence: 0,
-              mapped: false
-            }
+      // Create an array of unique source values to deduplicate API calls
+      const uniqueSourceValues = new Map<string, boolean>();
+      const sourceValueToRecords = new Map<string, number[]>();
+      
+      // Build lookup for unique values and their record indices
+      csvData.forEach((record, index) => {
+        const sourceValue = record[columnMapping];
+        if (sourceValue && sourceValue.trim() !== '') {
+          uniqueSourceValues.set(sourceValue, true);
+          
+          // Keep track of which records use this source value
+          if (!sourceValueToRecords.has(sourceValue)) {
+            sourceValueToRecords.set(sourceValue, []);
           }
-        };
-        transformedRecords.push(transformedRecord);
-        continue;
-      }
-      
-      try {
-        // Use API to look up value (this will automatically log missing mappings)
-        const response = await apiRequest(`/api/crosswalks/${crosswalkId}/lookup/${encodeURIComponent(sourceValue)}?context=${encodeURIComponent(`Transformation demo - CSV upload for ${selectedCrosswalk.name}`)}`);
-        const lookupResult = await response.json();
-        
-        const transformedRecord: TransformedRecord = {
-          original: { ...record },
-          transformed: { ...record },
-          transformations: {}
-        };
-        
-        if (lookupResult.found) {
-          // If the mapping is found, apply the transformation
-          transformedRecord.transformed[columnMapping] = lookupResult.targetValue;
-          transformedRecord.transformations[columnMapping] = {
-            originalValue: sourceValue,
-            newValue: lookupResult.targetValue,
-            confidence: lookupResult.confidence,
-            mapped: true
-          };
-        } else {
-          // If the mapping is not found, keep the original value
-          // (the API endpoint has already logged this as a missing mapping)
-          transformedRecord.transformations[columnMapping] = {
-            originalValue: sourceValue,
-            newValue: sourceValue,
-            confidence: 0,
-            mapped: false
-          };
+          sourceValueToRecords.get(sourceValue)?.push(index);
         }
-        
-        transformedRecords.push(transformedRecord);
-      } catch (error) {
-        console.error(`Error looking up value ${sourceValue}:`, error);
-        
-        // Add the record with error information
+      });
+      
+      // Initialize transformed records with empty placeholders
+      csvData.forEach(record => {
+        const sourceValue = record[columnMapping];
         const transformedRecord: TransformedRecord = {
           original: { ...record },
           transformed: { ...record },
           transformations: {
             [columnMapping]: {
-              originalValue: sourceValue,
-              newValue: sourceValue,
+              originalValue: sourceValue || '',
+              newValue: sourceValue || '',
               confidence: 0,
               mapped: false
             }
           }
         };
         transformedRecords.push(transformedRecord);
+      });
+      
+      // Get unique source values as array
+      const uniqueValues = Array.from(uniqueSourceValues.keys());
+      const totalUniqueValues = uniqueValues.length;
+      
+      // Process in batches
+      for (let i = 0; i < totalUniqueValues; i += batchSize) {
+        const batch = uniqueValues.slice(i, i + batchSize);
+        
+        // Process each value in the batch in parallel
+        const batchPromises = batch.map(async (sourceValue) => {
+          try {
+            // Use API to look up value (this will automatically log missing mappings)
+            const response = await apiRequest(`/api/crosswalks/${crosswalkId}/lookup/${encodeURIComponent(sourceValue)}?context=${encodeURIComponent(`Transformation demo - CSV upload for ${selectedCrosswalk.name}`)}`);
+            const lookupResult = await response.json();
+            
+            // Get all records that use this source value
+            const recordIndices = sourceValueToRecords.get(sourceValue) || [];
+            
+            // Update all records with this source value
+            recordIndices.forEach(index => {
+              if (lookupResult.found) {
+                // If the mapping is found, apply the transformation
+                transformedRecords[index].transformed[columnMapping] = lookupResult.targetValue;
+                transformedRecords[index].transformations[columnMapping] = {
+                  originalValue: sourceValue,
+                  newValue: lookupResult.targetValue,
+                  confidence: lookupResult.confidence,
+                  mapped: true
+                };
+              } else {
+                // If the mapping is not found, keep the original value
+                transformedRecords[index].transformations[columnMapping] = {
+                  originalValue: sourceValue,
+                  newValue: sourceValue,
+                  confidence: 0,
+                  mapped: false
+                };
+              }
+            });
+          } catch (error) {
+            console.error(`Error looking up value ${sourceValue}:`, error);
+            
+            // Update all records with this source value with error state
+            const recordIndices = sourceValueToRecords.get(sourceValue) || [];
+            recordIndices.forEach(index => {
+              transformedRecords[index].transformations[columnMapping] = {
+                originalValue: sourceValue,
+                newValue: sourceValue,
+                confidence: 0,
+                mapped: false
+              };
+            });
+          }
+        });
+        
+        // Wait for all lookups in this batch to complete
+        await Promise.all(batchPromises);
+        
+        // Update progress
+        const progress = Math.min(Math.round(((i + batch.length) / totalUniqueValues) * 100), 100);
+        setTransformationProgress(progress);
+        
+        // Show progress toast
+        toast({
+          title: "Transforming records...",
+          description: `Progress: ${progress}%`,
+          variant: "default",
+        });
       }
+      
+      // Set the transformed data
+      setTransformedData(transformedRecords);
+      
+      // Refresh statistics
+      queryClient.invalidateQueries({ queryKey: ['missing-mappings-statistics'] });
+      
+      // Final success toast
+      toast({
+        title: "Transformation Complete",
+        description: `Processed ${transformedRecords.length} records using ${selectedCrosswalk.name}`,
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Error during transformation:", error);
+      toast({
+        title: "Error During Transformation",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsApplyingTransformation(false);
+      setTransformationProgress(100);
     }
-    
-    setTransformedData(transformedRecords);
-    
-    // Refresh statistics
-    queryClient.invalidateQueries({ queryKey: ['missing-mappings-statistics'] });
-    
-    toast({
-      title: "Transformation Complete",
-      description: `Processed ${transformedRecords.length} records using ${selectedCrosswalk.name}`,
-      variant: "default",
-    });
   };
   
   // Download transformed data as CSV
@@ -379,15 +443,28 @@ export function CrosswalkTransformer() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-end">
+                <div className="flex items-end flex-col gap-2">
                   <Button 
                     onClick={() => applyTransformation()}
-                    disabled={!columnMapping || csvData.length === 0 || !selectedCrosswalk}
+                    disabled={!columnMapping || csvData.length === 0 || !selectedCrosswalk || isApplyingTransformation}
                     className="flex items-center gap-2"
                   >
-                    <RefreshCw size={16} />
-                    Apply Transformation
+                    {isApplyingTransformation ? (
+                      <RefreshCw size={16} className="animate-spin" />
+                    ) : (
+                      <RefreshCw size={16} />
+                    )}
+                    {isApplyingTransformation ? `Processing (${transformationProgress}%)` : "Apply Transformation"}
                   </Button>
+                  
+                  {isApplyingTransformation && (
+                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-blue-500 transition-all duration-300"
+                        style={{ width: `${transformationProgress}%` }}
+                      ></div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
