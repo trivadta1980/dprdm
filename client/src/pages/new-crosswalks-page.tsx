@@ -32,6 +32,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { PlusIcon, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { z } from "zod";
@@ -92,6 +93,21 @@ type CrosswalkFormData = z.infer<typeof crosswalkFormSchema>;
 export default function NewCrosswalksPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Fetch missing mappings statistics
+  const { data: missingMappingsStats, isLoading: isLoadingMissingMappings } = useQuery({
+    queryKey: ["missing-mappings-statistics"],
+    queryFn: async () => {
+      const response = await fetch("/api/missing-mappings/statistics");
+      if (!response.ok) {
+        throw new Error("Failed to fetch missing mappings statistics");
+      }
+      return response.json() as Promise<{
+        totalCount: number;
+        crosswalkCounts: { crosswalkId: number; crosswalkName: string; count: number }[];
+      }>;
+    }
+  });
 
   // State for UI elements
   const [searchQuery, setSearchQuery] = useState("");
@@ -187,6 +203,7 @@ export default function NewCrosswalksPage() {
       });
       
       queryClient.invalidateQueries({ queryKey: ["/api/crosswalks"] });
+      queryClient.invalidateQueries({ queryKey: ["missing-mappings-statistics"] });
       setIsEditorOpen(false);
     },
     onError: (error: Error) => {
@@ -230,6 +247,7 @@ export default function NewCrosswalksPage() {
       });
       
       queryClient.invalidateQueries({ queryKey: ["/api/crosswalks"] });
+      queryClient.invalidateQueries({ queryKey: ["missing-mappings-statistics"] });
       setIsEditorOpen(false);
       setSelectedCrosswalk(null);
     },
@@ -328,9 +346,16 @@ export default function NewCrosswalksPage() {
           <h1 className="text-3xl font-bold tracking-tight">Crosswalk Mappings</h1>
           <div className="flex items-center gap-3">
             <Button variant="outline" asChild>
-              <a href="/missing-mappings">
+              <a href="/missing-mappings" className="flex items-center">
                 <AlertCircle className="h-4 w-4 mr-2" />
                 Missing Mappings
+                {isLoadingMissingMappings ? (
+                  <Badge variant="outline" className="ml-2">...</Badge>
+                ) : missingMappingsStats?.totalCount ? (
+                  <Badge variant="destructive" className="ml-2">
+                    {missingMappingsStats.totalCount}
+                  </Badge>
+                ) : null}
               </a>
             </Button>
             <Button onClick={handleCreateCrosswalk}>
