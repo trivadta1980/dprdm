@@ -62,6 +62,9 @@ export function CrosswalkTransformer() {
   // State for mapping columns
   const [columnMapping, setColumnMapping] = useState<string>("");
   
+  // Get React Query client
+  const queryClient = useQueryClient();
+  
   // Missing mappings functionality
   const { logMissingMapping } = useMissingMappings();
   
@@ -158,9 +161,6 @@ export function CrosswalkTransformer() {
     setColumnMapping("");
     setTransformedData([]);
   };
-  
-  // Get React Query client
-  const queryClient = useQueryClient();
   
   // Apply transformation
   const applyTransformation = async () => {
@@ -381,7 +381,7 @@ export function CrosswalkTransformer() {
                 </div>
                 <div className="flex items-end">
                   <Button 
-                    onClick={applyTransformation}
+                    onClick={() => applyTransformation()}
                     disabled={!columnMapping || csvData.length === 0 || !selectedCrosswalk}
                     className="flex items-center gap-2"
                   >
