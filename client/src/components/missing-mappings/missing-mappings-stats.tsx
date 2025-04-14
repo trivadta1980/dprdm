@@ -45,7 +45,7 @@ export function MissingMappingsStats() {
     )
   }
   
-  if (!statistics || statistics.totalCount === 0) {
+  if (!statistics || !statistics.totalCount || statistics.totalCount === 0) {
     return (
       <Card>
         <CardHeader>

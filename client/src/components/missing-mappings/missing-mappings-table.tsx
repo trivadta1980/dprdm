@@ -48,7 +48,8 @@ export const MissingMappingsTable = ({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   
   // If there are no mappings and we don't want to show empty state
-  const dataToShow = limit ? missingMappings.slice(0, limit) : missingMappings
+  const mappingsArray = Array.isArray(missingMappings) ? missingMappings : []
+  const dataToShow = limit ? mappingsArray.slice(0, limit) : mappingsArray
   
   if (isLoading) {
     return (
@@ -88,7 +89,7 @@ export const MissingMappingsTable = ({
     )
   }
   
-  if (missingMappings.length === 0 && !showEmpty) {
+  if (mappingsArray.length === 0 && !showEmpty) {
     return null
   }
   
@@ -110,7 +111,7 @@ export const MissingMappingsTable = ({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {missingMappings.length === 0 ? (
+          {mappingsArray.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <div className="rounded-full bg-muted p-3">
                 <Filter className="h-6 w-6 text-muted-foreground" />

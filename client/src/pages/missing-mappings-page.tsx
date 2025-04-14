@@ -90,11 +90,11 @@ export default function MissingMappingsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Crosswalks</SelectItem>
-                    {crosswalks.map((crosswalk) => (
+                    {Array.isArray(crosswalks) ? crosswalks.map((crosswalk) => (
                       <SelectItem key={crosswalk.id} value={crosswalk.id.toString()}>
                         {crosswalk.name}
                       </SelectItem>
-                    ))}
+                    )) : null}
                   </SelectContent>
                 </Select>
               </div>
