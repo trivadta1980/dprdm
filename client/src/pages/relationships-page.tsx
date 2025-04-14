@@ -651,7 +651,9 @@ export default function RelationshipsPage() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <GitFork className="h-5 w-5" />
-              Relationship Management
+              <EnhancedTooltip content="Define connections between different reference data sets to establish data relationships">
+                Relationship Management
+              </EnhancedTooltip>
             </CardTitle>
             <Dialog
               open={isDialogOpen}
@@ -665,10 +667,12 @@ export default function RelationshipsPage() {
               }}
             >
               <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Relationship
-                </Button>
+                <EnhancedTooltip content="Create a new relationship between two data sets">
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Relationship
+                  </Button>
+                </EnhancedTooltip>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
@@ -883,14 +887,46 @@ export default function RelationshipsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Source Dataset</TableHead>
-                    <TableHead>Source Field</TableHead>
-                    <TableHead className="w-[100px]">Relationship</TableHead>
-                    <TableHead>Target Dataset</TableHead>
-                    <TableHead>Target Field</TableHead>
-                    <TableHead>Cardinality</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>
+                      <EnhancedTooltip content="Unique name of the relationship">
+                        Name
+                      </EnhancedTooltip>
+                    </TableHead>
+                    <TableHead>
+                      <EnhancedTooltip content="The source dataset that contains the data to be linked">
+                        Source Dataset
+                      </EnhancedTooltip>
+                    </TableHead>
+                    <TableHead>
+                      <EnhancedTooltip content="The field in the source dataset used for the relationship">
+                        Source Field
+                      </EnhancedTooltip>
+                    </TableHead>
+                    <TableHead className="w-[100px]">
+                      <EnhancedTooltip content="The type of relationship (parent-child, reference, or association)">
+                        Relationship
+                      </EnhancedTooltip>
+                    </TableHead>
+                    <TableHead>
+                      <EnhancedTooltip content="The target dataset that the source relates to">
+                        Target Dataset
+                      </EnhancedTooltip>
+                    </TableHead>
+                    <TableHead>
+                      <EnhancedTooltip content="The field in the target dataset that matches to the source field">
+                        Target Field
+                      </EnhancedTooltip>
+                    </TableHead>
+                    <TableHead>
+                      <EnhancedTooltip content="The relationship multiplicity (one-to-one, one-to-many, or many-to-many)">
+                        Cardinality
+                      </EnhancedTooltip>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <EnhancedTooltip content="Operations you can perform on this relationship">
+                        Actions
+                      </EnhancedTooltip>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -909,43 +945,51 @@ export default function RelationshipsPage() {
                       <TableCell>{relationship.targetField}</TableCell>
                       <TableCell>{relationship.cardinality}</TableCell>
                       <TableCell className="text-right space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedRelationshipId(relationship.id);
-                            setIsAttributeDialogOpen(true);
-                          }}
-                          className="hover:bg-blue-50"
-                        >
-                          <Settings className="h-4 w-4 text-blue-600" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          asChild
-                          className="hover:bg-green-50"
-                        >
-                          <Link to={`/relationships/${relationship.id}/values`}>
-                            <LinkIcon className="h-4 w-4 text-green-600" />
-                          </Link>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(relationship)}
-                          className="hover:bg-blue-50"
-                        >
-                          <Pencil className="h-4 w-4 text-blue-600" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(relationship.id)}
-                          className="hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </Button>
+                        <EnhancedTooltip content="Manage custom attributes for this relationship">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedRelationshipId(relationship.id);
+                              setIsAttributeDialogOpen(true);
+                            }}
+                            className="hover:bg-blue-50"
+                          >
+                            <Settings className="h-4 w-4 text-blue-600" />
+                          </Button>
+                        </EnhancedTooltip>
+                        <EnhancedTooltip content="View and manage relationship values">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            asChild
+                            className="hover:bg-green-50"
+                          >
+                            <Link to={`/relationships/${relationship.id}/values`}>
+                              <LinkIcon className="h-4 w-4 text-green-600" />
+                            </Link>
+                          </Button>
+                        </EnhancedTooltip>
+                        <EnhancedTooltip content="Edit this relationship">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(relationship)}
+                            className="hover:bg-blue-50"
+                          >
+                            <Pencil className="h-4 w-4 text-blue-600" />
+                          </Button>
+                        </EnhancedTooltip>
+                        <EnhancedTooltip content="Delete this relationship and all its values">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(relationship.id)}
+                            className="hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </EnhancedTooltip>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1063,11 +1107,31 @@ export default function RelationshipsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Required</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead>
+                          <EnhancedTooltip content="The name of this relationship attribute">
+                            Name
+                          </EnhancedTooltip>
+                        </TableHead>
+                        <TableHead>
+                          <EnhancedTooltip content="The data type of this attribute (string, number, boolean, date)">
+                            Type
+                          </EnhancedTooltip>
+                        </TableHead>
+                        <TableHead>
+                          <EnhancedTooltip content="Whether this attribute is required when defining relationship values">
+                            Required
+                          </EnhancedTooltip>
+                        </TableHead>
+                        <TableHead>
+                          <EnhancedTooltip content="A description of what this attribute represents">
+                            Description
+                          </EnhancedTooltip>
+                        </TableHead>
+                        <TableHead className="text-right">
+                          <EnhancedTooltip content="Operations you can perform on this attribute">
+                            Actions
+                          </EnhancedTooltip>
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1078,14 +1142,16 @@ export default function RelationshipsPage() {
                           <TableCell>{attr.isRequired ? "Yes" : "No"}</TableCell>
                           <TableCell>{attr.description}</TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteAttribute(attr.id)}
-                              className="hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4 text-red-600" />
-                            </Button>
+                            <EnhancedTooltip content="Delete this attribute definition">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteAttribute(attr.id)}
+                                className="hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4 text-red-600" />
+                              </Button>
+                            </EnhancedTooltip>
                           </TableCell>
                         </TableRow>
                       ))}
