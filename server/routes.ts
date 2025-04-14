@@ -1537,7 +1537,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           crosswalkId,
           sourceValue,
           requestContext: String(requestContext),
-          userId: req.user.id
+          requestUserId: req.user?.id || null
         });
         
         return res.json({
