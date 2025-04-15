@@ -1782,6 +1782,36 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+  
+  async getMissingMappingById(id: number): Promise<MissingMapping | null> {
+    try {
+      const result = await db
+        .select({
+          missingMapping: missingMappings,
+          crosswalk: crosswalkMappings,
+          user: users
+        })
+        .from(missingMappings)
+        .leftJoin(crosswalkMappings, eq(missingMappings.crosswalkId, crosswalkMappings.id))
+        .leftJoin(users, eq(missingMappings.requestUserId, users.id))
+        .where(eq(missingMappings.id, id))
+        .limit(1);
+      
+      if (result.length === 0) {
+        return null;
+      }
+      
+      // Format the result
+      return {
+        ...result[0].missingMapping,
+        crosswalkName: result[0].crosswalk?.name || 'Unknown Crosswalk',
+        userName: result[0].user?.username || 'Unknown User'
+      };
+    } catch (error) {
+      console.error('Storage: Error fetching missing mapping by ID:', error);
+      throw error;
+    }
+  }
 
   async getMissingMappingStatistics(): Promise<{
     totalCount: number;

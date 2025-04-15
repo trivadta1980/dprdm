@@ -2050,7 +2050,503 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: String(error) });
     }
   });
+  
+  // Add to crosswalk endpoint
+  app.post("/api/missing-mappings/:id/add-to-crosswalk", async (req, res) => {
+    console.log('POST /api/missing-mappings/:id/add-to-crosswalk - Request received');
+    
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/missing-mappings/:id/add-to-crosswalk - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const missingMappingId = Number(req.params.id);
+      const { crosswalkId, targetValue, confidence = 0.75, status = 'PENDING' } = req.body;
+      
+      if (!crosswalkId || !targetValue) {
+        console.log('POST /api/missing-mappings/:id/add-to-crosswalk - Missing required fields');
+        return res.status(400).json({ error: "Required fields missing" });
+      }
+      
+      // Get the missing mapping
+      const missingMapping = await storage.getMissingMappingById(missingMappingId);
+      if (!missingMapping) {
+        console.log('POST /api/missing-mappings/:id/add-to-crosswalk - Missing mapping not found');
+        return res.status(404).json({ error: "Missing mapping not found" });
+      }
+      
+      // Get the crosswalk
+      const crosswalk = await storage.getCrosswalkMapping(Number(crosswalkId));
+      if (!crosswalk) {
+        console.log('POST /api/missing-mappings/:id/add-to-crosswalk - Crosswalk not found');
+        return res.status(404).json({ error: "Crosswalk not found" });
+      }
+      
+      // Parse mappingData if it exists
+      let mappingData = crosswalk.mappingData || {};
+      if (typeof mappingData === 'string') {
+        try {
+          mappingData = JSON.parse(mappingData);
+        } catch (e) {
+          console.error('Error parsing mapping data:', e);
+          mappingData = {};
+        }
+      }
+      
+      // Ensure mappings array exists
+      if (!mappingData.mappings) {
+        mappingData.mappings = [];
+      }
+      
+      // Ensure source and target attributes exist in mappingData
+      let sourceAttribute = crosswalk.sourceAttribute || '';
+      let targetAttribute = crosswalk.targetAttribute || '';
+      
+      // Try to get source and target attributes from source/target datasets if not available
+      if (!sourceAttribute || !targetAttribute) {
+        try {
+          console.log('POST /api/missing-mappings/:id/add-to-crosswalk - Fetching source/target attributes');
+          
+          if (crosswalk.sourceSystemId && !sourceAttribute) {
+            const sourceDataset = await storage.getReferenceDataSet(Number(crosswalk.sourceSystemId));
+            if (sourceDataset && sourceDataset.data) {
+              const firstInstance = Object.values(sourceDataset.data)[0];
+              if (firstInstance) {
+                const possibleKeys = Object.keys(firstInstance).filter(
+                  k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
+                );
+                if (possibleKeys.length > 0) {
+                  sourceAttribute = possibleKeys[0];
+                  console.log('POST /api/missing-mappings/:id/add-to-crosswalk - Detected source attribute:', sourceAttribute);
+                }
+              }
+            }
+          }
+          
+          if (crosswalk.targetSystemId && !targetAttribute) {
+            const targetDataset = await storage.getReferenceDataSet(Number(crosswalk.targetSystemId));
+            if (targetDataset && targetDataset.data) {
+              const firstInstance = Object.values(targetDataset.data)[0];
+              if (firstInstance) {
+                const possibleKeys = Object.keys(firstInstance).filter(
+                  k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
+                );
+                if (possibleKeys.length > 0) {
+                  targetAttribute = possibleKeys[0];
+                  console.log('POST /api/missing-mappings/:id/add-to-crosswalk - Detected target attribute:', targetAttribute);
+                }
+              }
+            }
+          }
+        } catch (attrError) {
+          console.error('POST /api/missing-mappings/:id/add-to-crosswalk - Error detecting attributes:', attrError);
+        }
+      }
+      
+      // Set default attributes if still not found
+      if (!sourceAttribute) {
+        sourceAttribute = 'name';
+        console.log('POST /api/missing-mappings/:id/add-to-crosswalk - Using default source attribute name');
+      }
+      
+      if (!targetAttribute) {
+        targetAttribute = 'name';
+        console.log('POST /api/missing-mappings/:id/add-to-crosswalk - Using default target attribute name');
+      }
+      
+      // Update mappingData with correct attributes
+      mappingData.sourceAttribute = sourceAttribute;
+      mappingData.targetAttribute = targetAttribute;
+      
+      // Check if this source value already exists in the mappings
+      const duplicateIndex = mappingData.mappings.findIndex(m => 
+        m.sourceValue === missingMapping.sourceValue
+      );
+      
+      if (duplicateIndex >= 0) {
+        // Update existing mapping
+        mappingData.mappings[duplicateIndex] = {
+          ...mappingData.mappings[duplicateIndex],
+          targetValue,
+          confidence,
+          status,
+        };
+        console.log('POST /api/missing-mappings/:id/add-to-crosswalk - Updated existing mapping');
+      } else {
+        // Add new mapping
+        mappingData.mappings.push({
+          sourceValue: missingMapping.sourceValue,
+          targetValue,
+          confidence,
+          status,
+        });
+        console.log('POST /api/missing-mappings/:id/add-to-crosswalk - Added new mapping');
+      }
+      
+      // Update the crosswalk mapping with both mappingData and the attributes at root level
+      const updatedCrosswalk = await storage.updateCrosswalkMapping(
+        Number(crosswalkId),
+        { 
+          mappingData,
+          sourceAttribute,
+          targetAttribute
+        }
+      );
+      
+      // Delete the missing mapping since it's been added
+      await storage.deleteMissingMapping(missingMappingId);
+      
+      console.log('POST /api/missing-mappings/:id/add-to-crosswalk - Successfully added to crosswalk');
+      res.json({ success: true, crosswalk: updatedCrosswalk });
+    } catch (error) {
+      console.error('POST /api/missing-mappings/:id/add-to-crosswalk - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
 
+  // Batch-add missing mappings to crosswalk
+  app.post("/api/missing-mappings/batch-add", async (req, res) => {
+    console.log('POST /api/missing-mappings/batch-add - Request received');
+    
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/missing-mappings/batch-add - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const { 
+        mappingIds, 
+        crosswalkId, 
+        targetValues, 
+        confidence = 0.75, 
+        status = 'PENDING' 
+      } = req.body;
+      
+      if (!mappingIds || !Array.isArray(mappingIds) || mappingIds.length === 0 || 
+          !crosswalkId || !targetValues || Object.keys(targetValues).length === 0) {
+        console.log('POST /api/missing-mappings/batch-add - Missing required fields');
+        return res.status(400).json({ error: "Required fields missing" });
+      }
+      
+      // Get the crosswalk
+      const crosswalk = await storage.getCrosswalkMapping(Number(crosswalkId));
+      if (!crosswalk) {
+        console.log('POST /api/missing-mappings/batch-add - Crosswalk not found');
+        return res.status(404).json({ error: "Crosswalk not found" });
+      }
+      
+      // Parse mappingData if it exists
+      let mappingData = crosswalk.mappingData || {};
+      if (typeof mappingData === 'string') {
+        try {
+          mappingData = JSON.parse(mappingData);
+        } catch (e) {
+          console.error('Error parsing mapping data:', e);
+          mappingData = {};
+        }
+      }
+      
+      // Ensure mappings array exists
+      if (!mappingData.mappings) {
+        mappingData.mappings = [];
+      }
+      
+      // Ensure source and target attributes exist in mappingData
+      let sourceAttribute = crosswalk.sourceAttribute || '';
+      let targetAttribute = crosswalk.targetAttribute || '';
+      
+      // Try to get source and target attributes from source/target datasets if not available
+      if (!sourceAttribute || !targetAttribute) {
+        try {
+          console.log('POST /api/missing-mappings/batch-add - Fetching source/target attributes');
+          
+          if (crosswalk.sourceSystemId && !sourceAttribute) {
+            const sourceDataset = await storage.getReferenceDataSet(Number(crosswalk.sourceSystemId));
+            if (sourceDataset && sourceDataset.data) {
+              const firstInstance = Object.values(sourceDataset.data)[0];
+              if (firstInstance) {
+                const possibleKeys = Object.keys(firstInstance).filter(
+                  k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
+                );
+                if (possibleKeys.length > 0) {
+                  sourceAttribute = possibleKeys[0];
+                  console.log('POST /api/missing-mappings/batch-add - Detected source attribute:', sourceAttribute);
+                }
+              }
+            }
+          }
+          
+          if (crosswalk.targetSystemId && !targetAttribute) {
+            const targetDataset = await storage.getReferenceDataSet(Number(crosswalk.targetSystemId));
+            if (targetDataset && targetDataset.data) {
+              const firstInstance = Object.values(targetDataset.data)[0];
+              if (firstInstance) {
+                const possibleKeys = Object.keys(firstInstance).filter(
+                  k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
+                );
+                if (possibleKeys.length > 0) {
+                  targetAttribute = possibleKeys[0];
+                  console.log('POST /api/missing-mappings/batch-add - Detected target attribute:', targetAttribute);
+                }
+              }
+            }
+          }
+        } catch (attrError) {
+          console.error('POST /api/missing-mappings/batch-add - Error detecting attributes:', attrError);
+        }
+      }
+      
+      // Set default attributes if still not found
+      if (!sourceAttribute) {
+        sourceAttribute = 'name';
+        console.log('POST /api/missing-mappings/batch-add - Using default source attribute name');
+      }
+      
+      if (!targetAttribute) {
+        targetAttribute = 'name';
+        console.log('POST /api/missing-mappings/batch-add - Using default target attribute name');
+      }
+      
+      // Update mappingData with correct attributes
+      mappingData.sourceAttribute = sourceAttribute;
+      mappingData.targetAttribute = targetAttribute;
+      
+      // Fetch all missing mappings
+      const missingMappings = [];
+      for (const id of mappingIds) {
+        const mapping = await storage.getMissingMappingById(Number(id));
+        if (mapping) {
+          missingMappings.push(mapping);
+        }
+      }
+      
+      if (missingMappings.length === 0) {
+        console.log('POST /api/missing-mappings/batch-add - No valid missing mappings found');
+        return res.status(404).json({ error: "No valid missing mappings found" });
+      }
+      
+      // Process each missing mapping
+      const results = [];
+      const processedIds = [];
+      
+      for (const missingMapping of missingMappings) {
+        const targetValue = targetValues[missingMapping.id];
+        
+        if (!targetValue) {
+          results.push({
+            id: missingMapping.id,
+            success: false,
+            message: "No target value provided for this mapping"
+          });
+          continue;
+        }
+        
+        // Check if this source value already exists in the mappings
+        const duplicateIndex = mappingData.mappings.findIndex(m => 
+          m.sourceValue === missingMapping.sourceValue
+        );
+        
+        if (duplicateIndex >= 0) {
+          // Update existing mapping
+          mappingData.mappings[duplicateIndex] = {
+            ...mappingData.mappings[duplicateIndex],
+            targetValue,
+            confidence,
+            status,
+          };
+          results.push({
+            id: missingMapping.id,
+            success: true,
+            message: "Updated existing mapping"
+          });
+        } else {
+          // Add new mapping
+          mappingData.mappings.push({
+            sourceValue: missingMapping.sourceValue,
+            targetValue,
+            confidence,
+            status,
+          });
+          results.push({
+            id: missingMapping.id,
+            success: true,
+            message: "Added new mapping"
+          });
+        }
+        
+        processedIds.push(missingMapping.id);
+      }
+      
+      // Update the crosswalk mapping with both mappingData and the attributes at root level
+      const updatedCrosswalk = await storage.updateCrosswalkMapping(
+        Number(crosswalkId),
+        { 
+          mappingData,
+          sourceAttribute,
+          targetAttribute
+        }
+      );
+      
+      // Delete the processed missing mappings
+      for (const id of processedIds) {
+        await storage.deleteMissingMapping(Number(id));
+      }
+      
+      console.log(`POST /api/missing-mappings/batch-add - Successfully processed ${processedIds.length} mappings`);
+      res.json({ 
+        success: true, 
+        results, 
+        crosswalk: updatedCrosswalk,
+        processedCount: processedIds.length
+      });
+    } catch (error) {
+      console.error('POST /api/missing-mappings/batch-add - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+  
+  // Smart suggestions for missing mappings
+  app.post("/api/missing-mappings/smart-suggestions", async (req, res) => {
+    console.log('POST /api/missing-mappings/smart-suggestions - Request received');
+    
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/missing-mappings/smart-suggestions - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const { mappingIds, crosswalkId } = req.body;
+      
+      if (!mappingIds || !Array.isArray(mappingIds) || mappingIds.length === 0 || !crosswalkId) {
+        console.log('POST /api/missing-mappings/smart-suggestions - Missing required fields');
+        return res.status(400).json({ error: "Required fields missing" });
+      }
+      
+      // Get the crosswalk
+      const crosswalk = await storage.getCrosswalkMapping(Number(crosswalkId));
+      if (!crosswalk) {
+        console.log('POST /api/missing-mappings/smart-suggestions - Crosswalk not found');
+        return res.status(404).json({ error: "Crosswalk not found" });
+      }
+      
+      // Parse mappingData if it exists
+      let mappingData = crosswalk.mappingData || {};
+      if (typeof mappingData === 'string') {
+        try {
+          mappingData = JSON.parse(mappingData);
+        } catch (e) {
+          console.error('Error parsing mapping data:', e);
+          mappingData = {};
+        }
+      }
+      
+      // Ensure mappings array exists
+      if (!mappingData.mappings) {
+        mappingData.mappings = [];
+      }
+      
+      // Fetch all missing mappings
+      const missingMappings = [];
+      for (const id of mappingIds) {
+        const mapping = await storage.getMissingMappingById(Number(id));
+        if (mapping) {
+          missingMappings.push(mapping);
+        }
+      }
+      
+      if (missingMappings.length === 0) {
+        console.log('POST /api/missing-mappings/smart-suggestions - No valid missing mappings found');
+        return res.status(404).json({ error: "No valid missing mappings found" });
+      }
+      
+      // Get existing mappings for reference
+      const existingMappings = mappingData.mappings || [];
+      
+      // Generate suggestions for each missing mapping
+      const suggestions = [];
+      
+      for (const missingMapping of missingMappings) {
+        let suggestedValues = [];
+        const sourceValue = missingMapping.sourceValue;
+        
+        // Strategy 1: Exact matching (already exists in the crosswalk)
+        const exactMatch = existingMappings.find(m => 
+          m.sourceValue?.toLowerCase() === sourceValue?.toLowerCase()
+        );
+        
+        if (exactMatch) {
+          suggestedValues.push({
+            value: exactMatch.targetValue,
+            confidence: 1.0,
+            reason: "Exact match found in existing mappings"
+          });
+        } else {
+          // Strategy 2: Substring matching
+          const substringMatches = existingMappings.filter(m => 
+            m.sourceValue?.toLowerCase().includes(sourceValue?.toLowerCase()) ||
+            sourceValue?.toLowerCase().includes(m.sourceValue?.toLowerCase())
+          );
+          
+          if (substringMatches.length > 0) {
+            for (const match of substringMatches) {
+              const sourceLength = match.sourceValue.length;
+              const missingLength = sourceValue.length;
+              const lengthRatio = Math.min(sourceLength, missingLength) / Math.max(sourceLength, missingLength);
+              const confidence = 0.7 * lengthRatio;
+              
+              suggestedValues.push({
+                value: match.targetValue,
+                confidence: confidence,
+                reason: "Substring match found in existing mappings"
+              });
+            }
+          }
+          
+          // Strategy 3: Word similarity
+          const words = sourceValue.toLowerCase().split(/\s+/);
+          const wordMatches = existingMappings.filter(m => {
+            const mWords = m.sourceValue?.toLowerCase().split(/\s+/) || [];
+            return words.some(word => mWords.includes(word));
+          });
+          
+          if (wordMatches.length > 0) {
+            for (const match of wordMatches) {
+              const mWords = match.sourceValue?.toLowerCase().split(/\s+/) || [];
+              const commonWords = words.filter(word => mWords.includes(word));
+              const confidence = 0.5 * (commonWords.length / Math.max(words.length, mWords.length));
+              
+              suggestedValues.push({
+                value: match.targetValue,
+                confidence: confidence,
+                reason: "Word similarity match found in existing mappings"
+              });
+            }
+          }
+        }
+        
+        // Sort suggestions by confidence and take top 5
+        suggestedValues.sort((a, b) => b.confidence - a.confidence);
+        suggestedValues = suggestedValues.slice(0, 5);
+        
+        suggestions.push({
+          id: missingMapping.id,
+          sourceValue: missingMapping.sourceValue,
+          suggestions: suggestedValues
+        });
+      }
+      
+      console.log(`POST /api/missing-mappings/smart-suggestions - Generated suggestions for ${suggestions.length} mappings`);
+      res.json({ 
+        success: true, 
+        suggestions 
+      });
+    } catch (error) {
+      console.error('POST /api/missing-mappings/smart-suggestions - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+  
   // Add endpoints for approving/rejecting reference data instances
   app.post("/api/reference-data/:id/instances/:instanceId/approve", async (req, res) => {
     console.log('POST /api/reference-data/:id/instances/:instanceId/approve - Request received');
