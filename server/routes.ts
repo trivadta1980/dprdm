@@ -1813,12 +1813,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Make sure to include sourceAttribute and targetAttribute in the final update
-      if (currentMapping.sourceAttribute) {
+      // If provided in the request, use those values (allows client to update)
+      if (req.body.sourceAttribute) {
+        updatedData.sourceAttribute = req.body.sourceAttribute;
+      } else if (currentMapping.sourceAttribute) {
         updatedData.sourceAttribute = currentMapping.sourceAttribute;
       }
       
-      if (currentMapping.targetAttribute) {
+      if (req.body.targetAttribute) {
+        updatedData.targetAttribute = req.body.targetAttribute;
+      } else if (currentMapping.targetAttribute) {
         updatedData.targetAttribute = currentMapping.targetAttribute;
+      }
+      
+      // If we have mappingData with attributes, also ensure those values are used
+      // This ensures attributes at both levels remain in sync
+      if (updatedData.mappingData) {
+        // Ensure sourceAttribute exists and matches in both places
+        if (updatedData.sourceAttribute && !updatedData.mappingData.sourceAttribute) {
+          updatedData.mappingData.sourceAttribute = updatedData.sourceAttribute;
+        } else if (!updatedData.sourceAttribute && updatedData.mappingData.sourceAttribute) {
+          updatedData.sourceAttribute = updatedData.mappingData.sourceAttribute;
+        }
+        
+        // Ensure targetAttribute exists and matches in both places
+        if (updatedData.targetAttribute && !updatedData.mappingData.targetAttribute) {
+          updatedData.mappingData.targetAttribute = updatedData.targetAttribute;
+        } else if (!updatedData.targetAttribute && updatedData.mappingData.targetAttribute) {
+          updatedData.targetAttribute = updatedData.mappingData.targetAttribute;
+        }
       }
       
       console.log('PATCH /api/crosswalks/:id - Final updatedData:', {

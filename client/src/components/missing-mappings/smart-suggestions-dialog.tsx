@@ -96,8 +96,73 @@ export function SmartSuggestionsDialog({
       // Update progress to show activity
       setProgress(30)
       
+      // Also fetch the source and target datasets to get the proper attributes
+      const sourceDataset: any = await apiRequest(`/api/reference-data/${crosswalk.sourceSystemId}`, {
+        method: 'GET'
+      });
+      
+      const targetDataset: any = await apiRequest(`/api/reference-data/${crosswalk.targetSystemId}`, {
+        method: 'GET'
+      });
+      
+      // Get the first schema from each dataset to determine attribute names
+      // Look for fields that aren't special fields like status, _history, etc.
+      let sourceAttribute = '';
+      let targetAttribute = '';
+      
+      if (sourceDataset && sourceDataset.data) {
+        const firstInstance = Object.values(sourceDataset.data)[0] as any;
+        if (firstInstance) {
+          // Find keys that are likely to be the main attribute (not metadata fields)
+          const possibleKeys = Object.keys(firstInstance).filter(
+            k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
+          );
+          if (possibleKeys.length > 0) {
+            sourceAttribute = possibleKeys[0]; // Take the first attribute
+          }
+        }
+      }
+      
+      if (targetDataset && targetDataset.data) {
+        const firstInstance = Object.values(targetDataset.data)[0] as any;
+        if (firstInstance) {
+          // Find keys that are likely to be the main attribute (not metadata fields)
+          const possibleKeys = Object.keys(firstInstance).filter(
+            k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
+          );
+          if (possibleKeys.length > 0) {
+            targetAttribute = possibleKeys[0]; // Take the first attribute
+          }
+        }
+      }
+      
+      console.log('Dataset attributes detection:', {
+        sourceSystemId: crosswalk.sourceSystemId,
+        targetSystemId: crosswalk.targetSystemId,
+        sourceAttribute,
+        targetAttribute
+      });
+
       // Get existing mappings to analyze patterns
-      const existingMappingData = crosswalk.mappingData || { mappings: [] }
+      const existingMappingData = crosswalk.mappingData || { 
+        mappings: [],
+        sourceAttribute: '',
+        targetAttribute: ''
+      };
+      
+      // If we found better attribute values from the datasets, use those
+      if (sourceAttribute && !existingMappingData.sourceAttribute) {
+        existingMappingData.sourceAttribute = sourceAttribute;
+      } else if (!existingMappingData.sourceAttribute) {
+        existingMappingData.sourceAttribute = crosswalk.sourceAttribute || '';
+      }
+      
+      if (targetAttribute && !existingMappingData.targetAttribute) {
+        existingMappingData.targetAttribute = targetAttribute;
+      } else if (!existingMappingData.targetAttribute) {
+        existingMappingData.targetAttribute = crosswalk.targetAttribute || '';
+      }
+      
       const existingMappings = existingMappingData.mappings || []
       
       // Create a basic suggestion generator based on existing patterns
