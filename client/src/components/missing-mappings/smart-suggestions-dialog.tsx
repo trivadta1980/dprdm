@@ -294,7 +294,11 @@ export function SmartSuggestionsDialog({
       await apiRequest(`/api/crosswalks/${mapping.crosswalkId}`, {
         method: 'PATCH',
         data: {
+          // Include mappingData with proper values
           mappingData: updatedMappingData,
+          // Also store attributes at root level to ensure they're available everywhere
+          sourceAttribute: existingMappingData.sourceAttribute || '',
+          targetAttribute: existingMappingData.targetAttribute || '',
           mergeStrategy: 'merge' // This tells the server to merge, not replace
         }
       })

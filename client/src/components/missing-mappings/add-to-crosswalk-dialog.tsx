@@ -65,7 +65,7 @@ export function AddToCrosswalkDialog({
 
     try {
       // Fetch the current crosswalk mapping to get its structure
-      const currentMapping = await apiRequest(`/api/crosswalks/${mapping.crosswalkId}`, {
+      const currentMapping: any = await apiRequest(`/api/crosswalks/${mapping.crosswalkId}`, {
         method: 'GET'
       })
 
@@ -126,7 +126,11 @@ export function AddToCrosswalkDialog({
       await apiRequest(`/api/crosswalks/${mapping.crosswalkId}`, {
         method: 'PATCH',
         data: {
+          // Update mappingData with proper attribute information
           mappingData: updatedMappingData,
+          // Also store attributes at the root level to ensure they're available everywhere
+          sourceAttribute: existingMappingData.sourceAttribute || '',
+          targetAttribute: existingMappingData.targetAttribute || '',
           mergeStrategy: 'merge' // This tells the server to merge, not replace
         }
       })

@@ -1721,6 +1721,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Init with a deep copy of the request body
       let updatedData = { ...req.body };
       
+      // Store sourceAttribute/targetAttribute at root level if they're present
+      if (req.body.sourceAttribute !== undefined) {
+        console.log('PATCH /api/crosswalks/:id - Updating sourceAttribute:', req.body.sourceAttribute);
+        // Update the root level source attribute
+        currentMapping.sourceAttribute = req.body.sourceAttribute;
+      }
+      
+      if (req.body.targetAttribute !== undefined) {
+        console.log('PATCH /api/crosswalks/:id - Updating targetAttribute:', req.body.targetAttribute);
+        // Update the root level target attribute
+        currentMapping.targetAttribute = req.body.targetAttribute;
+      }
+      
       // If we're updating mappingData, we need to handle merging properly
       if (req.body.mappingData) {
         console.log('PATCH /api/crosswalks/:id - Updating mappingData');
@@ -1798,6 +1811,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           mappings: finalMappings
         };
       }
+      
+      // Make sure to include sourceAttribute and targetAttribute in the final update
+      if (currentMapping.sourceAttribute) {
+        updatedData.sourceAttribute = currentMapping.sourceAttribute;
+      }
+      
+      if (currentMapping.targetAttribute) {
+        updatedData.targetAttribute = currentMapping.targetAttribute;
+      }
+      
+      console.log('PATCH /api/crosswalks/:id - Final updatedData:', {
+        sourceAttribute: updatedData.sourceAttribute,
+        targetAttribute: updatedData.targetAttribute
+      });
       
       const mapping = await storage.updateCrosswalkMapping(
         mappingId,
