@@ -129,7 +129,7 @@ export function BatchAddDialog({
         
         try {
           // Fetch current crosswalk mapping
-          const currentMapping = await apiRequest(`/api/crosswalks/${crosswalkId}`, {
+          const currentMapping: any = await apiRequest(`/api/crosswalks/${crosswalkId}`, {
             method: 'GET'
           })
 

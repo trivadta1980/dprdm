@@ -89,7 +89,7 @@ export function SmartSuggestionsDialog({
       // that analyzes existing mappings and source/target patterns
 
       // First, fetch the crosswalk to get existing mappings
-      const crosswalk = await apiRequest(`/api/crosswalks/${mapping.crosswalkId}`, {
+      const crosswalk: any = await apiRequest(`/api/crosswalks/${mapping.crosswalkId}`, {
         method: 'GET'
       })
       
@@ -231,7 +231,7 @@ export function SmartSuggestionsDialog({
     
     try {
       // Fetch current crosswalk mapping
-      const currentMapping = await apiRequest(`/api/crosswalks/${mapping.crosswalkId}`, {
+      const currentMapping: any = await apiRequest(`/api/crosswalks/${mapping.crosswalkId}`, {
         method: 'GET'
       })
       
