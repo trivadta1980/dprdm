@@ -70,13 +70,25 @@ export function AddToCrosswalkDialog({
       })
 
       // Also fetch the source and target datasets to get the proper attributes
-      const sourceDataset: any = await apiRequest(`/api/reference-data/${currentMapping.sourceSystemId}`, {
-        method: 'GET'
-      });
+      // Make sure we have valid IDs before fetching
+      let sourceDataset = null;
+      let targetDataset = null;
       
-      const targetDataset: any = await apiRequest(`/api/reference-data/${currentMapping.targetSystemId}`, {
-        method: 'GET'
-      });
+      if (currentMapping.sourceSystemId && !isNaN(Number(currentMapping.sourceSystemId))) {
+        sourceDataset = await apiRequest(`/api/reference-data/${currentMapping.sourceSystemId}`, {
+          method: 'GET'
+        });
+      } else {
+        console.warn('Invalid or missing sourceSystemId:', currentMapping.sourceSystemId);
+      }
+      
+      if (currentMapping.targetSystemId && !isNaN(Number(currentMapping.targetSystemId))) {
+        targetDataset = await apiRequest(`/api/reference-data/${currentMapping.targetSystemId}`, {
+          method: 'GET'
+        });
+      } else {
+        console.warn('Invalid or missing targetSystemId:', currentMapping.targetSystemId);
+      }
       
       // Get the first schema from each dataset to determine attribute names
       // Look for fields that aren't special fields like status, _history, etc.

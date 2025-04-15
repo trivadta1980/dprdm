@@ -97,13 +97,25 @@ export function SmartSuggestionsDialog({
       setProgress(30)
       
       // Also fetch the source and target datasets to get the proper attributes
-      const sourceDataset: any = await apiRequest(`/api/reference-data/${crosswalk.sourceSystemId}`, {
-        method: 'GET'
-      });
+      // Make sure we have valid IDs before fetching
+      let sourceDataset = null;
+      let targetDataset = null;
       
-      const targetDataset: any = await apiRequest(`/api/reference-data/${crosswalk.targetSystemId}`, {
-        method: 'GET'
-      });
+      if (crosswalk.sourceSystemId && !isNaN(Number(crosswalk.sourceSystemId))) {
+        sourceDataset = await apiRequest(`/api/reference-data/${crosswalk.sourceSystemId}`, {
+          method: 'GET'
+        });
+      } else {
+        console.warn('Smart Suggestions - Invalid or missing sourceSystemId:', crosswalk.sourceSystemId);
+      }
+      
+      if (crosswalk.targetSystemId && !isNaN(Number(crosswalk.targetSystemId))) {
+        targetDataset = await apiRequest(`/api/reference-data/${crosswalk.targetSystemId}`, {
+          method: 'GET'
+        });
+      } else {
+        console.warn('Smart Suggestions - Invalid or missing targetSystemId:', crosswalk.targetSystemId);
+      }
       
       // Get the first schema from each dataset to determine attribute names
       // Look for fields that aren't special fields like status, _history, etc.

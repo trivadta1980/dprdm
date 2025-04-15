@@ -286,7 +286,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       console.log('GET /api/reference-data/:id - Request params:', req.params);
+      
+      // Validate the ID parameter before proceeding
+      if (!req.params.id || req.params.id === 'undefined' || req.params.id === 'null') {
+        console.log('GET /api/reference-data/:id - Invalid ID parameter:', req.params.id);
+        return res.status(400).json({ error: 'Invalid reference data ID parameter' });
+      }
+      
       const dataSetId = Number(req.params.id);
+      
+      // Ensure the ID is a valid number
+      if (isNaN(dataSetId)) {
+        console.log('GET /api/reference-data/:id - Invalid numeric ID:', req.params.id);
+        return res.status(400).json({ error: 'Invalid reference data ID format' });
+      }
+      
       console.log('GET /api/reference-data/:id - Fetching dataset:', dataSetId);
 
       const dataSet = await storage.getReferenceDataSet(dataSetId);
