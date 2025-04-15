@@ -11,7 +11,8 @@ import {
   BookOpen,
   Clock,
   ChevronRight,
-  BarChart3
+  BarChart3,
+  AlertTriangle
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -74,7 +75,7 @@ export default function HomePage() {
             </p>
 
             {/* Metrics Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <Card 
                 className="cursor-pointer hover:shadow-md transition-all group"
                 onClick={() => setLocation('/reference-data')}
@@ -127,6 +128,20 @@ export default function HomePage() {
                     <div>
                       <p className="text-2xl font-bold group-hover:text-orange-600 transition-colors">{metrics?.totalCrosswalks ?? '—'}</p>
                       <p className="text-sm text-gray-500 group-hover:text-orange-500 transition-colors">Crosswalks</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card 
+                className="cursor-pointer hover:shadow-md transition-all group"
+                onClick={() => setLocation('/missing-mappings')}
+              >
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-red-600 group-hover:scale-110 transition-transform" />
+                    <div>
+                      <p className="text-2xl font-bold group-hover:text-red-600 transition-colors">{metrics?.totalMissingMappings ?? '—'}</p>
+                      <p className="text-sm text-gray-500 group-hover:text-red-500 transition-colors">Missing Mappings</p>
                     </div>
                   </div>
                 </CardContent>

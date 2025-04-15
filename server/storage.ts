@@ -1332,6 +1332,7 @@ export class DatabaseStorage implements IStorage {
     totalDataTypes: number;
     totalRelationships: number;
     totalCrosswalks: number;
+    totalMissingMappings: number;
     activeMappings: number;
     recentChanges: number;
     activeUsers: number;
@@ -1351,6 +1352,10 @@ export class DatabaseStorage implements IStorage {
     const [crosswalks] = await db
       .select({ count: sql`count(*)` })
       .from(crosswalkMappings);
+      
+    const [missingMappingsCount] = await db
+      .select({ count: sql`count(*)` })
+      .from(missingMappings);
 
     const [mappings] = await db
       .select({ count: sql`count(*)` })
@@ -1373,6 +1378,7 @@ export class DatabaseStorage implements IStorage {
       totalDataTypes: Number(dataTypes?.count || 0),
       totalRelationships: Number(relationshipCount?.count || 0),
       totalCrosswalks: Number(crosswalks?.count || 0),
+      totalMissingMappings: Number(missingMappingsCount?.count || 0),
       activeMappings: Number(mappings?.count || 0),
       recentChanges: Number(changes?.count || 0),
       activeUsers: Number(activeUsers?.count || 0)
