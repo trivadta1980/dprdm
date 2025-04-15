@@ -69,20 +69,70 @@ export function AddToCrosswalkDialog({
         method: 'GET'
       })
 
+      // Also fetch the source and target datasets to get the proper attributes
+      const sourceDataset: any = await apiRequest(`/api/reference-data/${currentMapping.sourceSystemId}`, {
+        method: 'GET'
+      });
+      
+      const targetDataset: any = await apiRequest(`/api/reference-data/${currentMapping.targetSystemId}`, {
+        method: 'GET'
+      });
+      
+      // Get the first schema from each dataset to determine attribute names
+      // Look for fields that aren't special fields like status, _history, etc.
+      let sourceAttribute = '';
+      let targetAttribute = '';
+      
+      if (sourceDataset && sourceDataset.data) {
+        const firstInstance = Object.values(sourceDataset.data)[0] as any;
+        if (firstInstance) {
+          // Find keys that are likely to be the main attribute (not metadata fields)
+          const possibleKeys = Object.keys(firstInstance).filter(
+            k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
+          );
+          if (possibleKeys.length > 0) {
+            sourceAttribute = possibleKeys[0]; // Take the first attribute
+          }
+        }
+      }
+      
+      if (targetDataset && targetDataset.data) {
+        const firstInstance = Object.values(targetDataset.data)[0] as any;
+        if (firstInstance) {
+          // Find keys that are likely to be the main attribute (not metadata fields)
+          const possibleKeys = Object.keys(firstInstance).filter(
+            k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
+          );
+          if (possibleKeys.length > 0) {
+            targetAttribute = possibleKeys[0]; // Take the first attribute
+          }
+        }
+      }
+      
+      console.log('Dataset attributes detection:', {
+        sourceSystemId: currentMapping.sourceSystemId,
+        targetSystemId: currentMapping.targetSystemId,
+        sourceAttribute,
+        targetAttribute
+      });
+
       // Prepare the updated mapping data, ensuring we handle missing structure
-      // Ensure we properly get the source and target attributes from the crosswalk
       const existingMappingData = currentMapping.mappingData || { 
         mappings: [],
         sourceAttribute: '',
         targetAttribute: ''
       };
       
-      // If sourceAttribute/targetAttribute aren't in mappingData, we need to ensure they're included
-      if (!existingMappingData.sourceAttribute) {
+      // If we found better attribute values from the datasets, use those
+      if (sourceAttribute && !existingMappingData.sourceAttribute) {
+        existingMappingData.sourceAttribute = sourceAttribute;
+      } else if (!existingMappingData.sourceAttribute) {
         existingMappingData.sourceAttribute = currentMapping.sourceAttribute || '';
       }
       
-      if (!existingMappingData.targetAttribute) {
+      if (targetAttribute && !existingMappingData.targetAttribute) {
+        existingMappingData.targetAttribute = targetAttribute;
+      } else if (!existingMappingData.targetAttribute) {
         existingMappingData.targetAttribute = currentMapping.targetAttribute || '';
       }
       
