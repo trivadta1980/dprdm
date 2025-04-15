@@ -1840,22 +1840,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updatedData.targetAttribute = currentMapping.targetAttribute;
       }
       
-      // If we have mappingData with attributes, also ensure those values are used
+      // If we have empty attributes, try to detect the correct ones from reference datasets
+      if ((!updatedData.sourceAttribute || !updatedData.targetAttribute) && 
+          (currentMapping.sourceSystemId && currentMapping.targetSystemId)) {
+        try {
+          console.log('PATCH /api/crosswalks/:id - Detecting attributes from reference datasets');
+          // Fetch source and target datasets to determine attributes
+          const sourceDataset = await storage.getReferenceDataSet(Number(currentMapping.sourceSystemId));
+          const targetDataset = await storage.getReferenceDataSet(Number(currentMapping.targetSystemId));
+          
+          // Detect attributes from datasets
+          if (sourceDataset && sourceDataset.data && !updatedData.sourceAttribute) {
+            // Get first instance and find primary attribute (exclude metadata fields)
+            const firstInstance = Object.values(sourceDataset.data)[0];
+            if (firstInstance) {
+              const possibleKeys = Object.keys(firstInstance).filter(
+                k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
+              );
+              if (possibleKeys.length > 0) {
+                console.log('PATCH /api/crosswalks/:id - Detected source attribute:', possibleKeys[0]);
+                updatedData.sourceAttribute = possibleKeys[0];
+              }
+            }
+          }
+          
+          if (targetDataset && targetDataset.data && !updatedData.targetAttribute) {
+            // Get first instance and find primary attribute (exclude metadata fields)
+            const firstInstance = Object.values(targetDataset.data)[0];
+            if (firstInstance) {
+              const possibleKeys = Object.keys(firstInstance).filter(
+                k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
+              );
+              if (possibleKeys.length > 0) {
+                console.log('PATCH /api/crosswalks/:id - Detected target attribute:', possibleKeys[0]);
+                updatedData.targetAttribute = possibleKeys[0];
+              }
+            }
+          }
+        } catch (attrError) {
+          console.error('PATCH /api/crosswalks/:id - Error detecting attributes:', attrError);
+          // Continue even if attribute detection fails
+        }
+      }
+      
+      // Ensure we have defaults for the attributes if still missing
+      if (!updatedData.sourceAttribute) {
+        console.log('PATCH /api/crosswalks/:id - Using default source attribute name');
+        updatedData.sourceAttribute = 'name'; // Default fallback
+      }
+      
+      if (!updatedData.targetAttribute) {
+        console.log('PATCH /api/crosswalks/:id - Using default target attribute name');
+        updatedData.targetAttribute = 'name'; // Default fallback
+      }
+      
+      // If we have mappingData with attributes, ensure those values are used
       // This ensures attributes at both levels remain in sync
       if (updatedData.mappingData) {
         // Ensure sourceAttribute exists and matches in both places
-        if (updatedData.sourceAttribute && !updatedData.mappingData.sourceAttribute) {
-          updatedData.mappingData.sourceAttribute = updatedData.sourceAttribute;
-        } else if (!updatedData.sourceAttribute && updatedData.mappingData.sourceAttribute) {
-          updatedData.sourceAttribute = updatedData.mappingData.sourceAttribute;
-        }
-        
-        // Ensure targetAttribute exists and matches in both places
-        if (updatedData.targetAttribute && !updatedData.mappingData.targetAttribute) {
-          updatedData.mappingData.targetAttribute = updatedData.targetAttribute;
-        } else if (!updatedData.targetAttribute && updatedData.mappingData.targetAttribute) {
-          updatedData.targetAttribute = updatedData.mappingData.targetAttribute;
-        }
+        updatedData.mappingData.sourceAttribute = updatedData.sourceAttribute;
+        updatedData.mappingData.targetAttribute = updatedData.targetAttribute;
       }
       
       console.log('PATCH /api/crosswalks/:id - Final updatedData:', {

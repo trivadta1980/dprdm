@@ -2,77 +2,216 @@
  * This script fixes existing crosswalk mappings by adding status fields to
  * individual mappings in the mappingData JSON that might be missing them.
  * 
- * It ensures that the status of each mapping item matches the overall approval_status
- * of the crosswalk mapping record.
+ * It ensures that the source and target attributes are properly set in both 
+ * the root level and in the mappingData structure.
  */
 
-import { db } from './server/db.js';
-import { crosswalkMappings, eq } from './shared/schema.js';
+// Use PostgreSQL directly since we can't easily import TypeScript
+import pg from 'pg';
+
+const { Pool } = pg;
+
+// Create a connection to the database
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL
+});
 
 async function fixMappingStatus() {
-  console.log('Starting to fix mapping status in JSON data...');
+  const client = await pool.connect();
   
   try {
+    console.log('Starting crosswalk attribute repair process...');
+    
     // Get all crosswalk mappings
-    const mappings = await db
-      .select()
-      .from(crosswalkMappings);
+    const { rows: mappings } = await client.query('SELECT * FROM crosswalk_mappings');
+    console.log(`Found ${mappings.length} crosswalk mappings to check`);
     
-    console.log(`Found ${mappings.length} crosswalk mappings to process`);
+    let fixedCount = 0;
+    let updateErrors = 0;
     
-    // Process each mapping
     for (const mapping of mappings) {
-      const mappingData = mapping.mappingData;
-      let hasUpdated = false;
+      console.log(`Checking mapping #${mapping.id} (${mapping.name})...`);
       
-      // Check if mappingData has mappings array
-      if (mappingData && mappingData.mappings && Array.isArray(mappingData.mappings)) {
-        // Update each mapping in the array with the correct status
-        const updatedMappings = mappingData.mappings.map(item => {
-          // If the item doesn't have a status or its status doesn't match the parent, update it
-          if (!item.status || item.status !== mapping.approvalStatus) {
-            hasUpdated = true;
-            return {
-              ...item,
-              status: mapping.approvalStatus
-            };
+      try {
+        // Parse mappingData if it's a string
+        let mappingData = mapping.mapping_data;
+        if (typeof mappingData === 'string') {
+          try {
+            mappingData = JSON.parse(mappingData);
+          } catch (e) {
+            console.error(`Failed to parse mappingData for mapping ${mapping.id}:`, e);
+            mappingData = { mappings: [] };
           }
-          return item;
-        });
-        
-        // If we made changes, update the database
-        if (hasUpdated) {
-          const updatedMappingData = {
-            ...mappingData,
-            mappings: updatedMappings
-          };
-          
-          // Update the database
-          await db
-            .update(crosswalkMappings)
-            .set({
-              mappingData: updatedMappingData,
-              updatedAt: new Date()
-            })
-            .where(eq(crosswalkMappings.id, mapping.id));
-          
-          console.log(`Updated mapping ${mapping.id}: ${mapping.name} - Status: ${mapping.approvalStatus}`);
-        } else {
-          console.log(`No updates needed for mapping ${mapping.id}: ${mapping.name} - Status: ${mapping.approvalStatus}`);
         }
-      } else {
-        console.log(`Warning: Mapping ${mapping.id} has invalid or missing mappings array`);
+        
+        if (!mappingData) {
+          mappingData = { mappings: [] };
+        }
+        
+        // Check if sourceAttribute and targetAttribute exist in mappingData
+        const sourceAttr = mapping.source_attribute || '';
+        const targetAttr = mapping.target_attribute || '';
+        
+        // If we don't have source or target attributes, try to get them from reference datasets
+        if (!sourceAttr || !targetAttr) {
+          try {
+            // Get source reference dataset to determine attributes
+            if (mapping.source_system_id) {
+              const { rows: sourceDataSets } = await client.query(
+                'SELECT * FROM reference_data_sets WHERE id = $1',
+                [mapping.source_system_id]
+              );
+              
+              if (sourceDataSets.length > 0) {
+                const sourceDataSet = sourceDataSets[0];
+                let sourceData = sourceDataSet.data;
+                
+                // Parse data if it's a string
+                if (typeof sourceData === 'string') {
+                  try {
+                    sourceData = JSON.parse(sourceData);
+                  } catch (e) {
+                    console.error(`Failed to parse source dataset data:`, e);
+                  }
+                }
+                
+                // Get the first instance and find an appropriate attribute
+                if (sourceData && typeof sourceData === 'object') {
+                  const firstInstanceKey = Object.keys(sourceData)[0];
+                  if (firstInstanceKey) {
+                    const firstInstance = sourceData[firstInstanceKey];
+                    if (firstInstance && typeof firstInstance === 'object') {
+                      // Find the first non-metadata field
+                      const possibleKeys = Object.keys(firstInstance).filter(
+                        k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
+                      );
+                      
+                      if (possibleKeys.length > 0) {
+                        if (!sourceAttr) {
+                          mapping.source_attribute = possibleKeys[0];
+                          console.log(`  Detected source attribute: ${mapping.source_attribute}`);
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            
+            // Get target reference dataset to determine attributes
+            if (mapping.target_system_id) {
+              const { rows: targetDataSets } = await client.query(
+                'SELECT * FROM reference_data_sets WHERE id = $1',
+                [mapping.target_system_id]
+              );
+              
+              if (targetDataSets.length > 0) {
+                const targetDataSet = targetDataSets[0];
+                let targetData = targetDataSet.data;
+                
+                // Parse data if it's a string
+                if (typeof targetData === 'string') {
+                  try {
+                    targetData = JSON.parse(targetData);
+                  } catch (e) {
+                    console.error(`Failed to parse target dataset data:`, e);
+                  }
+                }
+                
+                // Get the first instance and find an appropriate attribute
+                if (targetData && typeof targetData === 'object') {
+                  const firstInstanceKey = Object.keys(targetData)[0];
+                  if (firstInstanceKey) {
+                    const firstInstance = targetData[firstInstanceKey];
+                    if (firstInstance && typeof firstInstance === 'object') {
+                      // Find the first non-metadata field
+                      const possibleKeys = Object.keys(firstInstance).filter(
+                        k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
+                      );
+                      
+                      if (possibleKeys.length > 0) {
+                        if (!targetAttr) {
+                          mapping.target_attribute = possibleKeys[0];
+                          console.log(`  Detected target attribute: ${mapping.target_attribute}`);
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          } catch (error) {
+            console.error(`Error detecting attributes from datasets:`, error);
+          }
+        }
+        
+        // Set default attributes if still not found
+        if (!mapping.source_attribute) {
+          mapping.source_attribute = 'name';
+          console.log(`  Using default source attribute: ${mapping.source_attribute}`);
+        }
+        
+        if (!mapping.target_attribute) {
+          mapping.target_attribute = 'name';
+          console.log(`  Using default target attribute: ${mapping.target_attribute}`);
+        }
+        
+        // Ensure mappingData has the attributes
+        mappingData.sourceAttribute = mapping.source_attribute;
+        mappingData.targetAttribute = mapping.target_attribute;
+        
+        // Ensure mappings array exists and has status values
+        if (!Array.isArray(mappingData.mappings)) {
+          mappingData.mappings = [];
+        }
+        
+        let modified = false;
+        
+        // Update any missing status values
+        for (const item of mappingData.mappings) {
+          if (!item.status) {
+            item.status = mapping.approval_status || 'PENDING';
+            modified = true;
+          }
+          if (item.confidence === undefined) {
+            item.confidence = 0.75; // Default confidence
+            modified = true;
+          }
+        }
+        
+        // Update the database if changes were made
+        if (modified || !mappingData.sourceAttribute || !mappingData.targetAttribute) {
+          await client.query(
+            'UPDATE crosswalk_mappings SET source_attribute = $1, target_attribute = $2, mapping_data = $3 WHERE id = $4',
+            [mapping.source_attribute, mapping.target_attribute, JSON.stringify(mappingData), mapping.id]
+          );
+          
+          console.log(`  Updated mapping #${mapping.id} - set source_attribute=${mapping.source_attribute}, target_attribute=${mapping.target_attribute}`);
+          fixedCount++;
+        } else {
+          console.log(`  No changes needed for mapping #${mapping.id}`);
+        }
+      } catch (error) {
+        console.error(`Error processing mapping #${mapping.id}:`, error);
+        updateErrors++;
       }
     }
     
-    console.log('Completed fixing mapping status');
+    console.log(`Repair complete. Fixed ${fixedCount} out of ${mappings.length} crosswalk mappings.`);
+    if (updateErrors > 0) {
+      console.log(`Encountered ${updateErrors} errors during processing.`);
+    }
   } catch (error) {
-    console.error('Error fixing mapping status:', error);
-    process.exit(1);
+    console.error('Error during execution:', error);
   } finally {
-    process.exit(0);
+    client.release();
+    await pool.end();
+    console.log('Finished processing.');
   }
 }
 
-// Run the fix function
-fixMappingStatus();
+// Run the script
+fixMappingStatus().catch(error => {
+  console.error('Unhandled error:', error);
+  process.exit(1);
+});
