@@ -11,9 +11,7 @@ import {
   BarChart3, 
   ChevronLeft, 
   Filter, 
-  List, 
-  RefreshCw, 
-  SlidersHorizontal 
+  List
 } from 'lucide-react'
 import { 
   DropdownMenu, 
@@ -69,7 +67,7 @@ export default function MissingMappingsPage() {
   return (
     <MainLayout>
       <div className="container max-w-7xl mx-auto py-6 space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center">
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" asChild>
               <a href="/crosswalks">
@@ -79,10 +77,6 @@ export default function MissingMappingsPage() {
             </Button>
             <h1 className="text-2xl font-semibold">Missing Mappings</h1>
           </div>
-          <Button onClick={handleRefresh} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -156,7 +150,7 @@ export default function MissingMappingsPage() {
           
           <div className="lg:col-span-3">
             <Tabs defaultValue="list" className="w-full">
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex mb-4">
                 <TabsList>
                   <TabsTrigger value="list" className="flex items-center">
                     <List className="h-4 w-4 mr-2" />
@@ -167,11 +161,6 @@ export default function MissingMappingsPage() {
                     Statistics
                   </TabsTrigger>
                 </TabsList>
-                
-                <Button variant="outline" size="sm">
-                  <SlidersHorizontal className="h-4 w-4 mr-2" />
-                  Advanced Options
-                </Button>
               </div>
               
               <TabsContent value="list" className="mt-0">
