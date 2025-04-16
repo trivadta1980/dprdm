@@ -65,11 +65,15 @@ export function AddToCrosswalkDialog({
             method: 'GET'
           })
           
-          // Log the entire crosswalk for debugging
+          // Log the entire crosswalk for debugging - this helps us see the field names
           console.log('Received crosswalk data:', crosswalk)
           
-          // More robust check for targetSystemId
-          const targetId = crosswalk?.targetSystemId || crosswalk?.target_system_id
+          // More robust check for targetSystemId - field could be camelCase or snake_case
+          // We also need to check other potential field name variations
+          const targetId = crosswalk?.targetSystemId || 
+                            crosswalk?.target_system_id || 
+                            crosswalk?.targetSystem || 
+                            crosswalk?.target_system
           
           if (targetId && !isNaN(Number(targetId))) {
             const numericTargetId = Number(targetId)
@@ -173,20 +177,32 @@ export function AddToCrosswalkDialog({
       let sourceDataset = null;
       let targetDataset = null;
       
-      if (currentMapping.sourceSystemId && !isNaN(Number(currentMapping.sourceSystemId))) {
-        sourceDataset = await apiRequest(`/api/reference-data/${currentMapping.sourceSystemId}`, {
+      // Handle both camelCase and snake_case field names for sourceSystemId
+      const sourceId = currentMapping.sourceSystemId || 
+                        currentMapping.source_system_id || 
+                        currentMapping.sourceSystem || 
+                        currentMapping.source_system;
+                        
+      if (sourceId && !isNaN(Number(sourceId))) {
+        sourceDataset = await apiRequest(`/api/reference-data/${sourceId}`, {
           method: 'GET'
         });
       } else {
-        console.warn('Invalid or missing sourceSystemId:', currentMapping.sourceSystemId);
+        console.warn('Invalid or missing source system ID:', sourceId);
       }
       
-      if (currentMapping.targetSystemId && !isNaN(Number(currentMapping.targetSystemId))) {
-        targetDataset = await apiRequest(`/api/reference-data/${currentMapping.targetSystemId}`, {
+      // Handle both camelCase and snake_case field names for targetSystemId
+      const targetId = currentMapping.targetSystemId || 
+                        currentMapping.target_system_id || 
+                        currentMapping.targetSystem || 
+                        currentMapping.target_system;
+                        
+      if (targetId && !isNaN(Number(targetId))) {
+        targetDataset = await apiRequest(`/api/reference-data/${targetId}`, {
           method: 'GET'
         });
       } else {
-        console.warn('Invalid or missing targetSystemId:', currentMapping.targetSystemId);
+        console.warn('Invalid or missing target system ID:', targetId);
       }
       
       // Get the first schema from each dataset to determine attribute names
@@ -238,24 +254,37 @@ export function AddToCrosswalkDialog({
       if (sourceAttribute && !existingMappingData.sourceAttribute) {
         existingMappingData.sourceAttribute = sourceAttribute;
       } else if (!existingMappingData.sourceAttribute) {
-        existingMappingData.sourceAttribute = currentMapping.sourceAttribute || '';
+        // Try different field name variations
+        existingMappingData.sourceAttribute = currentMapping.sourceAttribute || 
+                                              currentMapping.source_attribute || 
+                                              '';
       }
       
       if (targetAttribute && !existingMappingData.targetAttribute) {
         existingMappingData.targetAttribute = targetAttribute;
       } else if (!existingMappingData.targetAttribute) {
-        existingMappingData.targetAttribute = currentMapping.targetAttribute || '';
+        // Try different field name variations
+        existingMappingData.targetAttribute = currentMapping.targetAttribute || 
+                                              currentMapping.target_attribute || 
+                                              '';
       }
       
       // Add extra debug logs to help identify the issue
       console.log('Crosswalk data:', {
         id: currentMapping.id,
         name: currentMapping.name,
-        sourceAttribute: currentMapping.sourceAttribute,
-        targetAttribute: currentMapping.targetAttribute,
+        sourceSystemId: currentMapping.sourceSystemId || currentMapping.source_system_id,
+        targetSystemId: currentMapping.targetSystemId || currentMapping.target_system_id,
+        // Check all possible field name variations
+        sourceAttribute: currentMapping.sourceAttribute || currentMapping.source_attribute,
+        targetAttribute: currentMapping.targetAttribute || currentMapping.target_attribute,
+        // Check what we're using in the mapping data
         mappingDataSourceAttr: existingMappingData.sourceAttribute,
         mappingDataTargetAttr: existingMappingData.targetAttribute
       });
+      
+      // Log all field names to help identify naming patterns
+      console.log('All crosswalk field names:', Object.keys(currentMapping));
       
       // Console log to debug
       console.log('Current mappingData structure:', JSON.stringify(currentMapping.mappingData, null, 2));
