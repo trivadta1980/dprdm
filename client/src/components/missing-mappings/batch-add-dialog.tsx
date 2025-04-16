@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { 
   Dialog, 
   DialogContent, 
@@ -213,11 +213,15 @@ export function BatchAddDialog({
                   
                   if (extractedValues.size > 0) {
                     const valueArray = Array.from(extractedValues)
-                    setTargetValuesMap(prev => ({
-                      ...prev,
+                    // Update both state and ref
+                    const newTargetValuesMap = {
+                      ...targetValuesMapRef.current,
                       [crosswalkId]: valueArray
-                    }))
+                    }
+                    setTargetValuesMap(newTargetValuesMap)
+                    targetValuesMapRef.current = newTargetValuesMap
                     console.log(`Extracted ${valueArray.length} values from dataset for crosswalk ${crosswalkId}`)
+                    console.log(`Updated targetValuesMapRef with extracted values:`, targetValuesMapRef.current)
                   } else {
                     console.warn(`No values found for crosswalk ${crosswalkId} in target system ${numericTargetId}`)
                   }
@@ -612,9 +616,9 @@ export function BatchAddDialog({
                           <SelectValue placeholder="Select target value" />
                         </SelectTrigger>
                         <SelectContent>
-                          {targetValuesMap[item.crosswalkId] && targetValuesMap[item.crosswalkId].length > 0 ? (
+                          {targetValuesMapRef.current[item.crosswalkId] && targetValuesMapRef.current[item.crosswalkId].length > 0 ? (
                             // Map each value to a SelectItem, ensuring we handle empty strings
-                            targetValuesMap[item.crosswalkId].map((value) => {
+                            targetValuesMapRef.current[item.crosswalkId].map((value) => {
                               // Log each value to debug
                               console.log(`Rendering SelectItem for value "${value}" in crosswalk ${item.crosswalkId}`);
                               
