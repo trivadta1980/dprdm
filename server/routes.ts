@@ -2027,6 +2027,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get a specific missing mapping by ID
+  app.get("/api/missing-mappings/:id", async (req, res) => {
+    console.log('GET /api/missing-mappings/:id - Request received for ID:', req.params.id);
+    
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/missing-mappings/:id - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const missingMapping = await storage.getMissingMappingById(Number(req.params.id));
+      
+      if (!missingMapping) {
+        console.log(`GET /api/missing-mappings/:id - Mapping ID ${req.params.id} not found`);
+        return res.status(404).json({ error: "Missing mapping not found" });
+      }
+      
+      console.log(`GET /api/missing-mappings/:id - Found mapping:`, missingMapping);
+      res.json(missingMapping);
+    } catch (error) {
+      console.error('GET /api/missing-mappings/:id - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+  
   // Get statistics for missing mappings
   app.get("/api/missing-mappings/statistics", async (req, res) => {
     console.log('GET /api/missing-mappings/statistics - Request received');

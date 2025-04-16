@@ -503,9 +503,11 @@ export function BatchAddDialog({
         // Delete each missing mapping individually
         for (const id of successfulIds) {
           try {
-            console.log(`Attempting to delete missing mapping ID ${id}...`);
+            const url = `/api/missing-mappings/${id}`;
+            console.log(`Attempting to delete missing mapping ID ${id} with URL: ${url}`);
+            
             // Use direct fetch for better visibility into what's happening
-            const deleteResponse = await fetch(`/api/missing-mappings/${id}`, {
+            const deleteResponse = await fetch(url, {
               method: 'DELETE',
               headers: {
                 'Accept': 'application/json',
@@ -514,13 +516,40 @@ export function BatchAddDialog({
               credentials: 'include'
             });
             
-            console.log(`Delete response for ID ${id}:`, deleteResponse.status, deleteResponse.statusText);
+            console.log(`Delete response for ID ${id}:`, {
+              status: deleteResponse.status,
+              statusText: deleteResponse.statusText,
+              ok: deleteResponse.ok
+            });
+            
+            let responseContent = '';
+            try {
+              responseContent = await deleteResponse.text();
+              console.log(`Delete response content for ID ${id}:`, responseContent);
+            } catch (readErr) {
+              console.error(`Error reading response for ID ${id}:`, readErr);
+            }
             
             if (!deleteResponse.ok) {
-              const errorText = await deleteResponse.text();
-              console.error(`Server error deleting ID ${id}:`, errorText);
+              console.error(`Server error deleting ID ${id}:`, responseContent);
             } else {
               console.log(`Successfully deleted missing mapping ID ${id}`);
+              
+              // Double check if the deletion was successful by making a GET request
+              try {
+                const checkResponse = await fetch(`/api/missing-mappings/${id}`, {
+                  method: 'GET',
+                  credentials: 'include'
+                });
+                
+                if (checkResponse.status === 404) {
+                  console.log(`Verified deletion: Missing mapping ID ${id} no longer exists`);
+                } else {
+                  console.warn(`Deletion verification failed: Missing mapping ID ${id} still exists with status ${checkResponse.status}`);
+                }
+              } catch (checkErr) {
+                console.error(`Error checking deletion of ID ${id}:`, checkErr);
+              }
             }
           } catch (err) {
             console.error(`Error deleting missing mapping ${id}:`, err)
