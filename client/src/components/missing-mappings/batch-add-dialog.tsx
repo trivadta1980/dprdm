@@ -171,12 +171,33 @@ export function BatchAddDialog({
               console.log(`Successfully identified target system ID ${numericTargetId} for crosswalk ${crosswalkId}`)
               
               try {
-                // First try the values endpoint
+                // Use direct fetch for debugging purposes
                 console.log(`Fetching values from /api/reference-data/${numericTargetId}/values`)
-                const values = await apiRequest(`/api/reference-data/${numericTargetId}/values`, {
-                  method: 'GET'
-                })
-                console.log(`Received values from endpoint:`, values)
+                const response = await fetch(`/api/reference-data/${numericTargetId}/values`, {
+                  method: 'GET',
+                  headers: {
+                    'Accept': 'application/json'
+                  },
+                  credentials: 'include'
+                });
+                
+                console.log('Values response status:', response.status, response.statusText);
+                const valuesText = await response.text();
+                console.log('Raw values response:', valuesText.substring(0, 100) + '...');
+                
+                let values: any[] = [];
+                try {
+                  if (valuesText && valuesText.trim()) {
+                    values = JSON.parse(valuesText);
+                  }
+                } catch (parseErr) {
+                  console.error('Error parsing values response:', parseErr);
+                }
+                
+                // More detailed logging to diagnose the issue
+                console.log(`Parsed values from endpoint:`, values);
+                console.log(`Type of values:`, typeof values);
+                console.log(`Is array:`, Array.isArray(values));
                 
                 if (Array.isArray(values) && values.length > 0) {
                   console.log(`Target values for crosswalk ${crosswalkId}:`, values);
