@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useLocation } from 'wouter'
 import { 
   AlertTriangle,
   ArrowUpDown, 
@@ -13,7 +14,8 @@ import {
   ChevronLeft, 
   Filter, 
   List,
-  RefreshCw
+  RefreshCw,
+  LogOut
 } from 'lucide-react'
 import { 
   DropdownMenu, 
@@ -26,6 +28,14 @@ import { useMissingMappings } from '@/hooks/use-missing-mappings'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { toast } from '@/hooks/use-toast'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
 
 // Define the type for crosswalk options
 interface CrosswalkOption {
@@ -35,11 +45,13 @@ interface CrosswalkOption {
 }
 
 export default function MissingMappingsPage() {
+  const [_, navigate] = useLocation();
   const [selectedCrosswalkId, setSelectedCrosswalkId] = useState<number | undefined>(undefined);
   const [sortOrder, setSortOrder] = useState<'latest' | 'count'>('latest');
   const [searchTerm, setSearchTerm] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   
   // Fetch all crosswalks for the filter dropdown with error tracking
   const { 
@@ -108,13 +120,21 @@ export default function MissingMappingsPage() {
       
       if (isAuthError) {
         setConnectionError('Authentication error. Please try logging in again.');
+        setIsAuthDialogOpen(true); // Show authentication dialog for auth errors
       } else {
         setConnectionError(`Connection error: ${errorMessage}`);
       }
     } else {
       setConnectionError(null);
+      setIsAuthDialogOpen(false);
     }
   }, [error, statisticsError, crosswalksError]);
+  
+  // Handle login redirection
+  const handleLogin = () => {
+    // Redirect to login page
+    navigate('/login');
+  };
   
   // Handle manual refresh
   const handleRefresh = async () => {
@@ -142,6 +162,35 @@ export default function MissingMappingsPage() {
   
   return (
     <MainLayout>
+      {/* Authentication Dialog */}
+      <Dialog open={isAuthDialogOpen} onOpenChange={setIsAuthDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Authentication Required
+            </DialogTitle>
+            <DialogDescription>
+              Your session has expired or you are not logged in. Please log in to continue using the system.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              You need to be authenticated to access missing mappings. Please login with your credentials to continue.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button 
+              onClick={handleLogin} 
+              className="w-full flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Go to Login
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="container max-w-7xl mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
