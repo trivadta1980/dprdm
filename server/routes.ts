@@ -2027,6 +2027,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get statistics for missing mappings
+  // Important: This specific route must come before the :id wildcard route
+  app.get("/api/missing-mappings/statistics", async (req, res) => {
+    console.log('GET /api/missing-mappings/statistics - Request received');
+    
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/missing-mappings/statistics - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const statistics = await storage.getMissingMappingStatistics();
+      console.log('GET /api/missing-mappings/statistics - Statistics fetched successfully');
+      
+      res.json(statistics);
+    } catch (error) {
+      console.error('GET /api/missing-mappings/statistics - Error:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+  
   // Get a specific missing mapping by ID
   app.get("/api/missing-mappings/:id", async (req, res) => {
     console.log('GET /api/missing-mappings/:id - Request received for ID:', req.params.id);
@@ -2048,26 +2069,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(missingMapping);
     } catch (error) {
       console.error('GET /api/missing-mappings/:id - Error:', error);
-      res.status(500).json({ error: String(error) });
-    }
-  });
-  
-  // Get statistics for missing mappings
-  app.get("/api/missing-mappings/statistics", async (req, res) => {
-    console.log('GET /api/missing-mappings/statistics - Request received');
-    
-    if (!req.isAuthenticated()) {
-      console.log('GET /api/missing-mappings/statistics - Unauthorized access');
-      return res.sendStatus(401);
-    }
-    
-    try {
-      const statistics = await storage.getMissingMappingStatistics();
-      console.log('GET /api/missing-mappings/statistics - Statistics fetched successfully');
-      
-      res.json(statistics);
-    } catch (error) {
-      console.error('GET /api/missing-mappings/statistics - Error:', error);
       res.status(500).json({ error: String(error) });
     }
   });
