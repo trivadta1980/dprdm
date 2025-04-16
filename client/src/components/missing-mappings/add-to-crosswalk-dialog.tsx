@@ -61,9 +61,34 @@ export function AddToCrosswalkDialog({
         setIsLoadingValues(true)
         try {
           // First, get the crosswalk to determine the target system ID
-          const crosswalk: any = await apiRequest(`/api/crosswalks/${mapping.crosswalkId}`, {
-            method: 'GET'
-          })
+          console.log('Fetching crosswalk with ID:', mapping.crosswalkId);
+          
+          // Try using fetch directly to see more details about the response
+          const response = await fetch(`/api/crosswalks/${mapping.crosswalkId}`, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json'
+            },
+            credentials: 'include'
+          });
+          
+          // Log response details
+          console.log('Response status:', response.status, response.statusText);
+          console.log('Response type:', response.type);
+          
+          // Get the raw text first to debug any potential parsing issues
+          const responseText = await response.text();
+          console.log('Raw response text:', responseText);
+          
+          // Try parsing it manually
+          let crosswalk = {};
+          try {
+            if (responseText && responseText.trim()) {
+              crosswalk = JSON.parse(responseText);
+            }
+          } catch (parseErr) {
+            console.error('Error parsing JSON response:', parseErr);
+          }
           
           // Log the entire crosswalk for debugging - this helps us see the field names
           console.log('Received crosswalk data:', crosswalk)
@@ -168,9 +193,29 @@ export function AddToCrosswalkDialog({
 
     try {
       // Fetch the current crosswalk mapping to get its structure
-      const currentMapping: any = await apiRequest(`/api/crosswalks/${mapping.crosswalkId}`, {
-        method: 'GET'
-      })
+      console.log('Fetching crosswalk for submit with ID:', mapping.crosswalkId);
+      
+      // Try using direct fetch to debug the response
+      const cmResponse = await fetch(`/api/crosswalks/${mapping.crosswalkId}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        },
+        credentials: 'include'
+      });
+      
+      console.log('Submit response status:', cmResponse.status, cmResponse.statusText);
+      const cmText = await cmResponse.text();
+      console.log('Raw submit response:', cmText);
+      
+      let currentMapping: any = {};
+      try {
+        if (cmText && cmText.trim()) {
+          currentMapping = JSON.parse(cmText);
+        }
+      } catch (err) {
+        console.error('Error parsing JSON in submit handler:', err);
+      }
 
       // Also fetch the source and target datasets to get the proper attributes
       // Make sure we have valid IDs before fetching
@@ -313,17 +358,32 @@ export function AddToCrosswalkDialog({
 
       // Update the crosswalk with the new mapping
       // Tell the server to merge our mappings with existing ones
-      await apiRequest(`/api/crosswalks/${mapping.crosswalkId}`, {
+      console.log('Sending PATCH request to update crosswalk with new mapping');
+      
+      // Use direct fetch for more debugging visibility
+      const updateResponse = await fetch(`/api/crosswalks/${mapping.crosswalkId}`, {
         method: 'PATCH',
-        data: {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
           // Update mappingData with proper attribute information
           mappingData: updatedMappingData,
           // Also store attributes at the root level to ensure they're available everywhere
           sourceAttribute: existingMappingData.sourceAttribute || '',
           targetAttribute: existingMappingData.targetAttribute || '',
+          // Force set target system ID if we got it from missing mapping but not from crosswalk
+          targetSystemId: targetSystemId || mapping.targetSystemId || '', 
           mergeStrategy: 'merge' // This tells the server to merge, not replace
-        }
-      })
+        })
+      });
+      
+      // Debug response
+      console.log('Update response status:', updateResponse.status, updateResponse.statusText);
+      const updateResponseText = await updateResponse.text();
+      console.log('Update response:', updateResponseText);
 
       // Show success
       setSuccess(true)
