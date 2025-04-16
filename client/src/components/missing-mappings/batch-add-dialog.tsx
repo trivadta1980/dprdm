@@ -76,6 +76,8 @@ export function BatchAddDialog({
 
   useEffect(() => {
     if (isOpen) {
+      console.log('BatchAddDialog - Dialog opened with mappings:', mappings);
+      
       // Initialize batch items from the provided mappings
       const initialBatchItems = mappings.map(mapping => ({
         id: mapping.id,
@@ -86,6 +88,7 @@ export function BatchAddDialog({
         status: 'pending' as const
       }))
       
+      console.log('BatchAddDialog - Initialized batch items:', initialBatchItems);
       setBatchItems(initialBatchItems)
       setIsSubmitting(false)
       setError(null)
@@ -94,6 +97,7 @@ export function BatchAddDialog({
       // Load target values for each crosswalk
       const loadTargetValuesForCrosswalks = async () => {
         const crosswalkIds = [...new Set(mappings.map(m => m.crosswalkId))]
+        console.log('BatchAddDialog - Unique crosswalk IDs:', crosswalkIds);
         
         for (const crosswalkId of crosswalkIds) {
           try {
@@ -136,12 +140,15 @@ export function BatchAddDialog({
             
             if (targetId && !isNaN(Number(targetId))) {
               const numericTargetId = Number(targetId)
+              console.log(`Successfully identified target system ID ${numericTargetId} for crosswalk ${crosswalkId}`)
               
               try {
                 // First try the values endpoint
+                console.log(`Fetching values from /api/reference-data/${numericTargetId}/values`)
                 const values = await apiRequest(`/api/reference-data/${numericTargetId}/values`, {
                   method: 'GET'
                 })
+                console.log(`Received values from endpoint:`, values)
                 
                 if (Array.isArray(values) && values.length > 0) {
                   setTargetValuesMap(prev => ({
