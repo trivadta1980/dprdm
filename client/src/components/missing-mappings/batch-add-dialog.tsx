@@ -557,12 +557,14 @@ export function BatchAddDialog({
                           <SelectValue placeholder="Select target value" />
                         </SelectTrigger>
                         <SelectContent>
-                          {targetValuesMap[item.crosswalkId]?.map((value) => (
-                            <SelectItem key={value} value={value}>
-                              {value}
-                            </SelectItem>
-                          )) || (
-                            <SelectItem value="" disabled>
+                          {targetValuesMap[item.crosswalkId]?.length > 0 ? (
+                            targetValuesMap[item.crosswalkId].map((value) => (
+                              <SelectItem key={value} value={value || "placeholder_empty_value"}>
+                                {value || "[Empty Value]"}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no_values_available" disabled>
                               No target values available
                             </SelectItem>
                           )}
