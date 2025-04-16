@@ -2010,6 +2010,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all missing mappings or filtered by crosswalk
   app.get("/api/missing-mappings", async (req, res) => {
     console.log('GET /api/missing-mappings - Request received');
+    console.log('GET /api/missing-mappings - Session ID:', req.sessionID);
+    console.log('GET /api/missing-mappings - Is Authenticated:', req.isAuthenticated());
+    console.log('GET /api/missing-mappings - User:', req.user ? `ID: ${req.user.id}, Role: ${req.user.roleId}` : 'Not authenticated');
     
     if (!req.isAuthenticated()) {
       console.log('GET /api/missing-mappings - Unauthorized access');
@@ -2020,13 +2023,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const crosswalkId = req.query.crosswalkId ? Number(req.query.crosswalkId) : undefined;
       console.log('GET /api/missing-mappings - Filter by crosswalk:', crosswalkId);
       
+      console.log('GET /api/missing-mappings - Attempting to fetch missing mappings from storage');
       const missingMappings = await storage.getMissingMappings(crosswalkId);
       console.log('GET /api/missing-mappings - Missing mappings fetched successfully, count:', missingMappings.length);
+      
+      // Log the first few items if available
+      if (missingMappings.length > 0) {
+        console.log('GET /api/missing-mappings - Sample data (first item):', 
+          JSON.stringify(missingMappings[0], null, 2).substring(0, 500)); // Limit output size
+      }
       
       res.json(missingMappings);
     } catch (error) {
       console.error('GET /api/missing-mappings - Error:', error);
-      res.status(500).json({ error: String(error) });
+      console.error('GET /api/missing-mappings - Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      res.status(500).json({ error: String(error), stack: error instanceof Error ? error.stack : undefined });
     }
   });
   

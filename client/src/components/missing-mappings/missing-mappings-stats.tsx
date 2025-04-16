@@ -17,7 +17,10 @@ export function MissingMappingsStats() {
       <Card>
         <CardHeader>
           <CardTitle><Skeleton className="h-8 w-56" /></CardTitle>
-          <CardDescription><Skeleton className="h-4 w-72" /></CardDescription>
+          {/* Fix DOM nesting warning by wrapping Skeleton in span instead of p (CardDescription) */}
+          <div className="mt-1.5">
+            <Skeleton className="h-4 w-72" />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">

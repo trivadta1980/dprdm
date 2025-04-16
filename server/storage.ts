@@ -1812,7 +1812,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getMissingMappings(crosswalkId?: number): Promise<MissingMapping[]> {
+    console.log('Storage: getMissingMappings called with crosswalkId:', crosswalkId);
     try {
+      // First, check that the tables exist and have expected structure
+      console.log('Storage: Verifying table structures before query execution');
+      try {
+        const missingMappingsCheck = await db.select({ count: sql`count(*)` }).from(missingMappings);
+        console.log('Storage: Missing mappings table check - OK, count:', missingMappingsCheck[0]?.count);
+        
+        const crosswalksCheck = await db.select({ count: sql`count(*)` }).from(crosswalkMappings);
+        console.log('Storage: Crosswalk mappings table check - OK, count:', crosswalksCheck[0]?.count);
+        
+        const usersCheck = await db.select({ count: sql`count(*)` }).from(users);
+        console.log('Storage: Users table check - OK, count:', usersCheck[0]?.count);
+      } catch (tableError) {
+        console.error('Storage: Error verifying table structure:', tableError);
+        // Continue despite the error, as the main query might still work
+      }
+
+      // Construct the query with detailed logging
+      console.log('Storage: Building query for missing mappings');
       let query = db
         .select({
           missingMapping: missingMappings,
@@ -1826,19 +1845,35 @@ export class DatabaseStorage implements IStorage {
       
       // Apply crosswalk filter if provided
       if (crosswalkId) {
+        console.log('Storage: Adding crosswalk filter to query:', crosswalkId);
         query = query.where(eq(missingMappings.crosswalkId, crosswalkId));
       }
       
+      console.log('Storage: Executing missing mappings query');
       const results = await query;
+      console.log('Storage: Query executed successfully, result count:', results.length);
       
-      // Format the results
-      return results.map(row => ({
-        ...row.missingMapping,
-        crosswalkName: row.crosswalk?.name || 'Unknown Crosswalk',
-        userName: row.user?.username || 'Unknown User'
-      }));
+      // Format the results with additional checks
+      console.log('Storage: Mapping results to return format');
+      const mappedResults = results.map(row => {
+        // Check for undefined values
+        if (!row.missingMapping) {
+          console.warn('Storage: Missing mapping data is undefined in result row');
+          return null;
+        }
+        
+        return {
+          ...row.missingMapping,
+          crosswalkName: row.crosswalk?.name || 'Unknown Crosswalk',
+          userName: row.user?.username || 'Unknown User'
+        };
+      }).filter(Boolean) as MissingMapping[]; // Filter out null values
+      
+      console.log('Storage: Successfully mapped missing mappings data, count:', mappedResults.length);
+      return mappedResults;
     } catch (error) {
       console.error('Storage: Error fetching missing mappings:', error);
+      console.error('Storage: Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       throw error;
     }
   }
