@@ -29,7 +29,7 @@ export interface MissingMappingStatistics {
 export const useMissingMappings = (crosswalkId?: number) => {
   const queryClient = useQueryClient();
   
-  // Fetch all missing mappings
+  // Fetch all missing mappings with improved error handling
   const {
     data: missingMappings = [],
     isLoading,
@@ -52,7 +52,28 @@ export const useMissingMappings = (crosswalkId?: number) => {
         });
         
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const statusCode = response.status;
+          let errorMessage = `HTTP error! status: ${statusCode}`;
+          
+          // Try to get more details about the error
+          try {
+            const errorData = await response.text();
+            console.error(`Missing mappings API error (${statusCode}):`, errorData);
+            errorMessage = `${errorMessage} - ${errorData || 'No additional details available'}`;
+          } catch (textError) {
+            console.error('Could not read error response:', textError);
+          }
+          
+          // Check for specific error types
+          if (statusCode === 401 || statusCode === 403) {
+            throw new Error(`Authentication error (${statusCode}): Please log in again.`);
+          } else if (statusCode === 404) {
+            throw new Error('The missing mappings data was not found.');
+          } else if (statusCode >= 500) {
+            throw new Error(`Server error (${statusCode}): Please try again later.`);
+          }
+          
+          throw new Error(errorMessage);
         }
         
         const data = await response.json();
@@ -70,10 +91,11 @@ export const useMissingMappings = (crosswalkId?: number) => {
         throw err;
       }
     },
-    retry: 1 // Only retry once to avoid flooding logs
+    retry: 2, // Retry up to twice (3 total attempts)
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff with max 10s
   });
   
-  // Fetch missing mappings statistics
+  // Fetch missing mappings statistics with improved error handling
   const {
     data: statistics,
     isLoading: isLoadingStatistics,
@@ -92,7 +114,28 @@ export const useMissingMappings = (crosswalkId?: number) => {
         });
         
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const statusCode = response.status;
+          let errorMessage = `HTTP error! status: ${statusCode}`;
+          
+          // Try to get more details about the error
+          try {
+            const errorData = await response.text();
+            console.error(`Statistics API error (${statusCode}):`, errorData);
+            errorMessage = `${errorMessage} - ${errorData || 'No additional details available'}`;
+          } catch (textError) {
+            console.error('Could not read error response:', textError);
+          }
+          
+          // Check for specific error types
+          if (statusCode === 401 || statusCode === 403) {
+            throw new Error(`Authentication error (${statusCode}): Please log in again.`);
+          } else if (statusCode === 404) {
+            throw new Error('The statistics data was not found.');
+          } else if (statusCode >= 500) {
+            throw new Error(`Server error (${statusCode}): Please try again later.`);
+          }
+          
+          throw new Error(errorMessage);
         }
         
         const data = await response.json();
@@ -108,14 +151,14 @@ export const useMissingMappings = (crosswalkId?: number) => {
         }
         
         console.warn('Missing mappings statistics response has unexpected format:', data);
-        // Default fallback
-        return { totalCount: 0, crosswalkCounts: [] };
+        throw new Error('The statistics data has an unexpected format.');
       } catch (err) {
         console.error('Error fetching missing mappings statistics:', err);
         throw err;
       }
     },
-    retry: 1 // Only retry once to avoid flooding logs
+    retry: 2, // Retry up to twice (3 total attempts)
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff with max 10s
   });
   
   // Log a new missing mapping
