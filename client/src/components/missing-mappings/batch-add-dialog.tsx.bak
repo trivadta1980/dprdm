@@ -108,18 +108,19 @@ export function BatchAddDialog({
               method: 'GET'
             })
             
-            // Log the full crosswalk object for debugging
+            // Get target system ID - logging the full crosswalk object first to debug
             console.log(`Full crosswalk object for detection:`, JSON.stringify(crosswalk, null, 2));
             
-            // Direct access to targetSystemId which we know exists
+            // Direct access to targetSystemId which we know exists from logs
             let targetId = crosswalk.targetSystemId;
             
+            // Log what we found
             if (targetId !== undefined && targetId !== null) {
               console.log(`Found target system ID directly in targetSystemId field:`, targetId);
             } else {
               console.log(`targetSystemId field is missing or null, trying alternative field names`);
               
-              // Try alternative field names
+              // Try alternative field names as fallback
               const possibleTargetSystemFields = [
                 'target_system_id', 
                 'targetSystem', 
@@ -128,6 +129,7 @@ export function BatchAddDialog({
                 'targetId'
               ];
               
+              // Try all possible field names
               for (const field of possibleTargetSystemFields) {
                 if (crosswalk && crosswalk[field] !== undefined && crosswalk[field] !== null) {
                   targetId = crosswalk[field];
@@ -136,7 +138,7 @@ export function BatchAddDialog({
                 }
               }
               
-              // Also check if it's in mappingData
+              // Also check if the target system ID is contained in mappingData
               if (targetId === null && crosswalk?.mappingData) {
                 for (const field of ['targetSystemId', ...possibleTargetSystemFields]) {
                   if (crosswalk.mappingData[field] !== undefined && crosswalk.mappingData[field] !== null) {
@@ -163,17 +165,26 @@ export function BatchAddDialog({
                 if (Array.isArray(values) && values.length > 0) {
                   console.log(`Target values for crosswalk ${crosswalkId}:`, values);
                   
-                  // Create a new target values map and update both state and ref
+                  // Create a new state object with these values
                   const newTargetValuesMap = {
-                    ...targetValuesMapRef.current,
+                    ...targetValuesMap,
                     [crosswalkId]: values
                   };
                   
+                  console.log(`Updated target values map:`, newTargetValuesMap);
+                  
+                  // Update both state and ref
                   setTargetValuesMap(newTargetValuesMap);
                   targetValuesMapRef.current = newTargetValuesMap;
                   
                   console.log(`Loaded ${values.length} target values for crosswalk ${crosswalkId}`);
                   console.log(`Updated targetValuesMapRef:`, targetValuesMapRef.current);
+                  
+                  // Also check if the state was set correctly after a short delay
+                  setTimeout(() => {
+                    console.log(`Current targetValuesMap after update (setTimeout):`, targetValuesMap);
+                    console.log(`Current targetValuesMapRef after update (setTimeout):`, targetValuesMapRef.current);
+                  }, 500);
                 } else {
                   // If values endpoint doesn't work, try to extract from the dataset directly
                   const dataset = await apiRequest(`/api/reference-data/${numericTargetId}`, {
@@ -522,6 +533,7 @@ export function BatchAddDialog({
     <Dialog 
       open={isOpen} 
       onOpenChange={(open) => !isSubmitting && !open && onClose()}
+      className="max-w-4xl"
     >
       <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
@@ -643,7 +655,7 @@ export function BatchAddDialog({
                       {item.status === 'pending' ? (
                         <Badge variant="outline">Pending</Badge>
                       ) : item.status === 'success' ? (
-                        <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Added</Badge>
+                        <Badge variant="success">Added</Badge>
                       ) : (
                         <Badge variant="destructive">Error</Badge>
                       )}
