@@ -464,8 +464,16 @@ export function CrosswalkEditor({
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter a name" {...field} />
+                      <Input 
+                        placeholder="Enter a name" 
+                        {...field} 
+                        readOnly={isEditMode}
+                        className={isEditMode ? "bg-muted cursor-not-allowed" : ""} 
+                      />
                     </FormControl>
+                    {isEditMode && (
+                      <FormDescription>This field cannot be modified after creation</FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -480,10 +488,14 @@ export function CrosswalkEditor({
                     <FormControl>
                       <Textarea
                         placeholder="Enter a description (optional)"
-                        className="resize-none"
+                        className={`resize-none ${isEditMode ? "bg-muted cursor-not-allowed" : ""}`}
                         {...field}
+                        readOnly={isEditMode}
                       />
                     </FormControl>
+                    {isEditMode && (
+                      <FormDescription>This field cannot be modified after creation</FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -505,8 +517,9 @@ export function CrosswalkEditor({
                           field.onChange(numValue);
                           setSelectedSourceDataset(numValue);
                         }}
+                        disabled={isEditMode}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className={isEditMode ? "bg-muted cursor-not-allowed" : ""}>
                           <SelectValue placeholder="Select a source system" />
                         </SelectTrigger>
                         <SelectContent>
@@ -524,6 +537,9 @@ export function CrosswalkEditor({
                         </SelectContent>
                       </Select>
                     </FormControl>
+                    {isEditMode && (
+                      <FormDescription>This field cannot be modified after creation</FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
