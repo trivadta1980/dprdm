@@ -83,6 +83,7 @@ export interface IStorage {
   getReferenceDataSet(id: number): Promise<ReferenceDataSet | undefined>;
   getAllReferenceDataSets(): Promise<ReferenceDataSet[]>;
   getReferenceDataSetsByType(typeId: number): Promise<ReferenceDataSet[]>;
+  getReferenceDataSetValues(id: number, attribute?: string): Promise<string[]>;
   updateReferenceDataSet(id: number, data: Partial<InsertReferenceDataSet>): Promise<ReferenceDataSet>;
   deleteReferenceDataSet(id: number): Promise<boolean>;
 

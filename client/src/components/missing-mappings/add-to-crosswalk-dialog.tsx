@@ -15,7 +15,14 @@ import { useToast } from '@/hooks/use-toast'
 import { apiRequest, queryClient } from '@/lib/queryClient'
 import { MissingMapping } from '@/hooks/use-missing-mappings'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertCircle, CheckCircle2 } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 
 interface AddToCrosswalkDialogProps {
   isOpen: boolean
@@ -35,18 +42,59 @@ export function AddToCrosswalkDialog({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<boolean>(false)
+  const [targetValues, setTargetValues] = useState<string[]>([])
+  const [isLoadingValues, setIsLoadingValues] = useState<boolean>(false)
+  const [targetSystemId, setTargetSystemId] = useState<number | null>(null)
   const { toast } = useToast()
 
+  // Load the available target values when the dialog opens
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && mapping) {
       // Reset form state when dialog opens
       setTargetValue('')
       setConfidence(75)
       setIsSubmitting(false)
       setError(null)
       setSuccess(false)
+      
+      const fetchTargetValues = async () => {
+        setIsLoadingValues(true)
+        try {
+          // First, get the crosswalk to determine the target system ID
+          const crosswalk: any = await apiRequest(`/api/crosswalks/${mapping.crosswalkId}`, {
+            method: 'GET'
+          })
+          
+          if (crosswalk && crosswalk.targetSystemId) {
+            setTargetSystemId(crosswalk.targetSystemId)
+            
+            // Then fetch the available values from the target system
+            const values = await apiRequest(`/api/reference-data/${crosswalk.targetSystemId}/values`, {
+              method: 'GET'
+            })
+            
+            if (Array.isArray(values)) {
+              setTargetValues(values)
+              console.log(`Loaded ${values.length} target values for selection`)
+            } else {
+              console.error('Unexpected response format for target values:', values)
+              setError('Unable to load target values')
+            }
+          } else {
+            console.error('Missing target system ID in crosswalk:', crosswalk)
+            setError('Unable to determine target data set')
+          }
+        } catch (err: any) {
+          console.error('Error loading target values:', err)
+          setError(err.message || 'Failed to load target values')
+        } finally {
+          setIsLoadingValues(false)
+        }
+      }
+      
+      fetchTargetValues()
     }
-  }, [isOpen])
+  }, [isOpen, mapping])
 
   if (!mapping) {
     return null
@@ -269,14 +317,39 @@ export function AddToCrosswalkDialog({
                 <Label htmlFor="targetValue" className="text-right">
                   Target Value
                 </Label>
-                <Input
-                  id="targetValue"
-                  value={targetValue}
-                  onChange={(e) => setTargetValue(e.target.value)}
-                  className="col-span-3"
-                  placeholder="Enter corresponding target value"
-                  autoFocus
-                />
+                <div className="col-span-3 relative">
+                  {isLoadingValues ? (
+                    <div className="flex items-center">
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Loading values...</span>
+                    </div>
+                  ) : targetValues.length > 0 ? (
+                    <Select 
+                      value={targetValue} 
+                      onValueChange={setTargetValue}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a target value" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {targetValues.map((value) => (
+                          <SelectItem key={value} value={value}>
+                            {value}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      id="targetValue"
+                      value={targetValue}
+                      onChange={(e) => setTargetValue(e.target.value)}
+                      className="w-full"
+                      placeholder="Enter corresponding target value (no values available)"
+                      autoFocus
+                    />
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">

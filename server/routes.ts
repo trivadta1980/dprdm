@@ -350,6 +350,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/reference-data/:id/values", async (req, res) => {
+    console.log('GET /api/reference-data/:id/values - Request received');
+    if (!req.isAuthenticated()) {
+      console.log('GET /api/reference-data/:id/values - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    try {
+      const dataSetId = Number(req.params.id);
+      const attribute = req.query.attribute ? String(req.query.attribute) : undefined;
+      console.log('GET /api/reference-data/:id/values - Fetching values for dataset:', dataSetId, 'attribute:', attribute);
+      
+      const values = await storage.getReferenceDataSetValues(dataSetId, attribute);
+      console.log(`GET /api/reference-data/:id/values - Retrieved ${values.length} values`);
+      
+      res.json(values);
+    } catch (error) {
+      console.error('GET /api/reference-data/:id/values - Error fetching values:', error);
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   app.get("/api/reference-data/:id/template", async (req, res) => {
     console.log('GET /api/reference-data/:id/template - Request received');
     if (!req.isAuthenticated()) {
