@@ -64,7 +64,9 @@ export function BatchAddDialog({
   onSuccess
 }: BatchAddDialogProps) {
   const [batchItems, setBatchItems] = useState<BatchItem[]>([])
+  // Initialize with empty object and track with ref for debugging
   const [targetValuesMap, setTargetValuesMap] = useState<Record<number, string[]>>({})
+  const targetValuesMapRef = useRef<Record<number, string[]>>({})
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState<number>(0)
@@ -151,11 +153,28 @@ export function BatchAddDialog({
                 console.log(`Received values from endpoint:`, values)
                 
                 if (Array.isArray(values) && values.length > 0) {
-                  setTargetValuesMap(prev => ({
-                    ...prev,
+                  console.log(`Target values for crosswalk ${crosswalkId}:`, values);
+                  
+                  // Create a new state object with these values
+                  const newTargetValuesMap = {
+                    ...targetValuesMap,
                     [crosswalkId]: values
-                  }))
-                  console.log(`Loaded ${values.length} target values for crosswalk ${crosswalkId}`)
+                  };
+                  
+                  console.log(`Updated target values map:`, newTargetValuesMap);
+                  
+                  // Update both state and ref
+                  setTargetValuesMap(newTargetValuesMap);
+                  targetValuesMapRef.current = newTargetValuesMap;
+                  
+                  console.log(`Loaded ${values.length} target values for crosswalk ${crosswalkId}`);
+                  console.log(`Updated targetValuesMapRef:`, targetValuesMapRef.current);
+                  
+                  // Also check if the state was set correctly after a short delay
+                  setTimeout(() => {
+                    console.log(`Current targetValuesMap after update (setTimeout):`, targetValuesMap);
+                    console.log(`Current targetValuesMapRef after update (setTimeout):`, targetValuesMapRef.current);
+                  }, 500);
                 } else {
                   // If values endpoint doesn't work, try to extract from the dataset directly
                   const dataset = await apiRequest(`/api/reference-data/${numericTargetId}`, {
@@ -593,13 +612,24 @@ export function BatchAddDialog({
                           <SelectValue placeholder="Select target value" />
                         </SelectTrigger>
                         <SelectContent>
-                          {targetValuesMap[item.crosswalkId]?.length > 0 ? (
-                            targetValuesMap[item.crosswalkId].map((value) => (
-                              <SelectItem key={value} value={value || "placeholder_empty_value"}>
-                                {value || "[Empty Value]"}
-                              </SelectItem>
-                            ))
+                          {targetValuesMap[item.crosswalkId] && targetValuesMap[item.crosswalkId].length > 0 ? (
+                            // Map each value to a SelectItem, ensuring we handle empty strings
+                            targetValuesMap[item.crosswalkId].map((value) => {
+                              // Log each value to debug
+                              console.log(`Rendering SelectItem for value "${value}" in crosswalk ${item.crosswalkId}`);
+                              
+                              // Make sure value is never empty
+                              const itemValue = value || "placeholder_empty_value";
+                              const displayValue = value || "[Empty Value]";
+                              
+                              return (
+                                <SelectItem key={itemValue} value={itemValue}>
+                                  {displayValue}
+                                </SelectItem>
+                              );
+                            })
                           ) : (
+                            // Show message when no values are available
                             <SelectItem value="no_values_available" disabled>
                               No target values available
                             </SelectItem>

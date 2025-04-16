@@ -99,6 +99,34 @@ export const MissingMappingsTable = ({
   // Handle batch action
   const handleBatchAdd = () => {
     if (selectedMappings.length > 0) {
+      // Add debug logging to see what's being passed to the batch add dialog
+      console.log('MissingMappingsTable - Selected mappings for batch add:', selectedMappings);
+      
+      // Log the unique crosswalk IDs to identify target systems
+      const uniqueCrosswalkIds = [...new Set(selectedMappings.map(m => m.crosswalkId))];
+      console.log('MissingMappingsTable - Unique crosswalk IDs:', uniqueCrosswalkIds);
+      
+      // Additional debug logging
+      uniqueCrosswalkIds.forEach(async (crosswalkId) => {
+        try {
+          const crosswalk = await fetch(`/api/crosswalks/${crosswalkId}`).then(res => res.json());
+          console.log(`MissingMappingsTable - Crosswalk ${crosswalkId} details:`, crosswalk);
+          
+          if (crosswalk.targetSystemId) {
+            console.log(`MissingMappingsTable - Crosswalk ${crosswalkId} target system ID:`, crosswalk.targetSystemId);
+            
+            try {
+              const targetValues = await fetch(`/api/reference-data/${crosswalk.targetSystemId}/values`).then(res => res.json());
+              console.log(`MissingMappingsTable - Target system ${crosswalk.targetSystemId} values:`, targetValues);
+            } catch (err) {
+              console.error(`MissingMappingsTable - Error fetching target values:`, err);
+            }
+          }
+        } catch (err) {
+          console.error(`MissingMappingsTable - Error fetching crosswalk:`, err);
+        }
+      });
+      
       setShowBatchAddDialog(true)
     }
   }
