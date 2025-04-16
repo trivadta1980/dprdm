@@ -653,9 +653,9 @@ export function BatchAddDialog({
                           <SelectValue placeholder="Select target value" />
                         </SelectTrigger>
                         <SelectContent>
-                          {targetValuesMapRef.current[item.crosswalkId] && targetValuesMapRef.current[item.crosswalkId].length > 0 ? (
+                          {targetValuesMap[item.crosswalkId] && targetValuesMap[item.crosswalkId].length > 0 ? (
                             // Map each value to a SelectItem, ensuring we handle empty strings
-                            targetValuesMapRef.current[item.crosswalkId].map((value) => {
+                            targetValuesMap[item.crosswalkId].map((value) => {
                               // Log each value to debug
                               console.log(`Rendering SelectItem for value "${value}" in crosswalk ${item.crosswalkId}`);
                               
