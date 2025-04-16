@@ -38,7 +38,6 @@ export function AddToCrosswalkDialog({
   onSuccess
 }: AddToCrosswalkDialogProps) {
   const [targetValue, setTargetValue] = useState<string>('')
-  const [confidence, setConfidence] = useState<number>(75)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<boolean>(false)
@@ -52,7 +51,6 @@ export function AddToCrosswalkDialog({
     if (isOpen && mapping) {
       // Reset form state when dialog opens
       setTargetValue('')
-      setConfidence(75)
       setIsSubmitting(false)
       setError(null)
       setSuccess(false)
@@ -440,7 +438,7 @@ export function AddToCrosswalkDialog({
           {
             sourceValue: mapping.sourceValue,
             targetValue: targetValue.trim(),
-            confidence: confidence / 100, // Convert to 0-1 scale
+            confidence: 0.75, // Default confidence at 75%
             status: 'PENDING' // New mappings are pending by default
           }
         ]
