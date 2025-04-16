@@ -106,7 +106,11 @@ export const useMissingMappings = (crosswalkId?: number) => {
           
           return data as MissingMapping[];
         } catch (err) {
-        console.error('Error fetching missing mappings:', err);
+          console.error('Error fetching missing mappings:', err);
+          throw err;
+        }
+      } catch (err) {
+        console.error('Error in missing mappings query function:', err);
         throw err;
       }
     },
@@ -190,8 +194,12 @@ export const useMissingMappings = (crosswalkId?: number) => {
           
           console.warn('Missing mappings statistics response has unexpected format:', data);
           throw new Error('The statistics data has an unexpected format.');
+        } catch (err) {
+          console.error('Error fetching missing mappings statistics:', err);
+          throw err;
+        }
       } catch (err) {
-        console.error('Error fetching missing mappings statistics:', err);
+        console.error('Error in statistics query function:', err);
         throw err;
       }
     },
