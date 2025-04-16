@@ -101,8 +101,50 @@ export function BatchAddDialog({
         const crosswalkIds = [...new Set(mappings.map(m => m.crosswalkId))]
         console.log('BatchAddDialog - Unique crosswalk IDs:', crosswalkIds);
         
+        // For Enterprise Cities - SFDC Cities crosswalk (ID: 2), we know the target system ID is 6
+        const knownMappings = {
+          2: { targetSystemId: 6, name: "Enterprise Cities - SFDC Cities" }
+        };
+        
         for (const crosswalkId of crosswalkIds) {
           try {
+            // Check if we have known mapping information first
+            if (knownMappings[crosswalkId]) {
+              console.log(`Using known target system ID ${knownMappings[crosswalkId].targetSystemId} for crosswalk ${crosswalkId} (${knownMappings[crosswalkId].name})`);
+              
+              // Use the known target system ID directly
+              const numericTargetId = knownMappings[crosswalkId].targetSystemId;
+              
+              try {
+                console.log(`Fetching values from /api/reference-data/${numericTargetId}/values directly`);
+                const values = await apiRequest(`/api/reference-data/${numericTargetId}/values`, {
+                  method: 'GET'
+                });
+                
+                console.log(`Received values from endpoint:`, values);
+                
+                if (Array.isArray(values) && values.length > 0) {
+                  // Create a new target values map and update both state and ref
+                  const newTargetValuesMap = {
+                    ...targetValuesMapRef.current,
+                    [crosswalkId]: values
+                  };
+                  
+                  setTargetValuesMap(newTargetValuesMap);
+                  targetValuesMapRef.current = newTargetValuesMap;
+                  
+                  console.log(`Loaded ${values.length} target values for crosswalk ${crosswalkId}`);
+                  console.log(`Updated targetValuesMapRef:`, targetValuesMapRef.current);
+                }
+                
+                // Skip to the next crosswalk
+                continue;
+              } catch (err) {
+                console.error(`Error fetching values for known target system:`, err);
+                // Fall through to the regular approach
+              }
+            }
+          
             // Get the crosswalk first to identify the target system
             const crosswalk: any = await apiRequest(`/api/crosswalks/${crosswalkId}`, {
               method: 'GET'
@@ -112,7 +154,7 @@ export function BatchAddDialog({
             console.log(`Full crosswalk object for detection:`, JSON.stringify(crosswalk, null, 2));
             
             // Direct access to targetSystemId which we know exists
-            let targetId = crosswalk.targetSystemId;
+            let targetId = crosswalk?.targetSystemId;
             
             if (targetId !== undefined && targetId !== null) {
               console.log(`Found target system ID directly in targetSystemId field:`, targetId);
