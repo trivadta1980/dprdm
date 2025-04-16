@@ -636,15 +636,16 @@ export function BatchAddDialog({
             Enter the target values for each source value.
           </DialogDescription>
         </DialogHeader>
-
+       
         <div className="space-y-4 py-4">
           {/* Fixed confidence info - 75% */}
           <div className="flex items-center space-x-4 pb-4">
-            <Label className="min-w-[150px]">Default Confidence</Label>
+            <Label className="min-w-[150px]"></Label>
             <div className="w-full">
-              <span className="text-sm text-muted-foreground">Using fixed confidence value of 75% for all mappings</span>
+              <span className="text-sm text-muted-foreground"></span>
             </div>
           </div>
+     
 
           {/* Progress indicator when submitting */}
           {isSubmitting && (

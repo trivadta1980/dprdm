@@ -2769,8 +2769,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(401);
     }
     try {
-      const metrics = await storage.getDashboardMetrics();
-      console.log('GET /api/metrics - Metrics fetched successfully');
+      // Wrap each individual query in try/catch to identify which one is failing
+      let metrics = {
+        totalDatasets: 0,
+        totalDataTypes: 0,
+        totalRelationships: 0,
+        totalCrosswalks: 0,
+        totalMissingMappings: 0,
+        activeMappings: 0,
+        recentChanges: 0,
+        activeUsers: 0
+      };
+      
+      try {
+        const [datasets] = await db
+          .select({ count: sql`count(*)` })
+          .from(referenceDataSets);
+        metrics.totalDatasets = Number(datasets?.count || 0);
+        console.log('Datasets count fetched:', metrics.totalDatasets);
+      } catch (err) {
+        console.error('Error fetching datasets count:', err);
+      }
+      
+      try {
+        const [dataTypes] = await db
+          .select({ count: sql`count(*)` })
+          .from(referenceDataTypes);
+        metrics.totalDataTypes = Number(dataTypes?.count || 0);
+        console.log('Data types count fetched:', metrics.totalDataTypes);
+      } catch (err) {
+        console.error('Error fetching data types count:', err);
+      }
+      
+      try {
+        const [relationshipCount] = await db
+          .select({ count: sql`count(*)` })
+          .from(relationships);
+        metrics.totalRelationships = Number(relationshipCount?.count || 0);
+        console.log('Relationships count fetched:', metrics.totalRelationships);
+      } catch (err) {
+        console.error('Error fetching relationships count:', err);
+      }
+      
+      try {
+        const [crosswalks] = await db
+          .select({ count: sql`count(*)` })
+          .from(crosswalkMappings);
+        metrics.totalCrosswalks = Number(crosswalks?.count || 0);
+        console.log('Crosswalks count fetched:', metrics.totalCrosswalks);
+      } catch (err) {
+        console.error('Error fetching crosswalks count:', err);
+      }
+      
+      try {
+        const [missingMappingsCount] = await db
+          .select({ count: sql`count(*)` })
+          .from(missingMappings);
+        metrics.totalMissingMappings = Number(missingMappingsCount?.count || 0);
+        console.log('Missing mappings count fetched:', metrics.totalMissingMappings);
+      } catch (err) {
+        console.error('Error fetching missing mappings count:', err);
+      }
+      
+      try {
+        const [mappings] = await db
+          .select({ count: sql`count(*)` })
+          .from(crosswalkMappings);
+        metrics.activeMappings = Number(mappings?.count || 0);
+        console.log('Active mappings count fetched:', metrics.activeMappings);
+      } catch (err) {
+        console.error('Error fetching active mappings count:', err);
+      }
+      
+      try {
+        const [changes] = await db
+          .select({ count: sql`count(*)` })
+          .from(referenceDataSets)
+          .where(
+            sql`created_at > NOW() - INTERVAL '24 hours'`
+          );
+        metrics.recentChanges = Number(changes?.count || 0);
+        console.log('Recent changes count fetched:', metrics.recentChanges);
+      } catch (err) {
+        console.error('Error fetching recent changes count:', err);
+      }
+      
+      try {
+        const [activeUsers] = await db
+          .select({ count: sql`count(*)` })
+          .from(users)
+          .where(eq(users.isActive, true));
+        metrics.activeUsers = Number(activeUsers?.count || 0);
+        console.log('Active users count fetched:', metrics.activeUsers);
+      } catch (err) {
+        console.error('Error fetching active users count:', err);
+      }
+
+      console.log('GET /api/metrics - Metrics fetched successfully:', metrics);
       res.json(metrics);
     } catch (error) {
       console.error('GET /api/metrics - Error:', error);
