@@ -10,7 +10,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Slider } from '@/components/ui/slider'
 import { useToast } from '@/hooks/use-toast'
 import { apiRequest, queryClient } from '@/lib/queryClient'
 import { MissingMapping } from '@/hooks/use-missing-mappings'
@@ -582,25 +581,7 @@ export function AddToCrosswalkDialog({
                   )}
                 </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">
-                  Confidence
-                </Label>
-                <div className="col-span-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Low</span>
-                    <span className="text-sm font-medium">{confidence}%</span>
-                    <span className="text-sm text-muted-foreground">High</span>
-                  </div>
-                  <Slider
-                    value={[confidence]}
-                    min={0}
-                    max={100}
-                    step={5}
-                    onValueChange={(value) => setConfidence(value[0])}
-                  />
-                </div>
-              </div>
+
             </div>
 
             {error && (
