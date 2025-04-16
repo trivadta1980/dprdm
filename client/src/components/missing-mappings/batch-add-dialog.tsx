@@ -704,45 +704,54 @@ export function BatchAddDialog({
                       <ArrowRight className="h-4 w-4 text-muted-foreground" />
                     </TableCell>
                     <TableCell>
-                      <Select
-                        value={item.targetValue}
-                        onValueChange={(value) => handleTargetValueChange(item.id, value)}
-                        disabled={isSubmitting || item.status === 'success'}
-                      >
-                        <SelectTrigger className={
-                          item.status === 'success' 
-                            ? 'bg-green-50 border-green-200' 
-                            : item.status === 'error' 
-                              ? 'bg-red-50 border-red-200' 
-                              : ''
-                        }>
-                          <SelectValue placeholder="Select target value" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {targetValuesMap[item.crosswalkId] && targetValuesMap[item.crosswalkId].length > 0 ? (
-                            // Map each value to a SelectItem, ensuring we handle empty strings
-                            targetValuesMap[item.crosswalkId].map((value) => {
-                              // Log each value to debug
-                              console.log(`Rendering SelectItem for value "${value}" in crosswalk ${item.crosswalkId}`);
-                              
-                              // Make sure value is never empty
-                              const itemValue = value || "placeholder_empty_value";
-                              const displayValue = value || "[Empty Value]";
-                              
-                              return (
-                                <SelectItem key={itemValue} value={itemValue}>
-                                  {displayValue}
-                                </SelectItem>
-                              );
-                            })
+                      <div className="space-y-1">
+                        <Select
+                          value={item.targetValue}
+                          onValueChange={(value) => handleTargetValueChange(item.id, value)}
+                          disabled={isSubmitting || item.status === 'success'}
+                        >
+                          <SelectTrigger className={
+                            item.status === 'success' 
+                              ? 'bg-green-50 border-green-200' 
+                              : item.status === 'error' 
+                                ? 'bg-red-50 border-red-200' 
+                                : ''
+                          }>
+                            <SelectValue placeholder="Select target value" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {targetValuesMap[item.crosswalkId] && targetValuesMap[item.crosswalkId].length > 0 ? (
+                              // Map each value to a SelectItem, ensuring we handle empty strings
+                              targetValuesMap[item.crosswalkId].map((value) => {
+                                // Log each value to debug
+                                console.log(`Rendering SelectItem for value "${value}" in crosswalk ${item.crosswalkId}`);
+                                
+                                // Make sure value is never empty
+                                const itemValue = value || "placeholder_empty_value";
+                                const displayValue = value || "[Empty Value]";
+                                
+                                return (
+                                  <SelectItem key={itemValue} value={itemValue}>
+                                    {displayValue}
+                                  </SelectItem>
+                                );
+                              })
+                            ) : (
+                              // Show message when no values are available
+                              <SelectItem value="no_values_available" disabled>
+                                No target values available
+                              </SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-amber-700 italic text-left">
+                          {!targetValuesMap[item.crosswalkId] || targetValuesMap[item.crosswalkId].length === 0 ? (
+                            <span><strong>Warning:</strong> Add values to target dataset first.</span>
                           ) : (
-                            // Show message when no values are available
-                            <SelectItem value="no_values_available" disabled>
-                              No target values available
-                            </SelectItem>
+                            <span>Missing value? Add it to the target dataset first.</span>
                           )}
-                        </SelectContent>
-                      </Select>
+                        </p>
+                      </div>
                     </TableCell>
                     <TableCell>
                       {item.status === 'pending' ? (

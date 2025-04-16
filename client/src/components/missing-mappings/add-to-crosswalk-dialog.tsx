@@ -598,37 +598,49 @@ export function AddToCrosswalkDialog({
                 <Label htmlFor="targetValue" className="text-right">
                   Target Value
                 </Label>
-                <div className="col-span-3 relative">
+                <div className="col-span-3 relative space-y-2">
                   {isLoadingValues ? (
                     <div className="flex items-center">
                       <Loader2 className="w-4 h-4 mr-2 animate-spin text-muted-foreground" />
                       <span className="text-sm text-muted-foreground">Loading values...</span>
                     </div>
                   ) : targetValues.length > 0 ? (
-                    <Select 
-                      value={targetValue} 
-                      onValueChange={setTargetValue}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a target value" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {targetValues.map((value) => (
-                          <SelectItem key={value} value={value}>
-                            {value}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <>
+                      <Select 
+                        value={targetValue} 
+                        onValueChange={setTargetValue}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a target value" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {targetValues.map((value) => (
+                            <SelectItem key={value} value={value}>
+                              {value}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-amber-700 italic">
+                        <strong>Note:</strong> If the desired target value doesn't exist in the dropdown, 
+                        please add it to the target reference dataset first before mapping.
+                      </p>
+                    </>
                   ) : (
-                    <Input
-                      id="targetValue"
-                      value={targetValue}
-                      onChange={(e) => setTargetValue(e.target.value)}
-                      className="w-full"
-                      placeholder="Enter corresponding target value (no values available)"
-                      autoFocus
-                    />
+                    <>
+                      <Input
+                        id="targetValue"
+                        value={targetValue}
+                        onChange={(e) => setTargetValue(e.target.value)}
+                        className="w-full"
+                        placeholder="Enter corresponding target value (no values available)"
+                        autoFocus
+                      />
+                      <p className="text-xs text-amber-700 italic">
+                        <strong>Warning:</strong> No target values found. For the most consistent results, 
+                        please add the target value to the target reference dataset first.
+                      </p>
+                    </>
                   )}
                 </div>
               </div>
