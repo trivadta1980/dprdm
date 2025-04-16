@@ -60,10 +60,6 @@ export default function MissingMappingsPage() {
     }
   });
   
-  const handleRefresh = () => {
-    refetch();
-  };
-  
   return (
     <MainLayout>
       <div className="container max-w-7xl mx-auto py-6 space-y-6">
