@@ -101,91 +101,67 @@ export function BatchAddDialog({
         const crosswalkIds = [...new Set(mappings.map(m => m.crosswalkId))]
         console.log('BatchAddDialog - Unique crosswalk IDs:', crosswalkIds);
         
-        // For Enterprise Cities - SFDC Cities crosswalk (ID: 2), we know the target system ID is 6
-        const knownMappings = {
-          2: { targetSystemId: 6, name: "Enterprise Cities - SFDC Cities" }
-        };
-        
         for (const crosswalkId of crosswalkIds) {
           try {
-            // Check if we have known mapping information first
-            if (knownMappings[crosswalkId]) {
-              console.log(`Using known target system ID ${knownMappings[crosswalkId].targetSystemId} for crosswalk ${crosswalkId} (${knownMappings[crosswalkId].name})`);
-              
-              // Use the known target system ID directly
-              const numericTargetId = knownMappings[crosswalkId].targetSystemId;
-              
-              try {
-                console.log(`Fetching values from /api/reference-data/${numericTargetId}/values directly`);
-                const values = await apiRequest(`/api/reference-data/${numericTargetId}/values`, {
-                  method: 'GET'
-                });
-                
-                console.log(`Received values from endpoint:`, values);
-                
-                if (Array.isArray(values) && values.length > 0) {
-                  // Create a new target values map and update both state and ref
-                  const newTargetValuesMap = {
-                    ...targetValuesMapRef.current,
-                    [crosswalkId]: values
-                  };
-                  
-                  setTargetValuesMap(newTargetValuesMap);
-                  targetValuesMapRef.current = newTargetValuesMap;
-                  
-                  console.log(`Loaded ${values.length} target values for crosswalk ${crosswalkId}`);
-                  console.log(`Updated targetValuesMapRef:`, targetValuesMapRef.current);
-                }
-                
-                // Skip to the next crosswalk
-                continue;
-              } catch (err) {
-                console.error(`Error fetching values for known target system:`, err);
-                // Fall through to the regular approach
+            // First, get the crosswalk to determine the target system ID
+            console.log('Fetching crosswalk with ID:', crosswalkId);
+            
+            // Try using fetch directly to see more details about the response
+            const response = await fetch(`/api/crosswalks/${crosswalkId}`, {
+              method: 'GET',
+              headers: {
+                'Accept': 'application/json'
+              },
+              credentials: 'include'
+            });
+            
+            // Log response details
+            console.log('Response status:', response.status, response.statusText);
+            
+            // Get the raw text first to debug any potential parsing issues
+            const responseText = await response.text();
+            
+            // Try parsing it manually
+            let crosswalk = {};
+            try {
+              if (responseText && responseText.trim()) {
+                crosswalk = JSON.parse(responseText);
+              }
+            } catch (parseErr) {
+              console.error('Error parsing JSON response:', parseErr);
+            }
+            
+            // Log the received crosswalk data
+            console.log('Received crosswalk data:', crosswalk);
+            
+            // More robust check for targetSystemId - try various field names that might be used
+            const possibleTargetSystemFields = [
+              'targetSystemId', 
+              'target_system_id', 
+              'targetSystem', 
+              'target_system', 
+              'target',
+              'targetId'
+            ];
+            
+            let targetId = null;
+            
+            // Try all possible field names
+            for (const field of possibleTargetSystemFields) {
+              if (crosswalk && crosswalk[field] !== undefined && crosswalk[field] !== null) {
+                targetId = crosswalk[field];
+                console.log(`Found target system ID in field ${field}:`, targetId);
+                break;
               }
             }
-          
-            // Get the crosswalk first to identify the target system
-            const crosswalk: any = await apiRequest(`/api/crosswalks/${crosswalkId}`, {
-              method: 'GET'
-            })
             
-            // Log the full crosswalk object for debugging
-            console.log(`Full crosswalk object for detection:`, JSON.stringify(crosswalk, null, 2));
-            
-            // Direct access to targetSystemId which we know exists
-            let targetId = crosswalk?.targetSystemId;
-            
-            if (targetId !== undefined && targetId !== null) {
-              console.log(`Found target system ID directly in targetSystemId field:`, targetId);
-            } else {
-              console.log(`targetSystemId field is missing or null, trying alternative field names`);
-              
-              // Try alternative field names
-              const possibleTargetSystemFields = [
-                'target_system_id', 
-                'targetSystem', 
-                'target_system', 
-                'target',
-                'targetId'
-              ];
-              
+            // Also check if the target system ID is contained in mappingData
+            if (targetId === null && crosswalk?.mappingData) {
               for (const field of possibleTargetSystemFields) {
-                if (crosswalk && crosswalk[field] !== undefined && crosswalk[field] !== null) {
-                  targetId = crosswalk[field];
-                  console.log(`Found target system ID in field ${field}:`, targetId);
+                if (crosswalk.mappingData[field] !== undefined && crosswalk.mappingData[field] !== null) {
+                  targetId = crosswalk.mappingData[field];
+                  console.log(`Found target system ID in mappingData.${field}:`, targetId);
                   break;
-                }
-              }
-              
-              // Also check if it's in mappingData
-              if (targetId === null && crosswalk?.mappingData) {
-                for (const field of ['targetSystemId', ...possibleTargetSystemFields]) {
-                  if (crosswalk.mappingData[field] !== undefined && crosswalk.mappingData[field] !== null) {
-                    targetId = crosswalk.mappingData[field];
-                    console.log(`Found target system ID in mappingData.${field}:`, targetId);
-                    break;
-                  }
                 }
               }
             }
