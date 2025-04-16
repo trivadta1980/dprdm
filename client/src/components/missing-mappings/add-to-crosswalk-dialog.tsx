@@ -65,24 +65,75 @@ export function AddToCrosswalkDialog({
             method: 'GET'
           })
           
-          if (crosswalk && crosswalk.targetSystemId) {
-            setTargetSystemId(crosswalk.targetSystemId)
+          // Log the entire crosswalk for debugging
+          console.log('Received crosswalk data:', crosswalk)
+          
+          // More robust check for targetSystemId
+          const targetId = crosswalk?.targetSystemId || crosswalk?.target_system_id
+          
+          if (targetId && !isNaN(Number(targetId))) {
+            const numericTargetId = Number(targetId)
+            setTargetSystemId(numericTargetId)
             
-            // Then fetch the available values from the target system
-            const values = await apiRequest(`/api/reference-data/${crosswalk.targetSystemId}/values`, {
-              method: 'GET'
-            })
-            
-            if (Array.isArray(values)) {
-              setTargetValues(values)
-              console.log(`Loaded ${values.length} target values for selection`)
-            } else {
-              console.error('Unexpected response format for target values:', values)
-              setError('Unable to load target values')
+            try {
+              // Then fetch the available values from the target system
+              const values = await apiRequest(`/api/reference-data/${numericTargetId}/values`, {
+                method: 'GET'
+              })
+              
+              if (Array.isArray(values) && values.length > 0) {
+                setTargetValues(values)
+                console.log(`Loaded ${values.length} target values for selection`)
+              } else {
+                // If no values, fetch the target dataset directly
+                console.log('No values returned from values endpoint, trying to extract from dataset')
+                const targetDataset = await apiRequest(`/api/reference-data/${numericTargetId}`, {
+                  method: 'GET'
+                })
+                
+                if (targetDataset && targetDataset.data) {
+                  // Extract values from dataset instances
+                  const extractedValues = new Set<string>()
+                  
+                  Object.values(targetDataset.data).forEach((instance: any) => {
+                    // Find first non-metadata field
+                    const mainFields = Object.entries(instance)
+                      .filter(([key]) => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
+                    
+                    if (mainFields.length > 0) {
+                      const [_, value] = mainFields[0]
+                      if (value && typeof value === 'string') {
+                        extractedValues.add(value)
+                      }
+                    }
+                  })
+                  
+                  const valueArray = Array.from(extractedValues)
+                  if (valueArray.length > 0) {
+                    setTargetValues(valueArray)
+                    console.log(`Extracted ${valueArray.length} values directly from dataset`)
+                  } else {
+                    // Show that we couldn't find any values
+                    setTargetValues([])
+                    setError('No valid values found in target dataset')
+                    console.log('No valid values found in target dataset')
+                  }
+                } else {
+                  // Show that we couldn't find the target dataset
+                  setTargetValues([])
+                  setError('Target dataset not found or is empty')
+                  console.log('Target dataset not found or is empty')
+                }
+              }
+            } catch (err) {
+              console.error('Error fetching target values:', err)
+              setTargetValues([])
+              setError('Error loading target values: ' + (err.message || 'Unknown error'))
             }
           } else {
-            console.error('Missing target system ID in crosswalk:', crosswalk)
-            setError('Unable to determine target data set')
+            console.error('Missing or invalid target system ID in crosswalk:', crosswalk)
+            setTargetValues([])
+            setError('Missing target system in crosswalk. Please configure this crosswalk with a valid target system.')
           }
         } catch (err: any) {
           console.error('Error loading target values:', err)
