@@ -103,10 +103,36 @@ export function BatchAddDialog({
             })
             
             // Get target system ID using various naming patterns
-            const targetId = crosswalk?.targetSystemId || 
-                           crosswalk?.target_system_id || 
-                           crosswalk?.targetSystem || 
-                           crosswalk?.target_system
+            const possibleTargetSystemFields = [
+              'targetSystemId', 
+              'target_system_id', 
+              'targetSystem', 
+              'target_system', 
+              'target',
+              'targetId'
+            ];
+            
+            let targetId = null;
+            
+            // Try all possible field names
+            for (const field of possibleTargetSystemFields) {
+              if (crosswalk && crosswalk[field] !== undefined && crosswalk[field] !== null) {
+                targetId = crosswalk[field];
+                console.log(`Found target system ID in field ${field}:`, targetId);
+                break;
+              }
+            }
+            
+            // Also check if the target system ID is contained in mappingData
+            if (targetId === null && crosswalk?.mappingData) {
+              for (const field of possibleTargetSystemFields) {
+                if (crosswalk.mappingData[field] !== undefined && crosswalk.mappingData[field] !== null) {
+                  targetId = crosswalk.mappingData[field];
+                  console.log(`Found target system ID in mappingData.${field}:`, targetId);
+                  break;
+                }
+              }
+            }
             
             if (targetId && !isNaN(Number(targetId))) {
               const numericTargetId = Number(targetId)
@@ -300,6 +326,9 @@ export function BatchAddDialog({
             sourceAttribute,
             targetAttribute
           });
+          
+          // Debug the entire crosswalk object
+          console.log(`Full crosswalk object for ${crosswalkId}:`, JSON.stringify(currentMapping, null, 2));
 
           // Prepare updated mapping data, ensuring we properly handle missing structure
           const existingMappingData = currentMapping.mappingData || { 

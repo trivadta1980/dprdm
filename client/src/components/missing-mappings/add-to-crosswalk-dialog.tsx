@@ -90,12 +90,37 @@ export function AddToCrosswalkDialog({
           // Log the entire crosswalk for debugging - this helps us see the field names
           console.log('Received crosswalk data:', crosswalk)
           
-          // More robust check for targetSystemId - field could be camelCase or snake_case
-          // We also need to check other potential field name variations
-          const targetId = crosswalk?.targetSystemId || 
-                            crosswalk?.target_system_id || 
-                            crosswalk?.targetSystem || 
-                            crosswalk?.target_system
+          // More robust check for targetSystemId - try various field names that might be used
+          const possibleTargetSystemFields = [
+            'targetSystemId', 
+            'target_system_id', 
+            'targetSystem', 
+            'target_system', 
+            'target',
+            'targetId'
+          ];
+          
+          let targetId = null;
+          
+          // Try all possible field names
+          for (const field of possibleTargetSystemFields) {
+            if (crosswalk && crosswalk[field] !== undefined && crosswalk[field] !== null) {
+              targetId = crosswalk[field];
+              console.log(`Found target system ID in field ${field}:`, targetId);
+              break;
+            }
+          }
+          
+          // Also check if the target system ID is contained in mappingData
+          if (targetId === null && crosswalk?.mappingData) {
+            for (const field of possibleTargetSystemFields) {
+              if (crosswalk.mappingData[field] !== undefined && crosswalk.mappingData[field] !== null) {
+                targetId = crosswalk.mappingData[field];
+                console.log(`Found target system ID in mappingData.${field}:`, targetId);
+                break;
+              }
+            }
+          }
           
           if (targetId && !isNaN(Number(targetId))) {
             const numericTargetId = Number(targetId)
@@ -292,11 +317,37 @@ export function AddToCrosswalkDialog({
         console.warn('Invalid or missing source system ID:', sourceId);
       }
       
-      // Handle both camelCase and snake_case field names for targetSystemId
-      const targetId = currentMapping.targetSystemId || 
-                        currentMapping.target_system_id || 
-                        currentMapping.targetSystem || 
-                        currentMapping.target_system;
+      // More robust check for targetSystemId - try various field names that might be used
+      const possibleTargetSystemFields = [
+        'targetSystemId', 
+        'target_system_id', 
+        'targetSystem', 
+        'target_system', 
+        'target',
+        'targetId'
+      ];
+      
+      let targetId = null;
+      
+      // Try all possible field names
+      for (const field of possibleTargetSystemFields) {
+        if (currentMapping && currentMapping[field] !== undefined && currentMapping[field] !== null) {
+          targetId = currentMapping[field];
+          console.log(`Found target system ID in field ${field}:`, targetId);
+          break;
+        }
+      }
+      
+      // Also check if the target system ID is contained in mappingData
+      if (targetId === null && currentMapping?.mappingData) {
+        for (const field of possibleTargetSystemFields) {
+          if (currentMapping.mappingData[field] !== undefined && currentMapping.mappingData[field] !== null) {
+            targetId = currentMapping.mappingData[field];
+            console.log(`Found target system ID in mappingData.${field}:`, targetId);
+            break;
+          }
+        }
+      }
                         
       if (targetId && !isNaN(Number(targetId))) {
         targetDataset = await apiRequest(`/api/reference-data/${targetId}`, {
