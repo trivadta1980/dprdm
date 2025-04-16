@@ -559,8 +559,9 @@ export function CrosswalkEditor({
                           field.onChange(numValue);
                           setSelectedTargetDataset(numValue);
                         }}
+                        disabled={isEditMode}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className={isEditMode ? "bg-muted cursor-not-allowed" : ""}>
                           <SelectValue placeholder="Select a target system" />
                         </SelectTrigger>
                         <SelectContent>
@@ -578,6 +579,9 @@ export function CrosswalkEditor({
                         </SelectContent>
                       </Select>
                     </FormControl>
+                    {isEditMode && (
+                      <FormDescription>This field cannot be modified after creation</FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -595,9 +599,9 @@ export function CrosswalkEditor({
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
-                        disabled={!selectedSourceDataset || isLoadingSourceSchema}
+                        disabled={!selectedSourceDataset || isLoadingSourceSchema || isEditMode}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className={isEditMode ? "bg-muted cursor-not-allowed" : ""}>
                           <SelectValue placeholder="Select source attribute" />
                         </SelectTrigger>
                         <SelectContent>
@@ -615,6 +619,9 @@ export function CrosswalkEditor({
                         </SelectContent>
                       </Select>
                     </FormControl>
+                    {isEditMode && (
+                      <FormDescription>This field cannot be modified after creation</FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -630,9 +637,9 @@ export function CrosswalkEditor({
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
-                        disabled={!selectedTargetDataset || isLoadingTargetSchema}
+                        disabled={!selectedTargetDataset || isLoadingTargetSchema || isEditMode}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className={isEditMode ? "bg-muted cursor-not-allowed" : ""}>
                           <SelectValue placeholder="Select target attribute" />
                         </SelectTrigger>
                         <SelectContent>
@@ -650,6 +657,9 @@ export function CrosswalkEditor({
                         </SelectContent>
                       </Select>
                     </FormControl>
+                    {isEditMode && (
+                      <FormDescription>This field cannot be modified after creation</FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
