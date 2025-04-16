@@ -497,17 +497,37 @@ export function BatchAddDialog({
         .filter(item => item.status === 'success')
         .map(item => item.id)
 
+      console.log(`Successful mappings to delete:`, successfulIds);
+
       if (successfulIds.length > 0) {
         // Delete each missing mapping individually
         for (const id of successfulIds) {
           try {
-            await apiRequest(`/api/missing-mappings/${id}`, {
-              method: 'DELETE'
-            })
+            console.log(`Attempting to delete missing mapping ID ${id}...`);
+            // Use direct fetch for better visibility into what's happening
+            const deleteResponse = await fetch(`/api/missing-mappings/${id}`, {
+              method: 'DELETE',
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+              credentials: 'include'
+            });
+            
+            console.log(`Delete response for ID ${id}:`, deleteResponse.status, deleteResponse.statusText);
+            
+            if (!deleteResponse.ok) {
+              const errorText = await deleteResponse.text();
+              console.error(`Server error deleting ID ${id}:`, errorText);
+            } else {
+              console.log(`Successfully deleted missing mapping ID ${id}`);
+            }
           } catch (err) {
             console.error(`Error deleting missing mapping ${id}:`, err)
           }
         }
+      } else {
+        console.log('No successful mappings to delete');
       }
 
       // Invalidate queries to refresh data

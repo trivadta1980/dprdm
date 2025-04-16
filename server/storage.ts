@@ -1930,12 +1930,35 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMissingMapping(id: number): Promise<boolean> {
     try {
+      console.log(`Storage: Attempting to delete missing mapping with ID: ${id}`);
+      
+      // First check if the record exists
+      const existingRecord = await db
+        .select()
+        .from(missingMappings)
+        .where(eq(missingMappings.id, id))
+        .limit(1);
+      
+      if (!existingRecord || existingRecord.length === 0) {
+        console.log(`Storage: Missing mapping with ID ${id} not found in database`);
+        return false;
+      }
+      
+      console.log(`Storage: Found missing mapping to delete:`, existingRecord[0]);
+      
+      // Proceed with deletion
       const [deleted] = await db
         .delete(missingMappings)
         .where(eq(missingMappings.id, id))
         .returning();
       
-      return !!deleted;
+      if (deleted) {
+        console.log(`Storage: Successfully deleted missing mapping with ID ${id}`);
+        return true;
+      } else {
+        console.log(`Storage: Delete operation completed but no rows were affected for ID ${id}`);
+        return false;
+      }
     } catch (error) {
       console.error('Storage: Error deleting missing mapping:', error);
       throw error;

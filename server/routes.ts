@@ -2049,7 +2049,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Delete a missing mapping
   app.delete("/api/missing-mappings/:id", async (req, res) => {
-    console.log('DELETE /api/missing-mappings/:id - Request received');
+    console.log('DELETE /api/missing-mappings/:id - Request received for ID:', req.params.id);
     
     if (!req.isAuthenticated()) {
       console.log('DELETE /api/missing-mappings/:id - Unauthorized access');
@@ -2057,14 +2057,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
+      // Log the authentication status
+      console.log('DELETE /api/missing-mappings/:id - Auth info:', {
+        isAuthenticated: req.isAuthenticated(),
+        userId: req.user?.id,
+        sessionID: req.sessionID
+      });
+      
+      // First check if the mapping exists
+      const existingMapping = await storage.getMissingMappingById(Number(req.params.id));
+      if (!existingMapping) {
+        console.log(`DELETE /api/missing-mappings/:id - Mapping ID ${req.params.id} not found in database`);
+        return res.status(404).json({ error: "Missing mapping not found" });
+      }
+      
+      console.log(`DELETE /api/missing-mappings/:id - Found mapping to delete:`, existingMapping);
+      
       const success = await storage.deleteMissingMapping(Number(req.params.id));
       
       if (success) {
         console.log('DELETE /api/missing-mappings/:id - Missing mapping deleted successfully');
         res.json({ success: true });
       } else {
-        console.log('DELETE /api/missing-mappings/:id - Missing mapping not found');
-        res.status(404).json({ error: "Missing mapping not found" });
+        console.log('DELETE /api/missing-mappings/:id - Delete operation failed');
+        res.status(404).json({ error: "Failed to delete mapping" });
       }
     } catch (error) {
       console.error('DELETE /api/missing-mappings/:id - Error:', error);
