@@ -59,7 +59,14 @@ export const useMissingMappings = (crosswalkId?: number) => {
           try {
             const errorData = await response.text();
             console.error(`Missing mappings API error (${statusCode}):`, errorData);
-            errorMessage = `${errorMessage} - ${errorData || 'No additional details available'}`;
+            
+            // Check if we got HTML back instead of JSON
+            if (errorData.trim().startsWith('<!DOCTYPE') || errorData.trim().startsWith('<html')) {
+              console.error('Received HTML instead of JSON - this often indicates a server-side error');
+              errorMessage = `${errorMessage} - Server returned HTML instead of JSON (possible server error)`;
+            } else {
+              errorMessage = `${errorMessage} - ${errorData || 'No additional details available'}`;
+            }
           } catch (textError) {
             console.error('Could not read error response:', textError);
           }
@@ -76,17 +83,29 @@ export const useMissingMappings = (crosswalkId?: number) => {
           throw new Error(errorMessage);
         }
         
-        const data = await response.json();
-        console.log('Missing mappings API response:', data);
-        
-        // Ensure the response is an array
-        if (!Array.isArray(data)) {
-          console.warn('Missing mappings response is not an array:', data);
-          return [];
-        }
-        
-        return data as MissingMapping[];
-      } catch (err) {
+        // Get text first to check for HTML content before parsing
+        let responseText;
+        try {
+          responseText = await response.text();
+          
+          // Check if response is HTML instead of JSON
+          if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
+            console.error('Received HTML instead of JSON:', responseText.substring(0, 100) + '...');
+            throw new Error('Server returned HTML instead of JSON. The server might be experiencing issues.');
+          }
+          
+          // Try to parse JSON
+          const data = JSON.parse(responseText);
+          console.log('Missing mappings API response:', data);
+          
+          // Ensure the response is an array
+          if (!Array.isArray(data)) {
+            console.warn('Missing mappings response is not an array:', data);
+            return [];
+          }
+          
+          return data as MissingMapping[];
+        } catch (err) {
         console.error('Error fetching missing mappings:', err);
         throw err;
       }
@@ -121,7 +140,14 @@ export const useMissingMappings = (crosswalkId?: number) => {
           try {
             const errorData = await response.text();
             console.error(`Statistics API error (${statusCode}):`, errorData);
-            errorMessage = `${errorMessage} - ${errorData || 'No additional details available'}`;
+            
+            // Check if we got HTML back instead of JSON
+            if (errorData.trim().startsWith('<!DOCTYPE') || errorData.trim().startsWith('<html')) {
+              console.error('Received HTML instead of JSON - this often indicates a server-side error');
+              errorMessage = `${errorMessage} - Server returned HTML instead of JSON (possible server error)`;
+            } else {
+              errorMessage = `${errorMessage} - ${errorData || 'No additional details available'}`;
+            }
           } catch (textError) {
             console.error('Could not read error response:', textError);
           }
@@ -138,20 +164,32 @@ export const useMissingMappings = (crosswalkId?: number) => {
           throw new Error(errorMessage);
         }
         
-        const data = await response.json();
-        console.log('Missing mappings statistics API response:', data);
-        
-        // Ensure response has the expected shape
-        if (data && typeof data === 'object') {
-          const stats: MissingMappingStatistics = {
-            totalCount: typeof data.totalCount === 'number' ? data.totalCount : 0,
-            crosswalkCounts: Array.isArray(data.crosswalkCounts) ? data.crosswalkCounts : []
-          };
-          return stats;
-        }
-        
-        console.warn('Missing mappings statistics response has unexpected format:', data);
-        throw new Error('The statistics data has an unexpected format.');
+        // Get text first to check for HTML content before parsing
+        let responseText;
+        try {
+          responseText = await response.text();
+          
+          // Check if response is HTML instead of JSON
+          if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
+            console.error('Received HTML instead of JSON:', responseText.substring(0, 100) + '...');
+            throw new Error('Server returned HTML instead of JSON. The server might be experiencing issues.');
+          }
+          
+          // Try to parse JSON
+          const data = JSON.parse(responseText);
+          console.log('Missing mappings statistics API response:', data);
+          
+          // Ensure response has the expected shape
+          if (data && typeof data === 'object') {
+            const stats: MissingMappingStatistics = {
+              totalCount: typeof data.totalCount === 'number' ? data.totalCount : 0,
+              crosswalkCounts: Array.isArray(data.crosswalkCounts) ? data.crosswalkCounts : []
+            };
+            return stats;
+          }
+          
+          console.warn('Missing mappings statistics response has unexpected format:', data);
+          throw new Error('The statistics data has an unexpected format.');
       } catch (err) {
         console.error('Error fetching missing mappings statistics:', err);
         throw err;
