@@ -116,42 +116,101 @@ export function AddToCrosswalkDialog({
               } else {
                 // If no values, fetch the target dataset directly
                 console.log('No values returned from values endpoint, trying to extract from dataset')
-                const targetDataset = await apiRequest(`/api/reference-data/${numericTargetId}`, {
-                  method: 'GET'
-                })
                 
-                if (targetDataset && targetDataset.data) {
-                  // Extract values from dataset instances
-                  const extractedValues = new Set<string>()
+                try {
+                  // Use direct fetch for more debugging
+                  const response = await fetch(`/api/reference-data/${numericTargetId}`, {
+                    method: 'GET',
+                    headers: {
+                      'Accept': 'application/json'
+                    },
+                    credentials: 'include'
+                  });
                   
-                  Object.values(targetDataset.data).forEach((instance: any) => {
-                    // Find first non-metadata field
-                    const mainFields = Object.entries(instance)
-                      .filter(([key]) => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
-                    
-                    if (mainFields.length > 0) {
-                      const [_, value] = mainFields[0]
-                      if (value && typeof value === 'string') {
-                        extractedValues.add(value)
-                      }
+                  console.log('Target dataset response status:', response.status, response.statusText);
+                  const responseText = await response.text();
+                  console.log('Raw target dataset response of first 100 chars:', responseText.substring(0, 100) + '...');
+                  
+                  // Try parsing the response
+                  let targetDataset: any = null;
+                  try {
+                    if (responseText && responseText.trim()) {
+                      targetDataset = JSON.parse(responseText);
                     }
-                  })
-                  
-                  const valueArray = Array.from(extractedValues)
-                  if (valueArray.length > 0) {
-                    setTargetValues(valueArray)
-                    console.log(`Extracted ${valueArray.length} values directly from dataset`)
-                  } else {
-                    // Show that we couldn't find any values
-                    setTargetValues([])
-                    setError('No valid values found in target dataset')
-                    console.log('No valid values found in target dataset')
+                  } catch (err) {
+                    console.error('Error parsing dataset JSON:', err);
                   }
-                } else {
-                  // Show that we couldn't find the target dataset
-                  setTargetValues([])
-                  setError('Target dataset not found or is empty')
-                  console.log('Target dataset not found or is empty')
+                  
+                  // Log what we received
+                  console.log('Target dataset structure:', targetDataset);
+                  
+                  // First check for dataContent which is the new API format
+                  if (targetDataset && targetDataset.dataContent) {
+                    console.log('Using dataContent format');
+                    // Extract values from dataset instances
+                    const extractedValues = new Set<string>();
+                    
+                    Object.values(targetDataset.dataContent).forEach((instance: any) => {
+                      // Find first non-metadata field
+                      const mainFields = Object.entries(instance)
+                        .filter(([key]) => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key));
+                      
+                      if (mainFields.length > 0) {
+                        const [_, value] = mainFields[0];
+                        if (value && typeof value === 'string') {
+                          extractedValues.add(value);
+                        }
+                      }
+                    });
+                    
+                    const valueArray = Array.from(extractedValues);
+                    if (valueArray.length > 0) {
+                      setTargetValues(valueArray);
+                      console.log(`Extracted ${valueArray.length} values directly from dataset dataContent`);
+                    } else {
+                      setTargetValues([]);
+                      setError('No valid values found in target dataset dataContent');
+                      console.log('No valid values found in target dataset dataContent');
+                    }
+                  } 
+                  // Fall back to the older data format
+                  else if (targetDataset && targetDataset.data) {
+                    console.log('Using legacy data format');
+                    // Extract values from dataset instances
+                    const extractedValues = new Set<string>();
+                    
+                    Object.values(targetDataset.data).forEach((instance: any) => {
+                      // Find first non-metadata field
+                      const mainFields = Object.entries(instance)
+                        .filter(([key]) => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key));
+                      
+                      if (mainFields.length > 0) {
+                        const [_, value] = mainFields[0];
+                        if (value && typeof value === 'string') {
+                          extractedValues.add(value);
+                        }
+                      }
+                    });
+                    
+                    const valueArray = Array.from(extractedValues);
+                    if (valueArray.length > 0) {
+                      setTargetValues(valueArray);
+                      console.log(`Extracted ${valueArray.length} values directly from dataset data`);
+                    } else {
+                      setTargetValues([]);
+                      setError('No valid values found in target dataset data');
+                      console.log('No valid values found in target dataset data');
+                    }
+                  } else {
+                    // Show that we couldn't find the target dataset
+                    setTargetValues([]);
+                    setError('Target dataset format not recognized or is empty');
+                    console.log('Target dataset format not recognized or is empty:', targetDataset);
+                  }
+                } catch (fetchErr) {
+                  console.error('Error fetching target dataset:', fetchErr);
+                  setTargetValues([]);
+                  setError('Error fetching target dataset: ' + (fetchErr.message || 'Unknown error'));
                 }
               }
             } catch (err) {
@@ -255,28 +314,62 @@ export function AddToCrosswalkDialog({
       let sourceAttribute = '';
       let targetAttribute = '';
       
-      if (sourceDataset && sourceDataset.data) {
-        const firstInstance = Object.values(sourceDataset.data)[0] as any;
-        if (firstInstance) {
-          // Find keys that are likely to be the main attribute (not metadata fields)
-          const possibleKeys = Object.keys(firstInstance).filter(
-            k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
-          );
-          if (possibleKeys.length > 0) {
-            sourceAttribute = possibleKeys[0]; // Take the first attribute
+      // Handle both formats: dataContent (new format) and data (legacy format)
+      if (sourceDataset) {
+        // Try dataContent format first
+        if (sourceDataset.dataContent) {
+          const firstInstance = Object.values(sourceDataset.dataContent)[0] as any;
+          if (firstInstance) {
+            // Find keys that are likely to be the main attribute (not metadata fields)
+            const possibleKeys = Object.keys(firstInstance).filter(
+              k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
+            );
+            if (possibleKeys.length > 0) {
+              sourceAttribute = possibleKeys[0]; // Take the first attribute
+            }
+          }
+        } 
+        // Fall back to data format
+        else if (sourceDataset.data) {
+          const firstInstance = Object.values(sourceDataset.data)[0] as any;
+          if (firstInstance) {
+            // Find keys that are likely to be the main attribute (not metadata fields)
+            const possibleKeys = Object.keys(firstInstance).filter(
+              k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
+            );
+            if (possibleKeys.length > 0) {
+              sourceAttribute = possibleKeys[0]; // Take the first attribute
+            }
           }
         }
       }
       
-      if (targetDataset && targetDataset.data) {
-        const firstInstance = Object.values(targetDataset.data)[0] as any;
-        if (firstInstance) {
-          // Find keys that are likely to be the main attribute (not metadata fields)
-          const possibleKeys = Object.keys(firstInstance).filter(
-            k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
-          );
-          if (possibleKeys.length > 0) {
-            targetAttribute = possibleKeys[0]; // Take the first attribute
+      // Handle both formats: dataContent (new format) and data (legacy format)
+      if (targetDataset) {
+        // Try dataContent format first
+        if (targetDataset.dataContent) {
+          const firstInstance = Object.values(targetDataset.dataContent)[0] as any;
+          if (firstInstance) {
+            // Find keys that are likely to be the main attribute (not metadata fields)
+            const possibleKeys = Object.keys(firstInstance).filter(
+              k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
+            );
+            if (possibleKeys.length > 0) {
+              targetAttribute = possibleKeys[0]; // Take the first attribute
+            }
+          }
+        } 
+        // Fall back to data format
+        else if (targetDataset.data) {
+          const firstInstance = Object.values(targetDataset.data)[0] as any;
+          if (firstInstance) {
+            // Find keys that are likely to be the main attribute (not metadata fields)
+            const possibleKeys = Object.keys(firstInstance).filter(
+              k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
+            );
+            if (possibleKeys.length > 0) {
+              targetAttribute = possibleKeys[0]; // Take the first attribute
+            }
           }
         }
       }
