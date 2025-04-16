@@ -18,8 +18,14 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Slider } from '@/components/ui/slider'
 import { useToast } from '@/hooks/use-toast'
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { apiRequest, queryClient } from '@/lib/queryClient'
 import { MissingMapping } from '@/hooks/use-missing-mappings'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -58,12 +64,15 @@ export function BatchAddDialog({
   onSuccess
 }: BatchAddDialogProps) {
   const [batchItems, setBatchItems] = useState<BatchItem[]>([])
-  const [defaultConfidence, setDefaultConfidence] = useState<number>(75)
+  const [targetValuesMap, setTargetValuesMap] = useState<Record<number, string[]>>({})
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState<number>(0)
   const [groupByCrosswalk, setGroupByCrosswalk] = useState<boolean>(true)
   const { toast } = useToast()
+  
+  // Use a fixed confidence value of 75% (0.75)
+  const DEFAULT_CONFIDENCE = 0.75
 
   useEffect(() => {
     if (isOpen) {
@@ -78,10 +87,102 @@ export function BatchAddDialog({
       }))
       
       setBatchItems(initialBatchItems)
-      setDefaultConfidence(75)
       setIsSubmitting(false)
       setError(null)
       setProgress(0)
+      
+      // Load target values for each crosswalk
+      const loadTargetValuesForCrosswalks = async () => {
+        const crosswalkIds = [...new Set(mappings.map(m => m.crosswalkId))]
+        
+        for (const crosswalkId of crosswalkIds) {
+          try {
+            // Get the crosswalk first to identify the target system
+            const crosswalk: any = await apiRequest(`/api/crosswalks/${crosswalkId}`, {
+              method: 'GET'
+            })
+            
+            // Get target system ID using various naming patterns
+            const targetId = crosswalk?.targetSystemId || 
+                           crosswalk?.target_system_id || 
+                           crosswalk?.targetSystem || 
+                           crosswalk?.target_system
+            
+            if (targetId && !isNaN(Number(targetId))) {
+              const numericTargetId = Number(targetId)
+              
+              try {
+                // First try the values endpoint
+                const values = await apiRequest(`/api/reference-data/${numericTargetId}/values`, {
+                  method: 'GET'
+                })
+                
+                if (Array.isArray(values) && values.length > 0) {
+                  setTargetValuesMap(prev => ({
+                    ...prev,
+                    [crosswalkId]: values
+                  }))
+                  console.log(`Loaded ${values.length} target values for crosswalk ${crosswalkId}`)
+                } else {
+                  // If values endpoint doesn't work, try to extract from the dataset directly
+                  const dataset = await apiRequest(`/api/reference-data/${numericTargetId}`, {
+                    method: 'GET'
+                  })
+                  
+                  // Try to extract values from dataset
+                  const extractedValues = new Set<string>()
+                  
+                  // Try both data formats (dataContent and data)
+                  if (dataset.dataContent) {
+                    Object.values(dataset.dataContent).forEach((instance: any) => {
+                      const mainFields = Object.entries(instance)
+                        .filter(([key]) => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
+                      
+                      if (mainFields.length > 0) {
+                        const [_, value] = mainFields[0]
+                        if (value && typeof value === 'string') {
+                          extractedValues.add(value)
+                        }
+                      }
+                    })
+                  } else if (dataset.data) {
+                    Object.values(dataset.data).forEach((instance: any) => {
+                      const mainFields = Object.entries(instance)
+                        .filter(([key]) => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
+                      
+                      if (mainFields.length > 0) {
+                        const [_, value] = mainFields[0]
+                        if (value && typeof value === 'string') {
+                          extractedValues.add(value)
+                        }
+                      }
+                    })
+                  }
+                  
+                  if (extractedValues.size > 0) {
+                    const valueArray = Array.from(extractedValues)
+                    setTargetValuesMap(prev => ({
+                      ...prev,
+                      [crosswalkId]: valueArray
+                    }))
+                    console.log(`Extracted ${valueArray.length} values from dataset for crosswalk ${crosswalkId}`)
+                  } else {
+                    console.warn(`No values found for crosswalk ${crosswalkId} in target system ${numericTargetId}`)
+                  }
+                }
+              } catch (err) {
+                console.error(`Error loading target values for crosswalk ${crosswalkId}:`, err)
+              }
+            } else {
+              console.warn(`Invalid target system ID for crosswalk ${crosswalkId}:`, targetId)
+            }
+          } catch (err) {
+            console.error(`Error loading crosswalk ${crosswalkId}:`, err)
+          }
+        }
+      }
+      
+      loadTargetValuesForCrosswalks()
     }
   }, [isOpen, mappings])
 
