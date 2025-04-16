@@ -238,7 +238,7 @@ export function BatchAddDialog({
           const newMappings = items.map(item => ({
             sourceValue: item.sourceValue,
             targetValue: item.targetValue.trim(),
-            confidence: defaultConfidence / 100, // Convert to 0-1 scale
+            confidence: DEFAULT_CONFIDENCE, // Using fixed 75% confidence
             status: 'PENDING' // New mappings are pending by default
           }))
 
@@ -476,23 +476,11 @@ export function BatchAddDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Default confidence setting */}
+          {/* Fixed confidence info - 75% */}
           <div className="flex items-center space-x-4 pb-4">
             <Label className="min-w-[150px]">Default Confidence</Label>
-            <div className="w-full space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Low</span>
-                <span className="text-sm font-medium">{defaultConfidence}%</span>
-                <span className="text-sm text-muted-foreground">High</span>
-              </div>
-              <Slider
-                value={[defaultConfidence]}
-                min={0}
-                max={100}
-                step={5}
-                onValueChange={(value) => setDefaultConfidence(value[0])}
-                disabled={isSubmitting}
-              />
+            <div className="w-full">
+              <span className="text-sm text-muted-foreground">Using fixed confidence value of 75% for all mappings</span>
             </div>
           </div>
 
@@ -554,19 +542,32 @@ export function BatchAddDialog({
                       <ArrowRight className="h-4 w-4 text-muted-foreground" />
                     </TableCell>
                     <TableCell>
-                      <Input
+                      <Select
                         value={item.targetValue}
-                        onChange={(e) => handleTargetValueChange(item.id, e.target.value)}
-                        placeholder="Enter target value"
+                        onValueChange={(value) => handleTargetValueChange(item.id, value)}
                         disabled={isSubmitting || item.status === 'success'}
-                        className={
+                      >
+                        <SelectTrigger className={
                           item.status === 'success' 
                             ? 'bg-green-50 border-green-200' 
                             : item.status === 'error' 
                               ? 'bg-red-50 border-red-200' 
                               : ''
-                        }
-                      />
+                        }>
+                          <SelectValue placeholder="Select target value" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {targetValuesMap[item.crosswalkId]?.map((value) => (
+                            <SelectItem key={value} value={value}>
+                              {value}
+                            </SelectItem>
+                          )) || (
+                            <SelectItem value="" disabled>
+                              No target values available
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell>
                       {item.status === 'pending' ? (
