@@ -493,63 +493,64 @@ export function BatchAddDialog({
       }
 
       // Delete all successfully added missing mappings
-      const successfulIds = batchItems
+      // Important: Get the updated status of batch items AFTER the updates
+      const updatedItems = batchItems.map(item => ({ ...item }));
+      const successfulIds = updatedItems
         .filter(item => item.status === 'success')
-        .map(item => item.id)
+        .map(item => item.id);
 
       console.log(`Successful mappings to delete:`, successfulIds);
 
       if (successfulIds.length > 0) {
-        // Delete each missing mapping individually
+        // Delete each missing mapping individually using apiRequest instead of fetch
+        // This matches the implementation in the add-to-crosswalk-dialog.tsx which works correctly
         for (const id of successfulIds) {
           try {
-            const url = `/api/missing-mappings/${id}`;
-            console.log(`Attempting to delete missing mapping ID ${id} with URL: ${url}`);
+            console.log(`Attempting to delete missing mapping ID ${id}`);
             
-            // Use direct fetch for better visibility into what's happening
-            const deleteResponse = await fetch(url, {
-              method: 'DELETE',
-              headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              },
-              credentials: 'include'
+            // Use apiRequest which matches the implementation in the single-item dialog
+            await apiRequest(`/api/missing-mappings/${id}`, {
+              method: 'DELETE'
             });
             
-            console.log(`Delete response for ID ${id}:`, {
-              status: deleteResponse.status,
-              statusText: deleteResponse.statusText,
-              ok: deleteResponse.ok
-            });
+            console.log(`Successfully deleted missing mapping ID ${id}`);
             
-            let responseContent = '';
+            // Verify the deletion worked by trying to GET the item
             try {
-              responseContent = await deleteResponse.text();
-              console.log(`Delete response content for ID ${id}:`, responseContent);
-            } catch (readErr) {
-              console.error(`Error reading response for ID ${id}:`, readErr);
-            }
-            
-            if (!deleteResponse.ok) {
-              console.error(`Server error deleting ID ${id}:`, responseContent);
-            } else {
-              console.log(`Successfully deleted missing mapping ID ${id}`);
-              
-              // Double check if the deletion was successful by making a GET request
-              try {
-                const checkResponse = await fetch(`/api/missing-mappings/${id}`, {
-                  method: 'GET',
-                  credentials: 'include'
-                });
-                
-                if (checkResponse.status === 404) {
-                  console.log(`Verified deletion: Missing mapping ID ${id} no longer exists`);
-                } else {
-                  console.warn(`Deletion verification failed: Missing mapping ID ${id} still exists with status ${checkResponse.status}`);
+              const checkResponse = await fetch(`/api/missing-mappings/${id}`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                  'Accept': 'application/json'
                 }
-              } catch (checkErr) {
-                console.error(`Error checking deletion of ID ${id}:`, checkErr);
+              });
+              
+              if (checkResponse.status === 404) {
+                console.log(`Verified deletion: Missing mapping ID ${id} no longer exists`);
+              } else {
+                console.warn(`Deletion verification failed: Missing mapping ID ${id} still exists with status ${checkResponse.status}`);
+                
+                // Try once more with direct fetch as fallback
+                try {
+                  const fallbackResponse = await fetch(`/api/missing-mappings/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                      'Accept': 'application/json',
+                      'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                  });
+                  
+                  console.log(`Fallback delete response:`, {
+                    status: fallbackResponse.status,
+                    ok: fallbackResponse.ok
+                  });
+                } catch (fallbackErr) {
+                  console.error(`Error in fallback deletion:`, fallbackErr);
+                }
               }
+            } catch (checkErr) {
+              console.error(`Error checking deletion of ID ${id}:`, checkErr);
             }
           } catch (err) {
             console.error(`Error deleting missing mapping ${id}:`, err)
@@ -559,10 +560,26 @@ export function BatchAddDialog({
         console.log('No successful mappings to delete');
       }
 
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['crosswalks'] })
-      queryClient.invalidateQueries({ queryKey: ['missing-mappings'] })
-      queryClient.invalidateQueries({ queryKey: ['missing-mappings-statistics'] })
+      // Invalidate all the relevant queries to refresh data
+      // This ensures that the UI is updated properly after batch operations
+      try {
+        console.log('Invalidating queries after batch operation...');
+        
+        // Invalidate crosswalks data
+        queryClient.invalidateQueries({ queryKey: ['crosswalks'] });
+        
+        // Invalidate missing mappings data
+        queryClient.invalidateQueries({ queryKey: ['missing-mappings'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/missing-mappings'] });
+        
+        // Invalidate statistics data
+        queryClient.invalidateQueries({ queryKey: ['missing-mappings-statistics'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/missing-mappings/statistics'] });
+        
+        console.log('All queries invalidated successfully');
+      } catch (invalidateErr) {
+        console.error('Error invalidating queries:', invalidateErr);
+      }
 
       // Show toast with results
       toast({
