@@ -636,6 +636,59 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+  
+  async getReferenceDataSetValues(id: number, attribute?: string): Promise<string[]> {
+    console.log('Storage: Extracting unique values from reference data set with ID:', id);
+    try {
+      // Get the reference data set
+      const dataSet = await this.getReferenceDataSet(id);
+      
+      if (!dataSet || !dataSet.data || typeof dataSet.data !== 'object') {
+        console.log('Storage: Data set not found or has invalid data structure');
+        return [];
+      }
+      
+      // Extract all unique values for the specified attribute
+      const uniqueValues = new Set<string>();
+      
+      // If no specific attribute is provided, try to find the most likely attribute
+      if (!attribute) {
+        // Find the first instance to determine available attributes
+        const firstInstance = Object.values(dataSet.data)[0];
+        if (firstInstance) {
+          // Find keys that are likely to be the main attribute (not metadata fields)
+          const possibleKeys = Object.keys(firstInstance).filter(
+            k => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(k)
+          );
+          
+          if (possibleKeys.length > 0) {
+            attribute = possibleKeys[0]; // Take the first attribute
+            console.log('Storage: Auto-detected attribute:', attribute);
+          }
+        }
+      }
+      
+      if (!attribute) {
+        console.log('Storage: Could not determine attribute to extract values from');
+        return [];
+      }
+      
+      // Extract values
+      Object.values(dataSet.data).forEach(instance => {
+        if (instance && typeof instance === 'object' && attribute && instance[attribute]) {
+          uniqueValues.add(String(instance[attribute]));
+        }
+      });
+      
+      const valuesArray = Array.from(uniqueValues).sort();
+      console.log(`Storage: Found ${valuesArray.length} unique values for attribute '${attribute}'`);
+      
+      return valuesArray;
+    } catch (error) {
+      console.error('Storage: Error extracting reference data set values:', error);
+      throw error;
+    }
+  }
 
   async getAllReferenceDataSets(): Promise<ReferenceDataSet[]> {
     // Sort by created_at in descending order (newest first)
