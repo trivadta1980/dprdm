@@ -668,7 +668,11 @@ export default function RelationshipsPage() {
             >
               <DialogTrigger asChild>
                 <EnhancedTooltip content="Create a new relationship between two data sets">
-                  <Button>
+                  <Button onClick={() => {
+                    console.log("New Relationship button clicked");
+                    // The DialogTrigger should handle opening the dialog automatically
+                    // This console log is just to verify the button is being clicked
+                  }}>
                     <Plus className="h-4 w-4 mr-2" />
                     New Relationship
                   </Button>
