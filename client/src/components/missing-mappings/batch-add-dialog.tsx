@@ -171,9 +171,31 @@ export function BatchAddDialog({
               console.log(`Successfully identified target system ID ${numericTargetId} for crosswalk ${crosswalkId}`)
               
               try {
+                // Get the target attribute from the crosswalk definition
+                // Look for it in different possible locations (root level and mappingData)
+                let targetAttribute = '';
+                
+                if (crosswalk.targetAttribute) {
+                  targetAttribute = crosswalk.targetAttribute;
+                  console.log(`Found targetAttribute at root level: ${targetAttribute}`);
+                } else if (crosswalk.mappingData && crosswalk.mappingData.targetAttribute) {
+                  targetAttribute = crosswalk.mappingData.targetAttribute;
+                  console.log(`Found targetAttribute in mappingData: ${targetAttribute}`);
+                }
+                
+                // Make sure we have a valid target attribute
+                if (!targetAttribute) {
+                  console.warn(`No targetAttribute found for crosswalk ${crosswalkId}, attempting to auto-detect`);
+                }
+                
                 // Use direct fetch for debugging purposes
-                console.log(`Fetching values from /api/reference-data/${numericTargetId}/values`)
-                const response = await fetch(`/api/reference-data/${numericTargetId}/values`, {
+                const valuesUrl = targetAttribute 
+                  ? `/api/reference-data/${numericTargetId}/values?attribute=${encodeURIComponent(targetAttribute)}`
+                  : `/api/reference-data/${numericTargetId}/values`;
+                  
+                console.log(`Fetching values from ${valuesUrl}`);
+                
+                const response = await fetch(valuesUrl, {
                   method: 'GET',
                   headers: {
                     'Accept': 'application/json'
@@ -222,28 +244,58 @@ export function BatchAddDialog({
                   // Try to extract values from dataset
                   const extractedValues = new Set<string>()
                   
+                  // Get the specific target attribute from the crosswalk definition
+                  // Look for it in different possible locations
+                  let specificAttribute = '';
+                  
+                  if (crosswalk.targetAttribute) {
+                    specificAttribute = crosswalk.targetAttribute;
+                    console.log(`Using targetAttribute from root level for extraction: ${specificAttribute}`);
+                  } else if (crosswalk.mappingData && crosswalk.mappingData.targetAttribute) {
+                    specificAttribute = crosswalk.mappingData.targetAttribute;
+                    console.log(`Using targetAttribute from mappingData for extraction: ${specificAttribute}`);
+                  }
+                
                   // Try both data formats (dataContent and data)
                   if (dataset.dataContent) {
                     Object.values(dataset.dataContent).forEach((instance: any) => {
-                      const mainFields = Object.entries(instance)
-                        .filter(([key]) => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
-                      
-                      if (mainFields.length > 0) {
-                        const [_, value] = mainFields[0]
+                      // If we have a specific attribute to use, use that one
+                      if (specificAttribute && instance[specificAttribute]) {
+                        const value = instance[specificAttribute];
                         if (value && typeof value === 'string') {
-                          extractedValues.add(value)
+                          extractedValues.add(value);
+                        }
+                      } else {
+                        // Fallback to the first non-metadata field
+                        const mainFields = Object.entries(instance)
+                          .filter(([key]) => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
+                        
+                        if (mainFields.length > 0) {
+                          const [_, value] = mainFields[0]
+                          if (value && typeof value === 'string') {
+                            extractedValues.add(value)
+                          }
                         }
                       }
                     })
                   } else if (dataset.data) {
                     Object.values(dataset.data).forEach((instance: any) => {
-                      const mainFields = Object.entries(instance)
-                        .filter(([key]) => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
-                      
-                      if (mainFields.length > 0) {
-                        const [_, value] = mainFields[0]
+                      // If we have a specific attribute to use, use that one
+                      if (specificAttribute && instance[specificAttribute]) {
+                        const value = instance[specificAttribute];
                         if (value && typeof value === 'string') {
-                          extractedValues.add(value)
+                          extractedValues.add(value);
+                        }
+                      } else {
+                        // Fallback to the first non-metadata field
+                        const mainFields = Object.entries(instance)
+                          .filter(([key]) => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key))
+                        
+                        if (mainFields.length > 0) {
+                          const [_, value] = mainFields[0]
+                          if (value && typeof value === 'string') {
+                            extractedValues.add(value)
+                          }
                         }
                       }
                     })
