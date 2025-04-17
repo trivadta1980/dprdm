@@ -127,8 +127,31 @@ export function AddToCrosswalkDialog({
             setTargetSystemId(numericTargetId)
             
             try {
-              // Then fetch the available values from the target system
-              const values = await apiRequest(`/api/reference-data/${numericTargetId}/values`, {
+              // Get the target attribute from the crosswalk definition
+              // Look for it in different possible locations (root level and mappingData)
+              let targetAttribute = '';
+              
+              if (crosswalk.targetAttribute) {
+                targetAttribute = crosswalk.targetAttribute;
+                console.log(`Found targetAttribute at root level: ${targetAttribute}`);
+              } else if (crosswalk.mappingData && crosswalk.mappingData.targetAttribute) {
+                targetAttribute = crosswalk.mappingData.targetAttribute;
+                console.log(`Found targetAttribute in mappingData: ${targetAttribute}`);
+              }
+              
+              // Make sure we have a valid target attribute
+              if (!targetAttribute) {
+                console.warn(`No targetAttribute found for this crosswalk, attempting to auto-detect`);
+              }
+              
+              // Fetch the available values from the target system, using the targetAttribute if available
+              const valuesUrl = targetAttribute 
+                ? `/api/reference-data/${numericTargetId}/values?attribute=${encodeURIComponent(targetAttribute)}`
+                : `/api/reference-data/${numericTargetId}/values`;
+                
+              console.log(`Fetching values from ${valuesUrl}`);
+              
+              const values = await apiRequest(valuesUrl, {
                 method: 'GET'
               })
               
@@ -166,6 +189,17 @@ export function AddToCrosswalkDialog({
                   // Log what we received
                   console.log('Target dataset structure:', targetDataset);
                   
+                  // Get the specific target attribute from the crosswalk definition
+                  let specificAttribute = '';
+                  
+                  if (crosswalk.targetAttribute) {
+                    specificAttribute = crosswalk.targetAttribute;
+                    console.log(`Using targetAttribute from root level for extraction: ${specificAttribute}`);
+                  } else if (crosswalk.mappingData && crosswalk.mappingData.targetAttribute) {
+                    specificAttribute = crosswalk.mappingData.targetAttribute;
+                    console.log(`Using targetAttribute from mappingData for extraction: ${specificAttribute}`);
+                  }
+                
                   // First check for dataContent which is the new API format
                   if (targetDataset && targetDataset.dataContent) {
                     console.log('Using dataContent format');
@@ -173,14 +207,22 @@ export function AddToCrosswalkDialog({
                     const extractedValues = new Set<string>();
                     
                     Object.values(targetDataset.dataContent).forEach((instance: any) => {
-                      // Find first non-metadata field
-                      const mainFields = Object.entries(instance)
-                        .filter(([key]) => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key));
-                      
-                      if (mainFields.length > 0) {
-                        const [_, value] = mainFields[0];
+                      // If we have a specific attribute to use, use that one
+                      if (specificAttribute && instance[specificAttribute]) {
+                        const value = instance[specificAttribute];
                         if (value && typeof value === 'string') {
                           extractedValues.add(value);
+                        }
+                      } else {
+                        // Fallback to the first non-metadata field
+                        const mainFields = Object.entries(instance)
+                          .filter(([key]) => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key));
+                        
+                        if (mainFields.length > 0) {
+                          const [_, value] = mainFields[0];
+                          if (value && typeof value === 'string') {
+                            extractedValues.add(value);
+                          }
                         }
                       }
                     });
@@ -202,14 +244,22 @@ export function AddToCrosswalkDialog({
                     const extractedValues = new Set<string>();
                     
                     Object.values(targetDataset.data).forEach((instance: any) => {
-                      // Find first non-metadata field
-                      const mainFields = Object.entries(instance)
-                        .filter(([key]) => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key));
-                      
-                      if (mainFields.length > 0) {
-                        const [_, value] = mainFields[0];
+                      // If we have a specific attribute to use, use that one
+                      if (specificAttribute && instance[specificAttribute]) {
+                        const value = instance[specificAttribute];
                         if (value && typeof value === 'string') {
                           extractedValues.add(value);
+                        }
+                      } else {
+                        // Fallback to the first non-metadata field
+                        const mainFields = Object.entries(instance)
+                          .filter(([key]) => !['status', '_history', 'createdAt', 'createdBy', 'lastModifiedAt', 'lastModifiedBy'].includes(key));
+                        
+                        if (mainFields.length > 0) {
+                          const [_, value] = mainFields[0];
+                          if (value && typeof value === 'string') {
+                            extractedValues.add(value);
+                          }
                         }
                       }
                     });
