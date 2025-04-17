@@ -38,6 +38,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type {
   ReferenceDataSet,
@@ -83,6 +84,7 @@ export default function RelationshipsPage() {
     isProduction: process.env.NODE_ENV === 'production'
   });
   
+  const { user } = useAuth();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAttributeDialogOpen, setIsAttributeDialogOpen] = useState(false);
@@ -666,18 +668,24 @@ export default function RelationshipsPage() {
                 setIsDialogOpen(open);
               }}
             >
-              <DialogTrigger asChild>
-                <EnhancedTooltip content="Create a new relationship between two data sets">
-                  <Button onClick={() => {
-                    console.log("New Relationship button clicked");
-                    // The DialogTrigger should handle opening the dialog automatically
-                    // This console log is just to verify the button is being clicked
-                  }}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Relationship
-                  </Button>
-                </EnhancedTooltip>
-              </DialogTrigger>
+              <Button 
+                onClick={() => {
+                  console.log("New Relationship button clicked with auth status:", { isAuthenticated: !!user });
+                  if (!user) {
+                    toast({
+                      title: "Authentication Required",
+                      description: "Please log in to create relationships",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+                  // Manually set the dialog open state
+                  setIsDialogOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Relationship
+              </Button>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>
