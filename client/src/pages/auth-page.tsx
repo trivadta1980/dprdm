@@ -176,7 +176,7 @@ export default function AuthPage() {
               <Logo size="md" />
               <h1 className="text-2xl font-semibold text-primary">Blumetra</h1>
             </div>
-            <CardTitle className="text-2xl font-bold">Welcome to RDM</CardTitle>
+            <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
             <CardDescription>
               Sign in to Reference Data Management Console
             </CardDescription>
