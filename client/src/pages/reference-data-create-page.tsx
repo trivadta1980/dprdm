@@ -129,7 +129,7 @@ export default function ReferenceDataCreatePage() {
       }
     },
     onSuccess: (data) => {
-      console.log("Successfully created reference data set:", data);
+      console.log("Successfully created new reference data set:", data);
       queryClient.invalidateQueries({ queryKey: ["/api/reference-data"] });
       toast({
         title: "Success",
