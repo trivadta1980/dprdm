@@ -2,8 +2,8 @@ import { ReactNode, useState } from "react";
 import { Sidebar } from "./sidebar";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Database, HelpCircle, User, KeyRound, LogOut } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Database, HelpCircle, User, KeyRound, LogOut, ExternalLink } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
@@ -31,6 +31,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
   const [showPasswordDialog, setShowPasswordDialog] = useState(user?.requirePasswordChange ?? false);
+  const [showHelpDialog, setShowHelpDialog] = useState(false);
   const [_, setLocation] = useLocation();
 
   const navigateToBlumetra = () => {
@@ -120,7 +121,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setLocation('/help')}
+                    onClick={() => setShowHelpDialog(true)}
                     className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
                   >
                     <HelpCircle className="h-4 w-4 mr-2" />
@@ -244,6 +245,74 @@ export function MainLayout({ children }: MainLayoutProps) {
               </Button>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={showHelpDialog} onOpenChange={setShowHelpDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Reference Data Management Help</DialogTitle>
+            <DialogDescription>
+              Get help with using the Reference Data Management system
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Getting Started</h3>
+              <p>
+                The Reference Data Management (RDM) system allows you to manage, organize, and map reference data 
+                across your organization. Use the navigation menu on the left to access different features.
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Key Features</h3>
+              <ul className="list-disc pl-6 space-y-1">
+                <li><strong>Reference Data Types</strong> - Define schemas and formats for different types of reference data</li>
+                <li><strong>Reference Data</strong> - Manage core reference data sets and instances</li>
+                <li><strong>Relationships</strong> - Define and manage relationships between data entities</li>
+                <li><strong>Crosswalks</strong> - Create and manage data mapping between different systems</li>
+                <li><strong>Approvals</strong> - Review and approve data mapping submissions</li>
+              </ul>
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">User Management</h3>
+              <p>
+                Administrators can manage users and roles via the <strong>Manage Users</strong> and <strong>Manage Roles</strong> sections.
+                Each role defines specific permissions for accessing different parts of the system.
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Data Visualization</h3>
+              <p>
+                The system provides advanced visualization tools to help you understand relationships
+                between different data sets and track data lineage across your systems.
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Need More Help?</h3>
+              <p>
+                For more detailed information or assistance with specific features, please contact
+                your system administrator or the Blumetra support team.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => window.open('https://www.blumetra.com/contact', '_blank')}
+              className="flex items-center mr-2"
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Contact Support
+            </Button>
+            <Button onClick={() => setShowHelpDialog(false)}>Close</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
