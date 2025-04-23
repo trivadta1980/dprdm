@@ -206,9 +206,24 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/user", (req, res) => {
+  app.get("/api/user", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    res.json(req.user);
+    
+    // Get the user role information
+    try {
+      const userRole = await storage.getRole(req.user.roleId);
+      
+      // Combine the user and role data
+      const userData = {
+        ...req.user,
+        routes: userRole?.routes || []
+      };
+      
+      res.json(userData);
+    } catch (error) {
+      console.error('Error getting user role:', error);
+      res.json(req.user); // Fall back to just the user if we can't get the role
+    }
   });
 
   app.post("/api/reset-password/request", async (req, res) => {

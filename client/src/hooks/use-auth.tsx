@@ -5,6 +5,11 @@ import {
   UseMutationResult,
 } from "@tanstack/react-query";
 import { insertUserSchema, User as SelectUser, InsertUser, resetPasswordRequestSchema, resetPasswordSchema } from "@shared/schema";
+
+// Extended User type with routes from role
+interface UserWithRoutes extends SelectUser {
+  routes?: string[];
+}
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import * as z from 'zod';
@@ -20,6 +25,9 @@ type AuthContextType = {
   resetPasswordMutation: UseMutationResult<void, Error, z.infer<typeof resetPasswordSchema>>;
   isAdmin: boolean;
   changePassword: (currentPassword: string, newPassword: string) => Promise<any>;
+  // Add hasPermission function to check route permissions
+  hasPermission: (route: string) => boolean;
+  allowedRoutes: string[];
 };
 
 type LoginData = Pick<InsertUser, "username" | "password">;
@@ -181,6 +189,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAdmin = user?.roleId === 1 || Number(user?.roleId) === 1;
 
+  // Get allowed routes from user's routes field
+  const allowedRoutes = user?.routes as string[] || [];
+  
+  // Function to check if a user has permission for a specific route
+  const hasPermission = (route: string): boolean => {
+    // Admin has access to everything
+    if (isAdmin) return true;
+    
+    // Check if the route is in the user's allowed routes
+    if (!user || !allowedRoutes.length) return false;
+    
+    // Normalize the route for comparison (remove trailing slashes)
+    const normalizedRoute = route.endsWith('/') ? route.slice(0, -1) : route;
+    
+    // Check if the exact route is allowed
+    return allowedRoutes.some((allowedRoute: string) => {
+      // Normalize allowed route
+      const normalizedAllowedRoute = allowedRoute.endsWith('/') 
+        ? allowedRoute.slice(0, -1) 
+        : allowedRoute;
+      
+      // Check for exact match or if it's a parent route
+      return normalizedRoute === normalizedAllowedRoute ||
+             normalizedRoute.startsWith(normalizedAllowedRoute + '/');
+    });
+  };
+
   const changePassword = async (currentPassword: string, newPassword: string) => {
     try {
       const response = await apiRequest("/auth/change-password", {
@@ -207,6 +242,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resetPasswordMutation,
         isAdmin,
         changePassword,
+        hasPermission,
+        allowedRoutes,
       }}
     >
       {children}
@@ -231,6 +268,8 @@ export function useAuth() {
       resetPasswordMutation: {} as any,
       isAdmin: false,
       changePassword: async () => ({ success: false, error: "Auth provider not available" }),
+      hasPermission: () => false,
+      allowedRoutes: [],
     };
   }
   return context;
