@@ -2,6 +2,30 @@
 
 A sophisticated web application for enterprise-level Reference Data Management (RDM) that provides intelligent data processing and visualization capabilities for managing, mapping, and visualizing reference data across different systems.
 
+## Table of Contents
+
+1. [Application Overview](#application-overview)
+2. [Technical Architecture](#technical-architecture)
+   - [Frontend](#frontend)
+   - [Backend](#backend)
+   - [Databases](#databases)
+3. [Directory Structure](#directory-structure)
+4. [Core Features](#core-features)
+   - [User Authentication](#user-authentication)
+   - [Reference Data Types](#reference-data-types)
+   - [Reference Data Sets](#reference-data-sets)
+   - [Relationships](#relationships)
+   - [Crosswalk Mappings](#crosswalk-mappings)
+   - [Graph Visualization](#graph-visualization)
+5. [Key Database Tables](#key-database-tables)
+6. [Development Workflow](#development-workflow)
+7. [Getting Started](#getting-started)
+8. [Scripts and Utilities](#scripts-and-utilities)
+   - [Download Reference Data Template](#download-reference-data-template)
+   - [Database Migrations](#database-migrations)
+9. [Contributing](#contributing)
+10. [Best Practices](#best-practices)
+
 ## Application Overview
 
 This system helps organizations:
