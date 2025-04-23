@@ -30,9 +30,13 @@ export default function ProtectedRoute({
   }
 
   // Check if the user has permission for this route
-  const hasRoutePermission = requiredPermission 
-    ? hasPermission(requiredPermission)
-    : hasPermission(baseRoute);
+  // Special case for home route ("/") - always allow access if user is logged in
+  const isHomeRoute = baseRoute === "";
+  const hasRoutePermission = isHomeRoute || (
+    requiredPermission 
+      ? hasPermission(requiredPermission)
+      : hasPermission(baseRoute)
+  );
 
   console.log("ProtectedRoute Debug:", {
     path,

@@ -30,36 +30,49 @@ export default function HomePage() {
     queryKey: ['/api/recent-activity'],
   });
 
-  const quickActions = [
+  // Define all possible quick actions
+  const allQuickActions = [
     {
       title: "Reference Data Management",
       description: "Create and manage reference data types and instances",
       icon: Database,
       href: "/reference-data",
-      color: "text-blue-600"
+      color: "text-blue-600",
+      permission: "/reference-data"
     },
     {
       title: "Crosswalks",
       description: "Map and transform data between different systems",
       icon: ArrowRightLeft,
       href: "/crosswalks",
-      color: "text-purple-600"
+      color: "text-purple-600",
+      permission: "/crosswalks"
     },
     {
       title: "Relationships",
       description: "Define and visualize data relationships",
       icon: GitFork,
       href: "/relationships",
-      color: "text-green-600"
+      color: "text-green-600",
+      permission: "/relationships"
     },
     {
       title: "Data Types",
       description: "Manage reference data type definitions",
       icon: FileJson,
       href: "/reference-types",
-      color: "text-orange-600"
+      color: "text-orange-600",
+      permission: "/reference-types"
     }
   ];
+  
+  // Get the auth context for permission checking
+  const { hasPermission, isAdmin } = useAuth();
+  
+  // Filter quick actions based on user permissions
+  const quickActions = allQuickActions.filter(action => 
+    isAdmin || hasPermission(action.permission)
+  );
 
   return (
     <MainLayout>
@@ -76,76 +89,98 @@ export default function HomePage() {
 
             {/* Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <Card 
-                className="cursor-pointer hover:shadow-md transition-all group"
-                onClick={() => setLocation('/reference-data')}
-              >
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2">
-                    <Database className="h-5 w-5 text-blue-600 group-hover:scale-110 transition-transform" />
-                    <div>
-                      <p className="text-2xl font-bold group-hover:text-blue-600 transition-colors">{metrics?.totalDatasets ?? '—'}</p>
-                      <p className="text-sm text-gray-500 group-hover:text-blue-500 transition-colors">Total Datasets</p>
+              {(isAdmin || hasPermission("/reference-data")) && (
+                <Card 
+                  className="cursor-pointer hover:shadow-md transition-all group"
+                  onClick={() => setLocation('/reference-data')}
+                >
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-2">
+                      <Database className="h-5 w-5 text-blue-600 group-hover:scale-110 transition-transform" />
+                      <div>
+                        <p className="text-2xl font-bold group-hover:text-blue-600 transition-colors">{metrics?.totalDatasets ?? '—'}</p>
+                        <p className="text-sm text-gray-500 group-hover:text-blue-500 transition-colors">Total Datasets</p>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card 
-                className="cursor-pointer hover:shadow-md transition-all group"
-                onClick={() => setLocation('/reference-types')}
-              >
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2">
-                    <FileJson className="h-5 w-5 text-purple-600 group-hover:scale-110 transition-transform" />
-                    <div>
-                      <p className="text-2xl font-bold group-hover:text-purple-600 transition-colors">{metrics?.totalDataTypes ?? '—'}</p>
-                      <p className="text-sm text-gray-500 group-hover:text-purple-500 transition-colors">Data Types</p>
+                  </CardContent>
+                </Card>
+              )}
+              {(isAdmin || hasPermission("/reference-types")) && (
+                <Card 
+                  className="cursor-pointer hover:shadow-md transition-all group"
+                  onClick={() => setLocation('/reference-types')}
+                >
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-2">
+                      <FileJson className="h-5 w-5 text-purple-600 group-hover:scale-110 transition-transform" />
+                      <div>
+                        <p className="text-2xl font-bold group-hover:text-purple-600 transition-colors">{metrics?.totalDataTypes ?? '—'}</p>
+                        <p className="text-sm text-gray-500 group-hover:text-purple-500 transition-colors">Data Types</p>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card 
-                className="cursor-pointer hover:shadow-md transition-all group"
-                onClick={() => setLocation('/relationships')}
-              >
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2">
-                    <GitFork className="h-5 w-5 text-green-600 group-hover:scale-110 transition-transform" />
-                    <div>
-                      <p className="text-2xl font-bold group-hover:text-green-600 transition-colors">{metrics?.totalRelationships ?? '—'}</p>
-                      <p className="text-sm text-gray-500 group-hover:text-green-500 transition-colors">Relationships</p>
+                  </CardContent>
+                </Card>
+              )}
+              {(isAdmin || hasPermission("/relationships")) && (
+                <Card 
+                  className="cursor-pointer hover:shadow-md transition-all group"
+                  onClick={() => setLocation('/relationships')}
+                >
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-2">
+                      <GitFork className="h-5 w-5 text-green-600 group-hover:scale-110 transition-transform" />
+                      <div>
+                        <p className="text-2xl font-bold group-hover:text-green-600 transition-colors">{metrics?.totalRelationships ?? '—'}</p>
+                        <p className="text-sm text-gray-500 group-hover:text-green-500 transition-colors">Relationships</p>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card 
-                className="cursor-pointer hover:shadow-md transition-all group"
-                onClick={() => setLocation('/crosswalks')}
-              >
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2">
-                    <ArrowRightLeft className="h-5 w-5 text-orange-600 group-hover:scale-110 transition-transform" />
-                    <div>
-                      <p className="text-2xl font-bold group-hover:text-orange-600 transition-colors">{metrics?.totalCrosswalks ?? '—'}</p>
-                      <p className="text-sm text-gray-500 group-hover:text-orange-500 transition-colors">Crosswalks</p>
+                  </CardContent>
+                </Card>
+              )}
+              {(isAdmin || hasPermission("/crosswalks")) && (
+                <Card 
+                  className="cursor-pointer hover:shadow-md transition-all group"
+                  onClick={() => setLocation('/crosswalks')}
+                >
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-2">
+                      <ArrowRightLeft className="h-5 w-5 text-orange-600 group-hover:scale-110 transition-transform" />
+                      <div>
+                        <p className="text-2xl font-bold group-hover:text-orange-600 transition-colors">{metrics?.totalCrosswalks ?? '—'}</p>
+                        <p className="text-sm text-gray-500 group-hover:text-orange-500 transition-colors">Crosswalks</p>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card 
-                className="cursor-pointer hover:shadow-md transition-all group"
-                onClick={() => setLocation('/missing-mappings')}
-              >
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5 text-red-600 group-hover:scale-110 transition-transform" />
-                    <div>
-                      <p className="text-2xl font-bold group-hover:text-red-600 transition-colors">{metrics?.totalMissingMappings ?? '—'}</p>
-                      <p className="text-sm text-gray-500 group-hover:text-red-500 transition-colors">Missing Mappings</p>
+                  </CardContent>
+                </Card>
+              )}
+              {(isAdmin || hasPermission("/approvals")) && (
+                <Card 
+                  className="cursor-pointer hover:shadow-md transition-all group"
+                  onClick={() => setLocation('/missing-mappings')}
+                >
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-red-600 group-hover:scale-110 transition-transform" />
+                      <div>
+                        <p className="text-2xl font-bold group-hover:text-red-600 transition-colors">{metrics?.totalMissingMappings ?? '—'}</p>
+                        <p className="text-sm text-gray-500 group-hover:text-red-500 transition-colors">Missing Mappings</p>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
+              {/* If user has no permissions to view any metrics, show a message */}
+              {!hasPermission("/reference-data") && 
+               !hasPermission("/reference-types") && 
+               !hasPermission("/relationships") && 
+               !hasPermission("/crosswalks") && 
+               !hasPermission("/approvals") && 
+               !isAdmin && (
+                <div className="col-span-full text-center p-6 bg-gray-50 rounded-lg">
+                  <p className="text-gray-600">Welcome! You have limited access to the system.</p>
+                  <p className="text-gray-500 text-sm mt-1">Contact an administrator for more information.</p>
+                </div>
+              )}
             </div>
           </div>
         </section>
