@@ -130,28 +130,7 @@ export default function AuthPage() {
     });
   }
 
-  function onRegister(data: InsertUser) {
-    console.log('AuthPage: Registration attempt with:', { username: data.username, email: data.email });
-    registerMutation.mutate(data, {
-      onError: (error) => {
-        console.error('AuthPage: Registration error:', error);
-        toast({
-          title: "Registration Failed",
-          description: error.message || "Failed to create user account",
-          variant: "destructive",
-        });
-      },
-      onSuccess: (response) => {
-        console.log('AuthPage: Registration successful:', response);
-        toast({
-          title: "Success",
-          description: "User account created successfully",
-        });
-        loginForm.reset();
-        registerForm.reset();
-      }
-    });
-  }
+  // Registration functionality removed as only admin can create new users
 
   function onRequestReset(data: { email: string }) {
     requestResetMutation.mutate(data);
