@@ -126,13 +126,29 @@ export function setupAuth(app: Express) {
         console.log('[DEBUG Login Route] Authentication failed:', info?.message);
         return res.status(401).json({ message: info?.message || "Authentication failed" });
       }
-      req.logIn(user, (err) => {
+      req.logIn(user, async (err) => {
         if (err) {
           console.error('[DEBUG Login Route] Login error:', err);
           return res.status(500).json({ message: err.message || "Failed to establish session" });
         }
+        
         console.log('[DEBUG Login Route] User logged in successfully:', user.username);
-        res.status(200).json(user);
+        
+        // Get the user role information to include with the login response
+        try {
+          const userRole = await storage.getRole(user.roleId);
+          
+          // Combine the user and role data
+          const userData = {
+            ...user,
+            routes: userRole?.routes || []
+          };
+          
+          res.status(200).json(userData);
+        } catch (error) {
+          console.error('Error getting user role during login:', error);
+          res.status(200).json(user); // Fall back to just the user if we can't get the role
+        }
       });
     })(req, res, next);
   });
@@ -192,9 +208,24 @@ export function setupAuth(app: Express) {
       roleId: req.body.roleId || 3
     });
 
-    req.login(user, (err) => {
+    req.login(user, async (err) => {
       if (err) return next(err);
-      res.status(201).json(user);
+      
+      // Also include role information on registration response
+      try {
+        const userRole = await storage.getRole(user.roleId);
+        
+        // Combine the user and role data
+        const userData = {
+          ...user,
+          routes: userRole?.routes || []
+        };
+        
+        res.status(201).json(userData);
+      } catch (error) {
+        console.error('Error getting user role during registration:', error);
+        res.status(201).json(user); // Fall back to just the user if we can't get the role
+      }
     });
   });
 
