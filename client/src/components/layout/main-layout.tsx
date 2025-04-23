@@ -2,7 +2,7 @@ import { ReactNode, useState } from "react";
 import { Sidebar } from "./sidebar";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Database, HelpCircle } from "lucide-react";
+import { Database, HelpCircle, User, KeyRound, LogOut } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -14,13 +14,21 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Logo } from "@/components/ui/logo";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface MainLayoutProps {
   children: ReactNode;
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const { user } = useAuth();
+  const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
   const [showPasswordDialog, setShowPasswordDialog] = useState(user?.requirePasswordChange ?? false);
   const [_, setLocation] = useLocation();
@@ -35,7 +43,20 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   const changePasswordMutation = useMutation({
     mutationFn: async (data: ChangePassword) => {
-      await apiRequest("POST", "/api/change-password", data);
+      const res = await fetch("/api/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(error || "Failed to change password");
+      }
+      
+      return true;
     },
     onSuccess: () => {
       setShowPasswordDialog(false);
@@ -105,6 +126,40 @@ export function MainLayout({ children }: MainLayoutProps) {
                     <HelpCircle className="h-4 w-4 mr-2" />
                     Help
                   </Button>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      >
+                        <User className="h-4 w-4 mr-2" />
+                        Account
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>
+                        {user?.username}
+                        <div className="text-xs text-muted-foreground">
+                          {user?.email}
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setShowPasswordDialog(true)}>
+                        <KeyRound className="mr-2 h-4 w-4" />
+                        Change Password
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => logoutMutation.mutate()}
+                        className="text-red-600"
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
                 <Logo size="sm" className="hidden md:block" onClick={navigateToBlumetra} />
               </div>
@@ -135,7 +190,9 @@ export function MainLayout({ children }: MainLayoutProps) {
       <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Change Password Required</DialogTitle>
+            <DialogTitle>
+              {user?.requirePasswordChange ? "Change Password Required" : "Change Your Password"}
+            </DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
