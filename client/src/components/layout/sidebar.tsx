@@ -13,7 +13,6 @@ import {
   Laptop2,
   TestTube2,
   ArrowRightLeft,
-  LogOut,
   Share2,
   Map,
   CheckSquare,
@@ -27,7 +26,7 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const [location] = useLocation();
-  const { user, logoutMutation, isAdmin, hasPermission, allowedRoutes } = useAuth();
+  const { user, isAdmin, hasPermission, allowedRoutes } = useAuth();
   
   // Derive approver status from permissions rather than hardcoded role IDs
   const isApprover = hasPermission('/approvals');
@@ -200,21 +199,6 @@ export function Sidebar({ className }: SidebarProps) {
 
       <div className="px-3 py-2">
         <Separator className="my-2" />
-        <EnhancedTooltip
-          content="Sign out from your account"
-          side="right"
-          align="center"
-        >
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-            onClick={() => logoutMutation.mutate()}
-            disabled={logoutMutation.isPending}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
-        </EnhancedTooltip>
       </div>
     </div>
   );
