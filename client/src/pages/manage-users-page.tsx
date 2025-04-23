@@ -63,8 +63,8 @@ export default function ManageUsersPage() {
       email: "",
       username: "",
       roleId: undefined,
-      password: import.meta.env.VITE_DEFAULT_USER_PASSWORD || "Password123",
-      confirmPassword: import.meta.env.VITE_DEFAULT_USER_PASSWORD || "Password123",
+      password: "",
+      confirmPassword: "",
     },
   });
 
