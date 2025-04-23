@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import * as z from 'zod';
 
 type AuthContextType = {
-  user: SelectUser | null;
+  user: UserWithRoutes | null;
   isLoading: boolean;
   error: Error | null;
   loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
@@ -189,8 +189,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAdmin = user?.roleId === 1 || Number(user?.roleId) === 1;
 
-  // Get allowed routes from user's routes field
-  const allowedRoutes = user?.routes as string[] || [];
+  // Get allowed routes from user's routes field 
+  // Using type assertion since we're extending the user type with routes property
+  const userData = user as UserWithRoutes;
+  const allowedRoutes = userData?.routes || [];
   
   // Function to check if a user has permission for a specific route
   const hasPermission = (route: string): boolean => {
@@ -229,10 +231,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Use the modified UserWithRoutes type to include routes
+  const userWithRoutes: UserWithRoutes | null = user ? {
+    ...user,
+    routes: allowedRoutes
+  } : null;
+
   return (
     <AuthContext.Provider
       value={{
-        user: user ?? null,
+        user: userWithRoutes, // Use our extended type with routes
         isLoading,
         error,
         loginMutation,

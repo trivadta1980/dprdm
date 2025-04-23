@@ -25,26 +25,20 @@ interface SidebarProps {
   className?: string;
 }
 
-// Role-based permission mapping - exactly matching the href values in menuItems
-const rolePermissions: Record<number, string[]> = {
-  1: ['/manage-users', '/roles', '/reference-types', '/reference-data', '/relationships', '/crosswalks', '/api-keys', '/api-test', '/graph-visualization', '/site-paths'], // Admin
-  2: ['/approvals', '/reference-types', '/reference-data', '/relationships', '/crosswalks'], // Approver
-  3: ['/reference-data', '/relationships'], // Basic User
-  10: ['/approvals', '/reference-types', '/reference-data', '/relationships', '/crosswalks'], // Custom Approver Role
-};
-
 export function Sidebar({ className }: SidebarProps) {
   const [location] = useLocation();
-  const { user, logoutMutation } = useAuth();
-  const isAdmin = user?.roleId === 1;
-  const isApprover = user?.roleId === 2 || user?.roleId === 10;
+  const { user, logoutMutation, isAdmin, hasPermission, allowedRoutes } = useAuth();
+  
+  // Derive approver status from permissions rather than hardcoded role IDs
+  const isApprover = hasPermission('/approvals');
 
   // Debug logging for user information
   console.log('Sidebar Component - User Info:', {
     username: user?.username,
     roleId: user?.roleId,
     isAdmin,
-    isApprover
+    isApprover,
+    allowedRoutes
   });
 
   const menuItems = [
@@ -142,23 +136,23 @@ export function Sidebar({ className }: SidebarProps) {
     requiresPermission: item.requiresPermission
   })));
 
-  // Filter menu items based on user's role permissions
+  // Filter menu items based on user's role permissions from the hasPermission function
   const filteredMenuItems = menuItems.filter(item => {
     if (!item.requiresPermission) return true;
 
-    const userRolePermissions = rolePermissions[user?.roleId || 3] || [];
-    const hasPermission = userRolePermissions.includes(item.href);
+    // Check if user has permission for this route using hasPermission function
+    const itemHasPermission = hasPermission(item.href);
 
     // Debug logging for each menu item permission check
     console.log(`Permission check for ${item.title}:`, {
       href: item.href,
       roleId: user?.roleId,
-      userPermissions: userRolePermissions,
-      hasPermission,
+      userAllowedRoutes: allowedRoutes,
+      hasPermission: itemHasPermission, 
       requiresPermission: item.requiresPermission
     });
 
-    return hasPermission;
+    return itemHasPermission;
   });
 
   // Debug logging for final filtered menu items
