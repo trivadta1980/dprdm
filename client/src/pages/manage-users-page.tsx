@@ -309,8 +309,6 @@ export default function ManageUsersPage() {
                           <Input
                             type="password"
                             {...field}
-                            value={import.meta.env.VITE_DEFAULT_USER_PASSWORD || "Password123"}
-                            disabled
                           />
                         </FormControl>
                         <FormMessage />
@@ -327,8 +325,6 @@ export default function ManageUsersPage() {
                           <Input
                             type="password"
                             {...field}
-                            value={import.meta.env.VITE_DEFAULT_USER_PASSWORD || "Password123"}
-                            disabled
                           />
                         </FormControl>
                         <FormMessage />

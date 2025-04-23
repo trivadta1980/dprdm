@@ -188,19 +188,31 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/register", async (req, res, next) => {
+    // Require admin role to create new users
+    if (!req.isAuthenticated() || req.user.roleId !== 1) {
+      return res.status(403).json({ message: "Only administrators can create new users" });
+    }
+
     const existingUser = await storage.getUserByUsername(req.body.username);
     if (existingUser) {
-      return res.status(400).send("Username already exists");
+      return res.status(400).json({ message: "Username already exists" });
     }
 
     const existingEmail = await storage.getUserByEmail(req.body.email);
     if (existingEmail) {
-      return res.status(400).send("Email already exists");
+      return res.status(400).json({ message: "Email already exists" });
     }
 
+    // Use the provided password or fall back to the default
     const passwordToUse = req.body.password || DEFAULT_PASSWORD;
     const hashedPassword = await hashPassword(passwordToUse);
-    const requireChange = !req.body.password;
+    
+    // If admin provided a password, user doesn't need to change it immediately
+    // If using default password, user will be required to change it
+    const requireChange = !req.body.password || req.body.password === DEFAULT_PASSWORD;
+    
+    console.log(`[DEBUG Register] Creating user with ${requireChange ? 'required' : 'no required'} password change`);
+    
     const user = await storage.createUser({
       ...req.body,
       password: hashedPassword,
@@ -208,25 +220,21 @@ export function setupAuth(app: Express) {
       roleId: req.body.roleId || 3
     });
 
-    req.login(user, async (err) => {
-      if (err) return next(err);
+    // Don't automatically log in the created user
+    try {
+      const userRole = await storage.getRole(user.roleId);
       
-      // Also include role information on registration response
-      try {
-        const userRole = await storage.getRole(user.roleId);
-        
-        // Combine the user and role data
-        const userData = {
-          ...user,
-          routes: userRole?.routes || []
-        };
-        
-        res.status(201).json(userData);
-      } catch (error) {
-        console.error('Error getting user role during registration:', error);
-        res.status(201).json(user); // Fall back to just the user if we can't get the role
-      }
-    });
+      // Combine the user and role data
+      const userData = {
+        ...user,
+        routes: userRole?.routes || []
+      };
+      
+      res.status(201).json(userData);
+    } catch (error) {
+      console.error('Error getting user role during registration:', error);
+      res.status(201).json(user); // Fall back to just the user if we can't get the role
+    }
   });
 
 

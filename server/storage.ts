@@ -42,8 +42,13 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByResetToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: UpdateUser): Promise<User | undefined>;
+  updatePassword(userId: number, hashedPassword: string): Promise<void>;
+  updateRequirePasswordChange(userId: number, requireChange: boolean): Promise<void>;
+  setResetToken(userId: number, token: string, expiry: Date): Promise<void>;
+  clearResetToken(userId: number): Promise<void>;
   deleteUser(id: number): Promise<boolean>;
   getAllUsers(): Promise<User[]>; 
 
@@ -55,16 +60,8 @@ export interface IStorage {
   updateRole(id: number, role: Partial<InsertRole>): Promise<Role>;
   deleteRole(id: number): Promise<{ success: boolean; message?: string }>;
 
-  // New methods for password reset
-  setResetToken(userId: number, token: string, expiry: Date): Promise<void>;
-  getUserByResetToken(token: string): Promise<User | undefined>;
-  clearResetToken(userId: number): Promise<void>;
-  updatePassword(userId: number, hashedPassword: string): Promise<void>;
-
   // Session store
   sessionStore: session.Store;
-  // Add new method
-  updateRequirePasswordChange(userId: number, requireChange: boolean): Promise<void>;
 
   // Reference Data Type operations
   createReferenceDataType(data: InsertReferenceDataType): Promise<ReferenceDataType>;
@@ -305,6 +302,11 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.resetToken, token));
+    return user;
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
@@ -325,6 +327,78 @@ export class DatabaseStorage implements IStorage {
       return user;
     } catch (error) {
       console.error('Storage: Error updating user:', error);
+      throw error;
+    }
+  }
+
+  async updatePassword(id: number, hashedPassword: string): Promise<User | undefined> {
+    console.log(`Storage: Updating password for user ${id}`);
+    try {
+      const [user] = await db
+        .update(users)
+        .set({ 
+          password: hashedPassword, 
+          updatedAt: new Date() 
+        })
+        .where(eq(users.id, id))
+        .returning();
+      return user;
+    } catch (error) {
+      console.error('Storage: Error updating password:', error);
+      throw error;
+    }
+  }
+
+  async updateRequirePasswordChange(id: number, requireChange: boolean): Promise<User | undefined> {
+    console.log(`Storage: Updating requirePasswordChange to ${requireChange} for user ${id}`);
+    try {
+      const [user] = await db
+        .update(users)
+        .set({ 
+          requirePasswordChange: requireChange, 
+          updatedAt: new Date() 
+        })
+        .where(eq(users.id, id))
+        .returning();
+      return user;
+    } catch (error) {
+      console.error('Storage: Error updating password change requirement:', error);
+      throw error;
+    }
+  }
+
+  async setResetToken(id: number, token: string, expiry: Date): Promise<User | undefined> {
+    try {
+      const [user] = await db
+        .update(users)
+        .set({ 
+          resetToken: token, 
+          resetTokenExpiry: expiry,
+          updatedAt: new Date() 
+        })
+        .where(eq(users.id, id))
+        .returning();
+      return user;
+    } catch (error) {
+      console.error('Storage: Error setting reset token:', error);
+      throw error;
+    }
+  }
+
+  async clearResetToken(id: number): Promise<User | undefined> {
+    try {
+      const [user] = await db
+        .update(users)
+        .set({ 
+          resetToken: null, 
+          resetTokenExpiry: null,
+          updatedAt: new Date() 
+        })
+        .where(eq(users.id, id))
+        .returning();
+      return user;
+    } catch (error) {
+      console.error('Storage: Error clearing reset token:', error);
       throw error;
     }
   }
