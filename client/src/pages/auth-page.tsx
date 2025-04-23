@@ -21,28 +21,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 import { 
   Loader2, 
-  Database, 
-  GitFork, 
-  History, 
-  GitCompare, 
-  BarChart3, 
-  Globe, 
-  Shield, 
-  Layers, 
   FileText,
   Network,
-  AreaChart,
-  FileJson,
-  Search,
-  Workflow
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -130,8 +112,6 @@ export default function AuthPage() {
     });
   }
 
-  // Registration functionality removed as only admin can create new users
-
   function onRequestReset(data: { email: string }) {
     requestResetMutation.mutate(data);
     setResetDialogOpen(false);
@@ -152,108 +132,99 @@ export default function AuthPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="login" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-1">
-                <TabsTrigger value="login">Login</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="login">
-                <Form {...loginForm}>
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      console.log('AuthPage: Login form submitted');
-                      loginForm.handleSubmit(onLogin)(e);
-                    }}
-                    className="space-y-4"
-                  >
-                    <FormField
-                      control={loginForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Username</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={loginForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="flex justify-between items-center mt-2">
-                      <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
-                        <DialogTrigger asChild>
-                          <Button variant="link" className="px-0">
-                            Forgot password?
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Reset Password</DialogTitle>
-                          </DialogHeader>
-                          <Form {...resetForm}>
-                            <form
-                              onSubmit={resetForm.handleSubmit(onRequestReset)}
-                              className="space-y-4"
+            <div className="space-y-4">
+              <Form {...loginForm}>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    console.log('AuthPage: Login form submitted');
+                    loginForm.handleSubmit(onLogin)(e);
+                  }}
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={loginForm.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Username</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={loginForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex justify-between items-center mt-2">
+                    <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="link" className="px-0">
+                          Forgot password?
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Reset Password</DialogTitle>
+                        </DialogHeader>
+                        <Form {...resetForm}>
+                          <form
+                            onSubmit={resetForm.handleSubmit(onRequestReset)}
+                            className="space-y-4"
+                          >
+                            <FormField
+                              control={resetForm.control}
+                              name="email"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Email</FormLabel>
+                                  <FormControl>
+                                    <Input type="email" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <Button
+                              type="submit"
+                              className="w-full"
+                              disabled={requestResetMutation.isPending}
                             >
-                              <FormField
-                                control={resetForm.control}
-                                name="email"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Email</FormLabel>
-                                    <FormControl>
-                                      <Input type="email" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <Button
-                                type="submit"
-                                className="w-full"
-                                disabled={requestResetMutation.isPending}
-                              >
-                                {requestResetMutation.isPending && (
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                )}
-                                Send Reset Link
-                              </Button>
-                            </form>
-                          </Form>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={loginMutation.isPending}
-                    >
-                      {loginMutation.isPending && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      Login
-                    </Button>
-                  </form>
-                </Form>
-              </TabsContent>
-
-              {/* Registration functionality removed as per requirement. 
-              Only admin users can create new accounts through the User Management page. */}
-            </Tabs>
+                              {requestResetMutation.isPending && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              )}
+                              Send Reset Link
+                            </Button>
+                          </form>
+                        </Form>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={loginMutation.isPending}
+                  >
+                    {loginMutation.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Login
+                  </Button>
+                </form>
+              </Form>
+            </div>
           </CardContent>
         </Card>
       </div>
