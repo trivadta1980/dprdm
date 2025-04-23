@@ -305,7 +305,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           <DialogFooter>
             <Button 
               variant="outline" 
-              onClick={() => window.open('https://www.blumetra.com/contact', '_blank')}
+              onClick={() => window.open('https://www.blumetra.com/contact-us', '_blank')}
               className="flex items-center mr-2"
             >
               <ExternalLink className="h-4 w-4 mr-2" />
