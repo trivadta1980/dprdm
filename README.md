@@ -1,6 +1,6 @@
 # Reference Data Management (RDM) System
 
-A sophisticated web application for enterprise-level Reference Data Management (RDM) that provides intelligent data processing and visualization capabilities for managing, mapping, and visualizing reference data across different systems.
+A comprehensive platform designed for enterprise-level data mapping. This system helps organizations effectively manage, map, and visualize reference data across different systems. It provides a centralized solution for maintaining data consistency, establishing relationships between datasets, and creating mappings between different business systems, all with advanced visualization capabilities.
 
 ## Table of Contents
 
