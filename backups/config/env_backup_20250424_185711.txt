@@ -1,0 +1,21 @@
+DEFAULT_USER_PASSWORD=Password123
+
+# Use the actual database URL that worked with your reset-admin-password.js script
+DATABASE_URL=
+
+# Neo4j connection details
+NEO4J_URI=neo4j+s://19bbf3ed.databases.neo4j.io
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=s49AnPfTi2WX_4kLdEddSlX5HnxZI7KhTxSLCDhXamw
+AURA_INSTANCEID=19bbf3ed
+AURA_INSTANCENAME=Instance01
+
+# Email settings - SendGrid configuration
+SMTP_HOST=smtp.sendgrid.net
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=apikey
+SMTP_PASS=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
+EMAIL_FROM=jitender.nankani@blumetra.com
+APP_URL=https://your-app-url.repl.co
+
