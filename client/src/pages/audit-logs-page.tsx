@@ -28,6 +28,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -267,15 +268,15 @@ export default function AuditLogsPage() {
 
   return (
     <MainLayout>
-      <div className="container mx-auto py-6">
-        <div className="flex justify-between items-center mb-6">
+      <div className="container mx-auto py-4 px-3 sm:px-4 md:px-6 lg:px-8 sm:py-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
           <div>
-            <h1 className="text-3xl font-bold">Audit Trail</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold">Audit Trail</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Track and monitor all system activities and changes
             </p>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex self-end sm:self-auto space-x-2">
             <Button
               variant="outline"
               size="sm"
@@ -283,7 +284,7 @@ export default function AuditLogsPage() {
               className="flex items-center"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh
+              <span className="hidden sm:inline">Refresh</span>
             </Button>
             <Button
               variant="outline"
@@ -292,37 +293,37 @@ export default function AuditLogsPage() {
               className="flex items-center"
             >
               <DownloadCloud className="mr-2 h-4 w-4" />
-              Export
+              <span className="hidden sm:inline">Export</span>
             </Button>
           </div>
         </div>
 
         {/* Statistics Cards */}
         {!isLoadingStats && stats && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 mb-4 sm:mb-6">
             <StatisticCard
               title="Total Actions"
               value={stats.totalActions}
               change={5.2}
-              icon={<BarChart4 className="h-8 w-8 text-primary" />}
+              icon={<BarChart4 className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-primary" />}
             />
             <StatisticCard
               title="User Activities"
               value={stats.userActions}
               change={2.1}
-              icon={<UserRound className="h-8 w-8 text-sky-500" />}
+              icon={<UserRound className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-sky-500" />}
             />
             <StatisticCard
               title="Data Changes"
               value={stats.dataChanges}
               change={-1.5}
-              icon={<FileText className="h-8 w-8 text-amber-500" />}
+              icon={<FileText className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-amber-500" />}
             />
             <StatisticCard
               title="System Events"
               value={stats.systemEvents}
               change={7.8}
-              icon={<Info className="h-8 w-8 text-emerald-500" />}
+              icon={<Info className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-emerald-500" />}
             />
           </div>
         )}
@@ -331,14 +332,14 @@ export default function AuditLogsPage() {
         <div className="grid grid-cols-1 gap-6">
           <Card>
             <CardHeader className="pb-3">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 sm:gap-0">
                 <div>
-                  <CardTitle>Audit Logs</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-xl sm:text-2xl">Audit Logs</CardTitle>
+                  <CardDescription className="text-sm">
                     Comprehensive system activity records with {auditLogs?.metadata?.total || 0} entries
                   </CardDescription>
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex mt-2 sm:mt-0">
                   <Button
                     variant="outline"
                     size="sm"
@@ -346,35 +347,43 @@ export default function AuditLogsPage() {
                     className="flex items-center"
                   >
                     <Filter className="mr-2 h-4 w-4" />
-                    {showFilters ? "Hide Filters" : "Show Filters"}
+                    <span className="hidden xs:inline">{showFilters ? "Hide Filters" : "Show Filters"}</span>
                   </Button>
                 </div>
               </div>
 
               {/* Tabs for entity type filtering */}
-              <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full mt-4">
-                <TabsList className="w-full">
-                  <TabsTrigger value="all">All Activities</TabsTrigger>
-                  <TabsTrigger value="USER">Users</TabsTrigger>
-                  <TabsTrigger value="REFERENCE_DATA">Reference Data</TabsTrigger>
-                  <TabsTrigger value="RELATIONSHIP">Relationships</TabsTrigger>
-                  <TabsTrigger value="CROSSWALK">Crosswalks</TabsTrigger>
-                </TabsList>
-              </Tabs>
+              <div className="overflow-x-auto">
+                <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full mt-4">
+                  <TabsList className="w-full min-w-[500px]">
+                    <TabsTrigger value="all">All Activities</TabsTrigger>
+                    <TabsTrigger value="USER">Users</TabsTrigger>
+                    <TabsTrigger value="REFERENCE_DATA">
+                      <span className="hidden sm:inline">Reference Data</span>
+                      <span className="inline sm:hidden">Ref Data</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="RELATIONSHIP">
+                      <span className="hidden sm:inline">Relationships</span>
+                      <span className="inline sm:hidden">Relations</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="CROSSWALK">Crosswalks</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
 
               {/* Filter Section */}
               {showFilters && (
-                <div className="space-y-3 mt-4 bg-muted/20 p-4 rounded-md">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <label htmlFor="action-filter" className="text-sm font-medium">
+                <div className="space-y-3 mt-4 bg-muted/20 p-3 sm:p-4 rounded-md">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label htmlFor="action-filter" className="text-xs sm:text-sm font-medium">
                         Action Type
                       </label>
                       <Select
                         value={filters.action}
                         onValueChange={(value) => handleFilterChange("action", value)}
                       >
-                        <SelectTrigger id="action-filter">
+                        <SelectTrigger id="action-filter" className="h-8 sm:h-10">
                           <SelectValue placeholder="Select action" />
                         </SelectTrigger>
                         <SelectContent>
@@ -390,15 +399,15 @@ export default function AuditLogsPage() {
                       </Select>
                     </div>
 
-                    <div className="space-y-2">
-                      <label htmlFor="user-filter" className="text-sm font-medium">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label htmlFor="user-filter" className="text-xs sm:text-sm font-medium">
                         User
                       </label>
                       <Select
                         value={filters.user}
                         onValueChange={(value) => handleFilterChange("user", value)}
                       >
-                        <SelectTrigger id="user-filter">
+                        <SelectTrigger id="user-filter" className="h-8 sm:h-10">
                           <SelectValue placeholder="Select user" />
                         </SelectTrigger>
                         <SelectContent>
@@ -410,8 +419,8 @@ export default function AuditLogsPage() {
                       </Select>
                     </div>
 
-                    <div className="space-y-2">
-                      <label htmlFor="date-filter" className="text-sm font-medium">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label htmlFor="date-filter" className="text-xs sm:text-sm font-medium">
                         Date Range
                       </label>
                       <div className="flex space-x-2">
@@ -421,7 +430,7 @@ export default function AuditLogsPage() {
                           value={filters.startDate}
                           onChange={(e) => handleFilterChange("startDate", e.target.value)}
                           placeholder="Start date"
-                          className="w-full"
+                          className="w-full h-8 sm:h-10 text-xs sm:text-sm"
                         />
                         <Input
                           id="end-date"
@@ -429,26 +438,26 @@ export default function AuditLogsPage() {
                           value={filters.endDate}
                           onChange={(e) => handleFilterChange("endDate", e.target.value)}
                           placeholder="End date"
-                          className="w-full"
+                          className="w-full h-8 sm:h-10 text-xs sm:text-sm"
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex space-x-4 items-end">
-                    <div className="flex-1">
-                      <label htmlFor="search-filter" className="text-sm font-medium">
+                  <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-3 sm:space-y-0 sm:items-end">
+                    <div className="sm:flex-1">
+                      <label htmlFor="search-filter" className="text-xs sm:text-sm font-medium">
                         Search
                       </label>
                       <div className="relative mt-1">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Search className="absolute left-2 top-2 sm:top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="search-filter"
                           type="text"
                           placeholder="Search logs..."
                           value={filters.searchQuery}
                           onChange={(e) => handleFilterChange("searchQuery", e.target.value)}
-                          className="pl-8"
+                          className="pl-8 h-8 sm:h-10 text-xs sm:text-sm"
                         />
                       </div>
                     </div>
@@ -468,83 +477,153 @@ export default function AuditLogsPage() {
 
             <CardContent className="p-0">
               {isLoading ? (
-                <div className="flex justify-center items-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <span className="ml-2 text-lg">Loading audit logs...</span>
+                <div className="flex flex-col items-center justify-center py-8 sm:py-12">
+                  <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-primary" />
+                  <span className="ml-2 text-base sm:text-lg mt-2">Loading audit logs...</span>
                 </div>
               ) : isError ? (
-                <div className="flex justify-center items-center py-12 text-destructive">
+                <div className="flex justify-center items-center py-8 sm:py-12 text-destructive text-sm sm:text-base">
                   <p>Error loading audit logs. Please try again.</p>
                 </div>
               ) : auditLogs?.data.length === 0 ? (
-                <div className="py-12 text-center text-muted-foreground">
-                  <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
-                  <p className="text-lg font-medium">No audit logs found</p>
-                  <p className="text-sm">Try adjusting your filters or check back later</p>
+                <div className="py-8 sm:py-12 text-center text-muted-foreground">
+                  <FileText className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 sm:mb-3 text-muted-foreground/50" />
+                  <p className="text-base sm:text-lg font-medium">No audit logs found</p>
+                  <p className="text-xs sm:text-sm">Try adjusting your filters or check back later</p>
                 </div>
               ) : (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[180px]">Timestamp</TableHead>
-                        <TableHead>User</TableHead>
-                        <TableHead>Action</TableHead>
-                        <TableHead>Entity</TableHead>
-                        <TableHead className="max-w-[300px]">Details</TableHead>
-                        <TableHead className="text-right"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                <div className="rounded-md border overflow-auto">
+                  {/* Desktop view - full table */}
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[180px]">Timestamp</TableHead>
+                          <TableHead>User</TableHead>
+                          <TableHead>Action</TableHead>
+                          <TableHead>Entity</TableHead>
+                          <TableHead className="max-w-[300px]">Details</TableHead>
+                          <TableHead className="text-right"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {auditLogs?.data.map((log: AuditLog) => (
+                          <TableRow key={log.id}>
+                            <TableCell className="font-medium whitespace-nowrap">
+                              <div className="flex items-center">
+                                <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                                {formatTimestamp(log.timestamp)}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center">
+                                <UserRound className="mr-2 h-4 w-4 text-muted-foreground" />
+                                {log.username}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={getActionBadgeVariant(log.actionType)}>
+                                {log.actionType}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={getEntityBadgeVariant(log.entityType)}>
+                                {log.entityType}
+                              </Badge>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {log.entityName}
+                              </div>
+                            </TableCell>
+                            <TableCell className="max-w-[300px]">
+                              <div className="truncate text-sm">{log.details}</div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => viewLogDetails(log)}
+                              >
+                                View
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  
+                  {/* Mobile view - card-based layout */}
+                  <div className="block md:hidden">
+                    <div className="divide-y">
                       {auditLogs?.data.map((log: AuditLog) => (
-                        <TableRow key={log.id}>
-                          <TableCell className="font-medium whitespace-nowrap">
+                        <div key={log.id} className="p-4">
+                          <div className="flex justify-between items-start mb-2">
                             <div className="flex items-center">
                               <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                              {formatTimestamp(log.timestamp)}
+                              <span className="text-xs font-medium">{formatTimestamp(log.timestamp)}</span>
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center">
-                              <UserRound className="mr-2 h-4 w-4 text-muted-foreground" />
-                              {log.username}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={getActionBadgeVariant(log.actionType)}>
-                              {log.actionType}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={getEntityBadgeVariant(log.entityType)}>
-                              {log.entityType}
-                            </Badge>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              {log.entityName}
-                            </div>
-                          </TableCell>
-                          <TableCell className="max-w-[300px]">
-                            <div className="truncate text-sm">{log.details}</div>
-                          </TableCell>
-                          <TableCell className="text-right">
                             <Button
                               variant="ghost"
                               size="sm"
+                              className="h-6 px-2"
                               onClick={() => viewLogDetails(log)}
                             >
-                              View
+                              <Eye className="h-3.5 w-3.5 mr-1" />
+                              <span className="text-xs">View</span>
                             </Button>
-                          </TableCell>
-                        </TableRow>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2 mb-2">
+                            <div>
+                              <p className="text-xs text-muted-foreground">User:</p>
+                              <div className="flex items-center mt-1">
+                                <UserRound className="mr-1 h-3.5 w-3.5 text-muted-foreground" />
+                                <p className="text-sm truncate">{log.username}</p>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <p className="text-xs text-muted-foreground">Action:</p>
+                              <div className="mt-1">
+                                <Badge 
+                                  variant={getActionBadgeVariant(log.actionType)}
+                                  className="text-xs h-5"
+                                >
+                                  {log.actionType}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="mb-2">
+                            <p className="text-xs text-muted-foreground">Entity:</p>
+                            <div className="flex flex-col mt-1">
+                              <Badge 
+                                variant={getEntityBadgeVariant(log.entityType)}
+                                className="text-xs h-5 w-fit"
+                              >
+                                {log.entityType}
+                              </Badge>
+                              <p className="text-xs text-muted-foreground mt-1 truncate">
+                                {log.entityName}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <p className="text-xs text-muted-foreground">Details:</p>
+                            <p className="text-xs mt-1 line-clamp-2">{log.details}</p>
+                          </div>
+                        </div>
                       ))}
-                    </TableBody>
-                  </Table>
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>
 
-            <CardFooter className="flex items-center justify-between border-t p-4">
-              <div className="text-sm text-muted-foreground">
+            <CardFooter className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-t p-3 sm:p-4 gap-4 sm:gap-0">
+              <div className="text-xs sm:text-sm text-muted-foreground order-2 sm:order-1">
                 Showing{" "}
                 <span className="font-medium">
                   {auditLogs?.data.length ? (filters.page - 1) * filters.pageSize + 1 : 0}
@@ -559,14 +638,46 @@ export default function AuditLogsPage() {
                 <span className="font-medium">{auditLogs?.metadata?.total || 0}</span>{" "}
                 entries
               </div>
-              <div className="flex items-center space-x-6 lg:space-x-8">
-                <div className="flex items-center space-x-2">
-                  <p className="text-sm font-medium">Rows per page</p>
+              
+              {/* Pagination controls */}
+              <div className="flex flex-col xs:flex-row w-full sm:w-auto items-stretch xs:items-center space-y-3 xs:space-y-0 xs:space-x-4 order-1 sm:order-2">
+                {/* Mobile view pagination */}
+                <div className="flex-1 flex items-center justify-between xs:hidden">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-2"
+                    onClick={prevPage}
+                    disabled={filters.page === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Prev
+                  </Button>
+                  
+                  <span className="text-xs">
+                    Page {filters.page} of {auditLogs?.metadata?.totalPages || 1}
+                  </span>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-2"
+                    onClick={nextPage}
+                    disabled={!auditLogs?.metadata?.hasNextPage}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+                
+                {/* Desktop view pagination */}
+                <div className="hidden xs:flex items-center space-x-2">
+                  <p className="text-xs sm:text-sm font-medium whitespace-nowrap">Rows per page</p>
                   <Select
                     value={filters.pageSize.toString()}
                     onValueChange={(value) => handleFilterChange("pageSize", parseInt(value))}
                   >
-                    <SelectTrigger className="h-8 w-[70px]">
+                    <SelectTrigger className="h-8 w-[60px] sm:w-[70px] text-xs sm:text-sm">
                       <SelectValue placeholder={filters.pageSize.toString()} />
                     </SelectTrigger>
                     <SelectContent side="top">
@@ -578,7 +689,8 @@ export default function AuditLogsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-center space-x-2">
+                
+                <div className="hidden xs:flex items-center space-x-2">
                   <Button
                     variant="outline"
                     className="h-8 w-8 p-0"
@@ -588,7 +700,7 @@ export default function AuditLogsPage() {
                     <span className="sr-only">Go to previous page</span>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+                  <div className="flex w-[70px] sm:w-[100px] items-center justify-center text-xs sm:text-sm font-medium">
                     Page {filters.page} of {auditLogs?.metadata?.totalPages || 1}
                   </div>
                   <Button
