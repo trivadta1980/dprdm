@@ -23,7 +23,7 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
   console.log("GET /api/audit-logs - Request received");
   try {
     // Only allow administrators to access audit logs
-    if (!req.session.user?.isAdmin) {
+    if (!req.isAuthenticated() || !req.user?.roleId || req.user.roleId !== 1) {
       return res.status(403).json({ error: "Not authorized to view audit logs" });
     }
 
@@ -147,7 +147,7 @@ router.get("/audit-logs/:id", requireAuth, async (req: Request, res: Response) =
   console.log(`GET /api/audit-logs/${req.params.id} - Request received`);
   try {
     // Only allow administrators to access audit logs
-    if (!req.session.user?.isAdmin) {
+    if (!req.isAuthenticated() || !req.user?.roleId || req.user.roleId !== 1) {
       return res.status(403).json({ error: "Not authorized to view audit logs" });
     }
 
@@ -193,7 +193,7 @@ router.get("/audit-logs/entity/:type/:id", requireAuth, async (req: Request, res
   console.log(`GET /api/audit-logs/entity/${req.params.type}/${req.params.id} - Request received`);
   try {
     // Only allow administrators to access audit logs
-    if (!req.session.user?.isAdmin) {
+    if (!req.isAuthenticated() || !req.user?.roleId || req.user.roleId !== 1) {
       return res.status(403).json({ error: "Not authorized to view audit logs" });
     }
 

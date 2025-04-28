@@ -4391,6 +4391,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Register audit log routes (only accessible by admin users)
+  app.use('/api', auditRoutes);
+
   const httpServer = createServer(app);
   return httpServer;
 }
