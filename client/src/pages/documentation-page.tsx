@@ -5,9 +5,6 @@ import {
   CardDescription 
 } from "@/components/ui/card";
 import { 
-  Tabs, TabsContent, TabsList, TabsTrigger 
-} from "@/components/ui/tabs";
-import { 
   Accordion, AccordionContent, AccordionItem, AccordionTrigger 
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -139,37 +136,54 @@ export default function DocumentationPage() {
           <div className="md:col-span-9">
             <ScrollArea className="h-[calc(100vh-150px)]">
               <div className="pr-4">
-                <TabsContent value="getting-started" className={currentTab === "getting-started" ? "block" : "hidden"}>
-                  <GettingStartedContent />
-                </TabsContent>
+                {/* Use plain divs instead of TabsContent for conditional rendering */}
+                {currentTab === "getting-started" && (
+                  <div>
+                    <GettingStartedContent />
+                  </div>
+                )}
                 
-                <TabsContent value="reference-types" className={currentTab === "reference-types" ? "block" : "hidden"}>
-                  <ReferenceTypesContent />
-                </TabsContent>
+                {currentTab === "reference-types" && (
+                  <div>
+                    <ReferenceTypesContent />
+                  </div>
+                )}
                 
-                <TabsContent value="reference-data" className={currentTab === "reference-data" ? "block" : "hidden"}>
-                  <ReferenceDataContent />
-                </TabsContent>
+                {currentTab === "reference-data" && (
+                  <div>
+                    <ReferenceDataContent />
+                  </div>
+                )}
                 
-                <TabsContent value="relationships" className={currentTab === "relationships" ? "block" : "hidden"}>
-                  <RelationshipsContent />
-                </TabsContent>
+                {currentTab === "relationships" && (
+                  <div>
+                    <RelationshipsContent />
+                  </div>
+                )}
                 
-                <TabsContent value="crosswalks" className={currentTab === "crosswalks" ? "block" : "hidden"}>
-                  <CrosswalksContent />
-                </TabsContent>
+                {currentTab === "crosswalks" && (
+                  <div>
+                    <CrosswalksContent />
+                  </div>
+                )}
                 
-                <TabsContent value="approvals" className={currentTab === "approvals" ? "block" : "hidden"}>
-                  <ApprovalsContent />
-                </TabsContent>
+                {currentTab === "approvals" && (
+                  <div>
+                    <ApprovalsContent />
+                  </div>
+                )}
                 
-                <TabsContent value="administration" className={currentTab === "administration" ? "block" : "hidden"}>
-                  <AdministrationContent />
-                </TabsContent>
+                {currentTab === "administration" && (
+                  <div>
+                    <AdministrationContent />
+                  </div>
+                )}
                 
-                <TabsContent value="api-reference" className={currentTab === "api-reference" ? "block" : "hidden"}>
-                  <ApiReferenceContent />
-                </TabsContent>
+                {currentTab === "api-reference" && (
+                  <div>
+                    <ApiReferenceContent />
+                  </div>
+                )}
               </div>
             </ScrollArea>
           </div>
