@@ -82,10 +82,10 @@ export function MainLayout({ children }: MainLayoutProps) {
   return (
     <>
       <div className="flex min-h-screen flex-col">
-        <div className="flex flex-1">
-          <Sidebar className="w-64 hidden md:block" />
+        <div className="flex flex-1 w-full">
+          <Sidebar className="w-64 hidden md:block flex-shrink-0" />
 
-          <div className="flex-1 flex flex-col h-screen relative">
+          <div className="flex-1 flex flex-col h-screen relative w-full">
             {/* Background Layer with Data Visualization Theme */}
             <div className="absolute inset-0 z-0 pointer-events-none">
               {/* Base pattern layer */}
@@ -166,8 +166,10 @@ export function MainLayout({ children }: MainLayoutProps) {
               </div>
             </header>
 
-            <main className="flex-1 overflow-auto p-6 relative z-10">
-              {children}
+            <main className="flex-1 overflow-auto p-0 relative z-10 w-full">
+              <div className="w-full h-full">
+                {children}
+              </div>
             </main>
 
             <footer className="border-t py-2 px-4 bg-white relative z-10">

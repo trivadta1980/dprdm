@@ -270,7 +270,7 @@ export default function AuditLogsPage() {
 
   return (
     <MainLayout>
-      <div className="w-full py-4 px-3 sm:px-4 md:px-6 lg:px-8 sm:py-6">
+      <div className="w-full p-4 sm:p-6 md:p-8 lg:p-10">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Audit Trail</h1>
