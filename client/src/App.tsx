@@ -36,6 +36,7 @@ const ApiKeysPage = lazy(() => import("@/pages/api-keys-page"));
 const CrosswalkComparisonPage = lazy(() => import("@/pages/crosswalk-comparison-page"));
 const MissingMappingsPage = lazy(() => import("@/pages/missing-mappings-page"));
 const DocumentationPage = lazy(() => import("@/pages/documentation-page"));
+const AuditLogsPage = lazy(() => import("@/pages/audit-logs-page"));
 // Diagnostic page (not included in navigation)
 const DiagnosticsPage = lazy(() => import("@/pages/diagnostics-page"));
 
@@ -164,6 +165,11 @@ export default function App() {
                 <Route path="/api-keys">
                   <ProtectedRoute adminOnly>
                     <ApiKeysPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/audit-logs">
+                  <ProtectedRoute adminOnly>
+                    <AuditLogsPage />
                   </ProtectedRoute>
                 </Route>
                 <Route path="/crosswalk/comparison/:targetDatasetId">

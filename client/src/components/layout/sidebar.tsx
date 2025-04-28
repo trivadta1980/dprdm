@@ -17,6 +17,7 @@ import {
   Map,
   CheckSquare,
   Key,
+  History,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -98,6 +99,13 @@ export function Sidebar({ className }: SidebarProps) {
       tooltip: "Create and manage data mapping between different systems"
     },
     ...(isAdmin ? [
+      {
+        title: "Audit Logs",
+        href: "/audit-logs",
+        icon: History,
+        requiresPermission: true,
+        tooltip: "View system audit trail and change history"
+      },
       {
         title: "API Keys",
         href: "/api-keys",
