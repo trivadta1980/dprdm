@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { 
   Card, CardContent, CardHeader, CardTitle, 
@@ -24,6 +24,19 @@ import {
 export default function DocumentationPage() {
   const [currentTab, setCurrentTab] = useState("getting-started");
   const [searchQuery, setSearchQuery] = useState("");
+  const scrollAreaRef = useRef(null);
+
+  // Reset scroll position when tab changes
+  useEffect(() => {
+    // Check if scrollAreaRef is available
+    if (scrollAreaRef.current) {
+      // Access the scrollArea's viewport and reset its scroll position
+      const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (viewport) {
+        viewport.scrollTop = 0;
+      }
+    }
+  }, [currentTab]); // This effect runs whenever currentTab changes
 
   return (
     <MainLayout>
@@ -134,7 +147,7 @@ export default function DocumentationPage() {
           
           {/* Main content */}
           <div className="md:col-span-9">
-            <ScrollArea className="h-[calc(100vh-150px)]">
+            <ScrollArea ref={scrollAreaRef} className="h-[calc(100vh-150px)]">
               <div className="pr-4">
                 {/* Use plain divs instead of TabsContent for conditional rendering */}
                 {currentTab === "getting-started" && (
