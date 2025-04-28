@@ -27,19 +27,30 @@ import {
 export default function DocumentationPage() {
   const [currentTab, setCurrentTab] = useState("getting-started");
   const [searchQuery, setSearchQuery] = useState("");
-  const scrollAreaRef = useRef(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  
+  // Use the search hook to get search results
+  const { results, isSearching, hasResults, query } = useDocumentationSearch(searchQuery);
 
-  // Reset scroll position when tab changes
+  // Handle selecting a search result
+  const handleSelectResult = (tabId: string, sectionId: string, subsectionId?: string) => {
+    setCurrentTab(tabId);
+    setSearchQuery("");
+    
+    // We'll let the tab change reset the scroll position via the useEffect below
+  };
+
+  // Reset scroll position when tab changes or when search query changes
   useEffect(() => {
     // Check if scrollAreaRef is available
     if (scrollAreaRef.current) {
       // Access the scrollArea's viewport and reset its scroll position
       const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
       if (viewport) {
-        viewport.scrollTop = 0;
+        (viewport as HTMLElement).scrollTop = 0;
       }
     }
-  }, [currentTab]); // This effect runs whenever currentTab changes
+  }, [currentTab, searchQuery]); // This effect runs whenever currentTab or searchQuery changes
 
   return (
     <MainLayout>
@@ -152,53 +163,85 @@ export default function DocumentationPage() {
           <div className="md:col-span-9">
             <ScrollArea ref={scrollAreaRef} className="h-[calc(100vh-150px)]">
               <div className="pr-4">
-                {/* Use plain divs instead of TabsContent for conditional rendering */}
-                {currentTab === "getting-started" && (
-                  <div>
-                    <GettingStartedContent />
+                {/* Show search results when there's a search query, otherwise show regular content */}
+                {searchQuery.trim() !== "" ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-2xl font-bold">Search Results</h2>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSearchQuery("")}
+                        className="text-muted-foreground"
+                      >
+                        Clear Search
+                      </Button>
+                    </div>
+                    <Separator className="my-4" />
+                    
+                    {isSearching ? (
+                      <div className="py-8 text-center text-muted-foreground">
+                        Searching documentation...
+                      </div>
+                    ) : (
+                      <SearchResults 
+                        results={results} 
+                        query={query}
+                        onSelectResult={handleSelectResult}
+                      />
+                    )}
                   </div>
-                )}
-                
-                {currentTab === "reference-types" && (
-                  <div>
-                    <ReferenceTypesContent />
-                  </div>
-                )}
-                
-                {currentTab === "reference-data" && (
-                  <div>
-                    <ReferenceDataContent />
-                  </div>
-                )}
-                
-                {currentTab === "relationships" && (
-                  <div>
-                    <RelationshipsContent />
-                  </div>
-                )}
-                
-                {currentTab === "crosswalks" && (
-                  <div>
-                    <CrosswalksContent />
-                  </div>
-                )}
-                
-                {currentTab === "approvals" && (
-                  <div>
-                    <ApprovalsContent />
-                  </div>
-                )}
-                
-                {currentTab === "administration" && (
-                  <div>
-                    <AdministrationContent />
-                  </div>
-                )}
-                
-                {currentTab === "api-reference" && (
-                  <div>
-                    <ApiReferenceContent />
-                  </div>
+                ) : (
+                  // Regular documentation content when not searching
+                  <>
+                    {currentTab === "getting-started" && (
+                      <div>
+                        <GettingStartedContent />
+                      </div>
+                    )}
+                    
+                    {currentTab === "reference-types" && (
+                      <div>
+                        <ReferenceTypesContent />
+                      </div>
+                    )}
+                    
+                    {currentTab === "reference-data" && (
+                      <div>
+                        <ReferenceDataContent />
+                      </div>
+                    )}
+                    
+                    {currentTab === "relationships" && (
+                      <div>
+                        <RelationshipsContent />
+                      </div>
+                    )}
+                    
+                    {currentTab === "crosswalks" && (
+                      <div>
+                        <CrosswalksContent />
+                      </div>
+                    )}
+                    
+                    {currentTab === "approvals" && (
+                      <div>
+                        <ApprovalsContent />
+                      </div>
+                    )}
+                    
+                    {currentTab === "administration" && (
+                      <div>
+                        <AdministrationContent />
+                      </div>
+                    )}
+                    
+                    {currentTab === "api-reference" && (
+                      <div>
+                        <ApiReferenceContent />
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </ScrollArea>
