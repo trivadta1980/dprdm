@@ -92,10 +92,18 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
       );
     }
 
-    // Execute count query
-    const totalItems = await db.select({ count: db.fn.count() })
-      .from(auditLogs)
-      .where(filters.length > 0 ? and(...filters) : undefined);
+    // Execute count query with error handling
+    let totalCount = 0;
+    try {
+      const totalItemsResult = await db.select({ count: db.fn.count() })
+        .from(auditLogs)
+        .where(filters.length > 0 ? and(...filters) : undefined);
+      
+      totalCount = Number(totalItemsResult[0]?.count || 0);
+    } catch (error) {
+      console.error("Error counting audit logs:", error);
+      totalCount = 0;
+    }
 
     // Execute data query with filters, sorting, pagination
     const results = await db.select({
@@ -125,8 +133,8 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
       pagination: {
         page,
         limit,
-        totalItems: parseInt(totalItems[0].count.toString()),
-        totalPages: Math.ceil(parseInt(totalItems[0].count.toString()) / limit),
+        totalItems: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
       },
     };
 
