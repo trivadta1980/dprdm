@@ -490,53 +490,661 @@ function RelationshipsContent() {
 }
 
 function CrosswalksContent() {
+  // Get the crosswalks content from the documentation data
+  const crosswalksData = documentationContent["crosswalks"];
+  
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h2 className="text-3xl font-bold mb-4">Crosswalks</h2>
         <p className="text-lg text-muted-foreground mb-6">
-          Crosswalks map values between different reference data sets and systems.
+          {crosswalksData[0].content}
         </p>
       </div>
+      
+      {/* Render each subsection */}
+      {crosswalksData[0].subsections?.map((subsection) => (
+        <Card key={subsection.id} id={subsection.id} className="border-l-4 border-l-primary">
+          <CardHeader>
+            <CardTitle className="text-xl">{subsection.title}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="prose dark:prose-invert max-w-none">
+              <p>{subsection.content}</p>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+      
+      {/* Additional content specific to crosswalks */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Crosswalk Mapping Types</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2">One-to-One</h3>
+              <p className="text-sm text-muted-foreground">
+                Each source value maps to exactly one target value. The most common and straightforward mapping type.
+              </p>
+            </div>
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2">One-to-Many</h3>
+              <p className="text-sm text-muted-foreground">
+                A single source value maps to multiple target values. Used when the target system has more granular classifications.
+              </p>
+            </div>
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2">Many-to-One</h3>
+              <p className="text-sm text-muted-foreground">
+                Multiple source values map to a single target value. Used when the target system uses broader categories.
+              </p>
+            </div>
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2">Many-to-Many</h3>
+              <p className="text-sm text-muted-foreground">
+                Complex relationships where multiple source values map to multiple target values. Requires careful management.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Importing Crosswalk Mappings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p>
+              To import crosswalk mappings from a CSV file, follow these steps:
+            </p>
+            
+            <ol className="list-decimal pl-6 space-y-2">
+              <li>Navigate to the Crosswalks section and select the crosswalk you want to import mappings for.</li>
+              <li>Click the "Import" button in the Mappings section.</li>
+              <li>Download the template CSV file, which includes columns for the source and target attributes.</li>
+              <li>Fill in the template with your mapping data.</li>
+              <li>Upload the completed CSV file using the import dialog.</li>
+              <li>Review the import preview to ensure your data is correct.</li>
+              <li>Complete the import process.</li>
+            </ol>
+            
+            <div className="mt-4 p-4 bg-blue-50 text-blue-800 rounded-md dark:bg-blue-900 dark:text-blue-100">
+              <h4 className="font-medium mb-2">Pro Tip</h4>
+              <p className="text-sm">
+                For large crosswalks, consider using the batch import feature, which allows you to import mappings in chunks 
+                to avoid timeout issues. You can also use the assisted mapping feature to suggest potential matches based on 
+                text similarity or other matching algorithms.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Using Crosswalks for Data Integration</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p>
+              Crosswalks are powerful tools for data integration scenarios. Here are some common use cases:
+            </p>
+            
+            <div className="grid md:grid-cols-2 gap-4 mt-4">
+              <div className="p-4 border rounded-md">
+                <h3 className="font-medium mb-2">System Migration</h3>
+                <p className="text-sm text-muted-foreground">
+                  Map codes between legacy and new systems to ensure smooth data transition during system migrations.
+                </p>
+              </div>
+              <div className="p-4 border rounded-md">
+                <h3 className="font-medium mb-2">Data Warehousing</h3>
+                <p className="text-sm text-muted-foreground">
+                  Standardize codes from various source systems when loading data into a central data warehouse.
+                </p>
+              </div>
+              <div className="p-4 border rounded-md">
+                <h3 className="font-medium mb-2">External Data Exchange</h3>
+                <p className="text-sm text-muted-foreground">
+                  Translate between your internal codes and industry standards when exchanging data with partners.
+                </p>
+              </div>
+              <div className="p-4 border rounded-md">
+                <h3 className="font-medium mb-2">Analytics</h3>
+                <p className="text-sm text-muted-foreground">
+                  Harmonize classification schemes across different datasets to enable consistent reporting and analysis.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
 function ApprovalsContent() {
+  // Get the approvals content from the documentation data
+  const approvalsData = documentationContent["approvals"];
+  
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h2 className="text-3xl font-bold mb-4">Approvals</h2>
         <p className="text-lg text-muted-foreground mb-6">
-          The approval process ensures data quality and governance.
+          {approvalsData[0].content}
         </p>
       </div>
+      
+      {/* Render each subsection */}
+      {approvalsData[0].subsections?.map((subsection) => (
+        <Card key={subsection.id} id={subsection.id} className="border-l-4 border-l-primary">
+          <CardHeader>
+            <CardTitle className="text-xl">{subsection.title}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="prose dark:prose-invert max-w-none">
+              <p>{subsection.content}</p>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+      
+      {/* Additional content specific to approvals */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Approval Roles</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2">Submitter</h3>
+              <p className="text-sm text-muted-foreground">
+                Creates or modifies data and submits it for approval. Can track status of submissions.
+              </p>
+            </div>
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2">Approver</h3>
+              <p className="text-sm text-muted-foreground">
+                Reviews submitted changes and either approves or rejects them with comments.
+              </p>
+            </div>
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2">Administrator</h3>
+              <p className="text-sm text-muted-foreground">
+                Configures approval workflow settings and can override approval status if needed.
+              </p>
+            </div>
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2">Viewer</h3>
+              <p className="text-sm text-muted-foreground">
+                Can view approval status but cannot submit or approve changes.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Approval Process Flow</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-lg font-medium">
+                1
+              </div>
+              <div>
+                <h4 className="font-medium">Create or Modify</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Users create or modify reference data, relationships, or crosswalk mappings.
+                </p>
+              </div>
+            </div>
+            
+            <Separator />
+            
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-lg font-medium">
+                2
+              </div>
+              <div>
+                <h4 className="font-medium">Submit for Approval</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Changes are submitted for approval, triggering notifications to approvers.
+                </p>
+              </div>
+            </div>
+            
+            <Separator />
+            
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-lg font-medium">
+                3
+              </div>
+              <div>
+                <h4 className="font-medium">Review</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Approvers review the changes and can view differences from previous versions.
+                </p>
+              </div>
+            </div>
+            
+            <Separator />
+            
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-lg font-medium">
+                4
+              </div>
+              <div>
+                <h4 className="font-medium">Decision</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Approvers either approve the changes (making them active) or reject them with comments.
+                </p>
+              </div>
+            </div>
+            
+            <Separator />
+            
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg font-medium">
+                5
+              </div>
+              <div>
+                <h4 className="font-medium">Notification</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Submitters are notified of the decision and can view comments if rejected.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
 function AdministrationContent() {
+  // Get the administration content from the documentation data
+  const adminData = documentationContent["administration"];
+  
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h2 className="text-3xl font-bold mb-4">Administration</h2>
         <p className="text-lg text-muted-foreground mb-6">
-          Administration tools for managing users, roles, and system settings.
+          {adminData[0].content}
         </p>
       </div>
+      
+      {/* Render each subsection */}
+      {adminData[0].subsections?.map((subsection) => (
+        <Card key={subsection.id} id={subsection.id} className="border-l-4 border-l-primary">
+          <CardHeader>
+            <CardTitle className="text-xl">{subsection.title}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="prose dark:prose-invert max-w-none">
+              <p>{subsection.content}</p>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+      
+      {/* Additional admin-specific content */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Common Administration Tasks</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2 flex items-center gap-2">
+                <UserCog className="h-4 w-4" /> Add a New User
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Create a new user account, assign their role, and set initial permissions. New users receive an 
+                email with instructions to set their password.
+              </p>
+              <div className="mt-3">
+                <Button variant="outline" size="sm" className="w-full">
+                  Go to User Management
+                </Button>
+              </div>
+            </div>
+            
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2 flex items-center gap-2">
+                <Users className="h-4 w-4" /> Create a New Role
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Define a new role with specific permissions. Roles control what actions users can perform in the system.
+              </p>
+              <div className="mt-3">
+                <Button variant="outline" size="sm" className="w-full">
+                  Go to Role Management
+                </Button>
+              </div>
+            </div>
+            
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2 flex items-center gap-2">
+                <Key className="h-4 w-4" /> Generate API Key
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Create API keys for programmatic access to the RDM platform. Each key can have specific permissions.
+              </p>
+              <div className="mt-3">
+                <Button variant="outline" size="sm" className="w-full">
+                  Go to API Keys
+                </Button>
+              </div>
+            </div>
+            
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2 flex items-center gap-2">
+                <CheckSquare className="h-4 w-4" /> Manage Approval Workflows
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Configure approval workflows for different types of reference data changes. Define who can approve and notification settings.
+              </p>
+              <div className="mt-3">
+                <Button variant="outline" size="sm" className="w-full">
+                  Go to Workflow Settings
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>System Audit</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-4">
+            The RDM platform maintains comprehensive audit logs for all administrative actions:
+          </p>
+          
+          <div className="rounded-md border">
+            <div className="grid grid-cols-5 bg-muted p-2 text-sm font-medium">
+              <div>Date/Time</div>
+              <div>User</div>
+              <div>Action</div>
+              <div>Entity Type</div>
+              <div>Details</div>
+            </div>
+            
+            <div className="divide-y">
+              <div className="grid grid-cols-5 p-2 text-sm">
+                <div>2025-04-27 14:32:15</div>
+                <div>admin</div>
+                <div>Create</div>
+                <div>User</div>
+                <div>Created user 'jsmith'</div>
+              </div>
+              <div className="grid grid-cols-5 p-2 text-sm">
+                <div>2025-04-27 11:45:22</div>
+                <div>admin</div>
+                <div>Modify</div>
+                <div>Role</div>
+                <div>Updated permissions for 'Approver'</div>
+              </div>
+              <div className="grid grid-cols-5 p-2 text-sm">
+                <div>2025-04-26 16:12:09</div>
+                <div>admin</div>
+                <div>Create</div>
+                <div>API Key</div>
+                <div>Generated new API key 'Integration-Key'</div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-4 bg-blue-50 text-blue-800 rounded-md dark:bg-blue-900 dark:text-blue-100">
+            <h4 className="font-medium mb-2">Administrator Tip</h4>
+            <p className="text-sm">
+              Regular audit log reviews are recommended as a security best practice. You can export audit logs
+              for compliance reporting or internal review.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
 function ApiReferenceContent() {
+  // Get the API reference content from the documentation data
+  const apiData = documentationContent["api-reference"];
+  
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h2 className="text-3xl font-bold mb-4">API Reference</h2>
         <p className="text-lg text-muted-foreground mb-6">
-          Documentation for the RDM platform APIs.
+          {apiData[0].content}
         </p>
       </div>
+      
+      {/* Render each subsection */}
+      {apiData[0].subsections?.map((subsection) => (
+        <Card key={subsection.id} id={subsection.id} className="border-l-4 border-l-primary">
+          <CardHeader>
+            <CardTitle className="text-xl">{subsection.title}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="prose dark:prose-invert max-w-none">
+              <p>{subsection.content}</p>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+      
+      {/* API Endpoints Documentation */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Key API Endpoints</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="rounded-md border">
+              <div className="bg-primary/10 p-3 flex items-center gap-2">
+                <span className="px-2 py-1 text-xs font-medium rounded-md bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">GET</span>
+                <code className="font-mono text-sm">/api/external/reference-data/{'{id}'}</code>
+              </div>
+              <div className="p-4">
+                <h3 className="font-medium mb-2">Get Reference Data Set</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Retrieves all instances for a specific reference data set by ID.
+                </p>
+                
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Path Parameters</h4>
+                  <div className="grid grid-cols-4 gap-2 p-2 text-sm border rounded-md">
+                    <div className="font-medium">Name</div>
+                    <div className="font-medium">Type</div>
+                    <div className="font-medium">Required</div>
+                    <div className="font-medium">Description</div>
+                    
+                    <div>id</div>
+                    <div>number</div>
+                    <div>Yes</div>
+                    <div>The ID of the reference data set</div>
+                  </div>
+                </div>
+                
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium mb-2">Example Response</h4>
+                  <div className="p-3 bg-slate-100 rounded-md overflow-x-auto dark:bg-slate-800">
+                    <pre className="text-xs"><code>{`{
+  "id": 5,
+  "name": "Countries",
+  "description": "ISO Standard Country Codes",
+  "instances": [
+    {
+      "id": 101,
+      "code": "US", 
+      "name": "United States",
+      "continent": "North America"
+    },
+    {
+      "id": 102,
+      "code": "CA", 
+      "name": "Canada",
+      "continent": "North America"
+    }
+  ]
+}`}</code></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="rounded-md border">
+              <div className="bg-primary/10 p-3 flex items-center gap-2">
+                <span className="px-2 py-1 text-xs font-medium rounded-md bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">GET</span>
+                <code className="font-mono text-sm">/api/external/relationships/{'{id}'}/values</code>
+              </div>
+              <div className="p-4">
+                <h3 className="font-medium mb-2">Get Relationship Values</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Retrieves all values for a specific relationship by ID.
+                </p>
+                
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Path Parameters</h4>
+                  <div className="grid grid-cols-4 gap-2 p-2 text-sm border rounded-md">
+                    <div className="font-medium">Name</div>
+                    <div className="font-medium">Type</div>
+                    <div className="font-medium">Required</div>
+                    <div className="font-medium">Description</div>
+                    
+                    <div>id</div>
+                    <div>number</div>
+                    <div>Yes</div>
+                    <div>The ID of the relationship</div>
+                  </div>
+                </div>
+                
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium mb-2">Example Response</h4>
+                  <div className="p-3 bg-slate-100 rounded-md overflow-x-auto dark:bg-slate-800">
+                    <pre className="text-xs"><code>{`{
+  "id": 3,
+  "name": "Country-Currency",
+  "description": "Maps countries to their currencies",
+  "values": [
+    {
+      "id": 201,
+      "source_id": 101, 
+      "source_name": "United States",
+      "target_id": 501,
+      "target_name": "US Dollar",
+      "attributes": {
+        "effective_date": "1792-04-02"
+      }
+    },
+    {
+      "id": 202,
+      "source_id": 102, 
+      "source_name": "Canada",
+      "target_id": 502,
+      "target_name": "Canadian Dollar",
+      "attributes": {
+        "effective_date": "1871-04-01"
+      }
+    }
+  ]
+}`}</code></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="rounded-md border">
+              <div className="bg-primary/10 p-3 flex items-center gap-2">
+                <span className="px-2 py-1 text-xs font-medium rounded-md bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">GET</span>
+                <code className="font-mono text-sm">/api/external/crosswalks/{'{id}'}</code>
+              </div>
+              <div className="p-4">
+                <h3 className="font-medium mb-2">Get Crosswalk Mapping</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Retrieves a specific crosswalk mapping by ID, including all mapping values.
+                </p>
+                
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Path Parameters</h4>
+                  <div className="grid grid-cols-4 gap-2 p-2 text-sm border rounded-md">
+                    <div className="font-medium">Name</div>
+                    <div className="font-medium">Type</div>
+                    <div className="font-medium">Required</div>
+                    <div className="font-medium">Description</div>
+                    
+                    <div>id</div>
+                    <div>number</div>
+                    <div>Yes</div>
+                    <div>The ID of the crosswalk mapping</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Using API Keys</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p>
+              To use the RDM APIs, you'll need to generate an API key:
+            </p>
+            
+            <ol className="list-decimal pl-6 space-y-2">
+              <li>Navigate to the API Keys section in the administration panel.</li>
+              <li>Click "Create New API Key" and provide a name and description.</li>
+              <li>Select the appropriate permissions for the API key.</li>
+              <li>Save the API key in a secure location; it will only be shown once.</li>
+            </ol>
+            
+            <div className="mt-4">
+              <h3 className="font-medium mb-2">Example API Request</h3>
+              <div className="p-3 bg-slate-100 rounded-md overflow-x-auto dark:bg-slate-800">
+                <pre className="text-xs"><code>{`// Using fetch with API key as a header
+fetch('https://your-rdm-instance.com/api/external/reference-data/5', {
+  method: 'GET',
+  headers: {
+    'X-API-Key': 'your-api-key-here'
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Error:', error));
+
+// Using curl with API key as a query parameter
+curl "https://your-rdm-instance.com/api/external/reference-data/5?api_key=your-api-key-here"
+`}</code></pre>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-yellow-50 text-yellow-800 rounded-md dark:bg-yellow-900 dark:text-yellow-100 mt-4">
+              <h4 className="font-medium mb-2">Security Note</h4>
+              <p className="text-sm">
+                Keep your API keys secure and never expose them in client-side code. For browser-based applications, 
+                consider creating a proxy endpoint on your server that adds the API key to requests before forwarding 
+                them to the RDM API.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
