@@ -270,7 +270,7 @@ export default function AuditLogsPage() {
 
   return (
     <MainLayout>
-      <div className="container mx-auto py-4 px-3 sm:px-4 md:px-6 lg:px-8 sm:py-6">
+      <div className="w-full py-4 px-3 sm:px-4 md:px-6 lg:px-8 sm:py-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Audit Trail</h1>
@@ -331,7 +331,7 @@ export default function AuditLogsPage() {
         )}
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 gap-6 w-full">
           <Card>
             <CardHeader className="pb-3">
               <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 sm:gap-0">
@@ -355,9 +355,9 @@ export default function AuditLogsPage() {
               </div>
 
               {/* Tabs for entity type filtering */}
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto w-full">
                 <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full mt-4">
-                  <TabsList className="w-full min-w-[500px]">
+                  <TabsList className="w-full max-w-none">
                     <TabsTrigger value="all">All Activities</TabsTrigger>
                     <TabsTrigger value="USER">Users</TabsTrigger>
                     <TabsTrigger value="REFERENCE_DATA">
