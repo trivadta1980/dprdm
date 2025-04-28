@@ -8,6 +8,7 @@ import {
   ChevronRight,
   ChevronsUpDown,
   DownloadCloud,
+  Eye,
   FileText,
   Filter,
   Info,
@@ -16,6 +17,7 @@ import {
   Search,
   SlidersHorizontal,
   UserRound,
+  X,
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
@@ -720,37 +722,36 @@ export default function AuditLogsPage() {
 
         {/* Audit Log Details Dialog */}
         {selectedLog && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-2 sm:p-4">
             <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-              <CardHeader className="border-b">
+              <CardHeader className="border-b p-3 sm:p-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle>Audit Log Details</CardTitle>
-                  <Button variant="ghost" size="sm" onClick={closeDetails}>
-                    <span className="sr-only">Close</span>
-                    <ChevronLeft className="h-4 w-4 mr-2" />
-                    Back
+                  <CardTitle className="text-base sm:text-xl">Audit Log Details</CardTitle>
+                  <Button variant="ghost" size="sm" onClick={closeDetails} className="h-8 px-2">
+                    <X className="h-4 w-4 sm:mr-2" />
+                    <span className="sr-only sm:not-sr-only">Close</span>
                   </Button>
                 </div>
               </CardHeader>
               <CardContent className="p-0 flex-1 overflow-hidden">
                 <ScrollArea className="h-full">
-                  <div className="p-6 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                       <div>
-                        <h3 className="text-lg font-semibold mb-4">Event Information</h3>
-                        <dl className="space-y-2">
+                        <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4">Event Information</h3>
+                        <dl className="space-y-1 sm:space-y-2 text-sm">
                           <div className="flex justify-between py-1 border-b border-border/50">
                             <dt className="font-medium text-muted-foreground">ID:</dt>
                             <dd>{selectedLog.id}</dd>
                           </div>
                           <div className="flex justify-between py-1 border-b border-border/50">
                             <dt className="font-medium text-muted-foreground">Timestamp:</dt>
-                            <dd>{formatTimestamp(selectedLog.timestamp)}</dd>
+                            <dd className="text-right">{formatTimestamp(selectedLog.timestamp)}</dd>
                           </div>
                           <div className="flex justify-between py-1 border-b border-border/50">
                             <dt className="font-medium text-muted-foreground">Action:</dt>
                             <dd>
-                              <Badge variant={getActionBadgeVariant(selectedLog.actionType)}>
+                              <Badge variant={getActionBadgeVariant(selectedLog.actionType)} className="text-xs h-5">
                                 {selectedLog.actionType}
                               </Badge>
                             </dd>
@@ -758,7 +759,7 @@ export default function AuditLogsPage() {
                           <div className="flex justify-between py-1 border-b border-border/50">
                             <dt className="font-medium text-muted-foreground">Entity Type:</dt>
                             <dd>
-                              <Badge variant={getEntityBadgeVariant(selectedLog.entityType)}>
+                              <Badge variant={getEntityBadgeVariant(selectedLog.entityType)} className="text-xs h-5">
                                 {selectedLog.entityType}
                               </Badge>
                             </dd>
@@ -769,13 +770,15 @@ export default function AuditLogsPage() {
                           </div>
                           <div className="flex justify-between py-1 border-b border-border/50">
                             <dt className="font-medium text-muted-foreground">Entity Name:</dt>
-                            <dd>{selectedLog.entityName}</dd>
+                            <dd className="text-right text-xs sm:text-sm max-w-[180px] sm:max-w-none truncate">
+                              {selectedLog.entityName}
+                            </dd>
                           </div>
                         </dl>
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold mb-4">User Information</h3>
-                        <dl className="space-y-2">
+                        <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4 mt-4 md:mt-0">User Information</h3>
+                        <dl className="space-y-1 sm:space-y-2 text-sm">
                           <div className="flex justify-between py-1 border-b border-border/50">
                             <dt className="font-medium text-muted-foreground">User ID:</dt>
                             <dd>{selectedLog.userId}</dd>
@@ -791,7 +794,7 @@ export default function AuditLogsPage() {
                           {selectedLog.sessionData && (
                             <div className="flex justify-between py-1 border-b border-border/50">
                               <dt className="font-medium text-muted-foreground">Session ID:</dt>
-                              <dd className="truncate max-w-[200px]">
+                              <dd className="truncate text-right max-w-[120px] sm:max-w-[200px]">
                                 {selectedLog.sessionData.id || "N/A"}
                               </dd>
                             </div>
@@ -800,50 +803,78 @@ export default function AuditLogsPage() {
                       </div>
                     </div>
 
-                    <Separator />
-
                     <div>
-                      <h3 className="text-lg font-semibold mb-4">Event Details</h3>
-                      <p className="text-sm mb-4">{selectedLog.details}</p>
+                      <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4">Event Details</h3>
+                      <p className="text-xs sm:text-sm">{selectedLog.details}</p>
                     </div>
 
                     {selectedLog.changesMade && selectedLog.changesMade.length > 0 && (
-                      <>
-                        <Separator />
-                        <div>
-                          <h3 className="text-lg font-semibold mb-4">Changes Made</h3>
-                          <div className="rounded-md border">
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead className="w-[200px]">Field</TableHead>
-                                  <TableHead>Previous Value</TableHead>
-                                  <TableHead>New Value</TableHead>
+                      <div>
+                        <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4">Changes Made</h3>
+                          
+                        {/* Desktop view for changes */}
+                        <div className="hidden sm:block rounded-md border">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="w-[200px]">Field</TableHead>
+                                <TableHead>Previous Value</TableHead>
+                                <TableHead>New Value</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {selectedLog.changesMade.map((change, idx) => (
+                                <TableRow key={idx}>
+                                  <TableCell className="font-medium">
+                                    {change.field}
+                                  </TableCell>
+                                  <TableCell className="text-muted-foreground">
+                                    {change.oldValue || "(empty)"}
+                                  </TableCell>
+                                  <TableCell>
+                                    {change.newValue || "(empty)"}
+                                  </TableCell>
                                 </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {selectedLog.changesMade.map((change, idx) => (
-                                  <TableRow key={idx}>
-                                    <TableCell className="font-medium">
-                                      {change.field}
-                                    </TableCell>
-                                    <TableCell className="text-muted-foreground">
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                          
+                        {/* Mobile view for changes */}
+                        <div className="block sm:hidden rounded-md border overflow-hidden">
+                          <div className="divide-y">
+                            {selectedLog.changesMade.map((change, idx) => (
+                              <div key={idx} className="p-3 space-y-2">
+                                <div className="font-medium text-sm">{change.field}</div>
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">Previous:</p>
+                                    <div className="mt-1 bg-muted/50 p-1.5 rounded">
                                       {change.oldValue || "(empty)"}
-                                    </TableCell>
-                                    <TableCell>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">New:</p>
+                                    <div className="mt-1 bg-muted/30 p-1.5 rounded font-medium">
                                       {change.newValue || "(empty)"}
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      </>
+                      </div>
                     )}
                   </div>
                 </ScrollArea>
               </CardContent>
+              
+              <CardFooter className="border-t flex justify-end p-3 sm:p-4">
+                <Button onClick={closeDetails} variant="outline" size="sm" className="w-full sm:w-auto">
+                  Close
+                </Button>
+              </CardFooter>
             </Card>
           </div>
         )}
