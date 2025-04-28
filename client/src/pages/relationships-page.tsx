@@ -33,7 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Plus, GitFork, Pencil, Trash2, ArrowRight, Settings, Info, Link as LinkIcon } from "lucide-react";
+import { Plus, GitFork, Pencil, Trash2, ArrowRight, Settings, Info, Link as LinkIcon, Edit, ArrowRightLeft, ArrowUpDown, PlusCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,6 +47,7 @@ import type {
   RelationshipAttributeDefinition,
   InsertRelationshipAttributeDefinition
 } from "@shared/schema";
+import { ArrowRightLeft, ArrowUpDown, GitFork, Info, Plus, PlusCircle, Trash2, Edit } from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
 import { Switch } from "@/components/ui/switch";
@@ -472,7 +473,13 @@ export default function RelationshipsPage() {
   }
 
   function onAttributeSubmit(data: AttributeDefinitionForm) {
-    mutateAttributeDefinition.mutate(data);
+    if (editingAttributeDefinition) {
+      // If we're editing an existing attribute
+      handleUpdateAttribute(data);
+    } else {
+      // If we're creating a new attribute
+      mutateAttributeDefinition.mutate(data);
+    }
   }
 
   function handleEdit(relationship: Relationship) {
@@ -764,7 +771,7 @@ export default function RelationshipsPage() {
 
 
 
-  // Function to proceed with attribute creation after confirmation
+  // Function to proceed with attribute creation/update after confirmation
   const proceedWithAttributeCreation = () => {
     if (mandatoryAttributeWarning.attributeData) {
       // Create a request with skipValidation flag
@@ -781,9 +788,16 @@ export default function RelationshipsPage() {
         attributeData: null
       });
       
+      // Get method and endpoint based on operation (create or update)
+      const isEdit = !!editingAttributeDefinition;
+      const method = isEdit ? 'PATCH' : 'POST';
+      const endpoint = isEdit 
+        ? `/api/relationships/attribute-definitions/${editingAttributeDefinition!.id}`
+        : `/api/relationships/${selectedRelationshipId}/attribute-definitions`;
+      
       // Make the API request directly
-      apiRequest(`/api/relationships/${selectedRelationshipId}/attribute-definitions`, {
-        method: 'POST',
+      apiRequest(endpoint, {
+        method,
         data: requestData
       })
       .then(response => response.json())
@@ -793,20 +807,92 @@ export default function RelationshipsPage() {
         });
         toast({
           title: "Success",
-          description: "Attribute definition created successfully",
+          description: `Attribute definition ${isEdit ? 'updated' : 'created'} successfully`,
         });
+        
+        // Reset the form and editing state
         attributeForm.reset({
           name: "",
           dataType: undefined,
           isRequired: false,
           description: "",
         });
+        
+        // Clear editing state
+        if (isEdit) {
+          setEditingAttributeDefinition(null);
+          setIsAttributeDialogOpen(false);
+        }
       })
       .catch(error => {
-        console.error("Error creating attribute:", error);
+        console.error("Error with attribute:", error);
         toast({
           title: "Error",
-          description: error.message || "Failed to create attribute definition",
+          description: error.message || `Failed to ${isEdit ? 'update' : 'create'} attribute definition`,
+          variant: "destructive",
+        });
+      });
+    }
+  };
+  
+  // Function to apply default values to existing records
+  const applyDefaultValues = () => {
+    if (mandatoryAttributeWarning.attributeData) {
+      // Create a request with applyDefaults flag
+      const requestData = {
+        ...mandatoryAttributeWarning.attributeData,
+        applyDefaults: true
+      };
+      
+      // Reset the warning state
+      setMandatoryAttributeWarning({
+        show: false,
+        message: "",
+        affectedCount: 0,
+        attributeData: null
+      });
+      
+      // Get method and endpoint based on operation (create or update)
+      const isEdit = !!editingAttributeDefinition;
+      const method = isEdit ? 'PATCH' : 'POST';
+      const endpoint = isEdit 
+        ? `/api/relationships/attribute-definitions/${editingAttributeDefinition!.id}`
+        : `/api/relationships/${selectedRelationshipId}/attribute-definitions`;
+      
+      // Make the API request
+      apiRequest(endpoint, {
+        method,
+        data: requestData
+      })
+      .then(response => response.json())
+      .then(result => {
+        queryClient.invalidateQueries({
+          queryKey: [`/api/relationships/${selectedRelationshipId}/attribute-definitions`],
+        });
+        toast({
+          title: "Success",
+          description: `Attribute definition ${isEdit ? 'updated' : 'created'} and default values applied to existing records`,
+        });
+        
+        // Reset the form and editing state
+        attributeForm.reset({
+          name: "",
+          dataType: undefined,
+          isRequired: false,
+          description: "",
+        });
+        
+        // Clear editing state
+        if (isEdit) {
+          setEditingAttributeDefinition(null);
+          setIsAttributeDialogOpen(false);
+        }
+      })
+      .catch(error => {
+        console.error("Error with attribute:", error);
+        toast({
+          title: "Error",
+          description: error.message || `Failed to ${isEdit ? 'update' : 'create'} attribute definition with defaults`,
           variant: "destructive",
         });
       });
@@ -1351,7 +1437,7 @@ export default function RelationshipsPage() {
                     )}
                   />
                   <Button type="submit" className="w-full">
-                    Add Attribute Definition
+                    {editingAttributeDefinition ? 'Update Attribute Definition' : 'Add Attribute Definition'}
                   </Button>
                 </form>
               </Form>
@@ -1413,16 +1499,28 @@ export default function RelationshipsPage() {
                           <TableCell>{attr.isRequired ? "Yes" : "No"}</TableCell>
                           <TableCell>{attr.description}</TableCell>
                           <TableCell className="text-right">
-                            <EnhancedTooltip content="Delete this attribute definition">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteAttribute(attr.id)}
-                                className="hover:bg-red-50"
-                              >
-                                <Trash2 className="h-4 w-4 text-red-600" />
-                              </Button>
-                            </EnhancedTooltip>
+                            <div className="flex items-center justify-end gap-1">
+                              <EnhancedTooltip content="Edit this attribute definition">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditAttribute(attr)}
+                                  className="hover:bg-blue-50"
+                                >
+                                  <Edit className="h-4 w-4 text-blue-600" />
+                                </Button>
+                              </EnhancedTooltip>
+                              <EnhancedTooltip content="Delete this attribute definition">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteAttribute(attr.id)}
+                                  className="hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-600" />
+                                </Button>
+                              </EnhancedTooltip>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
