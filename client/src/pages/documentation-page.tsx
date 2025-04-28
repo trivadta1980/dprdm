@@ -439,24 +439,167 @@ function GettingStartedContent() {
 }
 
 function ReferenceTypesContent() {
+  // Get the reference types content from the documentation data
+  const refTypesData = documentationContent["reference-types"];
+  
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h2 className="text-3xl font-bold mb-4">Reference Data Types</h2>
         <p className="text-lg text-muted-foreground mb-6">
-          Reference Data Types define the structure and attributes of your reference data.
+          {refTypesData[0].content}
         </p>
       </div>
       
+      {/* Render each subsection */}
+      {refTypesData[0].subsections?.map((subsection) => (
+        <Card key={subsection.id} id={subsection.id} className="border-l-4 border-l-primary">
+          <CardHeader>
+            <CardTitle className="text-xl">{subsection.title}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="prose dark:prose-invert max-w-none">
+              <p>{subsection.content}</p>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+      
+      {/* Additional content specific to reference types */}
       <Card>
         <CardHeader>
-          <CardTitle>Creating Reference Data Types</CardTitle>
+          <CardTitle>Common Data Types</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>
-            To create a new Reference Data Type, you'll need to define its schema by specifying 
-            the fields that will be included and their data types.
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2">Text</h3>
+              <p className="text-sm text-muted-foreground">
+                String values of any length. Can include validation rules like minimum/maximum length or 
+                regular expression patterns.
+              </p>
+            </div>
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2">Number</h3>
+              <p className="text-sm text-muted-foreground">
+                Numeric values including integers and decimals. Can include validation like min/max values
+                and precision requirements.
+              </p>
+            </div>
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2">Date</h3>
+              <p className="text-sm text-muted-foreground">
+                Date values with optional time components. Can include validation like date ranges and formats.
+              </p>
+            </div>
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2">Boolean</h3>
+              <p className="text-sm text-muted-foreground">
+                True/false values. Useful for flags, indicators, or yes/no attributes.
+              </p>
+            </div>
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2">Enumerated List</h3>
+              <p className="text-sm text-muted-foreground">
+                A predefined list of allowed values. Ensures data consistency by restricting inputs to valid options.
+              </p>
+            </div>
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2">JSON</h3>
+              <p className="text-sm text-muted-foreground">
+                Structured data in JSON format. Useful for complex attributes that don't fit a simple field model.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Field Attribute Options</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-4">
+            When defining fields for a reference data type, you can set various attributes to control their behavior:
           </p>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-muted">
+                  <th className="p-2 text-left font-medium text-sm">Attribute</th>
+                  <th className="p-2 text-left font-medium text-sm">Description</th>
+                  <th className="p-2 text-left font-medium text-sm">Example</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                <tr>
+                  <td className="p-2 text-sm">Required</td>
+                  <td className="p-2 text-sm">Specifies if the field must have a value</td>
+                  <td className="p-2 text-sm">Country code is required</td>
+                </tr>
+                <tr>
+                  <td className="p-2 text-sm">Unique</td>
+                  <td className="p-2 text-sm">Ensures values are unique across all instances</td>
+                  <td className="p-2 text-sm">Product SKU must be unique</td>
+                </tr>
+                <tr>
+                  <td className="p-2 text-sm">Default Value</td>
+                  <td className="p-2 text-sm">Value to use if none is provided</td>
+                  <td className="p-2 text-sm">Status defaults to "Active"</td>
+                </tr>
+                <tr>
+                  <td className="p-2 text-sm">Validation Rule</td>
+                  <td className="p-2 text-sm">Custom rules to validate the field</td>
+                  <td className="p-2 text-sm">Email must match pattern</td>
+                </tr>
+                <tr>
+                  <td className="p-2 text-sm">Description</td>
+                  <td className="p-2 text-sm">Documentation for the field</td>
+                  <td className="p-2 text-sm">"ISO-3 country code (3 letters)"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="mt-6">
+            <h3 className="font-medium mb-2">Example Type Definition</h3>
+            <div className="p-3 bg-slate-100 rounded-md overflow-x-auto dark:bg-slate-800">
+              <pre className="text-xs"><code>{`// Country Reference Data Type
+{
+  "name": "Country",
+  "fields": [
+    {
+      "name": "code",
+      "type": "text",
+      "required": true,
+      "unique": true,
+      "validation": "^[A-Z]{2}$",
+      "description": "ISO-2 country code"
+    },
+    {
+      "name": "name",
+      "type": "text",
+      "required": true,
+      "description": "Full country name"
+    },
+    {
+      "name": "iso3_code",
+      "type": "text",
+      "validation": "^[A-Z]{3}$",
+      "description": "ISO-3 country code"
+    },
+    {
+      "name": "continent",
+      "type": "enum",
+      "values": ["Africa", "Asia", "Europe", "North America", 
+                "South America", "Oceania", "Antarctica"],
+      "description": "Continent where the country is located"
+    }
+  ]
+}`}</code></pre>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -464,27 +607,390 @@ function ReferenceTypesContent() {
 }
 
 function ReferenceDataContent() {
+  // Get the reference data content from the documentation data
+  const refDataSets = documentationContent["reference-data"];
+  
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h2 className="text-3xl font-bold mb-4">Reference Data Sets</h2>
         <p className="text-lg text-muted-foreground mb-6">
-          Reference Data Sets contain the actual reference data values used in your organization.
+          {refDataSets[0].content}
         </p>
       </div>
+      
+      {/* Render each subsection */}
+      {refDataSets[0].subsections?.map((subsection) => (
+        <Card key={subsection.id} id={subsection.id} className="border-l-4 border-l-primary">
+          <CardHeader>
+            <CardTitle className="text-xl">{subsection.title}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="prose dark:prose-invert max-w-none">
+              <p>{subsection.content}</p>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+      
+      {/* Additional content specific to reference data */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Reference Data Workflows</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p>The common workflows for managing reference data include:</p>
+            
+            <div className="space-y-4 mt-4">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-lg font-medium">
+                  1
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-medium">Create Reference Data Set</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Start by creating a reference data set based on an existing reference data type. Provide a name,
+                    description, and other required metadata. This creates an empty container ready to hold reference
+                    data instances.
+                  </p>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-lg font-medium">
+                  2
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-medium">Add Reference Data Instances</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Add individual reference data instances to the data set. Each instance must conform to the
+                    schema defined by the reference data type. You can add instances one by one through the UI
+                    or import them in bulk from a CSV file.
+                  </p>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-lg font-medium">
+                  3
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-medium">Maintain Reference Data</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Update reference data instances as needed. This might include adding new instances, 
+                    modifying existing ones, or retiring outdated ones. All changes can go through an
+                    approval workflow if governance controls are enabled.
+                  </p>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-lg font-medium">
+                  4
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-medium">Publish and Distribute</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Once reference data is approved, it becomes available for use throughout your organization.
+                    It can be accessed through the UI, APIs, or exported to various formats for distribution
+                    to other systems.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Importing Reference Data</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p>
+              For large reference data sets, you'll typically want to import data from external sources
+              rather than adding records manually. The platform provides robust import tools that support:
+            </p>
+            
+            <div className="grid md:grid-cols-2 gap-4 mt-4">
+              <div className="p-4 border rounded-md">
+                <h3 className="font-medium mb-2">CSV Import</h3>
+                <p className="text-sm text-muted-foreground">
+                  Import data from CSV files with flexible column mapping options. The system can generate
+                  templates based on your reference data type for easy population.
+                </p>
+              </div>
+              <div className="p-4 border rounded-md">
+                <h3 className="font-medium mb-2">API-Based Import</h3>
+                <p className="text-sm text-muted-foreground">
+                  Import data programmatically using REST APIs. This allows for automated updates from
+                  other systems or scheduled data refreshes.
+                </p>
+              </div>
+              <div className="p-4 border rounded-md">
+                <h3 className="font-medium mb-2">Validation During Import</h3>
+                <p className="text-sm text-muted-foreground">
+                  All imported data is validated against the reference data type's schema. Errors are
+                  reported with detailed information for correction.
+                </p>
+              </div>
+              <div className="p-4 border rounded-md">
+                <h3 className="font-medium mb-2">Bulk Updates</h3>
+                <p className="text-sm text-muted-foreground">
+                  Efficiently update existing reference data by importing changes. The system can match
+                  records based on key fields and apply updates intelligently.
+                </p>
+              </div>
+            </div>
+            
+            <div className="mt-4 p-4 bg-blue-50 text-blue-800 rounded-md dark:bg-blue-900 dark:text-blue-100">
+              <h4 className="font-medium mb-2">Best Practice</h4>
+              <p className="text-sm">
+                When importing large datasets, consider using the chunked import feature to break the process
+                into manageable batches. This prevents timeouts and provides better progress tracking and error handling.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Example Reference Data Sets</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-4">
+            Common examples of reference data sets managed in the RDM platform include:
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="border rounded-md p-4">
+              <h3 className="font-medium mb-2">Countries</h3>
+              <p className="text-sm text-muted-foreground">
+                Standard country codes, names, regions, and other geographical attributes.
+              </p>
+            </div>
+            <div className="border rounded-md p-4">
+              <h3 className="font-medium mb-2">Currencies</h3>
+              <p className="text-sm text-muted-foreground">
+                Currency codes, names, symbols, and decimal settings.
+              </p>
+            </div>
+            <div className="border rounded-md p-4">
+              <h3 className="font-medium mb-2">Product Catalogs</h3>
+              <p className="text-sm text-muted-foreground">
+                Product codes, names, categories, and attributes.
+              </p>
+            </div>
+            <div className="border rounded-md p-4">
+              <h3 className="font-medium mb-2">Organizational Units</h3>
+              <p className="text-sm text-muted-foreground">
+                Department codes, names, hierarchies, and contact information.
+              </p>
+            </div>
+            <div className="border rounded-md p-4">
+              <h3 className="font-medium mb-2">Industry Codes</h3>
+              <p className="text-sm text-muted-foreground">
+                Standard classification systems like NAICS, SIC, or ISIC codes.
+              </p>
+            </div>
+            <div className="border rounded-md p-4">
+              <h3 className="font-medium mb-2">Status Codes</h3>
+              <p className="text-sm text-muted-foreground">
+                Standardized status values for various business processes.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
 function RelationshipsContent() {
+  // Get the relationships content from the documentation data
+  const relationshipsData = documentationContent["relationships"];
+  
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h2 className="text-3xl font-bold mb-4">Relationships</h2>
         <p className="text-lg text-muted-foreground mb-6">
-          Relationships connect records from different reference data sets to each other.
+          {relationshipsData[0].content}
         </p>
       </div>
+      
+      {/* Render each subsection */}
+      {relationshipsData[0].subsections?.map((subsection) => (
+        <Card key={subsection.id} id={subsection.id} className="border-l-4 border-l-primary">
+          <CardHeader>
+            <CardTitle className="text-xl">{subsection.title}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="prose dark:prose-invert max-w-none">
+              <p>{subsection.content}</p>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+      
+      {/* Additional content specific to relationships */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Types of Relationships</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2">One-to-One</h3>
+              <p className="text-sm text-muted-foreground">
+                Each source record relates to exactly one target record. Example: Each Country has one Capital City.
+              </p>
+            </div>
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2">One-to-Many</h3>
+              <p className="text-sm text-muted-foreground">
+                A single source record relates to multiple target records. Example: A Country has many Cities.
+              </p>
+            </div>
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2">Many-to-One</h3>
+              <p className="text-sm text-muted-foreground">
+                Multiple source records relate to a single target record. Example: Many Products belong to one Category.
+              </p>
+            </div>
+            <div className="p-4 border rounded-md">
+              <h3 className="font-medium mb-2">Many-to-Many</h3>
+              <p className="text-sm text-muted-foreground">
+                Multiple source records relate to multiple target records. Example: Many Doctors relate to Many Patients.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Relationship Attributes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p>
+              Relationships can have their own attributes that provide additional context or metadata about the connection
+              between reference data instances. Common examples include:
+            </p>
+            
+            <div className="grid md:grid-cols-2 gap-4 mt-4">
+              <div className="p-4 border rounded-md">
+                <h3 className="font-medium mb-2">Effective Dates</h3>
+                <p className="text-sm text-muted-foreground">
+                  Start and end dates for when the relationship is valid. Example: A Product belongs to Category A 
+                  from Jan 1, 2025 to Jun 30, 2025, then to Category B afterward.
+                </p>
+              </div>
+              <div className="p-4 border rounded-md">
+                <h3 className="font-medium mb-2">Relationship Type</h3>
+                <p className="text-sm text-muted-foreground">
+                  Classification of the relationship. Example: An Employee "manages" another Employee, 
+                  or an Employee "reports to" another Employee.
+                </p>
+              </div>
+              <div className="p-4 border rounded-md">
+                <h3 className="font-medium mb-2">Relationship Strength</h3>
+                <p className="text-sm text-muted-foreground">
+                  A quantitative measure of the connection. Example: A Product is "primary" or "secondary" 
+                  in a Product Category.
+                </p>
+              </div>
+              <div className="p-4 border rounded-md">
+                <h3 className="font-medium mb-2">Custom Business Rules</h3>
+                <p className="text-sm text-muted-foreground">
+                  Business-specific attributes that provide context. Example: A Customer has a "preferred" status 
+                  with a Vendor.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Visualizing Relationships</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p>
+              The RDM platform provides several ways to visualize relationships between reference data sets:
+            </p>
+            
+            <div className="mt-4">
+              <h3 className="font-medium mb-3">Graph Visualization</h3>
+              <div className="rounded-md border overflow-hidden">
+                <div className="p-4 bg-muted">
+                  <p className="text-sm">
+                    The graph visualization interface lets you explore relationships between data sets interactively.
+                    Nodes represent reference data instances, and edges represent the relationships between them.
+                  </p>
+                </div>
+                <div className="p-6 flex justify-center bg-slate-50 dark:bg-slate-900">
+                  <div className="w-full max-w-lg h-40 bg-slate-200 dark:bg-slate-800 rounded-md flex items-center justify-center">
+                    <span className="text-sm text-muted-foreground italic">Interactive graph visualization</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-6">
+              <h3 className="font-medium mb-3">Tabular View</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-muted">
+                      <th className="p-2 text-left font-medium text-sm">Source</th>
+                      <th className="p-2 text-left font-medium text-sm">Relationship</th>
+                      <th className="p-2 text-left font-medium text-sm">Target</th>
+                      <th className="p-2 text-left font-medium text-sm">Effective Date</th>
+                      <th className="p-2 text-left font-medium text-sm">End Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    <tr>
+                      <td className="p-2 text-sm">United States</td>
+                      <td className="p-2 text-sm">has currency</td>
+                      <td className="p-2 text-sm">US Dollar</td>
+                      <td className="p-2 text-sm">1792-04-02</td>
+                      <td className="p-2 text-sm">-</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 text-sm">Canada</td>
+                      <td className="p-2 text-sm">has currency</td>
+                      <td className="p-2 text-sm">Canadian Dollar</td>
+                      <td className="p-2 text-sm">1871-04-01</td>
+                      <td className="p-2 text-sm">-</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 text-sm">France</td>
+                      <td className="p-2 text-sm">has currency</td>
+                      <td className="p-2 text-sm">Euro</td>
+                      <td className="p-2 text-sm">2002-01-01</td>
+                      <td className="p-2 text-sm">-</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
