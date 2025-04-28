@@ -7,6 +7,7 @@ import { parse } from "csv-parse";
 import externalRoutes from "./externalRoutes";
 import { apiKeyAuth } from "./middleware/api-auth";
 import diagnosticsRouter from "./diagnostics";
+import auditRoutes from "./auditRoutes";
 import {
   insertRelationshipSchema,
   insertCrosswalkMappingSchema,
