@@ -267,6 +267,19 @@ export default function RelationshipsPage() {
   });
 
   // Create attribute definition mutation - updated with proper error handling
+  // State to handle mandatory attribute validation
+  const [mandatoryAttributeWarning, setMandatoryAttributeWarning] = useState<{
+    show: boolean;
+    message: string;
+    affectedCount: number;
+    attributeData: any;
+  }>({
+    show: false,
+    message: "",
+    affectedCount: 0,
+    attributeData: null
+  });
+
   const mutateAttributeDefinition = useMutation({
     mutationFn: async (data: AttributeDefinitionForm) => {
       if (!selectedRelationshipId) {
@@ -285,13 +298,33 @@ export default function RelationshipsPage() {
         });
 
         const result = await response.json();
+        
+        // Check if this is a validation warning about mandatory attributes
+        if (result.requiresConfirmation) {
+          // Store the warning information for display
+          setMandatoryAttributeWarning({
+            show: true,
+            message: result.message,
+            affectedCount: result.affectedRecordsCount,
+            attributeData: result.attributeData
+          });
+          
+          // Return a special result to indicate validation is required
+          return { requiresValidation: true };
+        }
+        
         return result;
       } catch (error) {
         console.error("API request failed:", error);
         throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Skip further processing if we're showing a validation warning
+      if (data && 'requiresValidation' in data) {
+        return;
+      }
+      
       queryClient.invalidateQueries({
         queryKey: [`/api/relationships/${selectedRelationshipId}/attribute-definitions`],
       });

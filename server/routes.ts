@@ -1349,6 +1349,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('Validated data:', result.data);
+      
+      // Check if attribute is being set as required
+      if (result.data.isRequired) {
+        console.log('Attribute is marked as required, checking existing records...');
+        const relationshipId = Number(req.params.id);
+        
+        // 1. Get all relationship values for this relationship type
+        const relationshipValues = await storage.getRelationshipValues(relationshipId);
+        
+        if (relationshipValues.length > 0) {
+          console.log(`Found ${relationshipValues.length} existing relationship values to validate`);
+          
+          // Check if 'requireValidation' is set to false to bypass the check
+          if (req.body.skipValidation !== true) {
+            // 2. Return warning with count of affected records if there are existing records
+            return res.status(200).json({
+              requiresConfirmation: true,
+              affectedRecordsCount: relationshipValues.length,
+              message: `Making this attribute mandatory will affect ${relationshipValues.length} existing relationship records. Do you want to proceed?`,
+              attributeData: result.data
+            });
+          } else {
+            console.log('Validation check bypassed with skipValidation flag');
+          }
+        }
+      }
+      
+      // Proceed with creation if not required or no existing records or validation bypassed
       const definition = await storage.createRelationshipAttributeDefinition(result.data);
       console.log('POST /api/relationships/:id/attribute-definitions - Definition created successfully:', definition);
       res.status(201).json(definition);
@@ -1365,8 +1393,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(401);
     }
     try {
+      const attributeId = Number(req.params.id);
+      
+      // Check if this update is making the attribute required
+      if (req.body.isRequired === true) {
+        console.log('Attribute is being updated to required, checking existing records...');
+        
+        // Get the current attribute definition to find the relationship type ID
+        const currentDefinition = await storage.getRelationshipAttributeDefinition(attributeId);
+        
+        if (currentDefinition && !currentDefinition.isRequired) {
+          // Get all relationship values for this relationship type
+          const relationshipValues = await storage.getRelationshipValues(currentDefinition.relationshipTypeId);
+          
+          if (relationshipValues.length > 0) {
+            console.log(`Found ${relationshipValues.length} existing relationship values to validate`);
+            
+            // Check if skipValidation flag is set to bypass the check
+            if (req.body.skipValidation !== true) {
+              // Get more specific information about missing values
+              const missingValuesCount = relationshipValues.length; // This is simplified - see note below
+              
+              // Return warning with count of affected records
+              return res.status(200).json({
+                requiresConfirmation: true,
+                affectedRecordsCount: missingValuesCount,
+                message: `Making this attribute mandatory will affect ${missingValuesCount} existing relationship records. Do you want to proceed?`,
+                attributeData: { ...currentDefinition, ...req.body }
+              });
+            } else {
+              console.log('Validation check bypassed with skipValidation flag');
+            }
+          }
+        }
+      }
+      
+      // Proceed with the update
       const definition = await storage.updateRelationshipAttributeDefinition(
-        Number(req.params.id),
+        attributeId,
         req.body
       );
       console.log('PATCH /api/relationships/attribute-definitions/:id - Definition updated successfully');
