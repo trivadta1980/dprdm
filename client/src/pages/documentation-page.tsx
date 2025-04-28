@@ -7,6 +7,9 @@ import {
 import { 
   Accordion, AccordionContent, AccordionItem, AccordionTrigger 
 } from "@/components/ui/accordion";
+import { useDocumentationSearch } from "@/hooks/use-documentation-search";
+import { SearchResults } from "@/components/documentation/search-results";
+import { documentationContent } from "@/data/documentation-content";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
