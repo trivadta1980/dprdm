@@ -270,8 +270,8 @@ export default function AuditLogsPage() {
 
   return (
     <MainLayout>
-      <div className="w-full max-w-full p-4 sm:p-5 md:p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-5 gap-3 sm:gap-0">
+      <div className="w-full h-full flex-1 p-0 md:p-1">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-5 gap-3 sm:gap-0 px-4 sm:px-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Audit Trail</h1>
           </div>
@@ -308,7 +308,7 @@ export default function AuditLogsPage() {
 
         {/* Statistics Cards */}
         {!isLoadingStats && stats && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 mb-4 sm:mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 mb-4 sm:mb-6 px-2 sm:px-4 md:px-6">
             <StatisticCard
               title="Total Actions"
               value={stats.totalActions}
@@ -337,8 +337,8 @@ export default function AuditLogsPage() {
         )}
 
         {/* Main Content */}
-        <div className="w-full">
-          <Card className="w-full overflow-hidden">
+        <div className="w-full flex-1 px-0 mx-auto">
+          <Card className="w-full h-full overflow-hidden border-0 rounded-none sm:border sm:rounded-md">
             <CardHeader className="pb-3 pt-0">
 
               {/* Tabs for entity type filtering */}
@@ -464,24 +464,24 @@ export default function AuditLogsPage() {
               )}
             </CardHeader>
 
-            <CardContent className="p-0">
+            <CardContent className="p-0 w-full">
               {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-8 sm:py-12">
+                <div className="flex flex-col items-center justify-center py-8 sm:py-12 w-full">
                   <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-primary" />
                   <span className="ml-2 text-base sm:text-lg mt-2">Loading audit logs...</span>
                 </div>
               ) : isError ? (
-                <div className="flex justify-center items-center py-8 sm:py-12 text-destructive text-sm sm:text-base">
+                <div className="flex justify-center items-center py-8 sm:py-12 text-destructive text-sm sm:text-base w-full">
                   <p>Error loading audit logs. Please try again.</p>
                 </div>
               ) : auditLogs?.data.length === 0 ? (
-                <div className="py-8 sm:py-12 text-center text-muted-foreground">
+                <div className="py-8 sm:py-12 text-center text-muted-foreground w-full">
                   <FileText className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 sm:mb-3 text-muted-foreground/50" />
                   <p className="text-base sm:text-lg font-medium">No audit logs found</p>
                   <p className="text-xs sm:text-sm">Try adjusting your filters or check back later</p>
                 </div>
               ) : (
-                <div className="rounded-md border overflow-hidden w-full">
+                <div className="w-full min-w-full overflow-hidden">
                   {/* Desktop view - full table */}
                   <div className="hidden md:block w-full">
                     <Table className="w-full table-fixed">
@@ -542,8 +542,8 @@ export default function AuditLogsPage() {
                   </div>
                   
                   {/* Mobile view - card-based layout */}
-                  <div className="block md:hidden">
-                    <div className="divide-y">
+                  <div className="block md:hidden w-full">
+                    <div className="divide-y w-full">
                       {auditLogs?.data.map((log: AuditLog) => (
                         <div key={log.id} className="p-4">
                           <div className="flex justify-between items-start mb-2">
