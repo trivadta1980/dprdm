@@ -35,6 +35,7 @@ const ApprovalsDashboard = lazy(() => import("@/pages/approvals-dashboard"));
 const ApiKeysPage = lazy(() => import("@/pages/api-keys-page"));
 const CrosswalkComparisonPage = lazy(() => import("@/pages/crosswalk-comparison-page"));
 const MissingMappingsPage = lazy(() => import("@/pages/missing-mappings-page"));
+const DocumentationPage = lazy(() => import("@/pages/documentation-page"));
 // Diagnostic page (not included in navigation)
 const DiagnosticsPage = lazy(() => import("@/pages/diagnostics-page"));
 
@@ -173,6 +174,17 @@ export default function App() {
                 <Route path="/missing-mappings">
                   <ProtectedRoute>
                     <MissingMappingsPage />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/documentation">
+                  <ProtectedRoute>
+                    <DocumentationPage />
+                  </ProtectedRoute>
+                </Route>
+                {/* Alias for documentation - for the "View Documentation" button */}
+                <Route path="/help">
+                  <ProtectedRoute>
+                    <DocumentationPage />
                   </ProtectedRoute>
                 </Route>
                 {/* Diagnostic page - not included in navigation */}
