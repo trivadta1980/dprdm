@@ -271,14 +271,8 @@ export default function AuditLogsPage() {
   return (
     <MainLayout>
       <div className="w-full p-4 sm:p-6 md:p-8 lg:p-10">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Audit Trail</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              Track and monitor all system activities and changes
-            </p>
-          </div>
-          <div className="flex self-end sm:self-auto space-x-2">
+        <div className="flex justify-end mb-4 sm:mb-6">
+          <div className="flex space-x-2">
             <Button
               variant="outline"
               size="sm"
@@ -334,24 +328,16 @@ export default function AuditLogsPage() {
         <div className="grid grid-cols-1 gap-6 w-full">
           <Card>
             <CardHeader className="pb-3">
-              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 sm:gap-0">
-                <div>
-                  <CardTitle className="text-xl sm:text-2xl">Audit Logs</CardTitle>
-                  <CardDescription className="text-sm">
-                    Comprehensive system activity records with {auditLogs?.metadata?.total || 0} entries
-                  </CardDescription>
-                </div>
-                <div className="flex mt-2 sm:mt-0">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="flex items-center"
-                  >
-                    <Filter className="mr-2 h-4 w-4" />
-                    <span className="hidden xs:inline">{showFilters ? "Hide Filters" : "Show Filters"}</span>
-                  </Button>
-                </div>
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center"
+                >
+                  <Filter className="mr-2 h-4 w-4" />
+                  <span className="hidden xs:inline">{showFilters ? "Hide Filters" : "Show Filters"}</span>
+                </Button>
               </div>
 
               {/* Tabs for entity type filtering */}
