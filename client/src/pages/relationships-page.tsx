@@ -47,7 +47,6 @@ import type {
   RelationshipAttributeDefinition,
   InsertRelationshipAttributeDefinition
 } from "@shared/schema";
-import { ArrowRightLeft, ArrowUpDown, GitFork, Info, Plus, PlusCircle, Trash2, Edit } from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
 import { Switch } from "@/components/ui/switch";
@@ -908,6 +907,60 @@ export default function RelationshipsPage() {
       attributeData: null
     });
     attributeForm.reset();
+  };
+  
+  // Function to apply default values to existing records
+  const applyDefaultValues = async () => {
+    if (!mandatoryAttributeWarning.attributeData) {
+      return;
+    }
+    
+    try {
+      const attributeData = mandatoryAttributeWarning.attributeData;
+      
+      const response = await apiRequest(`/api/relationships/${selectedRelationshipId}/attribute-definitions/apply-defaults`, {
+        method: 'POST',
+        data: {
+          ...attributeData,
+          applyDefaults: true
+        }
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        queryClient.invalidateQueries({
+          queryKey: [`/api/relationships/${selectedRelationshipId}/attribute-definitions`],
+        });
+        
+        setMandatoryAttributeWarning({
+          show: false,
+          message: "",
+          affectedCount: 0,
+          attributeData: null
+        });
+        
+        attributeForm.reset();
+        
+        toast({
+          title: "Success",
+          description: "Default values applied to all existing records",
+        });
+      } else {
+        toast({
+          title: "Warning",
+          description: result.message || "Could not apply default values",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error applying default values:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to apply default values",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
