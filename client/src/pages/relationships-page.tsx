@@ -90,6 +90,7 @@ export default function RelationshipsPage() {
   const [isAttributeDialogOpen, setIsAttributeDialogOpen] = useState(false);
   const [editingRelationship, setEditingRelationship] = useState<Relationship | null>(null);
   const [selectedRelationshipId, setSelectedRelationshipId] = useState<number | null>(null);
+  const [editingAttributeDefinition, setEditingAttributeDefinition] = useState<RelationshipAttributeDefinition | null>(null);
   // Add state for available fields
   const [sourceFields, setSourceFields] = useState<string[]>([]);
   const [targetFields, setTargetFields] = useState<string[]>([]);
@@ -372,6 +373,67 @@ export default function RelationshipsPage() {
     },
   });
 
+  // Update attribute definition mutation
+  const updateAttributeMutation = useMutation({
+    mutationFn: async (data: { id: number, data: AttributeDefinitionForm }) => {
+      try {
+        const response = await apiRequest(`/api/relationships/attribute-definitions/${data.id}`, {
+          method: 'PATCH',
+          data: data.data
+        });
+
+        const result = await response.json();
+        
+        // Check if this is a validation warning about mandatory attributes
+        if (result.requiresConfirmation) {
+          // Store the warning information for display
+          setMandatoryAttributeWarning({
+            show: true,
+            message: result.message,
+            affectedCount: result.affectedRecordsCount,
+            attributeData: result.attributeData
+          });
+          
+          // Return a special result to indicate validation is required
+          return { requiresValidation: true };
+        }
+        
+        return result;
+      } catch (error) {
+        console.error("API request failed:", error);
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      // Skip further processing if we're showing a validation warning
+      if (data && 'requiresValidation' in data) {
+        return;
+      }
+      
+      queryClient.invalidateQueries({
+        queryKey: [`/api/relationships/${selectedRelationshipId}/attribute-definitions`],
+      });
+      setEditingAttributeDefinition(null);
+      attributeForm.reset({
+        name: "",
+        dataType: undefined,
+        isRequired: false,
+        description: "",
+      });
+      toast({
+        title: "Success",
+        description: "Attribute definition updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update attribute definition",
+        variant: "destructive",
+      });
+    },
+  });
+  
   // Delete attribute definition mutation
   const deleteAttributeMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -441,6 +503,30 @@ export default function RelationshipsPage() {
     }
   }
 
+  function handleEditAttribute(attribute: RelationshipAttributeDefinition) {
+    setEditingAttributeDefinition(attribute);
+    
+    // Set form values
+    attributeForm.reset({
+      name: attribute.name,
+      dataType: attribute.dataType as any,
+      isRequired: attribute.isRequired,
+      description: attribute.description || ""
+    });
+    
+    // Open attribute dialog
+    setIsAttributeDialogOpen(true);
+  }
+  
+  function handleUpdateAttribute(data: AttributeDefinitionForm) {
+    if (editingAttributeDefinition) {
+      updateAttributeMutation.mutate({
+        id: editingAttributeDefinition.id,
+        data
+      });
+    }
+  }
+  
   function handleDeleteAttribute(id: number) {
     if (window.confirm("Are you sure you want to delete this attribute definition?")) {
       deleteAttributeMutation.mutate(id);
@@ -678,8 +764,108 @@ export default function RelationshipsPage() {
 
 
 
+  // Function to proceed with attribute creation after confirmation
+  const proceedWithAttributeCreation = () => {
+    if (mandatoryAttributeWarning.attributeData) {
+      // Create a request with skipValidation flag
+      const requestData = {
+        ...mandatoryAttributeWarning.attributeData,
+        skipValidation: true
+      };
+      
+      // Reset the warning state
+      setMandatoryAttributeWarning({
+        show: false,
+        message: "",
+        affectedCount: 0,
+        attributeData: null
+      });
+      
+      // Make the API request directly
+      apiRequest(`/api/relationships/${selectedRelationshipId}/attribute-definitions`, {
+        method: 'POST',
+        data: requestData
+      })
+      .then(response => response.json())
+      .then(result => {
+        queryClient.invalidateQueries({
+          queryKey: [`/api/relationships/${selectedRelationshipId}/attribute-definitions`],
+        });
+        toast({
+          title: "Success",
+          description: "Attribute definition created successfully",
+        });
+        attributeForm.reset({
+          name: "",
+          dataType: undefined,
+          isRequired: false,
+          description: "",
+        });
+      })
+      .catch(error => {
+        console.error("Error creating attribute:", error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to create attribute definition",
+          variant: "destructive",
+        });
+      });
+    }
+  };
+  
+  // Function to cancel attribute creation
+  const cancelAttributeCreation = () => {
+    setMandatoryAttributeWarning({
+      show: false,
+      message: "",
+      affectedCount: 0,
+      attributeData: null
+    });
+    attributeForm.reset();
+  };
+
   return (
     <MainLayout>
+      {/* Validation warning dialog */}
+      <Dialog 
+        open={mandatoryAttributeWarning.show} 
+        onOpenChange={(open) => {
+          if (!open) cancelAttributeCreation();
+        }}
+      >
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-yellow-600">
+              <div className="flex items-center gap-2">
+                <Info className="h-5 w-5" />
+                Warning: Mandatory Attribute
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="mt-4 space-y-4">
+            <p>{mandatoryAttributeWarning.message}</p>
+            
+            <div className="bg-yellow-50 p-4 rounded-md border border-yellow-200">
+              <h4 className="font-medium text-yellow-800 mb-2">Impact</h4>
+              <p className="text-sm text-yellow-700">
+                This change will affect {mandatoryAttributeWarning.affectedCount} existing relationship records.
+                Existing records will not have a value for this attribute, which may cause validation issues in the future.
+              </p>
+            </div>
+            
+            <div className="pt-4 flex justify-end space-x-2">
+              <Button variant="outline" onClick={cancelAttributeCreation}>
+                Cancel
+              </Button>
+              <Button variant="default" onClick={proceedWithAttributeCreation}>
+                Proceed Anyway
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
       <div className="max-w-6xl mx-auto space-y-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -1079,6 +1265,7 @@ export default function RelationshipsPage() {
           open={isAttributeDialogOpen}
           onOpenChange={(open) => {
             if (!open) {
+              setEditingAttributeDefinition(null);
               attributeForm.reset({
                 name: "",
                 dataType: undefined,
@@ -1091,7 +1278,7 @@ export default function RelationshipsPage() {
         >
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Manage Relationship Attributes</DialogTitle>
+              <DialogTitle>{editingAttributeDefinition ? 'Edit Attribute Definition' : 'Add New Attribute Definition'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <Form {...attributeForm}>
