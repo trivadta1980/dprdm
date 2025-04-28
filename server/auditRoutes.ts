@@ -264,7 +264,7 @@ router.get("/audit-logs/user/:id", requireAuth, async (req: Request, res: Respon
   console.log(`GET /api/audit-logs/user/${req.params.id} - Request received`);
   try {
     // Only allow administrators to access user audit logs
-    if (!req.session.user?.isAdmin) {
+    if (!req.isAuthenticated() || !req.user?.roleId || req.user.roleId !== 1) {
       return res.status(403).json({ error: "Not authorized to view user audit logs" });
     }
 
@@ -338,7 +338,7 @@ router.get("/audit-logs/stats", requireAuth, async (req: Request, res: Response)
   console.log("GET /api/audit-logs/stats - Request received");
   try {
     // Only allow administrators to access audit stats
-    if (!req.session.user?.isAdmin) {
+    if (!req.isAuthenticated() || !req.user?.roleId || req.user.roleId !== 1) {
       return res.status(403).json({ error: "Not authorized to view audit statistics" });
     }
 

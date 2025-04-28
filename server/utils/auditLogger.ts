@@ -50,7 +50,7 @@ export async function logCrudEvent(
   changeSummary?: string
 ) {
   // Skip audit logging if the user is not authenticated
-  if (!req.session.user) {
+  if (!req.isAuthenticated() || !req.user) {
     console.warn("Attempted to log audit event without authenticated user");
     return null;
   }
@@ -63,8 +63,8 @@ export async function logCrudEvent(
 
   // Build audit log data
   const auditData: InsertAuditLog = {
-    userId: req.session.user.id,
-    username: req.session.user.username,
+    userId: req.user.id,
+    username: req.user.username,
     ipAddress: typeof ipAddress === 'string' ? ipAddress : ipAddress[0],
     actionType,
     module,
