@@ -529,3 +529,77 @@ export type ChangeHistoryEntry = {
   comment?: string;
   changes?: Record<string, any>;
 };
+
+// Define action types for audit logs
+export const auditActionEnum = pgEnum("audit_action", [
+  "CREATE",
+  "READ",
+  "UPDATE",
+  "DELETE",
+  "APPROVE",
+  "REJECT",
+  "EXPORT",
+  "IMPORT",
+  "LOGIN",
+  "LOGOUT",
+  "SYSTEM"
+]);
+
+// Define entity types for audit logs
+export const auditEntityEnum = pgEnum("audit_entity", [
+  "USER",
+  "ROLE",
+  "REFERENCE_TYPE",
+  "REFERENCE_DATA",
+  "RELATIONSHIP",
+  "CROSSWALK",
+  "API_KEY",
+  "SYSTEM"
+]);
+
+// Audit logs table for comprehensive activity tracking
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  userId: integer("user_id").references(() => users.id),
+  username: text("username").notNull(), // Stored directly for historical accuracy
+  ipAddress: text("ip_address"),
+  actionType: auditActionEnum("action_type").notNull(),
+  module: auditEntityEnum("module").notNull(),
+  entityId: text("entity_id"), // Can be integer or string ID
+  entityName: text("entity_name"), // Human-readable identifier
+  oldValue: jsonb("old_value"), // State before change
+  newValue: jsonb("new_value"), // State after change
+  changeSummary: text("change_summary"), // Human-readable summary of changes
+  additionalContext: jsonb("additional_context"), // Additional metadata
+});
+
+// Define relations for audit logs
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [auditLogs.userId],
+    references: [users.id],
+  }),
+}));
+
+// Schema for inserting audit logs
+export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
+  id: true,
+  timestamp: true,
+}).extend({
+  actionType: z.enum([
+    "CREATE", "READ", "UPDATE", "DELETE", "APPROVE", 
+    "REJECT", "EXPORT", "IMPORT", "LOGIN", "LOGOUT", "SYSTEM"
+  ]),
+  module: z.enum([
+    "USER", "ROLE", "REFERENCE_TYPE", "REFERENCE_DATA", 
+    "RELATIONSHIP", "CROSSWALK", "API_KEY", "SYSTEM"
+  ]),
+  oldValue: z.record(z.string(), z.any()).optional(),
+  newValue: z.record(z.string(), z.any()).optional(),
+  additionalContext: z.record(z.string(), z.any()).optional(),
+});
+
+// Types for audit logs
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
