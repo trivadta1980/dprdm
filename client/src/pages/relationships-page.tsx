@@ -940,12 +940,31 @@ export default function RelationshipsPage() {
               </p>
             </div>
             
+            <div className="mt-4 bg-blue-50 p-4 rounded-md border border-blue-200">
+              <h4 className="font-medium text-blue-800 mb-2">Options</h4>
+              <ul className="text-sm text-blue-700 space-y-2 list-disc pl-5">
+                <li><span className="font-semibold">Cancel</span> - Abort the operation without making any changes</li>
+                <li><span className="font-semibold">Proceed Anyway</span> - Create/update the attribute definition but allow existing records to have null values</li>
+                <li><span className="font-semibold">Apply Default Values</span> - Create/update the attribute definition and apply appropriate default values to all existing records:
+                  <ul className="pl-4 mt-1 text-xs">
+                    <li>String: Empty string ("")</li>
+                    <li>Number: 0</li>
+                    <li>Boolean: False</li>
+                    <li>Date: Current date</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+            
             <div className="pt-4 flex justify-end space-x-2">
               <Button variant="outline" onClick={cancelAttributeCreation}>
                 Cancel
               </Button>
               <Button variant="default" onClick={proceedWithAttributeCreation}>
                 Proceed Anyway
+              </Button>
+              <Button variant="default" className="bg-green-600 hover:bg-green-700 text-white" onClick={applyDefaultValues}>
+                Apply Default Values
               </Button>
             </div>
           </div>
