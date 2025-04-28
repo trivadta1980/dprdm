@@ -1386,6 +1386,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Apply default values to existing relationship records for a new mandatory attribute
+  app.post("/api/relationships/:id/attribute-definitions/apply-defaults", async (req, res) => {
+    console.log('POST /api/relationships/:id/attribute-definitions/apply-defaults - Request received');
+    console.log('Request body:', req.body);
+
+    if (!req.isAuthenticated()) {
+      console.log('POST /api/relationships/:id/attribute-definitions/apply-defaults - Unauthorized access');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const relationshipId = Number(req.params.id);
+      
+      // Parse the attribute data from the request
+      const result = insertRelationshipAttributeDefinitionSchema.safeParse({
+        ...req.body,
+        relationshipTypeId: relationshipId
+      });
+
+      if (!result.success) {
+        console.log('POST /api/relationships/:id/attribute-definitions/apply-defaults - Invalid data:', result.error);
+        return res.status(400).json({ success: false, message: "Invalid attribute data", error: result.error });
+      }
+      
+      // First create or update the attribute definition
+      const attributeDefinition = await storage.createRelationshipAttributeDefinition(result.data);
+      console.log('Attribute definition created:', attributeDefinition);
+      
+      // Get all relationship values for this relationship
+      const relationshipValues = await storage.getRelationshipValues(relationshipId);
+      console.log(`Found ${relationshipValues.length} existing relationship values to update`);
+      
+      // For each relationship value, add the default attribute value based on data type
+      let defaultValue;
+      switch (req.body.dataType) {
+        case 'string':
+          defaultValue = '';
+          break;
+        case 'number':
+          defaultValue = 0;
+          break;
+        case 'boolean':
+          defaultValue = false;
+          break;
+        case 'date':
+          defaultValue = new Date().toISOString();
+          break;
+        default:
+          defaultValue = null;
+      }
+      
+      // Create an attribute value for each relationship value
+      for (const relationshipValue of relationshipValues) {
+        await storage.createRelationshipAttributeValue({
+          relationshipValueId: relationshipValue.id,
+          attributeDefinitionId: attributeDefinition.id,
+          value: String(defaultValue), // Store all values as strings in the DB
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+      
+      console.log('POST /api/relationships/:id/attribute-definitions/apply-defaults - Successfully applied defaults');
+      res.status(200).json({ 
+        success: true, 
+        message: `Default values applied to ${relationshipValues.length} records`,
+        attributeDefinition
+      });
+    } catch (error) {
+      console.error('POST /api/relationships/:id/attribute-definitions/apply-defaults - Error:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to apply default values", 
+        error: String(error)
+      });
+    }
+  });
+
   app.patch("/api/relationships/attribute-definitions/:id", async (req, res) => {
     console.log('PATCH /api/relationships/attribute-definitions/:id - Request received');
     if (!req.isAuthenticated()) {
