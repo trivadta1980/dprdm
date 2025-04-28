@@ -270,8 +270,8 @@ export default function AuditLogsPage() {
 
   return (
     <MainLayout>
-      <div className="w-full p-4 sm:p-6 md:p-8 lg:p-10">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
+      <div className="w-full max-w-full p-4 sm:p-5 md:p-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-5 gap-3 sm:gap-0">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Audit Trail</h1>
           </div>
@@ -337,8 +337,8 @@ export default function AuditLogsPage() {
         )}
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 gap-6 w-full">
-          <Card>
+        <div className="w-full">
+          <Card className="w-full overflow-hidden">
             <CardHeader className="pb-3 pt-0">
 
               {/* Tabs for entity type filtering */}
@@ -481,18 +481,18 @@ export default function AuditLogsPage() {
                   <p className="text-xs sm:text-sm">Try adjusting your filters or check back later</p>
                 </div>
               ) : (
-                <div className="rounded-md border overflow-auto">
+                <div className="rounded-md border overflow-hidden w-full">
                   {/* Desktop view - full table */}
-                  <div className="hidden md:block">
-                    <Table>
+                  <div className="hidden md:block w-full">
+                    <Table className="w-full table-fixed">
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[180px]">Timestamp</TableHead>
-                          <TableHead>User</TableHead>
-                          <TableHead>Action</TableHead>
-                          <TableHead>Entity</TableHead>
-                          <TableHead className="max-w-[300px]">Details</TableHead>
-                          <TableHead className="text-right"></TableHead>
+                          <TableHead className="w-[16%]">Timestamp</TableHead>
+                          <TableHead className="w-[14%]">User</TableHead>
+                          <TableHead className="w-[12%]">Action</TableHead>
+                          <TableHead className="w-[14%]">Entity</TableHead>
+                          <TableHead className="w-[36%]">Details</TableHead>
+                          <TableHead className="w-[8%] text-right"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -500,14 +500,14 @@ export default function AuditLogsPage() {
                           <TableRow key={log.id}>
                             <TableCell className="font-medium whitespace-nowrap">
                               <div className="flex items-center">
-                                <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                                <Calendar className="mr-2 h-4 w-4 text-muted-foreground flex-shrink-0" />
                                 {formatTimestamp(log.timestamp)}
                               </div>
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center">
-                                <UserRound className="mr-2 h-4 w-4 text-muted-foreground" />
-                                {log.username}
+                                <UserRound className="mr-2 h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                <span className="truncate">{log.username}</span>
                               </div>
                             </TableCell>
                             <TableCell>
@@ -519,11 +519,11 @@ export default function AuditLogsPage() {
                               <Badge variant={getEntityBadgeVariant(log.entityType)}>
                                 {log.entityType}
                               </Badge>
-                              <div className="text-xs text-muted-foreground mt-1">
+                              <div className="text-xs text-muted-foreground mt-1 truncate">
                                 {log.entityName}
                               </div>
                             </TableCell>
-                            <TableCell className="max-w-[300px]">
+                            <TableCell>
                               <div className="truncate text-sm">{log.details}</div>
                             </TableCell>
                             <TableCell className="text-right">
@@ -611,7 +611,7 @@ export default function AuditLogsPage() {
               )}
             </CardContent>
 
-            <CardFooter className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-t p-3 sm:p-4 gap-4 sm:gap-0">
+            <CardFooter className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-t p-2 sm:p-3 gap-3 sm:gap-0">
               <div className="text-xs sm:text-sm text-muted-foreground order-2 sm:order-1">
                 Showing{" "}
                 <span className="font-medium">
