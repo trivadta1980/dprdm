@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, Pencil, AlertCircle } from "lucide-react";
+import { Loader2, Plus, Pencil, AlertCircle, KeyRound } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -384,6 +384,7 @@ export default function ManageUsersPage() {
                               variant="outline"
                               size="icon"
                               onClick={() => handleEditUser(user)}
+                              title="Edit User"
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
