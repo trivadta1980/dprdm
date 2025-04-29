@@ -48,7 +48,7 @@ export default function ReferenceTypesListPage() {
   }>({
     name: "",
     description: "",
-    schemas: [{ name: "", dataType: "string" }]
+    schemas: [{ name: "", dataType: "string", isPrimaryKey: true }]
   });
   
   // Edit type dialog state
@@ -73,7 +73,7 @@ export default function ReferenceTypesListPage() {
   const handleAddSchemaField = () => {
     setNewTypeData({
       ...newTypeData,
-      schemas: [...newTypeData.schemas, { name: "", dataType: "string" }]
+      schemas: [...newTypeData.schemas, { name: "", dataType: "string", isPrimaryKey: false }]
     });
   };
 
@@ -157,7 +157,7 @@ export default function ReferenceTypesListPage() {
       setNewTypeData({
         name: "",
         description: "",
-        schemas: [{ name: "", dataType: "string" }]
+        schemas: [{ name: "", dataType: "string", isPrimaryKey: true }]
       });
       setIsAddDialogOpen(false);
 
@@ -258,6 +258,16 @@ export default function ReferenceTypesListPage() {
         toast({
           title: "Validation Error",
           description: "All schemas must have names",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Ensure at least one field is selected as primary key
+      if (!editTypeData.schemas.some(s => s.isPrimaryKey)) {
+        toast({
+          title: "Validation Error",
+          description: "One field must be selected as the primary key",
           variant: "destructive",
         });
         return;
