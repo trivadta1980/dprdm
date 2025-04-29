@@ -28,6 +28,7 @@ import type { ReferenceDataType, ReferenceDataTypeSchema } from "@shared/schema"
 type SchemaInput = {
   name: string;
   dataType: string;
+  isPrimaryKey?: boolean;
 };
 
 export default function ReferenceTypesListPage() {
@@ -47,7 +48,7 @@ export default function ReferenceTypesListPage() {
   }>({
     name: "",
     description: "",
-    schemas: [{ name: "", dataType: "string" }]
+    schemas: [{ name: "", dataType: "string", isPrimaryKey: true }]
   });
   
   // Edit type dialog state
@@ -72,7 +73,7 @@ export default function ReferenceTypesListPage() {
   const handleAddSchemaField = () => {
     setNewTypeData({
       ...newTypeData,
-      schemas: [...newTypeData.schemas, { name: "", dataType: "string" }]
+      schemas: [...newTypeData.schemas, { name: "", dataType: "string", isPrimaryKey: false }]
     });
   };
 
@@ -105,6 +106,16 @@ export default function ReferenceTypesListPage() {
         toast({
           title: "Validation Error",
           description: "All schemas must have names",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Ensure at least one field is selected as primary key
+      if (!newTypeData.schemas.some(s => s.isPrimaryKey)) {
+        toast({
+          title: "Validation Error",
+          description: "One field must be selected as the primary key",
           variant: "destructive",
         });
         return;
@@ -146,7 +157,7 @@ export default function ReferenceTypesListPage() {
       setNewTypeData({
         name: "",
         description: "",
-        schemas: [{ name: "", dataType: "string" }]
+        schemas: [{ name: "", dataType: "string", isPrimaryKey: true }]
       });
       setIsAddDialogOpen(false);
 
@@ -159,7 +170,7 @@ export default function ReferenceTypesListPage() {
       console.error("Error creating reference type:", error);
       toast({
         title: "Error",
-        description: `Failed to create reference type: ${error.message || "Unknown error"}`,
+        description: `Failed to create reference type: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive",
       });
     }
@@ -204,7 +215,8 @@ export default function ReferenceTypesListPage() {
         description: typeData.description || "",
         schemas: schemas.map((schema: ReferenceDataTypeSchema) => ({
           name: schema.name,
-          dataType: schema.dataType
+          dataType: schema.dataType,
+          isPrimaryKey: !!schema.isPrimaryKey
         }))
       });
       
@@ -220,7 +232,7 @@ export default function ReferenceTypesListPage() {
       console.error("Error fetching type for edit:", error);
       toast({
         title: "Error",
-        description: `Failed to load reference type data: ${error.message}`,
+        description: `Failed to load reference type data: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive",
       });
     } finally {
@@ -247,6 +259,16 @@ export default function ReferenceTypesListPage() {
         toast({
           title: "Validation Error",
           description: "All schemas must have names",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Ensure at least one field is selected as primary key
+      if (!editTypeData.schemas.some(s => s.isPrimaryKey)) {
+        toast({
+          title: "Validation Error",
+          description: "One field must be selected as the primary key",
           variant: "destructive",
         });
         return;
@@ -296,7 +318,7 @@ export default function ReferenceTypesListPage() {
       console.error("Error updating reference type:", error);
       toast({
         title: "Error",
-        description: `Failed to update reference type: ${error.message || "Unknown error"}`,
+        description: `Failed to update reference type: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive",
       });
     }
@@ -306,7 +328,7 @@ export default function ReferenceTypesListPage() {
   const handleAddSchemaFieldEdit = () => {
     setEditTypeData({
       ...editTypeData,
-      schemas: [...editTypeData.schemas, { name: "", dataType: "string" }]
+      schemas: [...editTypeData.schemas, { name: "", dataType: "string", isPrimaryKey: false }]
     });
   };
 
@@ -515,8 +537,11 @@ export default function ReferenceTypesListPage() {
                           ) : (
                             typeSchemas.map((schema, index) => (
                               <div key={index} className="space-y-1">
-                                <Badge variant="secondary" className="mr-1">
+                                <Badge 
+                                  variant={schema.isPrimaryKey ? "default" : "secondary"} 
+                                  className="mr-1">
                                   {schema.name}: {schema.dataType}
+                                  {schema.isPrimaryKey && <span className="ml-1 text-xs">(PK)</span>}
                                 </Badge>
                               </div>
                             ))
@@ -553,224 +578,291 @@ export default function ReferenceTypesListPage() {
             </Table>
           </CardContent>
         </Card>
+      
+        {/* Add New Type Dialog */}
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Add New Reference Data Type</DialogTitle>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Name *
+                </Label>
+                <Input
+                  id="name"
+                  value={newTypeData.name}
+                  onChange={(e) => setNewTypeData({...newTypeData, name: e.target.value})}
+                  className="col-span-3"
+                  placeholder="Enter type name"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="description" className="text-right">
+                  Description
+                </Label>
+                <Textarea
+                  id="description"
+                  value={newTypeData.description}
+                  onChange={(e) => setNewTypeData({...newTypeData, description: e.target.value})}
+                  className="col-span-3"
+                  placeholder="Enter description"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 gap-4">
+                <Label className="text-right pt-2">
+                  Schemas *
+                </Label>
+                <div className="col-span-3">
+                  <div className="mb-2 bg-muted p-2 rounded-md">
+                    <div className="flex items-center text-sm">
+                      <AlertCircle className="h-4 w-4 mr-2 text-primary" />
+                      <span>One field must be selected as Primary Key to enforce uniqueness</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-12 gap-2 mb-2 px-2">
+                    <div className="col-span-5 font-medium text-sm">Field Name</div>
+                    <div className="col-span-4 font-medium text-sm">Data Type</div>
+                    <div className="col-span-2 font-medium text-sm">Primary Key</div>
+                    <div className="col-span-1"></div>
+                  </div>
+                  <div className="space-y-2">
+                    {newTypeData.schemas.map((schema, index) => (
+                      <div key={index} className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-5">
+                          <Input
+                            value={schema.name}
+                            onChange={(e) => {
+                              const updatedSchemas = [...newTypeData.schemas];
+                              updatedSchemas[index].name = e.target.value;
+                              setNewTypeData({...newTypeData, schemas: updatedSchemas});
+                            }}
+                            placeholder="Field name"
+                          />
+                        </div>
+                        <div className="col-span-4">
+                          <select
+                            value={schema.dataType}
+                            onChange={(e) => {
+                              const updatedSchemas = [...newTypeData.schemas];
+                              updatedSchemas[index].dataType = e.target.value;
+                              setNewTypeData({...newTypeData, schemas: updatedSchemas});
+                            }}
+                            className="w-full p-2 border rounded-md"
+                          >
+                            <option value="string">string</option>
+                            <option value="number">number</option>
+                            <option value="boolean">boolean</option>
+                            <option value="date">date</option>
+                          </select>
+                        </div>
+                        <div className="col-span-2 flex justify-center">
+                          <input
+                            type="radio"
+                            checked={!!schema.isPrimaryKey}
+                            onChange={() => {
+                              const updatedSchemas = [...newTypeData.schemas].map((s, i) => ({
+                                ...s,
+                                isPrimaryKey: i === index
+                              }));
+                              setNewTypeData({...newTypeData, schemas: updatedSchemas});
+                            }}
+                            className="h-4 w-4"
+                          />
+                        </div>
+                        <div className="col-span-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleRemoveSchemaField(index)}
+                            disabled={newTypeData.schemas.length === 1}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleAddSchemaField}
+                      className="mt-2"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Schema Field
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateType}>
+                Create Type
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Type Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Edit Reference Data Type</DialogTitle>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-name" className="text-right">
+                  Name *
+                </Label>
+                <Input
+                  id="edit-name"
+                  value={editTypeData.name}
+                  onChange={(e) => setEditTypeData({...editTypeData, name: e.target.value})}
+                  className="col-span-3"
+                  placeholder="Enter type name"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-description" className="text-right">
+                  Description
+                </Label>
+                <Textarea
+                  id="edit-description"
+                  value={editTypeData.description}
+                  onChange={(e) => setEditTypeData({...editTypeData, description: e.target.value})}
+                  className="col-span-3"
+                  placeholder="Enter description"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 gap-4">
+                <Label className="text-right pt-2">
+                  Schemas *
+                </Label>
+                <div className="col-span-3">
+                  <div className="mb-2 bg-muted p-2 rounded-md">
+                    <div className="flex items-center text-sm">
+                      <AlertCircle className="h-4 w-4 mr-2 text-primary" />
+                      <span>One field must be selected as Primary Key to enforce uniqueness</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-12 gap-2 mb-2 px-2">
+                    <div className="col-span-5 font-medium text-sm">Field Name</div>
+                    <div className="col-span-4 font-medium text-sm">Data Type</div>
+                    <div className="col-span-2 font-medium text-sm">Primary Key</div>
+                    <div className="col-span-1"></div>
+                  </div>
+                  <div className="space-y-2">
+                    {editTypeData.schemas.map((schema, index) => (
+                      <div key={index} className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-5">
+                          <Input
+                            value={schema.name}
+                            onChange={(e) => {
+                              const updatedSchemas = [...editTypeData.schemas];
+                              updatedSchemas[index].name = e.target.value;
+                              setEditTypeData({...editTypeData, schemas: updatedSchemas});
+                            }}
+                            placeholder="Field name"
+                          />
+                        </div>
+                        <div className="col-span-4">
+                          <select
+                            value={schema.dataType}
+                            onChange={(e) => {
+                              const updatedSchemas = [...editTypeData.schemas];
+                              updatedSchemas[index].dataType = e.target.value;
+                              setEditTypeData({...editTypeData, schemas: updatedSchemas});
+                            }}
+                            className="w-full p-2 border rounded-md"
+                          >
+                            <option value="string">string</option>
+                            <option value="number">number</option>
+                            <option value="boolean">boolean</option>
+                            <option value="date">date</option>
+                          </select>
+                        </div>
+                        <div className="col-span-2 flex justify-center">
+                          <input
+                            type="radio"
+                            checked={!!schema.isPrimaryKey}
+                            onChange={() => {
+                              const updatedSchemas = [...editTypeData.schemas].map((s, i) => ({
+                                ...s,
+                                isPrimaryKey: i === index
+                              }));
+                              setEditTypeData({...editTypeData, schemas: updatedSchemas});
+                            }}
+                            className="h-4 w-4"
+                          />
+                        </div>
+                        <div className="col-span-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleRemoveSchemaFieldEdit(index)}
+                            disabled={editTypeData.schemas.length === 1}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleAddSchemaFieldEdit}
+                      className="mt-2"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Schema Field
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit}>
+                <Save className="h-4 w-4 mr-2" />
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete the reference data type 
+                "{typeToDelete?.name}". This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteType} className="bg-red-600 hover:bg-red-700">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
-    {/* Add New Type Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Add New Reference Data Type</DialogTitle>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name *
-              </Label>
-              <Input
-                id="name"
-                value={newTypeData.name}
-                onChange={(e) => setNewTypeData({...newTypeData, name: e.target.value})}
-                className="col-span-3"
-                placeholder="Enter type name"
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="description" className="text-right">
-                Description
-              </Label>
-              <Textarea
-                id="description"
-                value={newTypeData.description}
-                onChange={(e) => setNewTypeData({...newTypeData, description: e.target.value})}
-                className="col-span-3"
-                placeholder="Enter description"
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 gap-4">
-              <Label className="text-right pt-2">
-                Schemas *
-              </Label>
-              <div className="col-span-3 space-y-2">
-                {newTypeData.schemas.map((schema, index) => (
-                  <div key={index} className="flex gap-2 items-center">
-                    <Input
-                      value={schema.name}
-                      onChange={(e) => {
-                        const updatedSchemas = [...newTypeData.schemas];
-                        updatedSchemas[index].name = e.target.value;
-                        setNewTypeData({...newTypeData, schemas: updatedSchemas});
-                      }}
-                      placeholder="Schema name"
-                      className="flex-1"
-                    />
-                    <select
-                      value={schema.dataType}
-                      onChange={(e) => {
-                        const updatedSchemas = [...newTypeData.schemas];
-                        updatedSchemas[index].dataType = e.target.value;
-                        setNewTypeData({...newTypeData, schemas: updatedSchemas});
-                      }}
-                      className="p-2 border rounded-md"
-                    >
-                      <option value="string">string</option>
-                      <option value="number">number</option>
-                      <option value="boolean">boolean</option>
-                      <option value="date">date</option>
-                    </select>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => handleRemoveSchemaField(index)}
-                      disabled={newTypeData.schemas.length === 1}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleAddSchemaField}
-                  className="mt-2"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Schema Field
-                </Button>
-              </div>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateType}>
-              Create Type
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Type Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Edit Reference Data Type</DialogTitle>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-name" className="text-right">
-                Name *
-              </Label>
-              <Input
-                id="edit-name"
-                value={editTypeData.name}
-                onChange={(e) => setEditTypeData({...editTypeData, name: e.target.value})}
-                className="col-span-3"
-                placeholder="Enter type name"
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-description" className="text-right">
-                Description
-              </Label>
-              <Textarea
-                id="edit-description"
-                value={editTypeData.description}
-                onChange={(e) => setEditTypeData({...editTypeData, description: e.target.value})}
-                className="col-span-3"
-                placeholder="Enter description"
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 gap-4">
-              <Label className="text-right pt-2">
-                Schemas *
-              </Label>
-              <div className="col-span-3 space-y-2">
-                {editTypeData.schemas.map((schema, index) => (
-                  <div key={index} className="flex gap-2 items-center">
-                    <Input
-                      value={schema.name}
-                      onChange={(e) => {
-                        const updatedSchemas = [...editTypeData.schemas];
-                        updatedSchemas[index].name = e.target.value;
-                        setEditTypeData({...editTypeData, schemas: updatedSchemas});
-                      }}
-                      placeholder="Schema name"
-                      className="flex-1"
-                    />
-                    <select
-                      value={schema.dataType}
-                      onChange={(e) => {
-                        const updatedSchemas = [...editTypeData.schemas];
-                        updatedSchemas[index].dataType = e.target.value;
-                        setEditTypeData({...editTypeData, schemas: updatedSchemas});
-                      }}
-                      className="p-2 border rounded-md"
-                    >
-                      <option value="string">string</option>
-                      <option value="number">number</option>
-                      <option value="boolean">boolean</option>
-                      <option value="date">date</option>
-                    </select>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => handleRemoveSchemaFieldEdit(index)}
-                      disabled={editTypeData.schemas.length === 1}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleAddSchemaFieldEdit}
-                  className="mt-2"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Schema Field
-                </Button>
-              </div>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveEdit}>
-              <Save className="h-4 w-4 mr-2" />
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the reference data type 
-              "{typeToDelete?.name}". This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteType} className="bg-red-600 hover:bg-red-700">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </MainLayout>
   );
 }

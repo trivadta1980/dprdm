@@ -1089,22 +1089,16 @@ export default function RelationshipsPage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Relationship Type</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select relationship type" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="parent-child">Parent-Child</SelectItem>
-                                <SelectItem value="reference">Reference</SelectItem>
-                                <SelectItem value="association">Association</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <FormControl>
+                              <Input 
+                                placeholder="E.g., 'Is Child Of', 'Belongs To', 'Reports To'" 
+                                {...field} 
+                              />
+                            </FormControl>
                             <FormMessage />
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Enter a descriptive label for the relationship meaning
+                            </p>
                           </FormItem>
                         )}
                       />
@@ -1236,10 +1230,10 @@ export default function RelationshipsPage() {
                         </EnhancedTooltip>
                       </div>
                     </TableHead>
-                    <TableHead className="w-[100px]">
+                    <TableHead className="w-[150px]">
                       <div className="flex items-center">
                         Relationship
-                        <EnhancedTooltip content="The type of relationship (parent-child, reference, or association)">
+                        <EnhancedTooltip content="The semantic meaning of the relationship (e.g., 'Is Child Of', 'Belongs To')">
                           <Info className="h-4 w-4 text-muted-foreground ml-1" />
                         </EnhancedTooltip>
                       </div>

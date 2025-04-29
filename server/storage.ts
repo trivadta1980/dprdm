@@ -547,6 +547,7 @@ export class DatabaseStorage implements IStorage {
               referenceDataTypeId: referenceType.id,
               name: schema.name,
               dataType: schema.dataType,
+              isPrimaryKey: schema.isPrimaryKey || false, // Include the isPrimaryKey field
             }))
           )
           .returning();
@@ -611,6 +612,7 @@ export class DatabaseStorage implements IStorage {
               referenceDataTypeId: id,
               name: schema.name,
               dataType: schema.dataType,
+              isPrimaryKey: schema.isPrimaryKey || false, // Include the isPrimaryKey field
             }))
           )
           .returning();

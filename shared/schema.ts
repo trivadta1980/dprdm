@@ -81,6 +81,7 @@ export const referenceDataTypeSchemas = pgTable("reference_data_type_schemas", {
     .notNull(),
   name: text("name").notNull(),
   dataType: text("data_type").notNull(),
+  isPrimaryKey: boolean("is_primary_key").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -325,9 +326,16 @@ export const insertReferenceDataTypeSchema = createInsertSchema(referenceDataTyp
     z.object({
       name: z.string().min(1, "Name is required"),
       dataType: z.string().min(1, "Data type is required"),
+      isPrimaryKey: z.boolean().optional().default(false),
     })
   ),
-});
+}).refine(
+  (data) => data.schemas.some(schema => schema.isPrimaryKey === true), 
+  {
+    message: "At least one field must be selected as the primary key",
+    path: ["schemas"],
+  }
+);
 
 // Add after the existing schemas
 export const insertReferenceDataSetSchema = createInsertSchema(referenceDataSets).extend({
