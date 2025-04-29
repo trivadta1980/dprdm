@@ -170,7 +170,7 @@ export default function ReferenceTypesListPage() {
       console.error("Error creating reference type:", error);
       toast({
         title: "Error",
-        description: `Failed to create reference type: ${error.message || "Unknown error"}`,
+        description: `Failed to create reference type: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive",
       });
     }
@@ -215,7 +215,8 @@ export default function ReferenceTypesListPage() {
         description: typeData.description || "",
         schemas: schemas.map((schema: ReferenceDataTypeSchema) => ({
           name: schema.name,
-          dataType: schema.dataType
+          dataType: schema.dataType,
+          isPrimaryKey: !!schema.isPrimaryKey
         }))
       });
       
@@ -231,7 +232,7 @@ export default function ReferenceTypesListPage() {
       console.error("Error fetching type for edit:", error);
       toast({
         title: "Error",
-        description: `Failed to load reference type data: ${error.message}`,
+        description: `Failed to load reference type data: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive",
       });
     } finally {
@@ -317,7 +318,7 @@ export default function ReferenceTypesListPage() {
       console.error("Error updating reference type:", error);
       toast({
         title: "Error",
-        description: `Failed to update reference type: ${error.message || "Unknown error"}`,
+        description: `Failed to update reference type: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive",
       });
     }
@@ -327,7 +328,7 @@ export default function ReferenceTypesListPage() {
   const handleAddSchemaFieldEdit = () => {
     setEditTypeData({
       ...editTypeData,
-      schemas: [...editTypeData.schemas, { name: "", dataType: "string" }]
+      schemas: [...editTypeData.schemas, { name: "", dataType: "string", isPrimaryKey: false }]
     });
   };
 
@@ -536,8 +537,11 @@ export default function ReferenceTypesListPage() {
                           ) : (
                             typeSchemas.map((schema, index) => (
                               <div key={index} className="space-y-1">
-                                <Badge variant="secondary" className="mr-1">
+                                <Badge 
+                                  variant={schema.isPrimaryKey ? "default" : "secondary"} 
+                                  className="mr-1">
                                   {schema.name}: {schema.dataType}
+                                  {schema.isPrimaryKey && <span className="ml-1 text-xs">(PK)</span>}
                                 </Badge>
                               </div>
                             ))
