@@ -110,6 +110,16 @@ export default function ReferenceTypesListPage() {
         });
         return;
       }
+      
+      // Ensure at least one field is selected as primary key
+      if (!newTypeData.schemas.some(s => s.isPrimaryKey)) {
+        toast({
+          title: "Validation Error",
+          description: "One field must be selected as the primary key",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const requestData = {
         name: newTypeData.name,
@@ -593,41 +603,73 @@ export default function ReferenceTypesListPage() {
               <Label className="text-right pt-2">
                 Schemas *
               </Label>
-              <div className="col-span-3 space-y-2">
+              <div className="col-span-3">
+                <div className="mb-2 bg-muted p-2 rounded-md">
+                  <div className="flex items-center text-sm">
+                    <AlertCircle className="h-4 w-4 mr-2 text-primary" />
+                    <span>One field must be selected as Primary Key to enforce uniqueness</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-12 gap-2 mb-2 px-2">
+                  <div className="col-span-5 font-medium text-sm">Field Name</div>
+                  <div className="col-span-4 font-medium text-sm">Data Type</div>
+                  <div className="col-span-2 font-medium text-sm">Primary Key</div>
+                  <div className="col-span-1"></div>
+                </div>
+                <div className="space-y-2">
                 {newTypeData.schemas.map((schema, index) => (
-                  <div key={index} className="flex gap-2 items-center">
-                    <Input
-                      value={schema.name}
-                      onChange={(e) => {
-                        const updatedSchemas = [...newTypeData.schemas];
-                        updatedSchemas[index].name = e.target.value;
-                        setNewTypeData({...newTypeData, schemas: updatedSchemas});
-                      }}
-                      placeholder="Schema name"
-                      className="flex-1"
-                    />
-                    <select
-                      value={schema.dataType}
-                      onChange={(e) => {
-                        const updatedSchemas = [...newTypeData.schemas];
-                        updatedSchemas[index].dataType = e.target.value;
-                        setNewTypeData({...newTypeData, schemas: updatedSchemas});
-                      }}
-                      className="p-2 border rounded-md"
-                    >
-                      <option value="string">string</option>
-                      <option value="number">number</option>
-                      <option value="boolean">boolean</option>
-                      <option value="date">date</option>
-                    </select>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => handleRemoveSchemaField(index)}
-                      disabled={newTypeData.schemas.length === 1}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                  <div key={index} className="grid grid-cols-12 gap-2 items-center">
+                    <div className="col-span-5">
+                      <Input
+                        value={schema.name}
+                        onChange={(e) => {
+                          const updatedSchemas = [...newTypeData.schemas];
+                          updatedSchemas[index].name = e.target.value;
+                          setNewTypeData({...newTypeData, schemas: updatedSchemas});
+                        }}
+                        placeholder="Field name"
+                      />
+                    </div>
+                    <div className="col-span-4">
+                      <select
+                        value={schema.dataType}
+                        onChange={(e) => {
+                          const updatedSchemas = [...newTypeData.schemas];
+                          updatedSchemas[index].dataType = e.target.value;
+                          setNewTypeData({...newTypeData, schemas: updatedSchemas});
+                        }}
+                        className="w-full p-2 border rounded-md"
+                      >
+                        <option value="string">string</option>
+                        <option value="number">number</option>
+                        <option value="boolean">boolean</option>
+                        <option value="date">date</option>
+                      </select>
+                    </div>
+                    <div className="col-span-2 flex justify-center">
+                      <input
+                        type="radio"
+                        checked={!!schema.isPrimaryKey}
+                        onChange={() => {
+                          const updatedSchemas = [...newTypeData.schemas].map((s, i) => ({
+                            ...s,
+                            isPrimaryKey: i === index
+                          }));
+                          setNewTypeData({...newTypeData, schemas: updatedSchemas});
+                        }}
+                        className="h-4 w-4"
+                      />
+                    </div>
+                    <div className="col-span-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleRemoveSchemaField(index)}
+                        disabled={newTypeData.schemas.length === 1}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
                 <Button 
@@ -692,41 +734,73 @@ export default function ReferenceTypesListPage() {
               <Label className="text-right pt-2">
                 Schemas *
               </Label>
-              <div className="col-span-3 space-y-2">
+              <div className="col-span-3">
+                <div className="mb-2 bg-muted p-2 rounded-md">
+                  <div className="flex items-center text-sm">
+                    <AlertCircle className="h-4 w-4 mr-2 text-primary" />
+                    <span>One field must be selected as Primary Key to enforce uniqueness</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-12 gap-2 mb-2 px-2">
+                  <div className="col-span-5 font-medium text-sm">Field Name</div>
+                  <div className="col-span-4 font-medium text-sm">Data Type</div>
+                  <div className="col-span-2 font-medium text-sm">Primary Key</div>
+                  <div className="col-span-1"></div>
+                </div>
+                <div className="space-y-2">
                 {editTypeData.schemas.map((schema, index) => (
-                  <div key={index} className="flex gap-2 items-center">
-                    <Input
-                      value={schema.name}
-                      onChange={(e) => {
-                        const updatedSchemas = [...editTypeData.schemas];
-                        updatedSchemas[index].name = e.target.value;
-                        setEditTypeData({...editTypeData, schemas: updatedSchemas});
-                      }}
-                      placeholder="Schema name"
-                      className="flex-1"
-                    />
-                    <select
-                      value={schema.dataType}
-                      onChange={(e) => {
-                        const updatedSchemas = [...editTypeData.schemas];
-                        updatedSchemas[index].dataType = e.target.value;
-                        setEditTypeData({...editTypeData, schemas: updatedSchemas});
-                      }}
-                      className="p-2 border rounded-md"
-                    >
-                      <option value="string">string</option>
-                      <option value="number">number</option>
-                      <option value="boolean">boolean</option>
-                      <option value="date">date</option>
-                    </select>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => handleRemoveSchemaFieldEdit(index)}
-                      disabled={editTypeData.schemas.length === 1}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                  <div key={index} className="grid grid-cols-12 gap-2 items-center">
+                    <div className="col-span-5">
+                      <Input
+                        value={schema.name}
+                        onChange={(e) => {
+                          const updatedSchemas = [...editTypeData.schemas];
+                          updatedSchemas[index].name = e.target.value;
+                          setEditTypeData({...editTypeData, schemas: updatedSchemas});
+                        }}
+                        placeholder="Field name"
+                      />
+                    </div>
+                    <div className="col-span-4">
+                      <select
+                        value={schema.dataType}
+                        onChange={(e) => {
+                          const updatedSchemas = [...editTypeData.schemas];
+                          updatedSchemas[index].dataType = e.target.value;
+                          setEditTypeData({...editTypeData, schemas: updatedSchemas});
+                        }}
+                        className="w-full p-2 border rounded-md"
+                      >
+                        <option value="string">string</option>
+                        <option value="number">number</option>
+                        <option value="boolean">boolean</option>
+                        <option value="date">date</option>
+                      </select>
+                    </div>
+                    <div className="col-span-2 flex justify-center">
+                      <input
+                        type="radio"
+                        checked={!!schema.isPrimaryKey}
+                        onChange={() => {
+                          const updatedSchemas = [...editTypeData.schemas].map((s, i) => ({
+                            ...s,
+                            isPrimaryKey: i === index
+                          }));
+                          setEditTypeData({...editTypeData, schemas: updatedSchemas});
+                        }}
+                        className="h-4 w-4"
+                      />
+                    </div>
+                    <div className="col-span-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleRemoveSchemaFieldEdit(index)}
+                        disabled={editTypeData.schemas.length === 1}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
                 <Button 
