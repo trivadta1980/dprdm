@@ -28,6 +28,7 @@ import type { ReferenceDataType, ReferenceDataTypeSchema } from "@shared/schema"
 type SchemaInput = {
   name: string;
   dataType: string;
+  isPrimaryKey?: boolean;
 };
 
 export default function ReferenceTypesListPage() {
