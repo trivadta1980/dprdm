@@ -162,18 +162,80 @@ export async function logSystemEvent(
     
     return null;
   }
+
+
+
+  // Get IP address from request
+  const ipAddress = 
+    req.headers['x-forwarded-for'] || 
+    req.socket.remoteAddress || 
+    'unknown';
+
+  // Build audit log data
+  // We use the original field names for DB storage but add frontendCompatible context
+  // that will help with debugging field mapping issues
+  const auditData: InsertAuditLog = {
+    userId: req.user.id,
+    username: req.user.username,
+    ipAddress: typeof ipAddress === 'string' ? ipAddress : ipAddress[0],
+    actionType,
+    module,
+    entityId: entityId.toString(),
+    entityName,
+    oldValue,
+    newValue,
+    changeSummary: changeSummary || createChangeSummary(actionType, module, entityName),
+    additionalContext: {
+      userAgent: req.headers['user-agent'],
+      method: req.method,
+      path: req.path,
+      query: req.query,
+      sessionID: req.sessionID,
+      // Store frontend-compatible field names in additionalContext for debugging
+      frontendCompatible: {
+        userIp: typeof ipAddress === 'string' ? ipAddress : ipAddress[0],
+        entityType: module,
+        details: changeSummary || createChangeSummary(actionType, module, entityName)
+      }
+    }
+  };
+
+  return await logAuditEvent(auditData);
+  
 }
 
 /**
  * Generate a default human-readable summary based on action and entity
  */
-function getDefaultSummary(
-  actionType: string,
-  module: string,
-  entityName: string
-): string {
-  const actionVerb = getActionVerb(actionType);
-  return `${actionVerb} ${module.toLowerCase()} ${entityName}`;
+
+export async function logSystemEvent(
+  actionType: "CREATE" | "UPDATE" | "DELETE" | "SYSTEM",
+  module: "USER" | "ROLE" | "REFERENCE_TYPE" | "REFERENCE_DATA" | "RELATIONSHIP" | "CROSSWALK" | "API_KEY" | "SYSTEM",
+  entityId?: string | number,
+  entityName?: string,
+  details?: Record<string, any>
+) {
+  const changeSummary = `System ${actionType.toLowerCase()} operation on ${module.toLowerCase()}`;
+  
+  const auditData: InsertAuditLog = {
+    username: "SYSTEM",
+    actionType,
+    module,
+    entityId: entityId?.toString() || '',
+    entityName: entityName || "System Operation",
+    changeSummary,
+    additionalContext: {
+      ...details,
+      // Store frontend-compatible field names in additionalContext for debugging
+      frontendCompatible: {
+        userIp: "system",
+        entityType: module,
+        details: changeSummary
+      }
+    }
+  };
+
+  return await logAuditEvent(auditData);
 }
 
 /**

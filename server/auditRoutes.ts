@@ -14,6 +14,127 @@ import { requireAuth } from "./auth";
 // Create a router for audit routes
 const router = Router();
 
+// Ensure the stats endpoint is registered before the general audit logs endpoint
+// to avoid route conflicts.
+
+/**
+ * @route GET /api/audit-logs/stats
+ * @description Get statistics about audit logs (counts by type, etc.)
+ * @access Admin
+ */
+router.get("/audit-logs/stats", requireAuth, async (req: Request, res: Response) => {
+  console.log("GET /api/audit-logs/stats - Request received");
+  try {
+    // Only allow administrators to access audit stats
+    if (!req.isAuthenticated() || !req.user?.roleId || req.user.roleId !== 1) {
+      return res.status(403).json({ error: "Not authorized to view audit statistics" });
+    }
+
+    // Get count by action type
+    const actionCounts = await db
+      .select({
+        actionType: auditLogs.actionType,
+        count: db.fn.count(),
+      })
+      .from(auditLogs)
+      .groupBy(auditLogs.actionType);
+
+    // Get count by module
+    const moduleCounts = await db
+      .select({
+        module: auditLogs.module,
+        count: db.fn.count(),
+      })
+      .from(auditLogs)
+      .groupBy(auditLogs.module);
+
+    // Get count by user (top 10)
+    const userCounts = await db
+      .select({
+        userId: auditLogs.userId,
+        username: auditLogs.username,
+        count: db.fn.count(),
+      })
+      .from(auditLogs)
+      .groupBy(auditLogs.userId, auditLogs.username)
+      .orderBy(desc(db.fn.count()))
+      .limit(10);
+
+    // Get counts by date (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const dateCounts = await db
+      .select({
+        date: db.sql`DATE(${auditLogs.timestamp})`,
+        count: db.fn.count(),
+      })
+      .from(auditLogs)
+      .where(gte(auditLogs.timestamp, thirtyDaysAgo))
+      .groupBy(db.sql`DATE(${auditLogs.timestamp})`)
+      .orderBy(db.sql`DATE(${auditLogs.timestamp})`);
+
+    // Calculate statistics for the client display with proper error handling
+    let totalActions = 0;
+    try {
+      const totalCountResult = await db.select({ count: db.fn.count() }).from(auditLogs);
+      console.log("Total count result:", totalCountResult);
+      
+      if (totalCountResult && totalCountResult.length > 0) {
+        if (totalCountResult[0].count !== undefined && totalCountResult[0].count !== null) {
+          totalActions = Number(totalCountResult[0].count);
+        }
+      }
+    } catch (error) {
+      console.error("Error counting total actions:", error);
+    }
+    
+    // Count user-specific actions (login, logout, and user-generated actions)
+    const userActions = actionCounts
+      .filter(action => ['LOGIN', 'LOGOUT', 'CREATE', 'UPDATE', 'DELETE'].includes(action.actionType))
+      .reduce((sum, item) => sum + Number(item.count), 0);
+    
+    // Count data changes (create, update, delete)
+    const dataChanges = actionCounts
+      .filter(action => ['CREATE', 'UPDATE', 'DELETE'].includes(action.actionType))
+      .reduce((sum, item) => sum + Number(item.count), 0);
+    
+    // Count system events (everything else)
+    const systemEvents = Number(totalActions) - Number(userActions);
+    
+    // Format recent activity
+    const recentActions = await db
+      .select({
+        id: auditLogs.id,
+        timestamp: auditLogs.timestamp,
+        username: auditLogs.username,
+        actionType: auditLogs.actionType,
+        module: auditLogs.module,
+        entityName: auditLogs.entityName,
+      })
+      .from(auditLogs)
+      .orderBy(desc(auditLogs.timestamp))
+      .limit(5);
+
+    return res.status(200).json({
+      actionCounts,
+      moduleCounts,
+      userCounts,
+      dateCounts,
+      totalLogs: totalActions,
+      // Statistics for the UI cards
+      totalActions,
+      userActions,
+      dataChanges,
+      systemEvents,
+      recentActions,
+    });
+  } catch (error) {
+    console.error("Error fetching audit statistics:", error);
+    return res.status(500).json({ error: "Failed to fetch audit statistics" });
+  }
+});
+
 /**
  * @route GET /api/audit-logs
  * @description Get all audit logs with filtering and pagination
@@ -95,6 +216,7 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
     // Execute count query with error handling
     let totalCount = 0;
     try {
+
       // Use count() directly and handle the case when filters is empty
       const filterCondition = filters.length > 0 ? and(...filters) : undefined;
       const countQuery = db.select({ count: db.fn.count() }).from(auditLogs);
@@ -112,6 +234,7 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
           totalCount = typeof countValue === 'number' 
             ? countValue 
             : Number(countValue);
+
         }
       }
     } catch (error) {
@@ -120,7 +243,7 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
     }
 
     // Execute data query with filters, sorting, pagination
-    const results = await db.select({
+    const dataQuery = db.select({
       id: auditLogs.id,
       timestamp: auditLogs.timestamp,
       userId: auditLogs.userId,
@@ -136,10 +259,24 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
       additionalContext: auditLogs.additionalContext,
     })
       .from(auditLogs)
-      .where(filters.length > 0 ? and(...filters) : undefined)
       .orderBy(desc(auditLogs.timestamp))
       .limit(limit)
       .offset(offset);
+      
+    // Only add where clause if filters exist
+    if (filters.length > 0) {
+      dataQuery.where(and(...filters));
+    }
+    
+    const rawResults = await dataQuery;
+    
+    // Map field names for frontend compatibility
+    const mappedResults = rawResults.map(log => ({
+      ...log,
+      userIp: log.ipAddress,        // Frontend expects userIp instead of ipAddress
+      entityType: log.module,       // Frontend expects entityType instead of module
+      details: log.changeSummary    // Frontend expects details
+    }));
 
     // Process the results to enhance with details
     const enhancedResults = results.map(log => {
@@ -174,7 +311,9 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
     
     // Format response with pagination metadata
     const response = {
-      data: enhancedResults,
+
+      data: mappedResults,
+
       pagination: {
         page,
         limit,
@@ -183,7 +322,7 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
       },
     };
 
-    console.log(`GET /api/audit-logs - Retrieved ${results.length} logs`);
+    console.log(`GET /api/audit-logs - Retrieved ${rawResults.length} logs`);
     return res.status(200).json(response);
   } catch (error) {
     console.error("Error fetching audit logs:", error);
@@ -444,6 +583,7 @@ router.get("/audit-logs/:id", requireAuth, async (req: Request, res: Response) =
       return res.status(404).json({ error: "Audit log not found" });
     }
 
+
     // Format result to prevent exposing sensitive information and enhance with richer details
     const oldData = result.audit_logs.oldValue;
     const newData = result.audit_logs.newValue;
@@ -502,8 +642,13 @@ router.get("/audit-logs/:id", requireAuth, async (req: Request, res: Response) =
     }
     
     // Construct the enhanced audit log
+
     const auditLog = {
       ...result.audit_logs,
+      // Map backend field names to what frontend expects
+      userIp: result.audit_logs.ipAddress,         // Frontend expects userIp instead of ipAddress
+      entityType: result.audit_logs.module,        // Frontend expects entityType instead of module 
+      details: result.audit_logs.changeSummary,    // Frontend expects details
       userDetails: result.users ? {
         id: result.users.id,
         username: result.users.username,
@@ -559,20 +704,23 @@ router.get("/audit-logs/entity/:type/:id", requireAuth, async (req: Request, res
             eq(auditLogs.entityId, entityId)
           )
         );
-        
-      // Safely access the count value with fallback
-      if (totalItems && totalItems.length > 0) {
-        // Handle different types of count results (PostgreSQL vs SQLite)
+
+
+      
+      console.log("Entity count query result:", JSON.stringify(totalItems));
+      
+      if (totalItems && Array.isArray(totalItems) && totalItems.length > 0) {
         const countValue = totalItems[0]?.count;
-        if (countValue !== undefined) {
-          totalCount = typeof countValue === 'number' 
-            ? countValue 
-            : Number(countValue);
+        if (countValue !== undefined && countValue !== null) {
+          totalCount = Number(countValue);
+
         }
       }
     } catch (error) {
       console.error("Error counting entity audit logs:", error);
+
       totalCount = 0;
+
     }
 
     // Execute data query
@@ -584,6 +732,8 @@ router.get("/audit-logs/entity/:type/:id", requireAuth, async (req: Request, res
       actionType: auditLogs.actionType,
       entityName: auditLogs.entityName,
       changeSummary: auditLogs.changeSummary,
+      module: auditLogs.module,       // Include for field mapping
+      ipAddress: auditLogs.ipAddress  // Include for field mapping
     })
       .from(auditLogs)
       .where(
@@ -596,9 +746,17 @@ router.get("/audit-logs/entity/:type/:id", requireAuth, async (req: Request, res
       .limit(limit)
       .offset(offset);
 
+    // Map field names for frontend compatibility
+    const mappedResults = results.map(log => ({
+      ...log,
+      userIp: log.ipAddress,        // Frontend expects userIp instead of ipAddress
+      entityType: log.module,       // Frontend expects entityType instead of module
+      details: log.changeSummary    // Frontend expects details
+    }));
+
     // Format response with pagination metadata
     const response = {
-      data: results,
+      data: mappedResults,
       pagination: {
         page,
         limit,
@@ -644,20 +802,19 @@ router.get("/audit-logs/user/:id", requireAuth, async (req: Request, res: Respon
       const totalItems = await db.select({ count: db.fn.count() })
         .from(auditLogs)
         .where(eq(auditLogs.userId, userId));
-        
-      // Safely access the count value with fallback
-      if (totalItems && totalItems.length > 0) {
-        // Handle different types of count results (PostgreSQL vs SQLite)
+      
+      console.log("User count query result:", JSON.stringify(totalItems));
+      
+      if (totalItems && Array.isArray(totalItems) && totalItems.length > 0) {
         const countValue = totalItems[0]?.count;
-        if (countValue !== undefined) {
-          totalCount = typeof countValue === 'number' 
-            ? countValue 
-            : Number(countValue);
+        if (countValue !== undefined && countValue !== null) {
+          totalCount = Number(countValue);
+
         }
       }
     } catch (error) {
       console.error("Error counting user audit logs:", error);
-      totalCount = 0;
+
     }
 
     // Execute data query
@@ -669,12 +826,21 @@ router.get("/audit-logs/user/:id", requireAuth, async (req: Request, res: Respon
       entityId: auditLogs.entityId,
       entityName: auditLogs.entityName,
       changeSummary: auditLogs.changeSummary,
+      ipAddress: auditLogs.ipAddress  // Include for field mapping
     })
       .from(auditLogs)
       .where(eq(auditLogs.userId, userId))
       .orderBy(desc(auditLogs.timestamp))
       .limit(limit)
       .offset(offset);
+
+    // Map field names for frontend compatibility
+    const mappedResults = results.map(log => ({
+      ...log,
+      userIp: log.ipAddress,        // Frontend expects userIp instead of ipAddress
+      entityType: log.module,       // Frontend expects entityType instead of module
+      details: log.changeSummary    // Frontend expects details
+    }));
 
     // Get user details
     const [user] = await db.select({
@@ -688,7 +854,7 @@ router.get("/audit-logs/user/:id", requireAuth, async (req: Request, res: Respon
 
     // Format response with pagination metadata
     const response = {
-      data: results,
+      data: mappedResults,
       user,
       pagination: {
         page,
@@ -705,6 +871,7 @@ router.get("/audit-logs/user/:id", requireAuth, async (req: Request, res: Respon
     return res.status(500).json({ error: "Failed to fetch user audit logs" });
   }
 });
+
 
 /**
  * Helper function to generate a list of changes between two objects
@@ -778,5 +945,6 @@ function getActionVerb(actionType: string): string {
     default: return 'Interacted with';
   }
 }
+
 
 export default router;

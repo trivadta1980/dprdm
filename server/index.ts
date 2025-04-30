@@ -9,7 +9,9 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { db } from './db';
 import { closeDriver, isNeo4jAvailable } from './neo4j';
+
 import { auditMiddleware } from './middleware/audit-middleware';
+
 
 const app = express();
 // Increase JSON payload limit to 1MB
@@ -23,8 +25,9 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
-// Add the audit middleware to capture all API activity
+
 app.use(auditMiddleware);
+
 
 // Add request logging middleware
 app.use((req, res, next) => {

@@ -1,4 +1,5 @@
 /**
+
  * Audit Middleware
  * 
  * Middleware that captures details about all HTTP requests to track
@@ -221,4 +222,5 @@ function sanitizeRequestBody(req: Request): Record<string, any> | null {
   });
   
   return sanitized;
+
 }
