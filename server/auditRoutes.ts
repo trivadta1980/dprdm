@@ -74,11 +74,20 @@ router.get("/audit-logs/stats", requireAuth, async (req: Request, res: Response)
       .groupBy(db.sql`DATE(${auditLogs.timestamp})`)
       .orderBy(db.sql`DATE(${auditLogs.timestamp})`);
 
-    // Calculate statistics for the client display
-    const totalCountResult = await db.select({ count: db.fn.count() }).from(auditLogs);
-    const totalActions = totalCountResult && totalCountResult.length > 0 
-      ? Number(totalCountResult[0].count || 0) 
-      : 0;
+    // Calculate statistics for the client display with proper error handling
+    let totalActions = 0;
+    try {
+      const totalCountResult = await db.select({ count: db.fn.count() }).from(auditLogs);
+      console.log("Total count result:", totalCountResult);
+      
+      if (totalCountResult && totalCountResult.length > 0) {
+        if (totalCountResult[0].count !== undefined && totalCountResult[0].count !== null) {
+          totalActions = Number(totalCountResult[0].count);
+        }
+      }
+    } catch (error) {
+      console.error("Error counting total actions:", error);
+    }
     
     // Count user-specific actions (login, logout, and user-generated actions)
     const userActions = actionCounts
@@ -207,7 +216,9 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
     // Execute count query with error handling
     let totalCount = 0;
     try {
-      const countQuery = db.select({ count: db.fn.count() }).from(auditLogs);
+      const countQuery = db.select({ 
+        count: db.fn.count()
+      }).from(auditLogs);
       
       // Only add where clause if filters exist
       if (filters.length > 0) {
@@ -215,13 +226,15 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
       }
       
       const totalItemsResult = await countQuery;
+      console.log("Count query result:", JSON.stringify(totalItemsResult));
       
-      // Use nullish coalescing to handle undefined or null
-      totalCount = totalItemsResult && totalItemsResult.length > 0 
-        ? Number(totalItemsResult[0].count || 0) 
-        : 0;
-        
-      console.log("Count query result:", totalItemsResult);
+      // More robust error handling
+      if (totalItemsResult && Array.isArray(totalItemsResult) && totalItemsResult.length > 0) {
+        const countValue = totalItemsResult[0]?.count;
+        if (countValue !== undefined && countValue !== null) {
+          totalCount = Number(countValue);
+        }
+      }
     } catch (error) {
       console.error("Error counting audit logs:", error);
       totalCount = 0;
@@ -341,15 +354,29 @@ router.get("/audit-logs/entity/:type/:id", requireAuth, async (req: Request, res
     const limit = parseInt(req.query.limit as string) || 50;
     const offset = (page - 1) * limit;
 
-    // Execute count query
-    const totalItems = await db.select({ count: db.fn.count() })
-      .from(auditLogs)
-      .where(
-        and(
-          eq(auditLogs.module, entityType as any),
-          eq(auditLogs.entityId, entityId)
-        )
-      );
+    // Execute count query with error handling
+    let totalCount = 0;
+    try {
+      const totalItems = await db.select({ count: db.fn.count() })
+        .from(auditLogs)
+        .where(
+          and(
+            eq(auditLogs.module, entityType as any),
+            eq(auditLogs.entityId, entityId)
+          )
+        );
+      
+      console.log("Entity count query result:", JSON.stringify(totalItems));
+      
+      if (totalItems && Array.isArray(totalItems) && totalItems.length > 0) {
+        const countValue = totalItems[0]?.count;
+        if (countValue !== undefined && countValue !== null) {
+          totalCount = Number(countValue);
+        }
+      }
+    } catch (error) {
+      console.error("Error counting entity audit logs:", error);
+    }
 
     // Execute data query
     const results = await db.select({
@@ -378,8 +405,8 @@ router.get("/audit-logs/entity/:type/:id", requireAuth, async (req: Request, res
       pagination: {
         page,
         limit,
-        totalItems: parseInt(totalItems[0].count.toString()),
-        totalPages: Math.ceil(parseInt(totalItems[0].count.toString()) / limit),
+        totalItems: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
       },
     };
 
@@ -414,10 +441,24 @@ router.get("/audit-logs/user/:id", requireAuth, async (req: Request, res: Respon
     const limit = parseInt(req.query.limit as string) || 50;
     const offset = (page - 1) * limit;
 
-    // Execute count query
-    const totalItems = await db.select({ count: db.fn.count() })
-      .from(auditLogs)
-      .where(eq(auditLogs.userId, userId));
+    // Execute count query with error handling
+    let totalCount = 0;
+    try {
+      const totalItems = await db.select({ count: db.fn.count() })
+        .from(auditLogs)
+        .where(eq(auditLogs.userId, userId));
+      
+      console.log("User count query result:", JSON.stringify(totalItems));
+      
+      if (totalItems && Array.isArray(totalItems) && totalItems.length > 0) {
+        const countValue = totalItems[0]?.count;
+        if (countValue !== undefined && countValue !== null) {
+          totalCount = Number(countValue);
+        }
+      }
+    } catch (error) {
+      console.error("Error counting user audit logs:", error);
+    }
 
     // Execute data query
     const results = await db.select({
@@ -452,8 +493,8 @@ router.get("/audit-logs/user/:id", requireAuth, async (req: Request, res: Respon
       pagination: {
         page,
         limit,
-        totalItems: parseInt(totalItems[0].count.toString()),
-        totalPages: Math.ceil(parseInt(totalItems[0].count.toString()) / limit),
+        totalItems: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
       },
     };
 
