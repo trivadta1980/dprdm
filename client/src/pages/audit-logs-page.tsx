@@ -516,11 +516,11 @@ export default function AuditLogsPage() {
                     <Table className="w-full table-fixed">
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[16%]">Timestamp</TableHead>
-                          <TableHead className="w-[14%]">User</TableHead>
+                          <TableHead className="w-[18%]">Timestamp</TableHead>
+                          <TableHead className="w-[15%]">User</TableHead>
                           <TableHead className="w-[12%]">Action</TableHead>
-                          <TableHead className="w-[14%]">Entity</TableHead>
-                          <TableHead className="w-[36%]">Details</TableHead>
+                          <TableHead className="w-[15%]">Entity</TableHead>
+                          <TableHead className="w-[32%]">Details</TableHead>
                           <TableHead className="w-[8%] text-right"></TableHead>
                         </TableRow>
                       </TableHeader>
@@ -530,22 +530,22 @@ export default function AuditLogsPage() {
                             <TableCell className="font-medium whitespace-nowrap">
                               <div className="flex items-center">
                                 <Calendar className="mr-2 h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                {formatTimestamp(log.timestamp)}
+                                <span className="text-sm">{formatTimestamp(log.timestamp)}</span>
                               </div>
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center">
                                 <UserRound className="mr-2 h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                <span className="truncate">{log.username}</span>
+                                <span className="truncate text-sm">{log.username}</span>
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge variant={getActionBadgeVariant(log.actionType)}>
+                              <Badge variant={getActionBadgeVariant(log.actionType)} className="text-xs">
                                 {log.actionType}
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              <Badge variant={getEntityBadgeVariant(log.entityType)}>
+                              <Badge variant={getEntityBadgeVariant(log.entityType)} className="text-xs">
                                 {log.entityType}
                               </Badge>
                               <div className="text-xs text-muted-foreground mt-1 truncate">
