@@ -34,7 +34,17 @@ export async function logCrudEvent(
       return null;
     }
     
-    // Prepare the audit log entry
+    // Prepare the audit log entry with enhanced metadata
+    const enhancedContext = {
+      ...additionalContext,
+      userAgent: req.headers?.['user-agent'] || 'Unknown',
+      referer: req.headers?.referer || 'Direct',
+      sessionID: (req as any).sessionID || 'No Session',
+      method: (req as any).method,
+      path: (req as any).path,
+      requestTime: new Date().toISOString()
+    };
+    
     const auditEntry: InsertAuditLog = {
       userId: req.user?.id,
       username: req.user?.username || 'system',
@@ -46,7 +56,7 @@ export async function logCrudEvent(
       oldValue: oldValue || undefined,
       newValue: newValue || undefined,
       changeSummary: changeSummary || getDefaultSummary(actionType, module, entityName),
-      additionalContext: additionalContext || undefined
+      additionalContext: enhancedContext
     };
     
     // Insert into database
@@ -61,7 +71,8 @@ export async function logCrudEvent(
     
     // Attempt to write to file as fallback if database insertion fails
     try {
-      const entry = {
+      // Create enhanced fallback entry with the same metadata we would have stored
+      const enhancedEntry = {
         timestamp: new Date().toISOString(),
         userId: req.user?.id,
         username: req.user?.username || 'system',
@@ -71,9 +82,15 @@ export async function logCrudEvent(
         entityId,
         entityName,
         changeSummary: changeSummary || getDefaultSummary(actionType, module, entityName),
+        userAgent: req.headers?.['user-agent'] || 'Unknown',
+        referer: req.headers?.referer || 'Direct',
+        sessionID: (req as any).sessionID || 'No Session',
+        method: (req as any).method,
+        path: (req as any).path,
+        error: String(error)
       };
       
-      console.warn('[Audit Logger] Writing to fallback log:', entry);
+      console.warn('[Audit Logger] Writing to fallback log:', enhancedEntry);
     } catch (fallbackError) {
       console.error('[Audit Logger] Even fallback logging failed:', fallbackError);
     }
@@ -94,7 +111,18 @@ export async function logSystemEvent(
   context?: Record<string, any>
 ) {
   try {
-    // For system events, we create a minimal audit entry
+    // For system events, we create an enhanced audit entry with system metadata
+    const enhancedContext = {
+      ...context,
+      systemInfo: {
+        nodeVersion: process.version,
+        platform: process.platform,
+        memory: process.memoryUsage(),
+        timestamp: new Date().toISOString(),
+        pid: process.pid
+      }
+    };
+    
     const auditEntry: InsertAuditLog = {
       username: 'system',
       ipAddress: '',
@@ -103,7 +131,7 @@ export async function logSystemEvent(
       entityId,
       entityName: description.substring(0, 50), // Truncate for entity name
       changeSummary: description,
-      additionalContext: context
+      additionalContext: enhancedContext
     };
     
     // Insert into database
@@ -115,14 +143,21 @@ export async function logSystemEvent(
   } catch (error) {
     console.error('[Audit Logger] Failed to log system event:', error);
     
-    // Log to console as fallback
+    // Log to console as fallback with enhanced information
     console.warn('[System Event]', {
       timestamp: new Date().toISOString(),
       actionType,
       module,
       entityId,
       description,
-      context
+      context,
+      systemInfo: {
+        nodeVersion: process.version,
+        platform: process.platform,
+        memory: process.memoryUsage(),
+        pid: process.pid
+      },
+      error: String(error)
     });
     
     return null;
