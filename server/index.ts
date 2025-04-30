@@ -12,8 +12,10 @@ import { closeDriver, isNeo4jAvailable } from './neo4j';
 import { auditAPIAccess } from './middleware/audit-middleware';
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Increase JSON payload limit to 1MB
+app.use(express.json({ limit: '1mb' }));
+// Increase URL-encoded payload limit to 1MB
+app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 
 // Add JSON content type header for all /api routes
 app.use('/api', (req, res, next) => {
@@ -49,6 +51,23 @@ app.use((req, res, next) => {
       }
 
       log(logLine);
+
+      // Track API usage for successful responses (excluding health checks)
+      if (res.statusCode < 400 && 
+          !path.includes('/health') && 
+          !path.includes('/status') && 
+          req.isAuthenticated && typeof req.isAuthenticated === 'function' && req.isAuthenticated()) {
+        try {
+          // Import is done inside to avoid circular dependencies
+          import('./utils/featureTracker').then(({ trackApiUsage }) => {
+            trackApiUsage(req, { responseStatus: res.statusCode, duration });
+          }).catch(importErr => {
+            console.error('Error importing feature tracker:', importErr);
+          });
+        } catch (err) {
+          console.error('Error tracking API usage:', err);
+        }
+      }
     }
   });
 
@@ -61,14 +80,47 @@ app.use((req, res, next) => {
   // Add JSON error handler for API routes
   app.use('/api', (err: any, req: Request, res: Response, next: NextFunction) => {
     console.error('API Error:', err);
+    
+    // Use our error logger to capture detailed error information
+    try {
+      // Import directly to avoid issues with require
+      import('./utils/errorLogger').then(({ logApiError, ErrorSeverity }) => {
+        logApiError(req, err, ErrorSeverity.ERROR, {
+          stack: err.stack,
+          status: err.status || err.statusCode || 500
+        });
+      }).catch(importErr => {
+        console.error('Error importing error logger:', importErr);
+      });
+    } catch (logErr) {
+      console.error('Error logging API error:', logErr);
+    }
+    
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
     res.status(status).json({ message });
   });
 
   // Add general error handler for non-API routes
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     console.error('General Error:', err);
+    
+    // Use our error logger for general errors too
+    try {
+      // Import directly to avoid issues with require
+      import('./utils/errorLogger').then(({ logSystemError, ErrorSeverity }) => {
+        logSystemError(err, 'general_error_handler', ErrorSeverity.ERROR, {
+          path: req.path,
+          method: req.method,
+          query: req.query
+        });
+      }).catch(importErr => {
+        console.error('Error importing error logger:', importErr);
+      });
+    } catch (logErr) {
+      console.error('Error logging general error:', logErr);
+    }
+    
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
     res.status(status).send(message);
