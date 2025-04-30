@@ -745,18 +745,31 @@ function ReferenceDataContent() {
               <div className="p-4 border rounded-md">
                 <h3 className="font-medium mb-2">Bulk Updates</h3>
                 <p className="text-sm text-muted-foreground">
-                  Efficiently update existing reference data by importing changes. The system can match
-                  records based on key fields and apply updates intelligently.
+                  Efficiently update existing reference data by importing changes. The system automatically enforces 
+                  primary key validation during bulk uploads, updating existing records rather than creating duplicates 
+                  when the same primary key value is detected.
                 </p>
               </div>
             </div>
             
             <div className="mt-4 p-4 bg-blue-50 text-blue-800 rounded-md dark:bg-blue-900 dark:text-blue-100">
-              <h4 className="font-medium mb-2">Best Practice</h4>
-              <p className="text-sm">
-                When importing large datasets, consider using the chunked import feature to break the process
-                into manageable batches. This prevents timeouts and provides better progress tracking and error handling.
-              </p>
+              <h4 className="font-medium mb-2">Best Practices</h4>
+              <div className="space-y-3">
+                <p className="text-sm">
+                  <strong>Primary Key Handling:</strong> When defining reference data types, always designate one field as 
+                  the primary key. During bulk uploads, the system will use this primary key to determine whether to update 
+                  existing records or create new ones. This prevents duplicate entries and ensures data consistency.
+                </p>
+                <p className="text-sm">
+                  <strong>Batch Processing:</strong> When importing large datasets, consider using the chunked import 
+                  feature to break the process into manageable batches. This prevents timeouts and provides better 
+                  progress tracking and error handling.
+                </p>
+                <p className="text-sm">
+                  <strong>Audit Trail:</strong> After bulk imports, review the import statistics to confirm the number 
+                  of new and updated records. This helps verify that the system correctly processed primary key conflicts.
+                </p>
+              </div>
             </div>
           </div>
         </CardContent>
