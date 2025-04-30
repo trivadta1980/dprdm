@@ -213,17 +213,36 @@ router.get("/audit-logs/stats", requireAuth, async (req: Request, res: Response)
     try {
       const totalResult = await db.select({ count: db.fn.count() }).from(auditLogs);
       
-      // Handle different types of count results (PostgreSQL vs SQLite)
-      if (totalResult && totalResult.length > 0) {
-        const countValue = totalResult[0]?.count;
-        if (countValue !== undefined) {
-          totalActions = typeof countValue === 'number' 
-            ? countValue 
-            : Number(countValue);
+      console.log("Total actions count result:", JSON.stringify(totalResult, null, 2));
+      
+      // Handle different types of count results with improved error handling
+      if (totalResult && Array.isArray(totalResult) && totalResult.length > 0) {
+        const firstResult = totalResult[0];
+        
+        // Safely handle different PostgreSQL count result formats
+        if (firstResult) {
+          if (typeof firstResult.count !== 'undefined') {
+            totalActions = Number(firstResult.count);
+          } else {
+            // Try to extract the count from any field that might contain it
+            const resultObj = firstResult as Record<string, any>;
+            const keys = Object.keys(resultObj);
+            const countKey = keys.find(k => k.toLowerCase().includes('count'));
+            if (countKey) {
+              totalActions = Number(resultObj[countKey]);
+            } else if (keys.length === 1) {
+              // If there's only one property, use that (likely the count)
+              totalActions = Number(resultObj[keys[0]]);
+            } else {
+              console.log("Unable to determine count field in:", firstResult);
+              totalActions = 0;
+            }
+          }
         }
       }
     } catch (error) {
       console.error("Error counting total actions:", error);
+      totalActions = 0;
     }
 
     // Get user-related actions count (LOGIN, LOGOUT, etc.)
@@ -239,17 +258,36 @@ router.get("/audit-logs/stats", requireAuth, async (req: Request, res: Response)
           )
         );
       
-      // Handle different types of count results (PostgreSQL vs SQLite)
-      if (userResult && userResult.length > 0) {
-        const countValue = userResult[0]?.count;
-        if (countValue !== undefined) {
-          userActions = typeof countValue === 'number' 
-            ? countValue 
-            : Number(countValue);
+      console.log("User actions count result:", JSON.stringify(userResult, null, 2));
+      
+      // Handle different types of count results with improved error handling
+      if (userResult && Array.isArray(userResult) && userResult.length > 0) {
+        const firstResult = userResult[0];
+        
+        // Safely handle different PostgreSQL count result formats
+        if (firstResult) {
+          if (typeof firstResult.count !== 'undefined') {
+            userActions = Number(firstResult.count);
+          } else {
+            // Try to extract the count from any field that might contain it
+            const resultObj = firstResult as Record<string, any>;
+            const keys = Object.keys(resultObj);
+            const countKey = keys.find(k => k.toLowerCase().includes('count'));
+            if (countKey) {
+              userActions = Number(resultObj[countKey]);
+            } else if (keys.length === 1) {
+              // If there's only one property, use that (likely the count)
+              userActions = Number(resultObj[keys[0]]);
+            } else {
+              console.log("Unable to determine count field in:", firstResult);
+              userActions = 0;
+            }
+          }
         }
       }
     } catch (error) {
       console.error("Error counting user actions:", error);
+      userActions = 0;
     }
 
     // Get data change actions count (CREATE, UPDATE, DELETE)
@@ -265,17 +303,36 @@ router.get("/audit-logs/stats", requireAuth, async (req: Request, res: Response)
           )
         );
       
-      // Handle different types of count results (PostgreSQL vs SQLite)
-      if (dataResult && dataResult.length > 0) {
-        const countValue = dataResult[0]?.count;
-        if (countValue !== undefined) {
-          dataChanges = typeof countValue === 'number' 
-            ? countValue 
-            : Number(countValue);
+      console.log("Data changes count result:", JSON.stringify(dataResult, null, 2));
+      
+      // Handle different types of count results with improved error handling
+      if (dataResult && Array.isArray(dataResult) && dataResult.length > 0) {
+        const firstResult = dataResult[0];
+        
+        // Safely handle different PostgreSQL count result formats
+        if (firstResult) {
+          if (typeof firstResult.count !== 'undefined') {
+            dataChanges = Number(firstResult.count);
+          } else {
+            // Try to extract the count from any field that might contain it
+            const resultObj = firstResult as Record<string, any>;
+            const keys = Object.keys(resultObj);
+            const countKey = keys.find(k => k.toLowerCase().includes('count'));
+            if (countKey) {
+              dataChanges = Number(resultObj[countKey]);
+            } else if (keys.length === 1) {
+              // If there's only one property, use that (likely the count)
+              dataChanges = Number(resultObj[keys[0]]);
+            } else {
+              console.log("Unable to determine count field in:", firstResult);
+              dataChanges = 0;
+            }
+          }
         }
       }
     } catch (error) {
       console.error("Error counting data changes:", error);
+      dataChanges = 0;
     }
 
     // Get system events count (ERROR, INFO, WARNING)
@@ -292,17 +349,36 @@ router.get("/audit-logs/stats", requireAuth, async (req: Request, res: Response)
           )
         );
       
-      // Handle different types of count results (PostgreSQL vs SQLite)
-      if (systemResult && systemResult.length > 0) {
-        const countValue = systemResult[0]?.count;
-        if (countValue !== undefined) {
-          systemEvents = typeof countValue === 'number' 
-            ? countValue 
-            : Number(countValue);
+      console.log("System events count result:", JSON.stringify(systemResult, null, 2));
+      
+      // Handle different types of count results with improved error handling
+      if (systemResult && Array.isArray(systemResult) && systemResult.length > 0) {
+        const firstResult = systemResult[0];
+        
+        // Safely handle different PostgreSQL count result formats
+        if (firstResult) {
+          if (typeof firstResult.count !== 'undefined') {
+            systemEvents = Number(firstResult.count);
+          } else {
+            // Try to extract the count from any field that might contain it
+            const resultObj = firstResult as Record<string, any>;
+            const keys = Object.keys(resultObj);
+            const countKey = keys.find(k => k.toLowerCase().includes('count'));
+            if (countKey) {
+              systemEvents = Number(resultObj[countKey]);
+            } else if (keys.length === 1) {
+              // If there's only one property, use that (likely the count)
+              systemEvents = Number(resultObj[keys[0]]);
+            } else {
+              console.log("Unable to determine count field in:", firstResult);
+              systemEvents = 0;
+            }
+          }
         }
       }
     } catch (error) {
       console.error("Error counting system events:", error);
+      systemEvents = 0;
     }
 
     // Get recent audit logs
