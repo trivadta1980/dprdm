@@ -447,7 +447,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const schemas = await storage.getReferenceDataTypeSchemas(dataSet.typeId);
       const schemaNames = schemas.map(s => s.name);
-
+      
+      // Find the primary key field for this reference data type
+      const primaryKeySchema = schemas.find(s => s.isPrimaryKey);
+      if (!primaryKeySchema) {
+        console.log('POST /api/reference-data/:id/bulk-upload - No primary key defined for this data type');
+        return res.status(400).json({ 
+          error: "No primary key defined for this reference data type. Please define a primary key field in the schema."
+        });
+      }
+      
+      const primaryKeyField = primaryKeySchema.name;
+      console.log(`POST /api/reference-data/:id/bulk-upload - Using primary key field: ${primaryKeyField}`);
       console.log('POST /api/reference-data/:id/bulk-upload - Schema names:', schemaNames);
 
       // Parse CSV
@@ -515,18 +526,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error('No valid records found in the CSV file');
       }
 
-      console.log('POST /api/reference-data/:id/bulk-upload - Updating dataset with records count:', records.length);
+      console.log('POST /api/reference-data/:id/bulk-upload - Processing records with primary key checks');
+      
+      // Get the existing data to check for duplicates
+      const existingData = dataSet.data || {};
+      const mergedData: Record<string, any> = { ...existingData };
+      
+      // Stats for logs and response
+      let newRecords = 0;
+      let updatedRecords = 0;
+      
+      // Process each record
+      for (const record of records) {
+        const primaryKeyValue = record[primaryKeyField];
+        
+        if (!primaryKeyValue) {
+          console.log(`POST /api/reference-data/:id/bulk-upload - Record missing primary key value for field ${primaryKeyField}, skipping`);
+          continue;
+        }
+        
+        // Check if this primary key already exists in the dataset
+        let existingInstanceKey: string | undefined;
+        for (const [key, instance] of Object.entries(existingData)) {
+          if (instance[primaryKeyField] === primaryKeyValue) {
+            existingInstanceKey = key;
+            break;
+          }
+        }
+        
+        if (existingInstanceKey) {
+          // Update existing record
+          console.log(`POST /api/reference-data/:id/bulk-upload - Updating existing record with ${primaryKeyField}: ${primaryKeyValue}`);
+          
+          const existingInstance = existingData[existingInstanceKey];
+          const historyEntry = {
+            timestamp,
+            changes: []
+          };
+          
+          // Create history entry with changes
+          for (const [field, value] of Object.entries(record)) {
+            if (field !== primaryKeyField && field !== 'status' && !field.startsWith('_')) {
+              if (existingInstance[field] !== value) {
+                historyEntry.changes.push({
+                  field,
+                  oldValue: existingInstance[field] || '',
+                  newValue: value
+                });
+              }
+            }
+          }
+          
+          // Only push to history if there are actual changes
+          const updatedHistory = [...(existingInstance._history || [])];
+          if (historyEntry.changes.length > 0) {
+            updatedHistory.push(historyEntry);
+          }
+          
+          // Update the existing instance with new values while preserving metadata
+          mergedData[existingInstanceKey] = {
+            ...existingInstance,
+            ...record,
+            _history: updatedHistory,
+            lastModifiedBy: req.user?.username || "system",
+            lastModifiedAt: timestamp
+          };
+          
+          updatedRecords++;
+        } else {
+          // Create new record
+          console.log(`POST /api/reference-data/:id/bulk-upload - Creating new record with ${primaryKeyField}: ${primaryKeyValue}`);
+          
+          // Generate a unique key for the new instance
+          const newKey = `instance_${Date.now()}_${newRecords}`;
+          mergedData[newKey] = record;
+          
+          newRecords++;
+        }
+      }
 
-      // Update data set with new instances including metadata
+      console.log(`POST /api/reference-data/:id/bulk-upload - Processed ${records.length} records: ${newRecords} new, ${updatedRecords} updated`);
+
+      // Update data set with merged data
       const updatedDataSet = await storage.updateReferenceDataSet(dataSetId, {
-        data: records.reduce((acc, record, index) => {
-          acc[`instance_${index + 1}`] = record;
-          return acc;
-        }, {} as Record<string, any>)
+        data: mergedData
       });
 
-      console.log('POST /api/reference-data/:id/bulk-upload - Upload complete. Dataset updated with data:', updatedDataSet.data);
-      res.json(updatedDataSet);
+      console.log('POST /api/reference-data/:id/bulk-upload - Upload complete. Dataset updated.');
+      
+      // Return stats in the response
+      res.json({
+        ...updatedDataSet,
+        importStats: {
+          totalRecords: records.length,
+          newRecords,
+          updatedRecords
+        }
+      });
 
     } catch (error) {
       console.error('POST /api/reference-data/:id/bulk-upload - Error processing bulk upload:', error);

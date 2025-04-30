@@ -512,12 +512,24 @@ export default function ReferenceDataInstancesPage() {
 
       return await updateResponse.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
-      toast({
-        title: "Success",
-        description: "Bulk upload completed successfully",
-      });
+      
+      // Display statistics if they're available in the response
+      const stats = data.importStats;
+      if (stats) {
+        toast({
+          title: "Bulk Upload Successful",
+          description: `Processed ${stats.totalRecords} records: ${stats.newRecords} new, ${stats.updatedRecords} updated`,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Bulk upload completed successfully",
+        });
+      }
+      
       setIsBulkUploadDialogOpen(false);
     },
     onError: (error: Error) => {
