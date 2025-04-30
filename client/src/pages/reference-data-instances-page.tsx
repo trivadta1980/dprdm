@@ -144,10 +144,28 @@ export default function ReferenceDataInstancesPage() {
       }
 
       try {
-        const processedInstances = Object.entries(dataSet.data).map(([id, data]) => ({
-          id,
-          ...(data as ExtendedReferenceDataInstance)
-        }));
+        // Only process entries that appear to be valid data instances
+        // by checking for required properties like status, DeliveryID, etc.
+        // We use Object.keys + reduce to properly count all entries
+        const processedInstances = Object.keys(dataSet.data).reduce((validInstances, id) => {
+          const data = dataSet.data[id] as any;
+          
+          // Ensure the data is an actual instance by checking for at least one required field
+          // Depending on your data, you might want to check for different fields
+          if (data && (data.status || data.DeliveryID || data.CustomerName)) {
+            validInstances.push({
+              id,
+              ...(data as ExtendedReferenceDataInstance)
+            });
+          } else {
+            console.log(`Skipping entry with key ${id} as it doesn't appear to be a valid instance`, data);
+          }
+          
+          return validInstances;
+        }, [] as Array<ExtendedReferenceDataInstance & { id: string }>);
+        
+        console.log(`Processed ${processedInstances.length} valid instances out of ${Object.keys(dataSet.data).length} total entries`);
+        
         return processedInstances;
       } catch (error) {
         console.error('Error processing instance data:', error);
