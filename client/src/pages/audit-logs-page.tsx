@@ -154,7 +154,9 @@ export default function AuditLogsPage() {
   };
 
   // Get badge variant based on action type
-  const getActionBadgeVariant = (action: string) => {
+  const getActionBadgeVariant = (action: string | null | undefined) => {
+    if (!action) return "default";
+    
     switch (action.toUpperCase()) {
       case "CREATE":
         return "success";
@@ -172,6 +174,14 @@ export default function AuditLogsPage() {
         return "success";
       case "REJECT":
         return "destructive";
+      case "FEATURE_USAGE":
+        return "secondary";
+      case "INFO":
+        return "outline";
+      case "ERROR":
+        return "destructive";
+      case "WARNING":
+        return "warning";
       default:
         return "default";
     }
@@ -249,7 +259,12 @@ export default function AuditLogsPage() {
   };
 
   // Get entity badge variant based on entity type
-  const getEntityBadgeVariant = (entity: string) => {
+  const getEntityBadgeVariant = (entity: string | null | undefined) => {
+    // Handle undefined or null entity type
+    if (!entity) {
+      return "default";
+    }
+    
     switch (entity.toUpperCase()) {
       case "USER":
         return "default";
@@ -263,6 +278,10 @@ export default function AuditLogsPage() {
         return "destructive";
       case "CROSSWALK":
         return "outline";
+      case "SYSTEM":
+        return "outline";
+      case "API_KEY":
+        return "secondary";
       default:
         return "default";
     }
@@ -270,10 +289,11 @@ export default function AuditLogsPage() {
 
   return (
     <MainLayout>
-      <div className="w-full h-full flex-1 p-0 md:p-1">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-5 gap-3 sm:gap-0 px-4 sm:px-6">
+      <div className="w-full h-full flex-1 flex flex-col">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-5 gap-3 sm:gap-0 px-4 sm:px-6 py-2 border-b">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Audit Trail</h1>
+            <p className="text-sm text-muted-foreground mt-1">Track all changes and activities in the system</p>
           </div>
           <div className="flex self-end sm:self-auto space-x-2">
             <Button
@@ -337,9 +357,9 @@ export default function AuditLogsPage() {
         )}
 
         {/* Main Content */}
-        <div className="w-full flex-1 px-0 mx-auto">
-          <Card className="w-full h-full overflow-hidden border-0 rounded-none sm:border sm:rounded-md">
-            <CardHeader className="pb-3 pt-0">
+        <div className="w-full flex-1 px-4 mx-auto">
+          <Card className="w-full h-full min-h-[600px] overflow-hidden border rounded-md shadow-sm">
+            <CardHeader className="pb-3 pt-4">
 
               {/* Tabs for entity type filtering */}
               <div className="overflow-x-auto w-full">
