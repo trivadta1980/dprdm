@@ -26,7 +26,7 @@ type AuthContextType = {
   isAdmin: boolean;
   changePassword: (currentPassword: string, newPassword: string) => Promise<any>;
   // Add hasPermission function to check route permissions
-  hasPermission: (route: string) => boolean;
+  hasPermission: (route: string | undefined) => boolean;
   allowedRoutes: string[];
 };
 
@@ -195,7 +195,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const allowedRoutes = userData?.routes || [];
   
   // Function to check if a user has permission for a specific route
-  const hasPermission = (route: string): boolean => {
+  const hasPermission = (route: string | undefined): boolean => {
+    // If route is undefined, no permission
+    if (route === undefined) return false;
+    
     // Admin has access to everything
     if (isAdmin) return true;
     
