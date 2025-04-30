@@ -524,15 +524,15 @@ export default function AuditLogsPage() {
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              <Badge variant={getEntityBadgeVariant(log.entityType)}>
-                                {log.entityType}
+                              <Badge variant={getEntityBadgeVariant(log.module || log.entityType)}>
+                                {log.module || log.entityType || "UNKNOWN"}
                               </Badge>
                               <div className="text-xs text-muted-foreground mt-1 truncate">
                                 {log.entityName}
                               </div>
                             </TableCell>
                             <TableCell>
-                              <div className="truncate text-sm">{log.details}</div>
+                              <div className="truncate text-sm">{log.changeSummary || log.details || ""}</div>
                             </TableCell>
                             <TableCell className="text-right">
                               <Button
@@ -596,10 +596,10 @@ export default function AuditLogsPage() {
                             <p className="text-xs text-muted-foreground">Entity:</p>
                             <div className="flex flex-col mt-1">
                               <Badge 
-                                variant={getEntityBadgeVariant(log.entityType)}
+                                variant={getEntityBadgeVariant(log.module || log.entityType)}
                                 className="text-xs h-5 w-fit"
                               >
-                                {log.entityType}
+                                {log.module || log.entityType || "UNKNOWN"}
                               </Badge>
                               <p className="text-xs text-muted-foreground mt-1 truncate">
                                 {log.entityName}
@@ -609,7 +609,7 @@ export default function AuditLogsPage() {
                           
                           <div>
                             <p className="text-xs text-muted-foreground">Details:</p>
-                            <p className="text-xs mt-1 line-clamp-2">{log.details}</p>
+                            <p className="text-xs mt-1 line-clamp-2">{log.changeSummary || log.details || ""}</p>
                           </div>
                         </div>
                       ))}
@@ -754,8 +754,8 @@ export default function AuditLogsPage() {
                           <div className="flex justify-between py-1 border-b border-border/50">
                             <dt className="font-medium text-muted-foreground">Entity Type:</dt>
                             <dd>
-                              <Badge variant={getEntityBadgeVariant(selectedLog.entityType)} className="text-xs h-5">
-                                {selectedLog.entityType}
+                              <Badge variant={getEntityBadgeVariant(selectedLog.module || selectedLog.entityType)} className="text-xs h-5">
+                                {selectedLog.module || selectedLog.entityType || "UNKNOWN"}
                               </Badge>
                             </dd>
                           </div>
@@ -784,7 +784,7 @@ export default function AuditLogsPage() {
                           </div>
                           <div className="flex justify-between py-1 border-b border-border/50">
                             <dt className="font-medium text-muted-foreground">IP Address:</dt>
-                            <dd>{selectedLog.userIp}</dd>
+                            <dd>{selectedLog.ipAddress || selectedLog.userIp || "Unknown"}</dd>
                           </div>
                           {selectedLog.sessionData && (
                             <div className="flex justify-between py-1 border-b border-border/50">
@@ -800,7 +800,7 @@ export default function AuditLogsPage() {
 
                     <div>
                       <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4">Event Details</h3>
-                      <p className="text-xs sm:text-sm">{selectedLog.details}</p>
+                      <p className="text-xs sm:text-sm">{selectedLog.changeSummary || selectedLog.details || "No details available"}</p>
                     </div>
 
                     {selectedLog.changesMade && selectedLog.changesMade.length > 0 && (

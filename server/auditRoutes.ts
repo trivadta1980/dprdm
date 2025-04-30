@@ -394,12 +394,48 @@ router.get("/audit-logs/stats", requireAuth, async (req: Request, res: Response)
       .groupBy(db.sql`DATE(${auditLogs.timestamp})`)
       .orderBy(db.sql`DATE(${auditLogs.timestamp})`);
 
+    // Calculate statistics for the client display
+    const totalActions = (await db.select({ count: db.fn.count() }).from(auditLogs))[0].count;
+    
+    // Count user-specific actions (login, logout, and user-generated actions)
+    const userActions = actionCounts
+      .filter(action => ['LOGIN', 'LOGOUT', 'CREATE', 'UPDATE', 'DELETE'].includes(action.actionType))
+      .reduce((sum, item) => sum + Number(item.count), 0);
+    
+    // Count data changes (create, update, delete)
+    const dataChanges = actionCounts
+      .filter(action => ['CREATE', 'UPDATE', 'DELETE'].includes(action.actionType))
+      .reduce((sum, item) => sum + Number(item.count), 0);
+    
+    // Count system events (everything else)
+    const systemEvents = Number(totalActions) - Number(userActions);
+    
+    // Format recent activity
+    const recentActions = await db
+      .select({
+        id: auditLogs.id,
+        timestamp: auditLogs.timestamp,
+        username: auditLogs.username,
+        actionType: auditLogs.actionType,
+        module: auditLogs.module,
+        entityName: auditLogs.entityName,
+      })
+      .from(auditLogs)
+      .orderBy(desc(auditLogs.timestamp))
+      .limit(5);
+
     return res.status(200).json({
       actionCounts,
       moduleCounts,
       userCounts,
       dateCounts,
-      totalLogs: await db.select({ count: db.fn.count() }).from(auditLogs),
+      totalLogs: totalActions,
+      // Statistics for the UI cards
+      totalActions,
+      userActions,
+      dataChanges,
+      systemEvents,
+      recentActions,
     });
   } catch (error) {
     console.error("Error fetching audit statistics:", error);
