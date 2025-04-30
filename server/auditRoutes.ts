@@ -266,11 +266,19 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
       dataQuery.where(and(...filters));
     }
     
-    const results = await dataQuery;
+    const rawResults = await dataQuery;
+    
+    // Map field names for frontend compatibility
+    const mappedResults = rawResults.map(log => ({
+      ...log,
+      userIp: log.ipAddress,        // Frontend expects userIp instead of ipAddress
+      entityType: log.module,       // Frontend expects entityType instead of module
+      details: log.changeSummary    // Frontend expects details
+    }));
 
     // Format response with pagination metadata
     const response = {
-      data: results,
+      data: mappedResults,
       pagination: {
         page,
         limit,
@@ -279,7 +287,7 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
       },
     };
 
-    console.log(`GET /api/audit-logs - Retrieved ${results.length} logs`);
+    console.log(`GET /api/audit-logs - Retrieved ${rawResults.length} logs`);
     return res.status(200).json(response);
   } catch (error) {
     console.error("Error fetching audit logs:", error);
@@ -315,9 +323,13 @@ router.get("/audit-logs/:id", requireAuth, async (req: Request, res: Response) =
       return res.status(404).json({ error: "Audit log not found" });
     }
 
-    // Format result to prevent exposing sensitive information
+    // Format result to prevent exposing sensitive information and map field names for frontend
     const auditLog = {
       ...result.audit_logs,
+      // Map backend field names to what frontend expects
+      userIp: result.audit_logs.ipAddress,         // Frontend expects userIp instead of ipAddress
+      entityType: result.audit_logs.module,        // Frontend expects entityType instead of module 
+      details: result.audit_logs.changeSummary,    // Frontend expects details
       userDetails: result.users ? {
         id: result.users.id,
         username: result.users.username,
@@ -387,6 +399,8 @@ router.get("/audit-logs/entity/:type/:id", requireAuth, async (req: Request, res
       actionType: auditLogs.actionType,
       entityName: auditLogs.entityName,
       changeSummary: auditLogs.changeSummary,
+      module: auditLogs.module,       // Include for field mapping
+      ipAddress: auditLogs.ipAddress  // Include for field mapping
     })
       .from(auditLogs)
       .where(
@@ -399,9 +413,17 @@ router.get("/audit-logs/entity/:type/:id", requireAuth, async (req: Request, res
       .limit(limit)
       .offset(offset);
 
+    // Map field names for frontend compatibility
+    const mappedResults = results.map(log => ({
+      ...log,
+      userIp: log.ipAddress,        // Frontend expects userIp instead of ipAddress
+      entityType: log.module,       // Frontend expects entityType instead of module
+      details: log.changeSummary    // Frontend expects details
+    }));
+
     // Format response with pagination metadata
     const response = {
-      data: results,
+      data: mappedResults,
       pagination: {
         page,
         limit,
@@ -469,12 +491,21 @@ router.get("/audit-logs/user/:id", requireAuth, async (req: Request, res: Respon
       entityId: auditLogs.entityId,
       entityName: auditLogs.entityName,
       changeSummary: auditLogs.changeSummary,
+      ipAddress: auditLogs.ipAddress  // Include for field mapping
     })
       .from(auditLogs)
       .where(eq(auditLogs.userId, userId))
       .orderBy(desc(auditLogs.timestamp))
       .limit(limit)
       .offset(offset);
+
+    // Map field names for frontend compatibility
+    const mappedResults = results.map(log => ({
+      ...log,
+      userIp: log.ipAddress,        // Frontend expects userIp instead of ipAddress
+      entityType: log.module,       // Frontend expects entityType instead of module
+      details: log.changeSummary    // Frontend expects details
+    }));
 
     // Get user details
     const [user] = await db.select({
@@ -488,7 +519,7 @@ router.get("/audit-logs/user/:id", requireAuth, async (req: Request, res: Respon
 
     // Format response with pagination metadata
     const response = {
-      data: results,
+      data: mappedResults,
       user,
       pagination: {
         page,
