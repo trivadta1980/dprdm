@@ -134,6 +134,25 @@ export function setupAuth(app: Express) {
         
         console.log('[DEBUG Login Route] User logged in successfully:', user.username);
         
+        // Log successful login for audit trail
+        import('./utils/auditLogger').then(({ logCrudEvent }) => {
+          logCrudEvent(
+            req,
+            'LOGIN',
+            'USER',
+            user.id.toString(),
+            user.username,
+            null,
+            null,
+            `User ${user.username} logged in successfully`,
+            {
+              ip: req.ip,
+              userAgent: req.headers['user-agent'],
+              loginTime: new Date().toISOString()
+            }
+          ).catch(err => console.error('Failed to log login event:', err));
+        }).catch(err => console.error('Failed to import auditLogger for login:', err));
+        
         // Get the user role information to include with the login response
         try {
           const userRole = await storage.getRole(user.roleId);
@@ -239,6 +258,31 @@ export function setupAuth(app: Express) {
 
 
   app.post("/api/logout", (req, res, next) => {
+    // Store user info before logout since req.user will be cleared
+    const userId = req.user?.id;
+    const username = req.user?.username;
+
+    // Log the logout event before actually logging out
+    if (req.isAuthenticated() && userId) {
+      import('./utils/auditLogger').then(({ logCrudEvent }) => {
+        logCrudEvent(
+          req,
+          'LOGOUT',
+          'USER',
+          userId.toString(),
+          username || 'Unknown User',
+          null,
+          null,
+          `User ${username || 'Unknown'} logged out`,
+          {
+            ip: req.ip,
+            userAgent: req.headers['user-agent'],
+            logoutTime: new Date().toISOString()
+          }
+        ).catch(err => console.error('Failed to log logout event:', err));
+      }).catch(err => console.error('Failed to import auditLogger for logout:', err));
+    }
+
     req.logout((err) => {
       if (err) return next(err);
       res.sendStatus(200);
@@ -470,6 +514,28 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
 
   if (!req.isAuthenticated()) {
     console.log('[DEBUG RequireAuth] Unauthorized access blocked');
+    
+    // Load these inside the condition to avoid circular dependencies
+    import('./utils/auditLogger').then(({ logCrudEvent }) => {
+      // Log the unauthorized access attempt
+      logCrudEvent(
+        req,
+        'ERROR',
+        'SYSTEM',
+        `auth_${Date.now()}`,
+        'Authentication Failure',
+        null,
+        null,
+        `Unauthorized access attempt to ${req.method} ${req.path}`,
+        {
+          path: req.path,
+          method: req.method,
+          ip: req.ip,
+          userAgent: req.headers['user-agent']
+        }
+      ).catch(err => console.error('Failed to log auth error:', err));
+    }).catch(err => console.error('Failed to import auditLogger:', err));
+    
     return res.sendStatus(401);
   }
   next();

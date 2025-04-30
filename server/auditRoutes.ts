@@ -198,7 +198,16 @@ router.get("/audit-logs/stats", requireAuth, async (req: Request, res: Response)
             eq(auditLogs.actionType, 'LOGOUT')
           )
         );
-      userActions = Number(userResult[0]?.count || 0);
+      
+      // Handle different types of count results (PostgreSQL vs SQLite)
+      if (userResult && userResult.length > 0) {
+        const countValue = userResult[0]?.count;
+        if (countValue !== undefined) {
+          userActions = typeof countValue === 'number' 
+            ? countValue 
+            : Number(countValue);
+        }
+      }
     } catch (error) {
       console.error("Error counting user actions:", error);
     }
@@ -233,7 +242,16 @@ router.get("/audit-logs/stats", requireAuth, async (req: Request, res: Response)
             eq(auditLogs.actionType, 'FEATURE_USAGE')
           )
         );
-      systemEvents = Number(systemResult[0]?.count || 0);
+      
+      // Handle different types of count results (PostgreSQL vs SQLite)
+      if (systemResult && systemResult.length > 0) {
+        const countValue = systemResult[0]?.count;
+        if (countValue !== undefined) {
+          systemEvents = typeof countValue === 'number' 
+            ? countValue 
+            : Number(countValue);
+        }
+      }
     } catch (error) {
       console.error("Error counting system events:", error);
     }
@@ -474,25 +492,6 @@ router.get("/audit-logs/user/:id", requireAuth, async (req: Request, res: Respon
   } catch (error) {
     console.error(`Error fetching user audit logs:`, error);
     return res.status(500).json({ error: "Failed to fetch user audit logs" });
-  }
-});
-
-/**
-    } catch (error) {
-      console.error("Error counting system events:", error);
-    }
-
-    // Return formatted response with the counts
-    return res.status(200).json({
-      totalActions,
-      userActions,
-      dataChanges, 
-      systemEvents,
-      recentActions
-    });
-  } catch (error) {
-    console.error("Error fetching audit statistics:", error);
-    return res.status(500).json({ error: "Failed to fetch audit statistics" });
   }
 });
 
