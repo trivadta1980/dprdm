@@ -68,9 +68,14 @@ export function EnhancedTooltip({
     return <>{children}</>;
   }
 
+  // Ensure children can accept a ref by wrapping in a div if needed
+  const triggerElement = React.isValidElement(children) && typeof children.type !== 'string' 
+    ? children 
+    : <div>{children}</div>;
+    
   const tooltipContent = (
     <Tooltip delayDuration={delayDuration}>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipTrigger asChild>{triggerElement}</TooltipTrigger>
       <TooltipContent
         side={side}
         align={align}

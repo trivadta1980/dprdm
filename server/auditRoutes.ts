@@ -95,11 +95,17 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
     // Execute count query with error handling
     let totalCount = 0;
     try {
-      const totalItemsResult = await db.select({ count: db.fn.count() })
-        .from(auditLogs)
-        .where(filters.length > 0 ? and(...filters) : undefined);
+      // Use count() directly and handle the case when filters is empty
+      const filterCondition = filters.length > 0 ? and(...filters) : undefined;
+      const countQuery = db.select({ count: db.fn.count() }).from(auditLogs);
       
-      totalCount = Number(totalItemsResult[0]?.count || 0);
+      // Only apply where clause if we have filters
+      const totalItemsResult = filterCondition 
+        ? await countQuery.where(filterCondition)
+        : await countQuery;
+      
+      // Safely access the count value with fallback
+      totalCount = Number(totalItemsResult[0]?.count ?? 0);
     } catch (error) {
       console.error("Error counting audit logs:", error);
       totalCount = 0;
