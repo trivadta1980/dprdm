@@ -843,11 +843,9 @@ export default function ReferenceDataInstancesPage() {
       });
     } catch (error) {
       console.error('Error downloading template:', error);
-      toast({
-        title: "Download Failed",
-        description: error instanceof Error ? error.message : "Failed to download template",
-        variant: "destructive",
-      });
+      // Use error dialog instead of toast
+      setErrorDialogMessage(error instanceof Error ? error.message : "Failed to download template");
+      setErrorDialogOpen(true);
     } finally {
       setIsDownloading(false);
     }
@@ -1232,6 +1230,13 @@ export default function ReferenceDataInstancesPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Error Dialog */}
+      <ErrorDialog
+        open={errorDialogOpen}
+        onOpenChange={setErrorDialogOpen}
+        description={errorDialogMessage}
+      />
     </MainLayout>
   );
 }
