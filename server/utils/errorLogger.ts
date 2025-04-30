@@ -1,226 +1,191 @@
 /**
- * Error Logger Utility
+ * Error Logger
  * 
- * Specialized logger for capturing detailed error information.
- * Implements configurable log levels and detailed error tracking.
+ * Specialized logging utility for capturing and storing error information
+ * with configurable detail levels. Integrated with the audit trail system.
  */
 
-import { logSystemEvent } from './auditLogger';
+import { logCrudEvent } from './auditLogger';
+import { Request } from 'express';
 
-// Log levels for controlling verbosity
-export enum LogLevel {
-  ERROR = 0,   // Only critical errors
-  WARNING = 1, // Warnings and errors
-  INFO = 2,    // Standard information plus warnings and errors
-  DEBUG = 3,   // Detailed debug information
-  TRACE = 4,   // Most granular information
-}
-
-// Current log level - can be set via environment variables or configuration
-let currentLogLevel = LogLevel.INFO;
-
-/**
- * Set the current log level
- */
-export function setLogLevel(level: LogLevel) {
-  currentLogLevel = level;
-  logSystemEvent(
-    'SYSTEM',
-    'SYSTEM',
-    'log-level',
-    'Log Level Changed',
-    { previousLevel: LogLevel[currentLogLevel], newLevel: LogLevel[level] }
-  );
-  currentLogLevel = level;
+// Define error severity levels
+export enum ErrorSeverity {
+  ERROR = 'ERROR',
+  WARNING = 'WARNING',
+  INFO = 'INFO',
+  DEBUG = 'DEBUG',
+  TRACE = 'TRACE'
 }
 
 /**
- * Log a critical error
- * Always logged regardless of log level
+ * Log an API error with contextual information
+ * 
+ * @param req Express request object
+ * @param error The error that occurred
+ * @param severity Error severity level
+ * @param details Additional contextual details
  */
-export function logError(
-  error: Error | string,
-  module: string,
-  entityId?: string | number,
-  context?: Record<string, any>
-) {
-  const errorMessage = error instanceof Error ? error.message : error;
-  const errorStack = error instanceof Error ? error.stack : undefined;
+export function logApiError(
+  req: Request,
+  error: Error,
+  severity: ErrorSeverity = ErrorSeverity.ERROR,
+  details?: Record<string, any>
+): void {
+  // Extract useful information from the request
+  const path = req.path;
+  const method = req.method;
+  const userId = req.user?.id;
+  const username = req.user?.username || 'anonymous';
   
-  console.error(`[ERROR] [${module}] ${errorMessage}`);
+  // Create error details for logging
+  const errorDetails = {
+    errorName: error.name,
+    errorMessage: error.message,
+    stack: error.stack,
+    requestPath: path,
+    requestMethod: method,
+    userId,
+    username,
+    ...details
+  };
   
-  return logSystemEvent(
+  // Log based on severity
+  logCrudEvent(
+    req,
+    severity,
     'SYSTEM',
-    module as any,
-    entityId?.toString() || 'error',
-    `Error: ${errorMessage.substring(0, 100)}`,
-    {
-      errorLevel: 'ERROR',
-      message: errorMessage,
-      stack: errorStack,
-      ...context
-    }
+    `error_${Date.now()}`,
+    'API Error',
+    null,
+    null,
+    `[${severity}] ${error.name}: ${error.message} (${method} ${path})`,
+    errorDetails
   );
+  
+  // If this is a serious error, also log to console
+  if (severity === ErrorSeverity.ERROR) {
+    console.error(`API Error [${method} ${path}]:`, error);
+  }
 }
 
 /**
- * Log a warning
- * Only logged if level is WARNING or higher
+ * Log a system error not tied to an API request
+ * 
+ * @param error The error that occurred
+ * @param context Context information about where the error occurred
+ * @param severity Error severity level
+ * @param details Additional contextual details
+ */
+export function logSystemError(
+  error: Error,
+  context: string,
+  severity: ErrorSeverity = ErrorSeverity.ERROR,
+  details?: Record<string, any>
+): void {
+  // Create error details for logging
+  const errorDetails = {
+    errorName: error.name,
+    errorMessage: error.message,
+    stack: error.stack,
+    context,
+    ...details
+  };
+  
+  // Create a fake request with minimal information
+  const fakeReq = {
+    path: '/system',
+    method: 'SYSTEM',
+    user: { id: 0, username: 'system' }
+  } as any;
+  
+  // Log based on severity
+  logCrudEvent(
+    fakeReq,
+    severity,
+    'SYSTEM',
+    `error_${Date.now()}`,
+    'System Error',
+    null,
+    null,
+    `[${severity}] ${error.name}: ${error.message} (${context})`,
+    errorDetails
+  );
+  
+  // If this is a serious error, also log to console
+  if (severity === ErrorSeverity.ERROR || severity === ErrorSeverity.WARNING) {
+    console.error(`System Error [${context}]:`, error);
+  }
+}
+
+/**
+ * Log a warning message that isn't tied to an exception
+ * 
+ * @param message Warning message
+ * @param context Context information about where the warning occurred
+ * @param details Additional contextual details
  */
 export function logWarning(
   message: string,
-  module: string,
-  entityId?: string | number,
-  context?: Record<string, any>
-) {
-  if (currentLogLevel < LogLevel.WARNING) return null;
+  context: string,
+  details?: Record<string, any>
+): void {
+  const fakeReq = {
+    path: '/system',
+    method: 'SYSTEM',
+    user: { id: 0, username: 'system' }
+  } as any;
   
-  console.warn(`[WARNING] [${module}] ${message}`);
-  
-  return logSystemEvent(
+  logCrudEvent(
+    fakeReq,
+    'WARNING',
     'SYSTEM',
-    module as any,
-    entityId?.toString() || 'warning',
-    `Warning: ${message.substring(0, 100)}`,
-    {
-      errorLevel: 'WARNING',
-      message,
-      ...context
-    }
+    `warning_${Date.now()}`,
+    'System Warning',
+    null,
+    null,
+    `[WARNING] ${message} (${context})`,
+    details
   );
+  
+  console.warn(`Warning [${context}]: ${message}`);
 }
 
 /**
- * Log information
- * Only logged if level is INFO or higher
+ * Process a caught error and log it appropriately
+ * 
+ * @param error The error that occurred
+ * @param context Information about where the error occurred
+ * @param req Optional Express request object if this is an API error
  */
-export function logInfo(
-  message: string,
-  module: string,
-  entityId?: string | number,
-  context?: Record<string, any>
-) {
-  if (currentLogLevel < LogLevel.INFO) return null;
-  
-  console.log(`[INFO] [${module}] ${message}`);
-  
-  return logSystemEvent(
-    'SYSTEM',
-    module as any,
-    entityId?.toString() || 'info',
-    `Info: ${message.substring(0, 100)}`,
-    {
-      errorLevel: 'INFO',
-      message,
-      ...context
-    }
-  );
+export function processError(
+  error: Error,
+  context: string,
+  req?: Request
+): void {
+  if (req) {
+    logApiError(req, error, ErrorSeverity.ERROR, { context });
+  } else {
+    logSystemError(error, context);
+  }
 }
 
 /**
- * Log debug information
- * Only logged if level is DEBUG or higher
+ * Simple wrapper for try/catch blocks to log errors
+ * 
+ * @param fn Function to execute
+ * @param context Context information for error logging
+ * @param req Optional Express request object
+ * @returns The result of the function or undefined if an error occurred
  */
-export function logDebug(
-  message: string,
-  module: string,
-  entityId?: string | number,
-  context?: Record<string, any>
-) {
-  if (currentLogLevel < LogLevel.DEBUG) return null;
-  
-  console.debug(`[DEBUG] [${module}] ${message}`);
-  
-  return logSystemEvent(
-    'SYSTEM',
-    module as any,
-    entityId?.toString() || 'debug',
-    `Debug: ${message.substring(0, 100)}`,
-    {
-      errorLevel: 'DEBUG',
-      message,
-      ...context
-    }
-  );
-}
-
-/**
- * Log trace information (most detailed level)
- * Only logged if level is TRACE
- */
-export function logTrace(
-  message: string,
-  module: string,
-  entityId?: string | number,
-  context?: Record<string, any>
-) {
-  if (currentLogLevel < LogLevel.TRACE) return null;
-  
-  console.debug(`[TRACE] [${module}] ${message}`);
-  
-  return logSystemEvent(
-    'SYSTEM',
-    module as any,
-    entityId?.toString() || 'trace',
-    `Trace: ${message.substring(0, 100)}`,
-    {
-      errorLevel: 'TRACE',
-      message,
-      ...context
-    }
-  );
-}
-
-/**
- * Handle and log an error with proper HTTP response
- * This is a helper for API routes
- */
-export function handleError(error: any, res: any, module: string, entityId?: string | number) {
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  
-  logError(error, module, entityId, {
-    statusCode: 500,
-    endpoint: res.req?.originalUrl,
-    method: res.req?.method
-  });
-  
-  return res.status(500).json({ error: errorMessage });
-}
-
-/**
- * Parse and log validation errors
- */
-export function logValidationError(
-  validationErrors: any,
-  module: string,
-  entityId?: string | number,
-  requestData?: Record<string, any>
-) {
-  const context = {
-    validationErrors,
-    requestData: sanitizeData(requestData || {})
-  };
-  
-  return logWarning(
-    `Validation error: ${JSON.stringify(validationErrors)}`,
-    module,
-    entityId,
-    context
-  );
-}
-
-/**
- * Sanitize data before logging by removing sensitive fields
- */
-function sanitizeData(data: Record<string, any>): Record<string, any> {
-  const sanitized = { ...data };
-  const sensitiveFields = ['password', 'token', 'apiKey', 'secret', 'key'];
-  
-  sensitiveFields.forEach(field => {
-    if (field in sanitized) {
-      sanitized[field] = '******';
-    }
-  });
-  
-  return sanitized;
+export async function tryCatchWithLogging<T>(
+  fn: () => Promise<T>,
+  context: string,
+  req?: Request
+): Promise<T | undefined> {
+  try {
+    return await fn();
+  } catch (error) {
+    processError(error as Error, context, req);
+    return undefined;
+  }
 }

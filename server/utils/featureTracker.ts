@@ -1,258 +1,216 @@
 /**
- * Feature Usage Tracker
+ * Feature Tracker
  * 
- * This utility tracks detailed usage of specific features within the application.
- * It provides insights into how users interact with the system.
+ * Utility for tracking feature usage and user activity within the application.
+ * Provides analytics on which features are most used and by whom.
  */
 
 import { logCrudEvent } from './auditLogger';
-import { logInfo } from './errorLogger';
 import { Request } from 'express';
 
-// Feature categories for tracking
+// Feature categories for grouping and reporting
 export enum FeatureCategory {
-  USER_MANAGEMENT = 'USER_MANAGEMENT',
   REFERENCE_DATA = 'REFERENCE_DATA',
   RELATIONSHIPS = 'RELATIONSHIPS',
   CROSSWALKS = 'CROSSWALKS',
+  USER_MANAGEMENT = 'USER_MANAGEMENT',
   APPROVALS = 'APPROVALS',
-  SYSTEM = 'SYSTEM',
-  AUDIT = 'AUDIT',
-  API_KEYS = 'API_KEYS',
-}
-
-// Feature actions
-export enum FeatureAction {
-  VIEW = 'VIEW',
-  CREATE = 'CREATE',
-  UPDATE = 'UPDATE',
-  DELETE = 'DELETE',
+  SEARCH = 'SEARCH',
   EXPORT = 'EXPORT',
   IMPORT = 'IMPORT',
-  APPROVE = 'APPROVE',
-  REJECT = 'REJECT',
-  SEARCH = 'SEARCH',
-  FILTER = 'FILTER',
-  BULK_OPERATION = 'BULK_OPERATION',
+  REPORTS = 'REPORTS',
+  API_USAGE = 'API_USAGE',
+  SETTINGS = 'SETTINGS'
 }
 
-// Interface for feature usage events
-interface FeatureUsageEvent {
-  category: FeatureCategory;
-  action: FeatureAction;
-  feature: string;
-  entityId?: string | number;
-  metadata?: Record<string, any>;
-}
+// Map of API paths to feature categories for automatic tracking
+const pathToFeatureMap: Record<string, FeatureCategory> = {
+  '/api/reference-types': FeatureCategory.REFERENCE_DATA,
+  '/api/reference-data': FeatureCategory.REFERENCE_DATA,
+  '/api/relationships': FeatureCategory.RELATIONSHIPS,
+  '/api/crosswalks': FeatureCategory.CROSSWALKS,
+  '/api/users': FeatureCategory.USER_MANAGEMENT,
+  '/api/roles': FeatureCategory.USER_MANAGEMENT,
+  '/api/approvals': FeatureCategory.APPROVALS,
+  '/api/search': FeatureCategory.SEARCH,
+  '/api/export': FeatureCategory.EXPORT,
+  '/api/import': FeatureCategory.IMPORT
+};
 
 /**
- * Track feature usage by a user
+ * Log a feature usage event
+ * 
+ * @param req Express request object
+ * @param featureName Name of the feature being used
+ * @param category Feature category
+ * @param details Additional details about the usage
  */
 export function trackFeatureUsage(
   req: Request,
+  featureName: string,
   category: FeatureCategory,
-  action: FeatureAction, 
-  feature: string,
-  entityId?: string | number,
-  metadata?: Record<string, any>
-) {
-  // Skip tracking if not authenticated
-  if (!req.isAuthenticated() || !req.user) {
-    return null;
-  }
+  details?: Record<string, any>
+): void {
+  const userId = req.user?.id;
+  const username = req.user?.username || 'anonymous';
   
-  const sanitizedMetadata = sanitizeMetadata(metadata || {});
-  
-  // Map to system audit action type
-  const actionTypeMap: Record<FeatureAction, "CREATE" | "READ" | "UPDATE" | "DELETE" | "APPROVE" | "REJECT" | "SYSTEM"> = {
-    [FeatureAction.VIEW]: 'READ',
-    [FeatureAction.CREATE]: 'CREATE',
-    [FeatureAction.UPDATE]: 'UPDATE',
-    [FeatureAction.DELETE]: 'DELETE',
-    [FeatureAction.EXPORT]: 'SYSTEM',
-    [FeatureAction.IMPORT]: 'SYSTEM',
-    [FeatureAction.APPROVE]: 'APPROVE',
-    [FeatureAction.REJECT]: 'REJECT',
-    [FeatureAction.SEARCH]: 'READ',
-    [FeatureAction.FILTER]: 'READ',
-    [FeatureAction.BULK_OPERATION]: 'SYSTEM',
-  };
-  
-  // Map to system audit module
-  const moduleMap: Record<FeatureCategory, "USER" | "ROLE" | "REFERENCE_TYPE" | "REFERENCE_DATA" | "RELATIONSHIP" | "CROSSWALK" | "API_KEY" | "SYSTEM"> = {
-    [FeatureCategory.USER_MANAGEMENT]: 'USER',
-    [FeatureCategory.REFERENCE_DATA]: 'REFERENCE_DATA',
-    [FeatureCategory.RELATIONSHIPS]: 'RELATIONSHIP',
-    [FeatureCategory.CROSSWALKS]: 'CROSSWALK',
-    [FeatureCategory.APPROVALS]: 'SYSTEM',
-    [FeatureCategory.SYSTEM]: 'SYSTEM',
-    [FeatureCategory.AUDIT]: 'SYSTEM',
-    [FeatureCategory.API_KEYS]: 'API_KEY',
-  };
-  
-  // Generate a feature usage ID
-  const featureId = entityId || `feature-${feature.toLowerCase().replace(/\s+/g, '-')}`;
-  
-  // Create the change summary
-  const changeSummary = `User ${req.user.username} ${action.toLowerCase()} ${feature} in ${category.toLowerCase().replace(/_/g, ' ')}`;
-  
-  // Log to audit system
-  return logCrudEvent(
-    req,
-    actionTypeMap[action],
-    moduleMap[category],
-    featureId.toString(),
-    feature,
-    null,
-    null,
-    changeSummary,
-  );
-}
-
-/**
- * Track a bulk operation with count information
- */
-export function trackBulkOperation(
-  req: Request,
-  category: FeatureCategory,
-  operation: string,
-  recordCount: number,
-  successCount: number,
-  metadata?: Record<string, any>
-) {
-  if (!req.isAuthenticated() || !req.user) {
-    return null;
-  }
-  
-  const feature = `Bulk ${operation}`;
-  const sanitizedMetadata = {
-    ...sanitizeMetadata(metadata || {}),
-    recordCount,
-    successCount,
-    failureCount: recordCount - successCount,
-    successRate: `${Math.round((successCount / recordCount) * 100)}%`
-  };
-  
-  return trackFeatureUsage(
-    req,
+  // Create usage details for logging
+  const usageDetails = {
+    featureName,
     category,
-    FeatureAction.BULK_OPERATION,
-    feature,
-    undefined,
-    sanitizedMetadata
+    userId,
+    username,
+    path: req.path,
+    method: req.method,
+    ...details
+  };
+  
+  // Log the feature usage
+  logCrudEvent(
+    req,
+    'INFO',
+    'SYSTEM',
+    `feature_${Date.now()}`,
+    'Feature Usage',
+    null,
+    null,
+    `User ${username} used feature: ${featureName}`,
+    usageDetails
   );
 }
 
 /**
- * Track a search operation
+ * Track feature usage based on API path
+ * 
+ * This function automatically maps API paths to features and logs usage
+ * 
+ * @param req Express request object
+ * @param details Additional details about the usage
+ */
+export function trackApiUsage(
+  req: Request,
+  details?: Record<string, any>
+): void {
+  // Extract path without query params for matching
+  const path = req.path.split('?')[0];
+  
+  // Find matching feature category
+  let category = FeatureCategory.API_USAGE;
+  let featureName = path;
+  
+  // Check for exact match
+  if (pathToFeatureMap[path]) {
+    category = pathToFeatureMap[path];
+  } else {
+    // Check for partial match
+    for (const [prefix, featureCategory] of Object.entries(pathToFeatureMap)) {
+      if (path.startsWith(prefix)) {
+        category = featureCategory;
+        break;
+      }
+    }
+  }
+  
+  // Create a more user-friendly feature name from the path
+  featureName = path.replace('/api/', '').replace(/-/g, ' ');
+  
+  // Add HTTP method to make it clearer what action was taken
+  featureName = `${req.method} ${featureName}`;
+  
+  // Only track API usage for authenticated users
+  if (req.isAuthenticated() && req.user) {
+    trackFeatureUsage(req, featureName, category, details);
+  }
+}
+
+/**
+ * Track a specific application feature being used
+ * 
+ * Use this for tracking UI interactions that don't directly map to API calls
+ * 
+ * @param req Express request object
+ * @param featureName Name of the feature being used
+ * @param category Feature category
+ * @param details Additional details about the usage
+ */
+export function trackAppFeatureUsage(
+  req: Request,
+  featureName: string,
+  category: FeatureCategory,
+  details?: Record<string, any>
+): void {
+  trackFeatureUsage(req, featureName, category, {
+    source: 'client',
+    ...details
+  });
+}
+
+/**
+ * Track search activity
+ * 
+ * @param req Express request object
+ * @param searchTerm Search term used
+ * @param searchContext Where the search was performed
+ * @param resultsCount Number of results returned
  */
 export function trackSearch(
   req: Request,
-  category: FeatureCategory,
   searchTerm: string,
-  resultCount: number,
-  filters?: Record<string, any>
-) {
-  if (!req.isAuthenticated() || !req.user) {
-    return null;
-  }
-  
-  return trackFeatureUsage(
-    req,
-    category,
-    FeatureAction.SEARCH,
-    'Search',
-    undefined,
-    {
-      searchTerm,
-      resultCount,
-      filters: filters ? JSON.stringify(filters) : undefined
-    }
-  );
+  searchContext: string,
+  resultsCount: number
+): void {
+  trackFeatureUsage(req, 'Search', FeatureCategory.SEARCH, {
+    searchTerm,
+    searchContext,
+    resultsCount
+  });
 }
 
 /**
- * Track an export operation
+ * Track data export activity
+ * 
+ * @param req Express request object
+ * @param exportType Type of export (CSV, JSON, etc.)
+ * @param dataType Type of data being exported
+ * @param recordCount Number of records exported
  */
 export function trackExport(
   req: Request,
-  category: FeatureCategory,
   exportType: string,
-  recordCount: number,
-  format: string
-) {
-  if (!req.isAuthenticated() || !req.user) {
-    return null;
-  }
-  
-  return trackFeatureUsage(
-    req,
-    category,
-    FeatureAction.EXPORT,
-    `Export ${exportType}`,
-    undefined,
-    {
-      recordCount,
-      format
-    }
-  );
+  dataType: string,
+  recordCount: number
+): void {
+  trackFeatureUsage(req, 'Data Export', FeatureCategory.EXPORT, {
+    exportType,
+    dataType,
+    recordCount
+  });
 }
 
 /**
- * Track an import operation
+ * Track data import activity
+ * 
+ * @param req Express request object
+ * @param importType Type of import (CSV, JSON, etc.)
+ * @param dataType Type of data being imported
+ * @param recordCount Number of records imported
+ * @param successCount Number of records successfully imported
+ * @param errorCount Number of records with errors
  */
 export function trackImport(
   req: Request,
-  category: FeatureCategory,
   importType: string,
+  dataType: string,
   recordCount: number,
-  format: string,
-  successCount: number
-) {
-  if (!req.isAuthenticated() || !req.user) {
-    return null;
-  }
-  
-  return trackFeatureUsage(
-    req,
-    category,
-    FeatureAction.IMPORT,
-    `Import ${importType}`,
-    undefined,
-    {
-      recordCount,
-      format,
-      successCount,
-      failureCount: recordCount - successCount,
-      successRate: `${Math.round((successCount / recordCount) * 100)}%`
-    }
-  );
-}
-
-/**
- * Sanitize metadata to remove sensitive information
- */
-function sanitizeMetadata(metadata: Record<string, any>): Record<string, any> {
-  const sanitized = { ...metadata };
-  const sensitiveFields = ['password', 'token', 'apiKey', 'secret', 'key'];
-  
-  // Remove sensitive fields
-  sensitiveFields.forEach(field => {
-    if (field in sanitized) {
-      sanitized[field] = '******';
-    }
+  successCount: number,
+  errorCount: number
+): void {
+  trackFeatureUsage(req, 'Data Import', FeatureCategory.IMPORT, {
+    importType,
+    dataType,
+    recordCount,
+    successCount,
+    errorCount,
+    errorRate: errorCount > 0 ? (errorCount / recordCount) * 100 : 0
   });
-  
-  // Ensure metadata isn't too large
-  const jsonSize = JSON.stringify(sanitized).length;
-  if (jsonSize > 10000) {
-    // Truncate if too large
-    return {
-      truncated: true,
-      message: `Metadata was too large (${jsonSize} bytes) and was truncated`,
-      original_keys: Object.keys(sanitized)
-    };
-  }
-  
-  return sanitized;
 }

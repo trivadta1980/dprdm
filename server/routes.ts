@@ -8,6 +8,7 @@ import externalRoutes from "./externalRoutes";
 import { apiKeyAuth } from "./middleware/api-auth";
 import diagnosticsRouter from "./diagnostics";
 import auditRoutes from "./auditRoutes";
+import { cleanupInactiveSessions } from './utils/sessionTracker';
 import {
   insertRelationshipSchema,
   insertCrosswalkMappingSchema,
@@ -4708,6 +4709,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register audit log routes (only accessible by admin users)
   app.use('/api', auditRoutes);
+  
+  // Set up scheduled cleanup of inactive sessions (runs every 15 minutes)
+  const SESSION_CLEANUP_INTERVAL = 15 * 60 * 1000; // 15 minutes
+  setInterval(() => {
+    try {
+      const cleanedCount = cleanupInactiveSessions();
+      if (cleanedCount > 0) {
+        console.log(`Cleaned up ${cleanedCount} inactive sessions`);
+      }
+    } catch (error) {
+      console.error('Error cleaning up inactive sessions:', error);
+    }
+  }, SESSION_CLEANUP_INTERVAL);
 
   const httpServer = createServer(app);
   return httpServer;

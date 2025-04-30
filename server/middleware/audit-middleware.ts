@@ -45,7 +45,8 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
   const startTime = Date.now();
   
   // Track session activity if authenticated
-  if (req.isAuthenticated() && req.user && req.sessionID) {
+  // Check if isAuthenticated function exists before using it
+  if (req.isAuthenticated && typeof req.isAuthenticated === 'function' && req.isAuthenticated() && req.user && req.sessionID) {
     recordUserActivity(req.sessionID, requestPath);
   }
   
@@ -54,7 +55,7 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
     // We'll handle actual login success in the response interceptor below
     // since we don't know if it will be successful yet
   } else if (req.path === '/api/logout' && req.method === 'POST') {
-    if (req.isAuthenticated() && req.user && req.sessionID) {
+    if (req.isAuthenticated && typeof req.isAuthenticated === 'function' && req.isAuthenticated() && req.user && req.sessionID) {
       // Log the logout event
       logCrudEvent(
         req,

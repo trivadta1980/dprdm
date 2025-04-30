@@ -1,36 +1,35 @@
 /**
  * Session Tracker
  * 
- * This module tracks user session activity, duration, and interactions
- * with the system. It provides detailed logging about user engagement.
+ * Tracks user sessions, activity, and time spent in the system.
+ * Used for audit trail and analytics.
  */
 
-import { logSystemEvent } from './auditLogger';
-import { logInfo, logWarning } from './errorLogger';
+import { logCrudEvent } from './auditLogger';
 
-// In-memory session store with activity tracking
-interface ActiveSession {
+interface SessionInfo {
   userId: number;
   username: string;
-  startTime: Date;
-  lastActivity: Date;
+  startTime: number;
+  lastActivity: number;
   activityCount: number;
-  pageViews: Record<string, number>;
-  activityLog: {
-    timestamp: Date;
-    action: string;
-    path: string;
-  }[];
+  paths: Set<string>;
 }
 
-// Cache of active sessions
-const activeSessions: Record<string, ActiveSession> = {};
+// In-memory store of active sessions
+const activeSessions: Record<string, SessionInfo> = {};
+
+// Configure session timeout (30 minutes of inactivity)
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
 
 /**
- * Initialize a new user session
+ * Start tracking a new user session
+ * @param sessionId The session ID from Express
+ * @param userId The user ID
+ * @param username The username
  */
-export function startUserSession(sessionId: string, userId: number, username: string) {
-  const now = new Date();
+export function startUserSession(sessionId: string, userId: number, username: string): void {
+  const now = Date.now();
   
   activeSessions[sessionId] = {
     userId,
@@ -38,205 +37,162 @@ export function startUserSession(sessionId: string, userId: number, username: st
     startTime: now,
     lastActivity: now,
     activityCount: 1,
-    pageViews: {},
-    activityLog: [{
-      timestamp: now,
-      action: 'SESSION_START',
-      path: '/api/login',
-    }]
+    paths: new Set<string>()
   };
   
-  logInfo(
-    `User session started: ${username} (${userId})`,
-    'USER',
-    userId,
-    { sessionId, timestamp: now }
+  // Log session start
+  logCrudEvent(
+    { user: { id: userId, username } } as any,
+    'CREATE',
+    'SYSTEM',
+    `session_${sessionId}`,
+    'User Session',
+    null,
+    null,
+    `User ${username} started a new session`,
+    { sessionId }
   );
-  
-  return activeSessions[sessionId];
 }
 
 /**
- * Record a user activity within a session
+ * Record user activity within a session
+ * @param sessionId The session ID from Express
+ * @param path The request path
  */
-export function recordUserActivity(
-  sessionId: string, 
-  path: string, 
-  action: string = 'PAGE_VIEW'
-) {
-  if (!activeSessions[sessionId]) {
-    // Session not found or expired
-    return null;
-  }
-  
-  const now = new Date();
+export function recordUserActivity(sessionId: string, path: string): void {
   const session = activeSessions[sessionId];
   
-  // Update session data
+  if (!session) {
+    // Session not found, possibly expired or new
+    return;
+  }
+  
+  const now = Date.now();
+  
+  // Update session activity
   session.lastActivity = now;
-  session.activityCount++;
-  
-  // Track page view counts
-  if (action === 'PAGE_VIEW') {
-    session.pageViews[path] = (session.pageViews[path] || 0) + 1;
-  }
-  
-  // Add to activity log
-  session.activityLog.push({
-    timestamp: now,
-    action,
-    path
-  });
-  
-  // Limit activity log size
-  if (session.activityLog.length > 1000) {
-    session.activityLog = session.activityLog.slice(-1000);
-  }
-  
-  return session;
+  session.activityCount += 1;
+  session.paths.add(path);
 }
 
 /**
- * End a user session and log details
+ * Get stats about a user's current session
+ * @param sessionId The session ID from Express
  */
-export function endUserSession(sessionId: string) {
-  if (!activeSessions[sessionId]) {
+export function getSessionStats(sessionId: string): {
+  duration: number;
+  activityCount: number;
+  uniquePaths: number;
+} | null {
+  const session = activeSessions[sessionId];
+  
+  if (!session) {
     return null;
   }
   
-  const session = activeSessions[sessionId];
-  const now = new Date();
-  const durationMs = now.getTime() - session.startTime.getTime();
-  const durationMinutes = Math.round(durationMs / 1000 / 60);
-  
-  // Get most viewed pages
-  const pageViewEntries = Object.entries(session.pageViews);
-  pageViewEntries.sort((a, b) => b[1] - a[1]);
-  const topPages = pageViewEntries.slice(0, 5);
-  
-  // Log session summary
-  logSystemEvent(
-    'LOGOUT',
-    'USER',
-    session.userId.toString(),
-    session.username,
-    {
-      sessionId,
-      startTime: session.startTime,
-      endTime: now,
-      durationMinutes,
-      activityCount: session.activityCount,
-      topPages,
-      // Don't include full activity log as it could be very large
-    }
-  );
-  
-  // Clean up
-  delete activeSessions[sessionId];
+  const now = Date.now();
   
   return {
-    userId: session.userId,
-    username: session.username,
-    durationMinutes,
-    activityCount: session.activityCount
+    duration: now - session.startTime,
+    activityCount: session.activityCount,
+    uniquePaths: session.paths.size
   };
 }
 
 /**
- * Handle inactive session cleanup
+ * End user session tracking
+ * @param sessionId The session ID from Express
  */
-export function cleanupInactiveSessions(maxInactiveMinutes = 30) {
-  const now = new Date();
+export function endUserSession(sessionId: string): void {
+  const session = activeSessions[sessionId];
+  
+  if (!session) {
+    return;
+  }
+  
+  const now = Date.now();
+  const duration = now - session.startTime;
+  const durationMinutes = Math.round(duration / 60000);
+  
+  // Log session end with statistics
+  logCrudEvent(
+    { user: { id: session.userId, username: session.username } } as any,
+    'LOGOUT',
+    'SYSTEM',
+    `session_${sessionId}`,
+    'User Session',
+    null,
+    null,
+    `User ${session.username} ended session after ${durationMinutes} minutes`,
+    {
+      sessionId,
+      duration,
+      activityCount: session.activityCount,
+      uniquePaths: Array.from(session.paths)
+    }
+  );
+  
+  // Remove session from tracking
+  delete activeSessions[sessionId];
+}
+
+/**
+ * Check and clean up inactive sessions
+ * Returns the number of cleaned up sessions
+ */
+export function cleanupInactiveSessions(): number {
+  const now = Date.now();
   let cleanedCount = 0;
   
-  Object.keys(activeSessions).forEach(sessionId => {
-    const session = activeSessions[sessionId];
-    const inactiveTime = now.getTime() - session.lastActivity.getTime();
-    const inactiveMinutes = Math.round(inactiveTime / 1000 / 60);
+  for (const [sessionId, session] of Object.entries(activeSessions)) {
+    const inactiveTime = now - session.lastActivity;
     
-    if (inactiveMinutes > maxInactiveMinutes) {
-      // Log session timeout
-      logWarning(
-        `User session timed out after ${inactiveMinutes} minutes of inactivity: ${session.username} (${session.userId})`,
-        'USER',
-        session.userId,
-        {
-          sessionId,
-          startTime: session.startTime,
-          lastActivity: session.lastActivity,
-          inactiveMinutes,
-          activityCount: session.activityCount
-        }
+    // If inactive for more than timeout period, end the session
+    if (inactiveTime > SESSION_TIMEOUT_MS) {
+      // Log timeout event
+      logCrudEvent(
+        { user: { id: session.userId, username: session.username } } as any,
+        'SYSTEM',
+        'SYSTEM',
+        `session_${sessionId}`,
+        'User Session',
+        null,
+        null,
+        `User ${session.username} session timed out after ${Math.round(inactiveTime / 60000)} minutes of inactivity`,
+        { sessionId, inactivityTime: inactiveTime }
       );
       
-      // End the session
-      endUserSession(sessionId);
+      // Remove session from tracking
+      delete activeSessions[sessionId];
       cleanedCount++;
     }
-  });
-  
-  if (cleanedCount > 0) {
-    logInfo(
-      `Cleaned up ${cleanedCount} inactive sessions`,
-      'SYSTEM',
-      'session-cleanup',
-      { maxInactiveMinutes }
-    );
   }
   
   return cleanedCount;
 }
 
 /**
- * Get session statistics
+ * Get all active sessions for monitoring purposes
+ * Can be used by admins to see who's currently online
  */
-export function getSessionStats() {
-  const now = new Date();
-  const sessionStats = Object.values(activeSessions).map(session => {
-    const durationMs = now.getTime() - session.startTime.getTime();
-    return {
-      userId: session.userId,
-      username: session.username,
-      durationMinutes: Math.round(durationMs / 1000 / 60),
-      activityCount: session.activityCount,
-      lastActivityMinutesAgo: Math.round((now.getTime() - session.lastActivity.getTime()) / 1000 / 60)
-    };
-  });
+export function getActiveSessions(): {
+  sessionId: string;
+  userId: number;
+  username: string;
+  startTime: Date;
+  lastActivity: Date;
+  activityCount: number;
+  durationMinutes: number;
+}[] {
+  const now = Date.now();
   
-  return {
-    activeSessions: sessionStats.length,
-    sessionDetails: sessionStats
-  };
-}
-
-/**
- * Get details about a specific user's session
- */
-export function getUserSessionInfo(userId: number) {
-  const userSessions = Object.values(activeSessions).filter(
-    session => session.userId === userId
-  );
-  
-  if (userSessions.length === 0) {
-    return null;
-  }
-  
-  const now = new Date();
-  
-  return userSessions.map(session => {
-    const durationMs = now.getTime() - session.startTime.getTime();
-    const lastActivityMs = now.getTime() - session.lastActivity.getTime();
-    
-    return {
-      username: session.username,
-      startTime: session.startTime,
-      durationMinutes: Math.round(durationMs / 1000 / 60),
-      lastActivity: session.lastActivity,
-      lastActivityMinutesAgo: Math.round(lastActivityMs / 1000 / 60),
-      activityCount: session.activityCount,
-      topPages: Object.entries(session.pageViews)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-    };
-  });
+  return Object.entries(activeSessions).map(([sessionId, session]) => ({
+    sessionId,
+    userId: session.userId,
+    username: session.username,
+    startTime: new Date(session.startTime),
+    lastActivity: new Date(session.lastActivity),
+    activityCount: session.activityCount,
+    durationMinutes: Math.round((now - session.startTime) / 60000)
+  }));
 }
