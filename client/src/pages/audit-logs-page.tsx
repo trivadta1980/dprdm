@@ -80,13 +80,19 @@ interface AuditLog {
   timestamp: string;
   userId: number;
   username: string;
-  userIp: string;
+  ipAddress?: string;  // From backend
+  userIp?: string;     // Aliased for frontend
   actionType: string;
-  entityType: string;
+  module?: string;     // From backend
+  entityType?: string; // Aliased for frontend
   entityId: string;
   entityName: string;
-  details: string;
-  changesMade: ChangeDetail[];
+  changeSummary?: string; // From backend
+  details?: string;       // Aliased for frontend
+  oldValue?: any;
+  newValue?: any;
+  additionalContext?: Record<string, any>;
+  changesMade?: ChangeDetail[];
   sessionData?: Record<string, any>;
 }
 
@@ -249,7 +255,9 @@ export default function AuditLogsPage() {
   };
 
   // Get entity badge variant based on entity type
-  const getEntityBadgeVariant = (entity: string) => {
+  const getEntityBadgeVariant = (entity: string | undefined) => {
+    if (!entity) return "default";
+    
     switch (entity.toUpperCase()) {
       case "USER":
         return "default";
