@@ -20,7 +20,8 @@ import {
   missingMappings,
   referenceDataSets,
   users,
-  referenceDataTypes
+  referenceDataTypes,
+  type ReferenceDataInstance
 } from "@shared/schema";
 import { sql, eq, and, or, inArray } from "drizzle-orm";
 import { scrypt, randomBytes } from "crypto";
@@ -607,12 +608,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`POST /api/reference-data/:id/bulk-upload - Processed ${records.length} records: ${newRecords} new, ${updatedRecords} updated`);
 
-      // Update data set with merged data
-      const updatedDataSet = await storage.updateReferenceDataSet(dataSetId, {
-        data: mergedData
-      });
+      // Use a database transaction to ensure atomicity
+      let updatedDataSet;
+      try {
+        // Start transaction
+        updatedDataSet = await db.transaction(async (tx) => {
+          // Update data set with merged data in a transaction
+          const [result] = await tx
+            .update(referenceDataSets)
+            .set({
+              data: mergedData,
+              updatedAt: new Date()
+            })
+            .where(eq(referenceDataSets.id, dataSetId))
+            .returning();
+          
+          return {
+            ...result,
+            data: result.data as Record<string, any>
+          };
+        });
 
-      console.log('POST /api/reference-data/:id/bulk-upload - Upload complete. Dataset updated.');
+        console.log('POST /api/reference-data/:id/bulk-upload - Upload complete. Dataset updated in transaction.');
+      } catch (txError: any) {
+        console.error('POST /api/reference-data/:id/bulk-upload - Transaction failed:', txError);
+        throw new Error(`Transaction failed: ${txError?.message || 'Unknown transaction error'}`);
+      }
       
       // Return stats in the response
       res.json({
@@ -679,15 +700,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         crosswalks: crosswalkResults,
         canDelete: relationshipResults.length === 0 && crosswalkResults.length === 0
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Dependency check failed:', {
-        error: error.message,
-        stack: error.stack,
-        type: error.constructor.name
+        error: error?.message || 'Unknown error',
+        stack: error?.stack,
+        type: error?.constructor?.name
       });
       res.status(500).json({
         error: "Failed to check dependencies",
-        details: error.message
+        details: error?.message || 'Unknown error'
       });
     }
   });
