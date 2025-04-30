@@ -527,93 +527,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error('No valid records found in the CSV file');
       }
 
-      console.log('POST /api/reference-data/:id/bulk-upload - Processing records with primary key checks');
+      console.log('POST /api/reference-data/:id/bulk-upload - Processing records with primary key checks in transaction');
       
-      // Get the existing data to check for duplicates
-      const existingData = dataSet.data || {};
-      const mergedData: Record<string, any> = { ...existingData };
-      
-      // Stats for logs and response
+      // Use a database transaction to ensure atomicity
+      let updatedDataSet;
       let newRecords = 0;
       let updatedRecords = 0;
       
-      // Process each record
-      for (const record of records) {
-        const primaryKeyValue = record[primaryKeyField];
-        
-        if (!primaryKeyValue) {
-          console.log(`POST /api/reference-data/:id/bulk-upload - Record missing primary key value for field ${primaryKeyField}, skipping`);
-          continue;
-        }
-        
-        // Check if this primary key already exists in the dataset
-        let existingInstanceKey: string | undefined;
-        for (const [key, instance] of Object.entries(existingData)) {
-          if (instance[primaryKeyField] === primaryKeyValue) {
-            existingInstanceKey = key;
-            break;
+      try {
+        // Start transaction - ALL processing will happen inside the transaction
+        updatedDataSet = await db.transaction(async (tx) => {
+          // Get fresh data from within the transaction
+          const [freshDataSet] = await tx
+            .select()
+            .from(referenceDataSets)
+            .where(eq(referenceDataSets.id, dataSetId))
+            .limit(1);
+          
+          if (!freshDataSet) {
+            throw new Error(`Dataset ${dataSetId} not found in transaction`);
           }
-        }
-        
-        if (existingInstanceKey) {
-          // Update existing record
-          console.log(`POST /api/reference-data/:id/bulk-upload - Updating existing record with ${primaryKeyField}: ${primaryKeyValue}`);
           
-          const existingInstance = existingData[existingInstanceKey];
-          const historyEntry = {
-            timestamp,
-            changes: []
-          };
+          // Get the existing data to check for duplicates
+          const existingData = freshDataSet.data as Record<string, any> || {};
+          const mergedData: Record<string, any> = { ...existingData };
           
-          // Create history entry with changes
-          for (const [field, value] of Object.entries(record)) {
-            if (field !== primaryKeyField && field !== 'status' && !field.startsWith('_')) {
-              if (existingInstance[field] !== value) {
+          // Stats for logs and response
+          newRecords = 0;
+          updatedRecords = 0;
+          
+          // Process each record
+          for (const record of records) {
+            const primaryKeyValue = record[primaryKeyField];
+            
+            if (!primaryKeyValue) {
+              console.log(`POST /api/reference-data/:id/bulk-upload - Record missing primary key value for field ${primaryKeyField}, skipping`);
+              continue;
+            }
+            
+            // Check if this primary key already exists in the dataset
+            let existingInstanceKey: string | undefined;
+            for (const [key, instance] of Object.entries(existingData)) {
+              if (instance[primaryKeyField] === primaryKeyValue) {
+                existingInstanceKey = key;
+                break;
+              }
+            }
+            
+            if (existingInstanceKey) {
+              // Update existing record
+              console.log(`POST /api/reference-data/:id/bulk-upload - Updating existing record with ${primaryKeyField}: ${primaryKeyValue}`);
+              
+              const existingInstance = existingData[existingInstanceKey];
+              const historyEntry = {
+                timestamp,
+                changes: []
+              };
+              
+              // Create history entry with changes
+              for (const [field, value] of Object.entries(record)) {
+                if (field !== primaryKeyField && field !== 'status' && !field.startsWith('_')) {
+                  if (existingInstance[field] !== value) {
+                    historyEntry.changes.push({
+                      field,
+                      oldValue: existingInstance[field] || '',
+                      newValue: value
+                    });
+                  }
+                }
+              }
+              
+              // Only push to history if there are actual changes
+              const updatedHistory = [...(existingInstance._history || [])];
+              if (historyEntry.changes.length > 0) {
+                updatedHistory.push(historyEntry);
+              }
+              
+              // Determine if we need to reset the approval status
+              let newStatus = existingInstance.status;
+              let statusChanged = false;
+              
+              // If the record has changes, and it was previously APPROVED, reset to DRAFT
+              if (historyEntry.changes.length > 0 && existingInstance.status === "APPROVED") {
+                newStatus = "DRAFT";
+                statusChanged = true;
+                
+                // Add status change to history
                 historyEntry.changes.push({
-                  field,
-                  oldValue: existingInstance[field] || '',
-                  newValue: value
+                  field: "status",
+                  oldValue: "APPROVED",
+                  newValue: "DRAFT"
                 });
               }
+              
+              // Update the existing instance with new values while preserving metadata
+              mergedData[existingInstanceKey] = {
+                ...existingInstance,
+                ...record,
+                status: newStatus,  // Ensure status is properly set
+                _history: updatedHistory,
+                lastModifiedBy: req.user?.username || "system",
+                lastModifiedAt: timestamp
+              };
+              
+              updatedRecords++;
+            } else {
+              // Create new record
+              console.log(`POST /api/reference-data/:id/bulk-upload - Creating new record with ${primaryKeyField}: ${primaryKeyValue}`);
+              
+              // Generate a unique key for the new instance - using newRecords counter to avoid overlap
+              const newKey = `instance_${Date.now()}_${newRecords}`;
+              
+              // Set initial status to DRAFT
+              const newRecord = {
+                ...record,
+                status: "DRAFT",  // All new records start as DRAFT
+                createdBy: req.user?.username || "system",
+                createdAt: timestamp,
+                lastModifiedBy: req.user?.username || "system",
+                lastModifiedAt: timestamp,
+                _history: [{
+                  timestamp,
+                  changes: Object.entries(record).map(([field, value]) => ({
+                    field,
+                    oldValue: "",
+                    newValue: value
+                  }))
+                }]
+              };
+              
+              mergedData[newKey] = newRecord;
+              newRecords++;
             }
           }
           
-          // Only push to history if there are actual changes
-          const updatedHistory = [...(existingInstance._history || [])];
-          if (historyEntry.changes.length > 0) {
-            updatedHistory.push(historyEntry);
-          }
+          console.log(`POST /api/reference-data/:id/bulk-upload - Processed ${records.length} records in transaction: ${newRecords} new, ${updatedRecords} updated`);
           
-          // Update the existing instance with new values while preserving metadata
-          mergedData[existingInstanceKey] = {
-            ...existingInstance,
-            ...record,
-            _history: updatedHistory,
-            lastModifiedBy: req.user?.username || "system",
-            lastModifiedAt: timestamp
-          };
-          
-          updatedRecords++;
-        } else {
-          // Create new record
-          console.log(`POST /api/reference-data/:id/bulk-upload - Creating new record with ${primaryKeyField}: ${primaryKeyValue}`);
-          
-          // Generate a unique key for the new instance
-          const newKey = `instance_${Date.now()}_${newRecords}`;
-          mergedData[newKey] = record;
-          
-          newRecords++;
-        }
-      }
-
-      console.log(`POST /api/reference-data/:id/bulk-upload - Processed ${records.length} records: ${newRecords} new, ${updatedRecords} updated`);
-
-      // Use a database transaction to ensure atomicity
-      let updatedDataSet;
-      try {
-        // Start transaction
-        updatedDataSet = await db.transaction(async (tx) => {
-          // Update data set with merged data in a transaction
+          // Update data set with merged data while still in the transaction
           const [result] = await tx
             .update(referenceDataSets)
             .set({
