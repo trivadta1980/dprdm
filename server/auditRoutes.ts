@@ -14,6 +14,118 @@ import { requireAuth } from "./auth";
 // Create a router for audit routes
 const router = Router();
 
+// Ensure the stats endpoint is registered before the general audit logs endpoint
+// to avoid route conflicts.
+
+/**
+ * @route GET /api/audit-logs/stats
+ * @description Get statistics about audit logs (counts by type, etc.)
+ * @access Admin
+ */
+router.get("/audit-logs/stats", requireAuth, async (req: Request, res: Response) => {
+  console.log("GET /api/audit-logs/stats - Request received");
+  try {
+    // Only allow administrators to access audit stats
+    if (!req.isAuthenticated() || !req.user?.roleId || req.user.roleId !== 1) {
+      return res.status(403).json({ error: "Not authorized to view audit statistics" });
+    }
+
+    // Get count by action type
+    const actionCounts = await db
+      .select({
+        actionType: auditLogs.actionType,
+        count: db.fn.count(),
+      })
+      .from(auditLogs)
+      .groupBy(auditLogs.actionType);
+
+    // Get count by module
+    const moduleCounts = await db
+      .select({
+        module: auditLogs.module,
+        count: db.fn.count(),
+      })
+      .from(auditLogs)
+      .groupBy(auditLogs.module);
+
+    // Get count by user (top 10)
+    const userCounts = await db
+      .select({
+        userId: auditLogs.userId,
+        username: auditLogs.username,
+        count: db.fn.count(),
+      })
+      .from(auditLogs)
+      .groupBy(auditLogs.userId, auditLogs.username)
+      .orderBy(desc(db.fn.count()))
+      .limit(10);
+
+    // Get counts by date (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const dateCounts = await db
+      .select({
+        date: db.sql`DATE(${auditLogs.timestamp})`,
+        count: db.fn.count(),
+      })
+      .from(auditLogs)
+      .where(gte(auditLogs.timestamp, thirtyDaysAgo))
+      .groupBy(db.sql`DATE(${auditLogs.timestamp})`)
+      .orderBy(db.sql`DATE(${auditLogs.timestamp})`);
+
+    // Calculate statistics for the client display
+    const totalCountResult = await db.select({ count: db.fn.count() }).from(auditLogs);
+    const totalActions = totalCountResult && totalCountResult.length > 0 
+      ? Number(totalCountResult[0].count || 0) 
+      : 0;
+    
+    // Count user-specific actions (login, logout, and user-generated actions)
+    const userActions = actionCounts
+      .filter(action => ['LOGIN', 'LOGOUT', 'CREATE', 'UPDATE', 'DELETE'].includes(action.actionType))
+      .reduce((sum, item) => sum + Number(item.count), 0);
+    
+    // Count data changes (create, update, delete)
+    const dataChanges = actionCounts
+      .filter(action => ['CREATE', 'UPDATE', 'DELETE'].includes(action.actionType))
+      .reduce((sum, item) => sum + Number(item.count), 0);
+    
+    // Count system events (everything else)
+    const systemEvents = Number(totalActions) - Number(userActions);
+    
+    // Format recent activity
+    const recentActions = await db
+      .select({
+        id: auditLogs.id,
+        timestamp: auditLogs.timestamp,
+        username: auditLogs.username,
+        actionType: auditLogs.actionType,
+        module: auditLogs.module,
+        entityName: auditLogs.entityName,
+      })
+      .from(auditLogs)
+      .orderBy(desc(auditLogs.timestamp))
+      .limit(5);
+
+    return res.status(200).json({
+      actionCounts,
+      moduleCounts,
+      userCounts,
+      dateCounts,
+      totalLogs: totalActions,
+      // Statistics for the UI cards
+      totalActions,
+      userActions,
+      dataChanges,
+      systemEvents,
+      recentActions,
+    });
+  } catch (error) {
+    console.error("Error fetching audit statistics:", error);
+    return res.status(500).json({ error: "Failed to fetch audit statistics" });
+  }
+});
+
 /**
  * @route GET /api/audit-logs
  * @description Get all audit logs with filtering and pagination
@@ -95,18 +207,28 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
     // Execute count query with error handling
     let totalCount = 0;
     try {
-      const totalItemsResult = await db.select({ count: db.fn.count() })
-        .from(auditLogs)
-        .where(filters.length > 0 ? and(...filters) : undefined);
+      const countQuery = db.select({ count: db.fn.count() }).from(auditLogs);
       
-      totalCount = Number(totalItemsResult[0]?.count || 0);
+      // Only add where clause if filters exist
+      if (filters.length > 0) {
+        countQuery.where(and(...filters));
+      }
+      
+      const totalItemsResult = await countQuery;
+      
+      // Use nullish coalescing to handle undefined or null
+      totalCount = totalItemsResult && totalItemsResult.length > 0 
+        ? Number(totalItemsResult[0].count || 0) 
+        : 0;
+        
+      console.log("Count query result:", totalItemsResult);
     } catch (error) {
       console.error("Error counting audit logs:", error);
       totalCount = 0;
     }
 
     // Execute data query with filters, sorting, pagination
-    const results = await db.select({
+    const dataQuery = db.select({
       id: auditLogs.id,
       timestamp: auditLogs.timestamp,
       userId: auditLogs.userId,
@@ -122,10 +244,16 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
       // newValue: auditLogs.newValue,
     })
       .from(auditLogs)
-      .where(filters.length > 0 ? and(...filters) : undefined)
       .orderBy(desc(auditLogs.timestamp))
       .limit(limit)
       .offset(offset);
+      
+    // Only add where clause if filters exist
+    if (filters.length > 0) {
+      dataQuery.where(and(...filters));
+    }
+    
+    const results = await dataQuery;
 
     // Format response with pagination metadata
     const response = {
@@ -337,110 +465,6 @@ router.get("/audit-logs/user/:id", requireAuth, async (req: Request, res: Respon
   }
 });
 
-/**
- * @route GET /api/audit-logs/stats
- * @description Get statistics about audit logs (counts by type, etc.)
- * @access Admin
- */
-router.get("/audit-logs/stats", requireAuth, async (req: Request, res: Response) => {
-  console.log("GET /api/audit-logs/stats - Request received");
-  try {
-    // Only allow administrators to access audit stats
-    if (!req.isAuthenticated() || !req.user?.roleId || req.user.roleId !== 1) {
-      return res.status(403).json({ error: "Not authorized to view audit statistics" });
-    }
 
-    // Get count by action type
-    const actionCounts = await db
-      .select({
-        actionType: auditLogs.actionType,
-        count: db.fn.count(),
-      })
-      .from(auditLogs)
-      .groupBy(auditLogs.actionType);
-
-    // Get count by module
-    const moduleCounts = await db
-      .select({
-        module: auditLogs.module,
-        count: db.fn.count(),
-      })
-      .from(auditLogs)
-      .groupBy(auditLogs.module);
-
-    // Get count by user (top 10)
-    const userCounts = await db
-      .select({
-        userId: auditLogs.userId,
-        username: auditLogs.username,
-        count: db.fn.count(),
-      })
-      .from(auditLogs)
-      .groupBy(auditLogs.userId, auditLogs.username)
-      .orderBy(desc(db.fn.count()))
-      .limit(10);
-
-    // Get counts by date (last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const dateCounts = await db
-      .select({
-        date: db.sql`DATE(${auditLogs.timestamp})`,
-        count: db.fn.count(),
-      })
-      .from(auditLogs)
-      .where(gte(auditLogs.timestamp, thirtyDaysAgo))
-      .groupBy(db.sql`DATE(${auditLogs.timestamp})`)
-      .orderBy(db.sql`DATE(${auditLogs.timestamp})`);
-
-    // Calculate statistics for the client display
-    const totalActions = (await db.select({ count: db.fn.count() }).from(auditLogs))[0].count;
-    
-    // Count user-specific actions (login, logout, and user-generated actions)
-    const userActions = actionCounts
-      .filter(action => ['LOGIN', 'LOGOUT', 'CREATE', 'UPDATE', 'DELETE'].includes(action.actionType))
-      .reduce((sum, item) => sum + Number(item.count), 0);
-    
-    // Count data changes (create, update, delete)
-    const dataChanges = actionCounts
-      .filter(action => ['CREATE', 'UPDATE', 'DELETE'].includes(action.actionType))
-      .reduce((sum, item) => sum + Number(item.count), 0);
-    
-    // Count system events (everything else)
-    const systemEvents = Number(totalActions) - Number(userActions);
-    
-    // Format recent activity
-    const recentActions = await db
-      .select({
-        id: auditLogs.id,
-        timestamp: auditLogs.timestamp,
-        username: auditLogs.username,
-        actionType: auditLogs.actionType,
-        module: auditLogs.module,
-        entityName: auditLogs.entityName,
-      })
-      .from(auditLogs)
-      .orderBy(desc(auditLogs.timestamp))
-      .limit(5);
-
-    return res.status(200).json({
-      actionCounts,
-      moduleCounts,
-      userCounts,
-      dateCounts,
-      totalLogs: totalActions,
-      // Statistics for the UI cards
-      totalActions,
-      userActions,
-      dataChanges,
-      systemEvents,
-      recentActions,
-    });
-  } catch (error) {
-    console.error("Error fetching audit statistics:", error);
-    return res.status(500).json({ error: "Failed to fetch audit statistics" });
-  }
-});
 
 export default router;
