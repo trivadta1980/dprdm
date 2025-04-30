@@ -8,6 +8,7 @@ import externalRoutes from "./externalRoutes";
 import { apiKeyAuth } from "./middleware/api-auth";
 import diagnosticsRouter from "./diagnostics";
 import auditRoutes from "./auditRoutes";
+import { auditAPIAccess } from "./middleware/audit-middleware";
 import {
   insertRelationshipSchema,
   insertCrosswalkMappingSchema,
@@ -36,6 +37,9 @@ const scryptAsync = promisify(scrypt);
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication and user management routes
   setupAuth(app);
+  
+  // Add audit logging middleware (after auth is set up)
+  app.use('/api', auditAPIAccess);
 
   const upload = multer({ storage: multer.memoryStorage() });
 

@@ -9,6 +9,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { db } from './db';
 import { closeDriver, isNeo4jAvailable } from './neo4j';
+import { auditAPIAccess } from './middleware/audit-middleware';
 
 const app = express();
 app.use(express.json());
@@ -19,6 +20,9 @@ app.use('/api', (req, res, next) => {
   res.setHeader('Content-Type', 'application/json');
   next();
 });
+
+// Add audit logging middleware after auth is set up in routes.ts
+// This will capture all API requests for audit logs
 
 // Add request logging middleware
 app.use((req, res, next) => {
