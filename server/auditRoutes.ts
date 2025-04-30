@@ -181,7 +181,16 @@ router.get("/audit-logs/stats", requireAuth, async (req: Request, res: Response)
     // Get total actions count
     try {
       const totalResult = await db.select({ count: db.fn.count() }).from(auditLogs);
-      totalActions = Number(totalResult[0]?.count || 0);
+      
+      // Handle different types of count results (PostgreSQL vs SQLite)
+      if (totalResult && totalResult.length > 0) {
+        const countValue = totalResult[0]?.count;
+        if (countValue !== undefined) {
+          totalActions = typeof countValue === 'number' 
+            ? countValue 
+            : Number(countValue);
+        }
+      }
     } catch (error) {
       console.error("Error counting total actions:", error);
     }
@@ -224,7 +233,16 @@ router.get("/audit-logs/stats", requireAuth, async (req: Request, res: Response)
             eq(auditLogs.actionType, 'DELETE')
           )
         );
-      dataChanges = Number(dataResult[0]?.count || 0);
+      
+      // Handle different types of count results (PostgreSQL vs SQLite)
+      if (dataResult && dataResult.length > 0) {
+        const countValue = dataResult[0]?.count;
+        if (countValue !== undefined) {
+          dataChanges = typeof countValue === 'number' 
+            ? countValue 
+            : Number(countValue);
+        }
+      }
     } catch (error) {
       console.error("Error counting data changes:", error);
     }
@@ -254,6 +272,27 @@ router.get("/audit-logs/stats", requireAuth, async (req: Request, res: Response)
       }
     } catch (error) {
       console.error("Error counting system events:", error);
+    }
+
+    // Get recent audit logs
+    try {
+      recentActions = await db.select({
+        id: auditLogs.id,
+        timestamp: auditLogs.timestamp,
+        userId: auditLogs.userId,
+        username: auditLogs.username,
+        actionType: auditLogs.actionType,
+        module: auditLogs.module,
+        entityId: auditLogs.entityId,
+        entityName: auditLogs.entityName,
+        changeSummary: auditLogs.changeSummary,
+      })
+        .from(auditLogs)
+        .orderBy(desc(auditLogs.timestamp))
+        .limit(10);
+    } catch (error) {
+      console.error("Error fetching recent audit logs:", error);
+      recentActions = [];
     }
 
     // Return formatted response with the counts
