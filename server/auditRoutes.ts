@@ -131,9 +131,9 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
       entityId: auditLogs.entityId,
       entityName: auditLogs.entityName,
       changeSummary: auditLogs.changeSummary,
-      // Exclude full data by default for performance (can be included in detail view)
-      // oldValue: auditLogs.oldValue,
-      // newValue: auditLogs.newValue,
+      oldValue: auditLogs.oldValue,
+      newValue: auditLogs.newValue,
+      additionalContext: auditLogs.additionalContext,
     })
       .from(auditLogs)
       .where(filters.length > 0 ? and(...filters) : undefined)
@@ -141,9 +141,40 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
       .limit(limit)
       .offset(offset);
 
+    // Process the results to enhance with details
+    const enhancedResults = results.map(log => {
+      // Generate a details field if not already present
+      let details = log.changeSummary;
+      if (!details && log.actionType) {
+        const actionVerb = getActionVerb(log.actionType);
+        details = `${actionVerb} ${log.module?.toLowerCase() || 'entity'} ${log.entityName || ''}`;
+        
+        // Try to extract path info from additionalContext if available
+        if (log.additionalContext && typeof log.additionalContext === 'object') {
+          try {
+            const context = log.additionalContext;
+            if (context.path) {
+              details += ` (${context.method || ''} ${context.path})`;
+            }
+          } catch (e) {
+            // Ignore context parsing errors
+          }
+        }
+      }
+      
+      return {
+        ...log,
+        details, // Add the properly formatted details field
+        // Generate basic changes made preview if available
+        changesMade: (log.oldValue && log.newValue) ? 
+          generateChangeList(log.oldValue, log.newValue).slice(0, 3) : // Just first 3 for preview
+          []
+      };
+    });
+    
     // Format response with pagination metadata
     const response = {
-      data: results,
+      data: enhancedResults,
       pagination: {
         page,
         limit,
@@ -337,7 +368,64 @@ router.get("/audit-logs/:id", requireAuth, async (req: Request, res: Response) =
       return res.status(404).json({ error: "Audit log not found" });
     }
 
-    // Format result to prevent exposing sensitive information
+    // Format result to prevent exposing sensitive information and enhance with richer details
+    const oldData = result.audit_logs.oldValue;
+    const newData = result.audit_logs.newValue;
+    
+    // Generate a list of changes for display
+    const changesMade = [];
+    
+    // If we have both old and new values, generate a detailed change list
+    if (oldData && newData) {
+      try {
+        // Get all unique keys from both objects
+        const allKeys = [...new Set([...Object.keys(oldData || {}), ...Object.keys(newData || {})])];
+        
+        // Create change entries for each modified field
+        allKeys.forEach(key => {
+          if (key === 'updatedAt' || key === 'lastActivity') return; // Skip some fields
+          
+          const oldValue = oldData[key];
+          const newValue = newData[key];
+          
+          // Check if values are different
+          if (
+            (!oldData.hasOwnProperty(key) && newData.hasOwnProperty(key)) ||
+            (oldData.hasOwnProperty(key) && !newData.hasOwnProperty(key)) ||
+            JSON.stringify(oldValue) !== JSON.stringify(newValue)
+          ) {
+            changesMade.push({
+              field: key,
+              oldValue: oldValue === undefined ? 'N/A' : typeof oldValue === 'object' ? JSON.stringify(oldValue) : String(oldValue),
+              newValue: newValue === undefined ? 'N/A' : typeof newValue === 'object' ? JSON.stringify(newValue) : String(newValue)
+            });
+          }
+        });
+      } catch (error) {
+        console.warn("Error generating changes for audit log:", error);
+      }
+    }
+    
+    // Generate a human-readable details string if not already present
+    let details = result.audit_logs.changeSummary;
+    if (!details && result.audit_logs.actionType) {
+      const actionVerb = getActionVerb(result.audit_logs.actionType);
+      details = `${actionVerb} ${result.audit_logs.module?.toLowerCase() || 'entity'} ${result.audit_logs.entityName || ''}`;
+      
+      // Add more context from additional_context if available
+      if (result.audit_logs.additionalContext) {
+        try {
+          const context = result.audit_logs.additionalContext;
+          if (context.path) {
+            details += ` (${context.method || ''} ${context.path})`;
+          }
+        } catch (e) {
+          // Ignore context parsing errors
+        }
+      }
+    }
+    
+    // Construct the enhanced audit log
     const auditLog = {
       ...result.audit_logs,
       userDetails: result.users ? {
@@ -346,6 +434,14 @@ router.get("/audit-logs/:id", requireAuth, async (req: Request, res: Response) =
         email: result.users.email,
         roleId: result.users.roleId,
       } : null,
+      details: details,
+      changesMade: changesMade,
+      sessionData: result.audit_logs.additionalContext ? 
+        { 
+          id: result.audit_logs.additionalContext.sessionID,
+          userAgent: result.audit_logs.additionalContext.userAgent,
+          referer: result.audit_logs.additionalContext.referer 
+        } : null
     };
 
     return res.status(200).json(auditLog);
@@ -533,5 +629,78 @@ router.get("/audit-logs/user/:id", requireAuth, async (req: Request, res: Respon
     return res.status(500).json({ error: "Failed to fetch user audit logs" });
   }
 });
+
+/**
+ * Helper function to generate a list of changes between two objects
+ * This is used to display what changed in an audit log entry
+ */
+function generateChangeList(
+  oldObj: Record<string, any>,
+  newObj: Record<string, any>,
+  ignoredFields: string[] = ['updatedAt', 'lastActivity']
+): { field: string; oldValue: string; newValue: string }[] {
+  const changes: { field: string; oldValue: string; newValue: string }[] = [];
+  
+  try {
+    // Get all unique keys from both objects
+    const allKeys = [...new Set([...Object.keys(oldObj || {}), ...Object.keys(newObj || {})])];
+    
+    // Check each key for changes
+    allKeys.forEach(key => {
+      // Skip ignored fields
+      if (ignoredFields.includes(key)) {
+        return;
+      }
+      
+      const oldValue = oldObj[key];
+      const newValue = newObj[key];
+      
+      // Check if values are different (including existence checks)
+      if (
+        (!oldObj.hasOwnProperty(key) && newObj.hasOwnProperty(key)) ||
+        (oldObj.hasOwnProperty(key) && !newObj.hasOwnProperty(key)) ||
+        JSON.stringify(oldValue) !== JSON.stringify(newValue)
+      ) {
+        changes.push({
+          field: key,
+          oldValue: oldValue === undefined ? 'N/A' : typeof oldValue === 'object' ? JSON.stringify(oldValue) : String(oldValue),
+          newValue: newValue === undefined ? 'N/A' : typeof newValue === 'object' ? JSON.stringify(newValue) : String(newValue)
+        });
+      }
+    });
+  } catch (error) {
+    console.warn("Error generating changes:", error);
+  }
+  
+  return changes;
+}
+
+/**
+ * Helper function to get a human-readable verb for the action type
+ * This mirrors the function in auditLogger.ts but is duplicated here to avoid circular dependencies
+ */
+function getActionVerb(actionType: string): string {
+  switch (actionType) {
+    case 'CREATE': return 'Created';
+    case 'READ': return 'Viewed';
+    case 'UPDATE': return 'Updated';
+    case 'DELETE': return 'Deleted';
+    case 'APPROVE': return 'Approved';
+    case 'REJECT': return 'Rejected';
+    case 'SYSTEM': return 'System processed';
+    case 'ERROR': return 'Error occurred in';
+    case 'WARNING': return 'Warning occurred in';
+    case 'INFO': return 'Info logged for';
+    case 'DEBUG': return 'Debug info for';
+    case 'TRACE': return 'Trace captured for';
+    case 'LOGIN': return 'Logged in to';
+    case 'LOGOUT': return 'Logged out from';
+    case 'SESSION_START': return 'Started session for';
+    case 'SESSION_END': return 'Ended session for';
+    case 'FEATURE_USAGE': return 'Used feature in';
+    case 'BULK_OPERATION': return 'Performed bulk operation on';
+    default: return 'Interacted with';
+  }
+}
 
 export default router;
