@@ -516,11 +516,11 @@ export default function AuditLogsPage() {
                     <Table className="w-full table-fixed">
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[18%]">Timestamp</TableHead>
-                          <TableHead className="w-[15%]">User</TableHead>
+                          <TableHead className="w-[20%]">Timestamp</TableHead>
+                          <TableHead className="w-[15%] pl-3">User</TableHead>
                           <TableHead className="w-[12%]">Action</TableHead>
                           <TableHead className="w-[15%]">Entity</TableHead>
-                          <TableHead className="w-[32%]">Details</TableHead>
+                          <TableHead className="w-[30%]">Details</TableHead>
                           <TableHead className="w-[8%] text-right"></TableHead>
                         </TableRow>
                       </TableHeader>
@@ -533,7 +533,7 @@ export default function AuditLogsPage() {
                                 <span className="text-sm">{formatTimestamp(log.timestamp)}</span>
                               </div>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="pl-3">
                               <div className="flex items-center">
                                 <UserRound className="mr-2 h-4 w-4 text-muted-foreground flex-shrink-0" />
                                 <span className="truncate text-sm">{log.username}</span>
