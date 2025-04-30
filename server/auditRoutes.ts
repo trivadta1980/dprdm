@@ -8,7 +8,7 @@
 import { Router, Request, Response } from "express";
 import { db } from "./db";
 import { auditLogs, users, roles } from "@shared/schema";
-import { eq, desc, and, gte, lte, ilike, inArray } from "drizzle-orm";
+import { eq, desc, and, gte, lte, ilike, inArray, or, between } from "drizzle-orm";
 import { requireAuth } from "./auth";
 
 // Create a router for audit routes
@@ -478,79 +478,6 @@ router.get("/audit-logs/user/:id", requireAuth, async (req: Request, res: Respon
 });
 
 /**
- * @route GET /api/audit-logs/stats
- * @description Get statistics about audit logs (counts by type, etc.)
- * @access Admin
- */
-router.get("/audit-logs/stats", requireAuth, async (req: Request, res: Response) => {
-  console.log("GET /api/audit-logs/stats - Request received");
-  try {
-    // Only allow administrators to access audit stats
-    if (!req.isAuthenticated() || !req.user?.roleId || req.user.roleId !== 1) {
-      return res.status(403).json({ error: "Not authorized to view audit statistics" });
-    }
-
-    // Get summary statistics for the dashboard
-    // To avoid errors with empty tables, we'll use more robust queries
-    let totalActions = 0, userActions = 0, dataChanges = 0, systemEvents = 0;
-    let recentActions = [];
-
-    // Get total actions count
-    try {
-      const totalResult = await db.select({ count: db.fn.count() }).from(auditLogs);
-      totalActions = Number(totalResult[0]?.count || 0);
-    } catch (error) {
-      console.error("Error counting total actions:", error);
-    }
-
-    // Get user-related actions count (LOGIN, LOGOUT, etc.)
-    try {
-      const userResult = await db
-        .select({ count: db.fn.count() })
-        .from(auditLogs)
-        .where(
-          or(
-            eq(auditLogs.module, 'USER'),
-            eq(auditLogs.actionType, 'LOGIN'),
-            eq(auditLogs.actionType, 'LOGOUT')
-          )
-        );
-      userActions = Number(userResult[0]?.count || 0);
-    } catch (error) {
-      console.error("Error counting user actions:", error);
-    }
-
-    // Get data change actions count (CREATE, UPDATE, DELETE)
-    try {
-      const dataResult = await db
-        .select({ count: db.fn.count() })
-        .from(auditLogs)
-        .where(
-          or(
-            eq(auditLogs.actionType, 'CREATE'),
-            eq(auditLogs.actionType, 'UPDATE'),
-            eq(auditLogs.actionType, 'DELETE')
-          )
-        );
-      dataChanges = Number(dataResult[0]?.count || 0);
-    } catch (error) {
-      console.error("Error counting data changes:", error);
-    }
-
-    // Get system events count (ERROR, INFO, WARNING)
-    try {
-      const systemResult = await db
-        .select({ count: db.fn.count() })
-        .from(auditLogs)
-        .where(
-          or(
-            eq(auditLogs.actionType, 'ERROR'),
-            eq(auditLogs.actionType, 'INFO'),
-            eq(auditLogs.actionType, 'WARNING'),
-            eq(auditLogs.actionType, 'FEATURE_USAGE')
-          )
-        );
-      systemEvents = Number(systemResult[0]?.count || 0);
     } catch (error) {
       console.error("Error counting system events:", error);
     }
