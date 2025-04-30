@@ -50,6 +50,7 @@ import { useState, useRef } from "react";
 import { format } from "date-fns";
 import { useSession } from "@/hooks/use-session";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { ErrorDialog } from "@/components/ui/error-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -108,6 +109,10 @@ export default function ReferenceDataInstancesPage() {
   const [isDownloading, setIsDownloading] = useState(false); // Added state for download
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isBulkSubmitDialogOpen, setIsBulkSubmitDialogOpen] = useState(false);
+  
+  // Error dialog state
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorDialogMessage, setErrorDialogMessage] = useState("");
 
   const { data: dataSet, isLoading: isLoadingDataSet } = useQuery<ReferenceDataSet>({
     queryKey: [`/api/reference-data/${dataSetId}`],
@@ -551,11 +556,12 @@ export default function ReferenceDataInstancesPage() {
       setIsBulkUploadDialogOpen(false);
     },
     onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to upload file",
-        variant: "destructive",
-      });
+      // Set error dialog message and open the dialog
+      setErrorDialogMessage(error.message || "Failed to upload file");
+      setErrorDialogOpen(true);
+      
+      // Close the bulk upload dialog
+      setIsBulkUploadDialogOpen(false);
     },
   });
 
@@ -690,11 +696,9 @@ export default function ReferenceDataInstancesPage() {
     const file = event.target.files?.[0];
     if (file) {
       if (file.type !== "text/csv") {
-        toast({
-          title: "Error",
-          description: "Please upload a CSV file",
-          variant: "destructive",
-        });
+        // Use error dialog instead of toast
+        setErrorDialogMessage("Please upload a CSV file");
+        setErrorDialogOpen(true);
         return;
       }
       bulkUploadMutation.mutate(file);
