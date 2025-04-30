@@ -1,220 +1,226 @@
 /**
- * Audit Logging Middleware
+
+ * Audit Middleware
  * 
- * This middleware captures HTTP requests and logs them to the audit trail.
- * It's designed to automatically track API access and user actions.
+ * Middleware that captures details about all HTTP requests to track
+ * user activity and API usage in the system.
  */
 
-import { Request, Response, NextFunction } from "express";
-import { logCrudEvent } from "../utils/auditLogger";
+import { Request, Response, NextFunction } from 'express';
+import { logCrudEvent } from '../utils/auditLogger';
+import { startUserSession, recordUserActivity, endUserSession } from '../utils/sessionTracker';
 
-/**
- * Determine the entity type from the request path
- * @param path Request path
- * @returns Entity type string
- */
-function getEntityTypeFromPath(path: string): "USER" | "ROLE" | "REFERENCE_TYPE" | "REFERENCE_DATA" | "RELATIONSHIP" | "CROSSWALK" | "API_KEY" | "SYSTEM" {
-  if (path.includes('/users') || path.includes('/login') || path.includes('/logout')) {
-    return "USER";
-  } else if (path.includes('/roles')) {
-    return "ROLE";
-  } else if (path.includes('/reference-types')) {
-    return "REFERENCE_TYPE";
-  } else if (path.includes('/reference-data')) {
-    return "REFERENCE_DATA";
-  } else if (path.includes('/relationships')) {
-    return "RELATIONSHIP";
-  } else if (path.includes('/crosswalks')) {
-    return "CROSSWALK";
-  } else if (path.includes('/api-keys')) {
-    return "API_KEY";
-  } else {
-    return "SYSTEM";
-  }
-}
+// List of paths to exclude from detailed audit logging (to reduce noise)
+const EXCLUDED_PATHS = [
+  '/api/health',
+  '/api/status', 
+  '/favicon.ico'
+];
+
+// Sensitive paths that should not be logged with query params
+const SENSITIVE_PATHS = [
+  '/api/login',
+  '/api/register',
+  '/api/reset-password',
+  '/api/change-password'
+];
 
 /**
- * Determine the action type from the HTTP method
- * @param method HTTP method
- * @returns Action type string
+ * Main audit middleware function that captures all HTTP requests
  */
-function getActionTypeFromMethod(method: string): "CREATE" | "READ" | "UPDATE" | "DELETE" | "APPROVE" | "REJECT" {
-  switch (method.toUpperCase()) {
-    case 'POST':
-      return "CREATE";
-    case 'GET':
-      return "READ";
-    case 'PUT':
-    case 'PATCH':
-      return "UPDATE";
-    case 'DELETE':
-      return "DELETE";
-    default:
-      return "READ";
-  }
-}
-
-/**
- * Extract entity ID from the request path
- * @param path Request path
- * @returns Entity ID or undefined
- */
-function getEntityIdFromPath(path: string): string | undefined {
-  const segments = path.split('/').filter(Boolean);
-  // Look for IDs in path segments - usually the last segment
-  if (segments.length > 1) {
-    const lastSegment = segments[segments.length - 1];
-    // Check if last segment is numeric or looks like an ID
-    if (/^\d+$/.test(lastSegment)) {
-      return lastSegment;
-    }
-  }
-  return undefined;
-}
-
-/**
- * Get entity name from path and params
- * @param path Request path
- * @param params Request parameters
- * @returns Constructed entity name
- */
-function getEntityNameFromRequest(path: string, params: any): string {
-  const entityType = getEntityTypeFromPath(path);
-  const entityId = getEntityIdFromPath(path);
-  
-  if (entityId) {
-    return `${entityType.toLowerCase()}/${entityId}`;
-  } else {
-    return `${entityType.toLowerCase()}`;
-  }
-}
-
-/**
- * Middleware function to log API requests to audit trail
- */
-export function auditAPIAccess(req: Request, res: Response, next: NextFunction) {
-  // Skip logging for certain paths
-  if (
-    req.path.includes('/health') || 
-    req.path.includes('/metrics') ||
-    req.path === '/api/user' || // Skip user check requests
-    req.path.includes('/audit-logs') // Don't log audit log requests to avoid recursion
-  ) {
+export function auditMiddleware(req: Request, res: Response, next: NextFunction) {
+  // Skip excluded paths
+  if (EXCLUDED_PATHS.includes(req.path)) {
     return next();
   }
   
-  // Original response methods
+  // Get a clean version of the URL (without sensitive data)
+  const requestPath = getCleanPath(req);
+  
+  // Store original end function to intercept it later
   const originalEnd = res.end;
   const originalJson = res.json;
+  const originalSend = res.send;
   
-  // Override end method to capture response
-  res.end = function(this: Response, ...args: any[]) {
-    try {
-      const entityType = getEntityTypeFromPath(req.path);
-      const actionType = getActionTypeFromMethod(req.method);
-      const entityId = getEntityIdFromPath(req.path) || '';
-      const entityName = getEntityNameFromRequest(req.path, req.params);
+  // Capture start time for response time calculation
+  const startTime = Date.now();
+  
+  // Track session activity if authenticated
+  // Check if isAuthenticated function exists before using it
+  if (req.isAuthenticated && typeof req.isAuthenticated === 'function' && req.isAuthenticated() && req.user && req.sessionID) {
+    recordUserActivity(req.sessionID, requestPath);
+  }
+  
+  // Handle login/logout events specially
+  if (req.path === '/api/login' && req.method === 'POST') {
+    // We'll handle actual login success in the response interceptor below
+    // since we don't know if it will be successful yet
+  } else if (req.path === '/api/logout' && req.method === 'POST') {
+    if (req.isAuthenticated && typeof req.isAuthenticated === 'function' && req.isAuthenticated() && req.user && req.sessionID) {
+      // Log the logout event
+      logCrudEvent(
+        req,
+        'LOGOUT',
+        'USER',
+        req.user.id.toString(),
+        req.user.username,
+        null,
+        null,
+        `User ${req.user.username} logged out`
+      );
       
-      // Only log if user is authenticated
-      if (req.isAuthenticated() && req.user) {
+      endUserSession(req.sessionID);
+    }
+  } else {
+    // For all other API requests, log the request details
+    if (req.path.startsWith('/api/')) {
+      const actionTypeMap: Record<string, "CREATE" | "READ" | "UPDATE" | "DELETE" | "SYSTEM"> = {
+        'GET': 'READ',
+        'POST': 'CREATE',
+        'PUT': 'UPDATE',
+        'PATCH': 'UPDATE',
+        'DELETE': 'DELETE'
+      };
+      
+      // Map HTTP method to CRUD action type with fallback to READ
+      const actionType = actionTypeMap[req.method] || 'READ';
+      
+      // Determine entity type from path
+      const pathParts = req.path.split('/').filter(Boolean);
+      let module = 'SYSTEM';
+      let entityId = 'api';
+      let entityName = req.path;
+      
+      if (pathParts.length >= 2) {
+        // Extract module and entityId from path parts
+        const apiEntityMap: Record<string, "USER" | "ROLE" | "REFERENCE_TYPE" | "REFERENCE_DATA" | "RELATIONSHIP" | "CROSSWALK" | "API_KEY" | "SYSTEM"> = {
+          'users': 'USER',
+          'roles': 'ROLE',
+          'reference-types': 'REFERENCE_TYPE',
+          'reference-data': 'REFERENCE_DATA',
+          'relationships': 'RELATIONSHIP',
+          'crosswalks': 'CROSSWALK',
+          'api-keys': 'API_KEY',
+          'user': 'USER',
+        };
+        
+        // Second path part is usually the entity type
+        module = apiEntityMap[pathParts[1]] || 'SYSTEM';
+        
+        // Third path part is often the entity ID
+        if (pathParts.length >= 3 && pathParts[2]) {
+          entityId = pathParts[2];
+          entityName = `${pathParts[1]}/${entityId}`;
+        } else {
+          entityName = pathParts[1];
+        }
+      }
+      
+      // Log API request
+      logCrudEvent(
+        req,
+        actionType,
+        module,
+        entityId,
+        entityName,
+        null,
+        null,
+        `${req.method} ${requestPath}`,
+        {
+          query: req.query,
+          params: req.params,
+          body: sanitizeRequestBody(req)
+        }
+      );
+    }
+  }
+  
+  // Intercept the response to log the outcome
+  res.end = function(chunk?: any, encoding?: BufferEncoding, callback?: () => void): Response {
+    // Calculate response time
+    const responseTime = Date.now() - startTime;
+    
+    // Handle login success here
+    if (req.path === '/api/login' && req.method === 'POST' && res.statusCode >= 200 && res.statusCode < 300) {
+      if (req.user && req.sessionID) {
+        // Start tracking session
+        startUserSession(req.sessionID, req.user.id, req.user.username);
+        
+        // Log login success
         logCrudEvent(
           req,
-          actionType,
-          entityType,
-          entityId,
-          entityName,
-          undefined, // oldValue
-          undefined, // newValue
-          `${req.method} ${req.path}`
-        ).catch(err => {
-          console.error('Failed to log API access:', err);
-        });
+          'LOGIN',
+          'USER',
+          req.user.id.toString(),
+          req.user.username,
+          null,
+          null,
+          `User ${req.user.username} logged in successfully`,
+          { responseTime }
+        );
       }
-    } catch (err) {
-      console.error('Error in audit middleware:', err);
     }
     
-    return originalEnd.apply(this, args);
+    // Restore original end function
+    res.end = originalEnd;
+    
+    // Call the original end function
+    return originalEnd.call(this, chunk, encoding, callback);
   };
   
-  // Override json method to capture structured response
-  res.json = function(this: Response, body: any) {
-    // For non-GET requests, this could also log the request body and response
-    // But we'll keep it simple for now
-    return originalJson.apply(this, [body]);
-  };
-  
+  // Continue with the request
   next();
 }
 
 /**
- * Middleware to explicitly log entity operations with detailed change tracking
+ * Remove sensitive information from request path
  */
-export function auditEntityChanges(
-  entityType: "USER" | "ROLE" | "REFERENCE_TYPE" | "REFERENCE_DATA" | "RELATIONSHIP" | "CROSSWALK" | "API_KEY" | "SYSTEM",
-  actionType: "CREATE" | "READ" | "UPDATE" | "DELETE" | "APPROVE" | "REJECT",
-  getEntityId: (req: Request) => string | number,
-  getEntityName: (req: Request) => string,
-  getOldValue?: (req: Request) => Record<string, any> | undefined,
-  getNewValue?: (req: Request) => Record<string, any> | undefined
-) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    // Store original methods
-    const originalEnd = res.end;
-    const originalJson = res.json;
-    
-    // Override end method
-    res.end = function(this: Response, ...args: any[]) {
-      if (res.statusCode >= 200 && res.statusCode < 300) {
-        try {
-          const entityId = getEntityId(req);
-          const entityName = getEntityName(req);
-          
-          let oldValue = undefined;
-          if (getOldValue) {
-            try {
-              oldValue = getOldValue(req);
-            } catch (err) {
-              console.error('Error getting old value for audit:', err);
-            }
-          }
-          
-          let newValue = undefined;
-          if (getNewValue) {
-            try {
-              newValue = getNewValue(req);
-            } catch (err) {
-              console.error('Error getting new value for audit:', err);
-            }
-          }
-          
-          if (req.isAuthenticated() && req.user) {
-            logCrudEvent(
-              req,
-              actionType,
-              entityType,
-              entityId,
-              entityName,
-              oldValue,
-              newValue,
-              `${actionType} ${entityType.toLowerCase()} "${entityName}"`
-            ).catch(err => {
-              console.error('Failed to log entity change:', err);
-            });
-          }
-        } catch (err) {
-          console.error('Error in entity audit middleware:', err);
-        }
-      }
-      
-      return originalEnd.apply(this, args);
-    };
-    
-    // Override json method
-    res.json = function(this: Response, body: any) {
-      return originalJson.apply(this, [body]);
-    };
-    
-    next();
-  };
+function getCleanPath(req: Request): string {
+  const path = req.originalUrl || req.url;
+  
+  // Check if this is a sensitive path
+  const isSensitive = SENSITIVE_PATHS.some(sensitivePath => 
+    path.startsWith(sensitivePath));
+  
+  if (isSensitive) {
+    // Return just the path without query params
+    return path.split('?')[0];
+  }
+  
+  return path;
+}
+
+/**
+ * Sanitize request body by removing sensitive fields
+ */
+function sanitizeRequestBody(req: Request): Record<string, any> | null {
+  if (!req.body || typeof req.body !== 'object') {
+    return null;
+  }
+  
+  // Create a copy to avoid modifying the original
+  const sanitized = { ...req.body };
+  
+  // List of sensitive fields to remove
+  const sensitiveFields = [
+    'password', 
+    'newPassword', 
+    'currentPassword',
+    'token', 
+    'refreshToken',
+    'apiKey', 
+    'secret',
+    'accessToken',
+    'authorization'
+  ];
+  
+  // Sanitize each sensitive field
+  sensitiveFields.forEach(field => {
+    if (field in sanitized) {
+      sanitized[field] = '******';
+    }
+  });
+  
+  return sanitized;
+
 }

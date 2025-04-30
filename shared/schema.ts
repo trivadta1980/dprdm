@@ -550,7 +550,16 @@ export const auditActionEnum = pgEnum("audit_action", [
   "IMPORT",
   "LOGIN",
   "LOGOUT",
-  "SYSTEM"
+  "SYSTEM",
+  "ERROR",
+  "WARNING",
+  "INFO",
+  "DEBUG",
+  "TRACE",
+  "SESSION_START",
+  "SESSION_END",
+  "FEATURE_USAGE",
+  "BULK_OPERATION"
 ]);
 
 // Define entity types for audit logs
@@ -597,7 +606,9 @@ export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
 }).extend({
   actionType: z.enum([
     "CREATE", "READ", "UPDATE", "DELETE", "APPROVE", 
-    "REJECT", "EXPORT", "IMPORT", "LOGIN", "LOGOUT", "SYSTEM"
+    "REJECT", "EXPORT", "IMPORT", "LOGIN", "LOGOUT", "SYSTEM",
+    "ERROR", "WARNING", "INFO", "DEBUG", "TRACE",
+    "SESSION_START", "SESSION_END", "FEATURE_USAGE", "BULK_OPERATION"
   ]),
   module: z.enum([
     "USER", "ROLE", "REFERENCE_TYPE", "REFERENCE_DATA", 

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -18,16 +19,42 @@ import {
   CheckSquare,
   Key,
   History,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { LucideIcon } from "lucide-react";
 
 interface SidebarProps {
   className?: string;
 }
 
+interface MenuItem {
+  title: string;
+  href?: string;
+  icon: LucideIcon;
+  requiresPermission: boolean;
+  tooltip?: string;
+  type?: 'section' | 'item';
+  children?: MenuItem[];
+}
+
 export function Sidebar({ className }: SidebarProps) {
   const [location] = useLocation();
   const { user, isAdmin, hasPermission, allowedRoutes } = useAuth();
+  
+  // State for collapsible sections
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    userManagement: false  // User Management section starts collapsed
+  });
+  
+  // Function to toggle a section's expanded state
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }));
+  };
   
   // Derive approver status from permissions rather than hardcoded role IDs
   const isApprover = hasPermission('/approvals');
@@ -42,23 +69,6 @@ export function Sidebar({ className }: SidebarProps) {
   });
 
   const menuItems = [
-    // Admin-only items
-    ...(isAdmin ? [
-      {
-        title: "Manage Users",
-        href: "/manage-users",
-        icon: Users,
-        requiresPermission: true,
-        tooltip: "Create, edit, and manage user accounts and permissions"
-      },
-      {
-        title: "Manage Roles",
-        href: "/roles",
-        icon: UserCog,
-        requiresPermission: true,
-        tooltip: "Configure role-based access control for users"
-      },
-    ] : []),
     // Approver-specific items
     ...(isApprover ? [
       {
@@ -133,6 +143,30 @@ export function Sidebar({ className }: SidebarProps) {
       //   icon: Map,
       //   requiresPermission: true,
       // },
+      // User Management section moved to bottom
+      {
+        title: "User Management",
+        icon: Users,
+        type: "section",
+        requiresPermission: true,
+        tooltip: "User and role management options",
+        children: [
+          {
+            title: "Manage Users",
+            href: "/manage-users",
+            icon: Users,
+            requiresPermission: true,
+            tooltip: "Create, edit, and manage user accounts and permissions"
+          },
+          {
+            title: "Manage Roles",
+            href: "/roles",
+            icon: UserCog,
+            requiresPermission: true,
+            tooltip: "Configure role-based access control for users"
+          },
+        ]
+      },
     ] : []),
   ];
 
@@ -143,13 +177,32 @@ export function Sidebar({ className }: SidebarProps) {
     requiresPermission: item.requiresPermission
   })));
 
-  // Filter menu items based on user's role permissions from the hasPermission function
+  // Filter menu items based on user's role permissions
   const filteredMenuItems = menuItems.filter(item => {
     if (!item.requiresPermission) return true;
-
-    // Check if user has permission for this route using hasPermission function
+    
+    if (item.type === 'section' && item.children) {
+      // For sections, check if any children have permission
+      const hasChildWithPermission = item.children.some(child => 
+        child.href !== undefined && hasPermission(child.href)
+      );
+      
+      if (hasChildWithPermission) {
+        // Filter the children array to only include items with permission
+        item.children = item.children.filter(child => 
+          child.href !== undefined && hasPermission(child.href)
+        );
+        return true;
+      }
+      return false;
+    }
+    
+    // For regular items, check permission directly
+    // Skip check if href is not defined
+    if (item.href === undefined) return false;
+    
     const itemHasPermission = hasPermission(item.href);
-
+    
     // Debug logging for each menu item permission check
     console.log(`Permission check for ${item.title}:`, {
       href: item.href,
@@ -158,15 +211,24 @@ export function Sidebar({ className }: SidebarProps) {
       hasPermission: itemHasPermission, 
       requiresPermission: item.requiresPermission
     });
-
+    
     return itemHasPermission;
   });
-
+  
   // Debug logging for final filtered menu items
-  console.log('Filtered Menu Items:', filteredMenuItems.map(item => ({
-    title: item.title,
-    href: item.href
-  })));
+  console.log('Filtered Menu Items:', filteredMenuItems.map(item => {
+    if (item.type === 'section' && item.children) {
+      return {
+        title: item.title,
+        type: 'section',
+        children: item.children.map(c => ({ title: c.title, href: c.href }))
+      };
+    }
+    return {
+      title: item.title,
+      href: item.href
+    };
+  }));
 
   return (
     <div className={cn("pb-12 border-r bg-sidebar h-screen flex flex-col", className)}>
@@ -178,11 +240,68 @@ export function Sidebar({ className }: SidebarProps) {
           </div>
           <ScrollArea className="px-1">
             <div className="space-y-1">
-              {filteredMenuItems.map((item) => {
+              {filteredMenuItems.map((item, index) => {
                 const Icon = item.icon;
+                
+                // If it's a section with children
+                if (item.type === 'section' && item.children && item.children.length > 0) {
+                  // Get section ID based on title (for use with expandedSections state)
+                  const sectionId = item.title.toLowerCase().replace(/\s+/g, '');
+                  const isExpanded = expandedSections[sectionId];
+                  
+                  return (
+                    <div key={`section-${index}`} className="mb-2">
+                      {/* Clickable section header */}
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-between px-2 py-1.5 text-sm font-semibold text-muted-foreground hover:bg-muted/50"
+                        onClick={() => toggleSection(sectionId)}
+                      >
+                        <div className="flex items-center">
+                          <Icon className="mr-2 h-4 w-4" />
+                          {item.title}
+                        </div>
+                        {isExpanded ? 
+                          <ChevronDown className="h-4 w-4" /> : 
+                          <ChevronRight className="h-4 w-4" />
+                        }
+                      </Button>
+                      
+                      {/* Section children indented - only show when expanded */}
+                      {isExpanded && (
+                        <div className="ml-4 space-y-1 mt-1">
+                          {item.children.map((child) => {
+                            const ChildIcon = child.icon;
+                            return (
+                              <EnhancedTooltip
+                                key={child.href}
+                                content={child.tooltip || child.title}
+                                side="right"
+                                align="center"
+                              >
+                                <Button
+                                  variant={location === child.href ? "secondary" : "ghost"}
+                                  className="w-full justify-start"
+                                  asChild
+                                >
+                                  <Link href={child.href}>
+                                    <ChildIcon className="mr-2 h-4 w-4" />
+                                    {child.title}
+                                  </Link>
+                                </Button>
+                              </EnhancedTooltip>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+                
+                // For regular menu items
                 return (
                   <EnhancedTooltip
-                    key={item.href}
+                    key={item.href || `item-${index}`}
                     content={item.tooltip || item.title}
                     side="right"
                     align="center"
@@ -190,12 +309,19 @@ export function Sidebar({ className }: SidebarProps) {
                     <Button
                       variant={location === item.href ? "secondary" : "ghost"}
                       className="w-full justify-start"
-                      asChild
+                      asChild={!!item.href}
                     >
-                      <Link href={item.href}>
-                        <Icon className="mr-2 h-4 w-4" />
-                        {item.title}
-                      </Link>
+                      {item.href ? (
+                        <Link href={item.href}>
+                          <Icon className="mr-2 h-4 w-4" />
+                          {item.title}
+                        </Link>
+                      ) : (
+                        <>
+                          <Icon className="mr-2 h-4 w-4" />
+                          {item.title}
+                        </>
+                      )}
                     </Button>
                   </EnhancedTooltip>
                 );

@@ -17,7 +17,7 @@ import { Link } from "wouter";
 import { 
   Database, GitFork, ArrowRightLeft, FileJson, Users, 
   UserCog, CheckSquare, Key, Info, BookOpen, Search,
-  ChevronRight, BarChart3
+  ChevronRight, BarChart3, AlertTriangle
 } from "lucide-react";
 
 /**
@@ -465,6 +465,53 @@ function ReferenceTypesContent() {
         </Card>
       ))}
       
+      {/* Primary Key section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Primary Key Configuration</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p>
+              When defining a Reference Data Type, you must designate one field as the primary key. This field 
+              will be used to uniquely identify each record and enforce data integrity during bulk imports 
+              and updates.
+            </p>
+            
+            <div className="bg-amber-50 p-4 rounded-md border border-amber-200 dark:bg-amber-900 dark:border-amber-800">
+              <h4 className="font-medium text-amber-800 dark:text-amber-300 mb-2 flex items-center">
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                Important
+              </h4>
+              <p className="text-sm text-amber-800 dark:text-amber-300">
+                The primary key field should contain unique values that don't change over time. Common examples 
+                include code fields, IDs, or industry-standard identifiers. During bulk uploads, records with 
+                matching primary key values will update existing entries rather than creating duplicates.
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-4 mt-4">
+              <div className="p-4 border rounded-md bg-slate-50 dark:bg-slate-900">
+                <h3 className="font-medium mb-2">Setting a Primary Key</h3>
+                <p className="text-sm text-muted-foreground">
+                  When creating a Reference Data Type, select "Set as Primary Key" on the field that will 
+                  uniquely identify each record. Only one field can be designated as the primary key.
+                </p>
+              </div>
+              <div className="p-4 border rounded-md bg-slate-50 dark:bg-slate-900">
+                <h3 className="font-medium mb-2">Primary Key Examples</h3>
+                <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
+                  <li>ISO country code for Countries</li>
+                  <li>Product code for a Product Catalog</li>
+                  <li>Department code for Organizational Units</li>
+                  <li>Standard industry classification code</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Additional content specific to reference types */}
       <Card>
         <CardHeader>
@@ -745,18 +792,31 @@ function ReferenceDataContent() {
               <div className="p-4 border rounded-md">
                 <h3 className="font-medium mb-2">Bulk Updates</h3>
                 <p className="text-sm text-muted-foreground">
-                  Efficiently update existing reference data by importing changes. The system can match
-                  records based on key fields and apply updates intelligently.
+                  Efficiently update existing reference data by importing changes. The system automatically enforces 
+                  primary key validation during bulk uploads, updating existing records rather than creating duplicates 
+                  when the same primary key value is detected.
                 </p>
               </div>
             </div>
             
             <div className="mt-4 p-4 bg-blue-50 text-blue-800 rounded-md dark:bg-blue-900 dark:text-blue-100">
-              <h4 className="font-medium mb-2">Best Practice</h4>
-              <p className="text-sm">
-                When importing large datasets, consider using the chunked import feature to break the process
-                into manageable batches. This prevents timeouts and provides better progress tracking and error handling.
-              </p>
+              <h4 className="font-medium mb-2">Best Practices</h4>
+              <div className="space-y-3">
+                <p className="text-sm">
+                  <strong>Primary Key Handling:</strong> When defining reference data types, always designate one field as 
+                  the primary key. During bulk uploads, the system will use this primary key to determine whether to update 
+                  existing records or create new ones. This prevents duplicate entries and ensures data consistency.
+                </p>
+                <p className="text-sm">
+                  <strong>Batch Processing:</strong> When importing large datasets, consider using the chunked import 
+                  feature to break the process into manageable batches. This prevents timeouts and provides better 
+                  progress tracking and error handling.
+                </p>
+                <p className="text-sm">
+                  <strong>Audit Trail:</strong> After bulk imports, review the import statistics to confirm the number 
+                  of new and updated records. This helps verify that the system correctly processed primary key conflicts.
+                </p>
+              </div>
             </div>
           </div>
         </CardContent>

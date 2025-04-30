@@ -8,7 +8,9 @@ import externalRoutes from "./externalRoutes";
 import { apiKeyAuth } from "./middleware/api-auth";
 import diagnosticsRouter from "./diagnostics";
 import auditRoutes from "./auditRoutes";
-import { auditAPIAccess } from "./middleware/audit-middleware";
+
+import { cleanupInactiveSessions } from './utils/sessionTracker';
+
 import {
   insertRelationshipSchema,
   insertCrosswalkMappingSchema,
@@ -21,7 +23,8 @@ import {
   missingMappings,
   referenceDataSets,
   users,
-  referenceDataTypes
+  referenceDataTypes,
+  type ReferenceDataInstance
 } from "@shared/schema";
 import { sql, eq, and, or, inArray } from "drizzle-orm";
 import { scrypt, randomBytes } from "crypto";
@@ -41,7 +44,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add audit logging middleware (after auth is set up)
   app.use('/api', auditAPIAccess);
 
-  const upload = multer({ storage: multer.memoryStorage() });
+  // Configure multer with 1MB file size limit
+  const upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 1024 * 1024 // 1MB file size limit
+    }
+  });
 
   // Admin-only routes for user management
   app.get("/api/users", async (req, res) => {
@@ -451,7 +460,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const schemas = await storage.getReferenceDataTypeSchemas(dataSet.typeId);
       const schemaNames = schemas.map(s => s.name);
-
+      
+      // Find the primary key field for this reference data type
+      const primaryKeySchema = schemas.find(s => s.isPrimaryKey);
+      if (!primaryKeySchema) {
+        console.log('POST /api/reference-data/:id/bulk-upload - No primary key defined for this data type');
+        return res.status(400).json({ 
+          error: "No primary key defined for this reference data type. Please define a primary key field in the schema."
+        });
+      }
+      
+      const primaryKeyField = primaryKeySchema.name;
+      console.log(`POST /api/reference-data/:id/bulk-upload - Using primary key field: ${primaryKeyField}`);
       console.log('POST /api/reference-data/:id/bulk-upload - Schema names:', schemaNames);
 
       // Parse CSV
@@ -519,18 +539,173 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error('No valid records found in the CSV file');
       }
 
-      console.log('POST /api/reference-data/:id/bulk-upload - Updating dataset with records count:', records.length);
+      console.log('POST /api/reference-data/:id/bulk-upload - Processing records with primary key checks in transaction');
+      
+      // Use a database transaction to ensure atomicity
+      let updatedDataSet;
+      let newRecords = 0;
+      let updatedRecords = 0;
+      
+      try {
+        // Start transaction - ALL processing will happen inside the transaction
+        updatedDataSet = await db.transaction(async (tx) => {
+          // Get fresh data from within the transaction
+          const [freshDataSet] = await tx
+            .select()
+            .from(referenceDataSets)
+            .where(eq(referenceDataSets.id, dataSetId))
+            .limit(1);
+          
+          if (!freshDataSet) {
+            throw new Error(`Dataset ${dataSetId} not found in transaction`);
+          }
+          
+          // Get the existing data to check for duplicates
+          const existingData = freshDataSet.data as Record<string, any> || {};
+          const mergedData: Record<string, any> = { ...existingData };
+          
+          // Stats for logs and response
+          newRecords = 0;
+          updatedRecords = 0;
+          
+          // Process each record
+          for (const record of records) {
+            const primaryKeyValue = record[primaryKeyField];
+            
+            if (!primaryKeyValue) {
+              console.log(`POST /api/reference-data/:id/bulk-upload - Record missing primary key value for field ${primaryKeyField}, skipping`);
+              continue;
+            }
+            
+            // Check if this primary key already exists in the dataset
+            let existingInstanceKey: string | undefined;
+            for (const [key, instance] of Object.entries(existingData)) {
+              if (instance[primaryKeyField] === primaryKeyValue) {
+                existingInstanceKey = key;
+                break;
+              }
+            }
+            
+            if (existingInstanceKey) {
+              // Update existing record
+              console.log(`POST /api/reference-data/:id/bulk-upload - Updating existing record with ${primaryKeyField}: ${primaryKeyValue}`);
+              
+              const existingInstance = existingData[existingInstanceKey];
+              const historyEntry = {
+                timestamp,
+                changes: []
+              };
+              
+              // Create history entry with changes
+              for (const [field, value] of Object.entries(record)) {
+                if (field !== primaryKeyField && field !== 'status' && !field.startsWith('_')) {
+                  if (existingInstance[field] !== value) {
+                    historyEntry.changes.push({
+                      field,
+                      oldValue: existingInstance[field] || '',
+                      newValue: value
+                    });
+                  }
+                }
+              }
+              
+              // Only push to history if there are actual changes
+              const updatedHistory = [...(existingInstance._history || [])];
+              if (historyEntry.changes.length > 0) {
+                updatedHistory.push(historyEntry);
+              }
+              
+              // Determine if we need to reset the approval status
+              let newStatus = existingInstance.status;
+              let statusChanged = false;
+              
+              // If the record has changes, and it was previously APPROVED, reset to DRAFT
+              if (historyEntry.changes.length > 0 && existingInstance.status === "APPROVED") {
+                newStatus = "DRAFT";
+                statusChanged = true;
+                
+                // Add status change to history
+                historyEntry.changes.push({
+                  field: "status",
+                  oldValue: "APPROVED",
+                  newValue: "DRAFT"
+                });
+              }
+              
+              // Update the existing instance with new values while preserving metadata
+              mergedData[existingInstanceKey] = {
+                ...existingInstance,
+                ...record,
+                status: newStatus,  // Ensure status is properly set
+                _history: updatedHistory,
+                lastModifiedBy: req.user?.username || "system",
+                lastModifiedAt: timestamp
+              };
+              
+              updatedRecords++;
+            } else {
+              // Create new record
+              console.log(`POST /api/reference-data/:id/bulk-upload - Creating new record with ${primaryKeyField}: ${primaryKeyValue}`);
+              
+              // Generate a unique key for the new instance - using newRecords counter to avoid overlap
+              const newKey = `instance_${Date.now()}_${newRecords}`;
+              
+              // Set initial status to DRAFT
+              const newRecord = {
+                ...record,
+                status: "DRAFT",  // All new records start as DRAFT
+                createdBy: req.user?.username || "system",
+                createdAt: timestamp,
+                lastModifiedBy: req.user?.username || "system",
+                lastModifiedAt: timestamp,
+                _history: [{
+                  timestamp,
+                  changes: Object.entries(record).map(([field, value]) => ({
+                    field,
+                    oldValue: "",
+                    newValue: value
+                  }))
+                }]
+              };
+              
+              mergedData[newKey] = newRecord;
+              newRecords++;
+            }
+          }
+          
+          console.log(`POST /api/reference-data/:id/bulk-upload - Processed ${records.length} records in transaction: ${newRecords} new, ${updatedRecords} updated`);
+          
+          // Update data set with merged data while still in the transaction
+          const [result] = await tx
+            .update(referenceDataSets)
+            .set({
+              data: mergedData,
+              updatedAt: new Date()
+            })
+            .where(eq(referenceDataSets.id, dataSetId))
+            .returning();
+          
+          return {
+            ...result,
+            data: result.data as Record<string, any>
+          };
+        });
 
-      // Update data set with new instances including metadata
-      const updatedDataSet = await storage.updateReferenceDataSet(dataSetId, {
-        data: records.reduce((acc, record, index) => {
-          acc[`instance_${index + 1}`] = record;
-          return acc;
-        }, {} as Record<string, any>)
+        console.log('POST /api/reference-data/:id/bulk-upload - Upload complete. Dataset updated in transaction.');
+      } catch (txError: any) {
+        console.error('POST /api/reference-data/:id/bulk-upload - Transaction failed:', txError);
+        throw new Error(`Transaction failed: ${txError?.message || 'Unknown transaction error'}`);
+      }
+      
+      // Return stats in the response
+      res.json({
+        ...updatedDataSet,
+        importStats: {
+          totalRecords: records.length,
+          newRecords,
+          updatedRecords
+        }
       });
-
-      console.log('POST /api/reference-data/:id/bulk-upload - Upload complete. Dataset updated with data:', updatedDataSet.data);
-      res.json(updatedDataSet);
 
     } catch (error) {
       console.error('POST /api/reference-data/:id/bulk-upload - Error processing bulk upload:', error);
@@ -587,15 +762,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         crosswalks: crosswalkResults,
         canDelete: relationshipResults.length === 0 && crosswalkResults.length === 0
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Dependency check failed:', {
-        error: error.message,
-        stack: error.stack,
-        type: error.constructor.name
+        error: error?.message || 'Unknown error',
+        stack: error?.stack,
+        type: error?.constructor?.name
       });
       res.status(500).json({
         error: "Failed to check dependencies",
-        details: error.message
+        details: error?.message || 'Unknown error'
       });
     }
   });
@@ -4539,6 +4714,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register audit log routes (only accessible by admin users)
   app.use('/api', auditRoutes);
+  
+  // Set up scheduled cleanup of inactive sessions (runs every 15 minutes)
+  const SESSION_CLEANUP_INTERVAL = 15 * 60 * 1000; // 15 minutes
+  setInterval(() => {
+    try {
+      const cleanedCount = cleanupInactiveSessions();
+      if (cleanedCount > 0) {
+        console.log(`Cleaned up ${cleanedCount} inactive sessions`);
+      }
+    } catch (error) {
+      console.error('Error cleaning up inactive sessions:', error);
+    }
+  }, SESSION_CLEANUP_INTERVAL);
 
   const httpServer = createServer(app);
   return httpServer;

@@ -50,6 +50,7 @@ import { useState, useRef } from "react";
 import { format } from "date-fns";
 import { useSession } from "@/hooks/use-session";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { ErrorDialog } from "@/components/ui/error-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -108,6 +109,10 @@ export default function ReferenceDataInstancesPage() {
   const [isDownloading, setIsDownloading] = useState(false); // Added state for download
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isBulkSubmitDialogOpen, setIsBulkSubmitDialogOpen] = useState(false);
+  
+  // Error dialog state
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorDialogMessage, setErrorDialogMessage] = useState("");
 
   const { data: dataSet, isLoading: isLoadingDataSet } = useQuery<ReferenceDataSet>({
     queryKey: [`/api/reference-data/${dataSetId}`],
@@ -144,10 +149,28 @@ export default function ReferenceDataInstancesPage() {
       }
 
       try {
-        const processedInstances = Object.entries(dataSet.data).map(([id, data]) => ({
-          id,
-          ...(data as ExtendedReferenceDataInstance)
-        }));
+        // Only process entries that appear to be valid data instances
+        // by checking for required properties like status, DeliveryID, etc.
+        // We use Object.keys + reduce to properly count all entries
+        const processedInstances = Object.keys(dataSet.data).reduce((validInstances, id) => {
+          const data = dataSet.data[id] as any;
+          
+          // Ensure the data is an actual instance by checking for at least one required field
+          // Depending on your data, you might want to check for different fields
+          if (data && (data.status || data.DeliveryID || data.CustomerName)) {
+            validInstances.push({
+              id,
+              ...(data as ExtendedReferenceDataInstance)
+            });
+          } else {
+            console.log(`Skipping entry with key ${id} as it doesn't appear to be a valid instance`, data);
+          }
+          
+          return validInstances;
+        }, [] as Array<ExtendedReferenceDataInstance & { id: string }>);
+        
+        console.log(`Processed ${processedInstances.length} valid instances out of ${Object.keys(dataSet.data).length} total entries`);
+        
         return processedInstances;
       } catch (error) {
         console.error('Error processing instance data:', error);
@@ -512,20 +535,33 @@ export default function ReferenceDataInstancesPage() {
 
       return await updateResponse.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [`/api/reference-data/${dataSetId}`] });
-      toast({
-        title: "Success",
-        description: "Bulk upload completed successfully",
-      });
+      
+      // Display statistics if they're available in the response
+      const stats = data.importStats;
+      if (stats) {
+        toast({
+          title: "Bulk Upload Successful",
+          description: `Processed ${stats.totalRecords} records: ${stats.newRecords} new, ${stats.updatedRecords} updated`,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Bulk upload completed successfully",
+        });
+      }
+      
       setIsBulkUploadDialogOpen(false);
     },
     onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to upload file",
-        variant: "destructive",
-      });
+      // Set error dialog message and open the dialog
+      setErrorDialogMessage(error.message || "Failed to upload file");
+      setErrorDialogOpen(true);
+      
+      // Close the bulk upload dialog
+      setIsBulkUploadDialogOpen(false);
     },
   });
 
@@ -660,11 +696,9 @@ export default function ReferenceDataInstancesPage() {
     const file = event.target.files?.[0];
     if (file) {
       if (file.type !== "text/csv") {
-        toast({
-          title: "Error",
-          description: "Please upload a CSV file",
-          variant: "destructive",
-        });
+        // Use error dialog instead of toast
+        setErrorDialogMessage("Please upload a CSV file");
+        setErrorDialogOpen(true);
         return;
       }
       bulkUploadMutation.mutate(file);
@@ -809,11 +843,9 @@ export default function ReferenceDataInstancesPage() {
       });
     } catch (error) {
       console.error('Error downloading template:', error);
-      toast({
-        title: "Download Failed",
-        description: error instanceof Error ? error.message : "Failed to download template",
-        variant: "destructive",
-      });
+      // Use error dialog instead of toast
+      setErrorDialogMessage(error instanceof Error ? error.message : "Failed to download template");
+      setErrorDialogOpen(true);
     } finally {
       setIsDownloading(false);
     }
@@ -1198,6 +1230,13 @@ export default function ReferenceDataInstancesPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Error Dialog */}
+      <ErrorDialog
+        open={errorDialogOpen}
+        onOpenChange={setErrorDialogOpen}
+        description={errorDialogMessage}
+      />
     </MainLayout>
   );
 }

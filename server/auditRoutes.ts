@@ -8,7 +8,7 @@
 import { Router, Request, Response } from "express";
 import { db } from "./db";
 import { auditLogs, users, roles } from "@shared/schema";
-import { eq, desc, and, gte, lte, ilike, inArray } from "drizzle-orm";
+import { eq, desc, and, gte, lte, ilike, inArray, or, between } from "drizzle-orm";
 import { requireAuth } from "./auth";
 
 // Create a router for audit routes
@@ -216,23 +216,25 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
     // Execute count query with error handling
     let totalCount = 0;
     try {
-      const countQuery = db.select({ 
-        count: db.fn.count()
-      }).from(auditLogs);
+
+      // Use count() directly and handle the case when filters is empty
+      const filterCondition = filters.length > 0 ? and(...filters) : undefined;
+      const countQuery = db.select({ count: db.fn.count() }).from(auditLogs);
       
-      // Only add where clause if filters exist
-      if (filters.length > 0) {
-        countQuery.where(and(...filters));
-      }
+      // Only apply where clause if we have filters
+      const totalItemsResult = filterCondition 
+        ? await countQuery.where(filterCondition)
+        : await countQuery;
       
-      const totalItemsResult = await countQuery;
-      console.log("Count query result:", JSON.stringify(totalItemsResult));
-      
-      // More robust error handling
-      if (totalItemsResult && Array.isArray(totalItemsResult) && totalItemsResult.length > 0) {
+      // Safely access the count value with fallback
+      if (totalItemsResult && totalItemsResult.length > 0) {
+        // Handle different types of count results (PostgreSQL vs SQLite)
         const countValue = totalItemsResult[0]?.count;
-        if (countValue !== undefined && countValue !== null) {
-          totalCount = Number(countValue);
+        if (countValue !== undefined) {
+          totalCount = typeof countValue === 'number' 
+            ? countValue 
+            : Number(countValue);
+
         }
       }
     } catch (error) {
@@ -252,9 +254,9 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
       entityId: auditLogs.entityId,
       entityName: auditLogs.entityName,
       changeSummary: auditLogs.changeSummary,
-      // Exclude full data by default for performance (can be included in detail view)
-      // oldValue: auditLogs.oldValue,
-      // newValue: auditLogs.newValue,
+      oldValue: auditLogs.oldValue,
+      newValue: auditLogs.newValue,
+      additionalContext: auditLogs.additionalContext,
     })
       .from(auditLogs)
       .orderBy(desc(auditLogs.timestamp))
@@ -276,9 +278,42 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
       details: log.changeSummary    // Frontend expects details
     }));
 
+    // Process the results to enhance with details
+    const enhancedResults = results.map(log => {
+      // Generate a details field if not already present
+      let details = log.changeSummary;
+      if (!details && log.actionType) {
+        const actionVerb = getActionVerb(log.actionType);
+        details = `${actionVerb} ${log.module?.toLowerCase() || 'entity'} ${log.entityName || ''}`;
+        
+        // Try to extract path info from additionalContext if available
+        if (log.additionalContext && typeof log.additionalContext === 'object') {
+          try {
+            const context = log.additionalContext;
+            if (context.path) {
+              details += ` (${context.method || ''} ${context.path})`;
+            }
+          } catch (e) {
+            // Ignore context parsing errors
+          }
+        }
+      }
+      
+      return {
+        ...log,
+        details, // Add the properly formatted details field
+        // Generate basic changes made preview if available
+        changesMade: (log.oldValue && log.newValue) ? 
+          generateChangeList(log.oldValue, log.newValue).slice(0, 3) : // Just first 3 for preview
+          []
+      };
+    });
+    
     // Format response with pagination metadata
     const response = {
+
       data: mappedResults,
+
       pagination: {
         page,
         limit,
@@ -292,6 +327,231 @@ router.get("/audit-logs", requireAuth, async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error fetching audit logs:", error);
     return res.status(500).json({ error: "Failed to fetch audit logs" });
+  }
+});
+
+/**
+ * @route GET /api/audit-logs/stats
+ * @description Get statistics about audit logs (counts by type, etc.)
+ * @access Admin
+ */
+router.get("/audit-logs/stats", requireAuth, async (req: Request, res: Response) => {
+  console.log("GET /api/audit-logs/stats - Request received");
+  try {
+    // Only allow administrators to access audit stats
+    if (!req.isAuthenticated() || !req.user?.roleId || req.user.roleId !== 1) {
+      return res.status(403).json({ error: "Not authorized to view audit statistics" });
+    }
+
+    // Get summary statistics for the dashboard
+    // To avoid errors with empty tables, we'll use more robust queries
+    let totalActions = 0, userActions = 0, dataChanges = 0, systemEvents = 0;
+    let recentActions = [];
+
+    // Get total actions count
+    try {
+      const totalResult = await db.select({ count: db.fn.count() }).from(auditLogs);
+      
+      console.log("Total actions count result:", JSON.stringify(totalResult, null, 2));
+      
+      // Handle different types of count results with improved error handling
+      if (totalResult && Array.isArray(totalResult) && totalResult.length > 0) {
+        const firstResult = totalResult[0];
+        
+        // Safely handle different PostgreSQL count result formats
+        if (firstResult) {
+          if (typeof firstResult.count !== 'undefined') {
+            totalActions = Number(firstResult.count);
+          } else {
+            // Try to extract the count from any field that might contain it
+            const resultObj = firstResult as Record<string, any>;
+            const keys = Object.keys(resultObj);
+            const countKey = keys.find(k => k.toLowerCase().includes('count'));
+            if (countKey) {
+              totalActions = Number(resultObj[countKey]);
+            } else if (keys.length === 1) {
+              // If there's only one property, use that (likely the count)
+              totalActions = Number(resultObj[keys[0]]);
+            } else {
+              console.log("Unable to determine count field in:", firstResult);
+              totalActions = 0;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error counting total actions:", error);
+      totalActions = 0;
+    }
+
+    // Get user-related actions count (LOGIN, LOGOUT, etc.)
+    try {
+      const userResult = await db
+        .select({ count: db.fn.count() })
+        .from(auditLogs)
+        .where(
+          or(
+            eq(auditLogs.module, 'USER'),
+            eq(auditLogs.actionType, 'LOGIN'),
+            eq(auditLogs.actionType, 'LOGOUT')
+          )
+        );
+      
+      console.log("User actions count result:", JSON.stringify(userResult, null, 2));
+      
+      // Handle different types of count results with improved error handling
+      if (userResult && Array.isArray(userResult) && userResult.length > 0) {
+        const firstResult = userResult[0];
+        
+        // Safely handle different PostgreSQL count result formats
+        if (firstResult) {
+          if (typeof firstResult.count !== 'undefined') {
+            userActions = Number(firstResult.count);
+          } else {
+            // Try to extract the count from any field that might contain it
+            const resultObj = firstResult as Record<string, any>;
+            const keys = Object.keys(resultObj);
+            const countKey = keys.find(k => k.toLowerCase().includes('count'));
+            if (countKey) {
+              userActions = Number(resultObj[countKey]);
+            } else if (keys.length === 1) {
+              // If there's only one property, use that (likely the count)
+              userActions = Number(resultObj[keys[0]]);
+            } else {
+              console.log("Unable to determine count field in:", firstResult);
+              userActions = 0;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error counting user actions:", error);
+      userActions = 0;
+    }
+
+    // Get data change actions count (CREATE, UPDATE, DELETE)
+    try {
+      const dataResult = await db
+        .select({ count: db.fn.count() })
+        .from(auditLogs)
+        .where(
+          or(
+            eq(auditLogs.actionType, 'CREATE'),
+            eq(auditLogs.actionType, 'UPDATE'),
+            eq(auditLogs.actionType, 'DELETE')
+          )
+        );
+      
+      console.log("Data changes count result:", JSON.stringify(dataResult, null, 2));
+      
+      // Handle different types of count results with improved error handling
+      if (dataResult && Array.isArray(dataResult) && dataResult.length > 0) {
+        const firstResult = dataResult[0];
+        
+        // Safely handle different PostgreSQL count result formats
+        if (firstResult) {
+          if (typeof firstResult.count !== 'undefined') {
+            dataChanges = Number(firstResult.count);
+          } else {
+            // Try to extract the count from any field that might contain it
+            const resultObj = firstResult as Record<string, any>;
+            const keys = Object.keys(resultObj);
+            const countKey = keys.find(k => k.toLowerCase().includes('count'));
+            if (countKey) {
+              dataChanges = Number(resultObj[countKey]);
+            } else if (keys.length === 1) {
+              // If there's only one property, use that (likely the count)
+              dataChanges = Number(resultObj[keys[0]]);
+            } else {
+              console.log("Unable to determine count field in:", firstResult);
+              dataChanges = 0;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error counting data changes:", error);
+      dataChanges = 0;
+    }
+
+    // Get system events count (ERROR, INFO, WARNING)
+    try {
+      const systemResult = await db
+        .select({ count: db.fn.count() })
+        .from(auditLogs)
+        .where(
+          or(
+            eq(auditLogs.actionType, 'ERROR'),
+            eq(auditLogs.actionType, 'INFO'),
+            eq(auditLogs.actionType, 'WARNING'),
+            eq(auditLogs.actionType, 'FEATURE_USAGE')
+          )
+        );
+      
+      console.log("System events count result:", JSON.stringify(systemResult, null, 2));
+      
+      // Handle different types of count results with improved error handling
+      if (systemResult && Array.isArray(systemResult) && systemResult.length > 0) {
+        const firstResult = systemResult[0];
+        
+        // Safely handle different PostgreSQL count result formats
+        if (firstResult) {
+          if (typeof firstResult.count !== 'undefined') {
+            systemEvents = Number(firstResult.count);
+          } else {
+            // Try to extract the count from any field that might contain it
+            const resultObj = firstResult as Record<string, any>;
+            const keys = Object.keys(resultObj);
+            const countKey = keys.find(k => k.toLowerCase().includes('count'));
+            if (countKey) {
+              systemEvents = Number(resultObj[countKey]);
+            } else if (keys.length === 1) {
+              // If there's only one property, use that (likely the count)
+              systemEvents = Number(resultObj[keys[0]]);
+            } else {
+              console.log("Unable to determine count field in:", firstResult);
+              systemEvents = 0;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error counting system events:", error);
+      systemEvents = 0;
+    }
+
+    // Get recent audit logs
+    try {
+      recentActions = await db.select({
+        id: auditLogs.id,
+        timestamp: auditLogs.timestamp,
+        userId: auditLogs.userId,
+        username: auditLogs.username,
+        actionType: auditLogs.actionType,
+        module: auditLogs.module,
+        entityId: auditLogs.entityId,
+        entityName: auditLogs.entityName,
+        changeSummary: auditLogs.changeSummary,
+      })
+        .from(auditLogs)
+        .orderBy(desc(auditLogs.timestamp))
+        .limit(10);
+    } catch (error) {
+      console.error("Error fetching recent audit logs:", error);
+      recentActions = [];
+    }
+
+    // Return formatted response with the counts
+    return res.status(200).json({
+      totalActions,
+      userActions,
+      dataChanges, 
+      systemEvents,
+      recentActions
+    });
+  } catch (error) {
+    console.error("Error fetching audit statistics:", error);
+    return res.status(500).json({ error: "Failed to fetch audit statistics" });
   }
 });
 
@@ -323,7 +583,66 @@ router.get("/audit-logs/:id", requireAuth, async (req: Request, res: Response) =
       return res.status(404).json({ error: "Audit log not found" });
     }
 
-    // Format result to prevent exposing sensitive information and map field names for frontend
+
+    // Format result to prevent exposing sensitive information and enhance with richer details
+    const oldData = result.audit_logs.oldValue;
+    const newData = result.audit_logs.newValue;
+    
+    // Generate a list of changes for display
+    const changesMade = [];
+    
+    // If we have both old and new values, generate a detailed change list
+    if (oldData && newData) {
+      try {
+        // Get all unique keys from both objects
+        const allKeys = [...new Set([...Object.keys(oldData || {}), ...Object.keys(newData || {})])];
+        
+        // Create change entries for each modified field
+        allKeys.forEach(key => {
+          if (key === 'updatedAt' || key === 'lastActivity') return; // Skip some fields
+          
+          const oldValue = oldData[key];
+          const newValue = newData[key];
+          
+          // Check if values are different
+          if (
+            (!oldData.hasOwnProperty(key) && newData.hasOwnProperty(key)) ||
+            (oldData.hasOwnProperty(key) && !newData.hasOwnProperty(key)) ||
+            JSON.stringify(oldValue) !== JSON.stringify(newValue)
+          ) {
+            changesMade.push({
+              field: key,
+              oldValue: oldValue === undefined ? 'N/A' : typeof oldValue === 'object' ? JSON.stringify(oldValue) : String(oldValue),
+              newValue: newValue === undefined ? 'N/A' : typeof newValue === 'object' ? JSON.stringify(newValue) : String(newValue)
+            });
+          }
+        });
+      } catch (error) {
+        console.warn("Error generating changes for audit log:", error);
+      }
+    }
+    
+    // Generate a human-readable details string if not already present
+    let details = result.audit_logs.changeSummary;
+    if (!details && result.audit_logs.actionType) {
+      const actionVerb = getActionVerb(result.audit_logs.actionType);
+      details = `${actionVerb} ${result.audit_logs.module?.toLowerCase() || 'entity'} ${result.audit_logs.entityName || ''}`;
+      
+      // Add more context from additional_context if available
+      if (result.audit_logs.additionalContext) {
+        try {
+          const context = result.audit_logs.additionalContext;
+          if (context.path) {
+            details += ` (${context.method || ''} ${context.path})`;
+          }
+        } catch (e) {
+          // Ignore context parsing errors
+        }
+      }
+    }
+    
+    // Construct the enhanced audit log
+
     const auditLog = {
       ...result.audit_logs,
       // Map backend field names to what frontend expects
@@ -336,6 +655,14 @@ router.get("/audit-logs/:id", requireAuth, async (req: Request, res: Response) =
         email: result.users.email,
         roleId: result.users.roleId,
       } : null,
+      details: details,
+      changesMade: changesMade,
+      sessionData: result.audit_logs.additionalContext ? 
+        { 
+          id: result.audit_logs.additionalContext.sessionID,
+          userAgent: result.audit_logs.additionalContext.userAgent,
+          referer: result.audit_logs.additionalContext.referer 
+        } : null
     };
 
     return res.status(200).json(auditLog);
@@ -377,6 +704,8 @@ router.get("/audit-logs/entity/:type/:id", requireAuth, async (req: Request, res
             eq(auditLogs.entityId, entityId)
           )
         );
+
+
       
       console.log("Entity count query result:", JSON.stringify(totalItems));
       
@@ -384,10 +713,14 @@ router.get("/audit-logs/entity/:type/:id", requireAuth, async (req: Request, res
         const countValue = totalItems[0]?.count;
         if (countValue !== undefined && countValue !== null) {
           totalCount = Number(countValue);
+
         }
       }
     } catch (error) {
       console.error("Error counting entity audit logs:", error);
+
+      totalCount = 0;
+
     }
 
     // Execute data query
@@ -476,10 +809,12 @@ router.get("/audit-logs/user/:id", requireAuth, async (req: Request, res: Respon
         const countValue = totalItems[0]?.count;
         if (countValue !== undefined && countValue !== null) {
           totalCount = Number(countValue);
+
         }
       }
     } catch (error) {
       console.error("Error counting user audit logs:", error);
+
     }
 
     // Execute data query
@@ -537,6 +872,79 @@ router.get("/audit-logs/user/:id", requireAuth, async (req: Request, res: Respon
   }
 });
 
+
+/**
+ * Helper function to generate a list of changes between two objects
+ * This is used to display what changed in an audit log entry
+ */
+function generateChangeList(
+  oldObj: Record<string, any>,
+  newObj: Record<string, any>,
+  ignoredFields: string[] = ['updatedAt', 'lastActivity']
+): { field: string; oldValue: string; newValue: string }[] {
+  const changes: { field: string; oldValue: string; newValue: string }[] = [];
+  
+  try {
+    // Get all unique keys from both objects
+    const allKeys = [...new Set([...Object.keys(oldObj || {}), ...Object.keys(newObj || {})])];
+    
+    // Check each key for changes
+    allKeys.forEach(key => {
+      // Skip ignored fields
+      if (ignoredFields.includes(key)) {
+        return;
+      }
+      
+      const oldValue = oldObj[key];
+      const newValue = newObj[key];
+      
+      // Check if values are different (including existence checks)
+      if (
+        (!oldObj.hasOwnProperty(key) && newObj.hasOwnProperty(key)) ||
+        (oldObj.hasOwnProperty(key) && !newObj.hasOwnProperty(key)) ||
+        JSON.stringify(oldValue) !== JSON.stringify(newValue)
+      ) {
+        changes.push({
+          field: key,
+          oldValue: oldValue === undefined ? 'N/A' : typeof oldValue === 'object' ? JSON.stringify(oldValue) : String(oldValue),
+          newValue: newValue === undefined ? 'N/A' : typeof newValue === 'object' ? JSON.stringify(newValue) : String(newValue)
+        });
+      }
+    });
+  } catch (error) {
+    console.warn("Error generating changes:", error);
+  }
+  
+  return changes;
+}
+
+/**
+ * Helper function to get a human-readable verb for the action type
+ * This mirrors the function in auditLogger.ts but is duplicated here to avoid circular dependencies
+ */
+function getActionVerb(actionType: string): string {
+  switch (actionType) {
+    case 'CREATE': return 'Created';
+    case 'READ': return 'Viewed';
+    case 'UPDATE': return 'Updated';
+    case 'DELETE': return 'Deleted';
+    case 'APPROVE': return 'Approved';
+    case 'REJECT': return 'Rejected';
+    case 'SYSTEM': return 'System processed';
+    case 'ERROR': return 'Error occurred in';
+    case 'WARNING': return 'Warning occurred in';
+    case 'INFO': return 'Info logged for';
+    case 'DEBUG': return 'Debug info for';
+    case 'TRACE': return 'Trace captured for';
+    case 'LOGIN': return 'Logged in to';
+    case 'LOGOUT': return 'Logged out from';
+    case 'SESSION_START': return 'Started session for';
+    case 'SESSION_END': return 'Ended session for';
+    case 'FEATURE_USAGE': return 'Used feature in';
+    case 'BULK_OPERATION': return 'Performed bulk operation on';
+    default: return 'Interacted with';
+  }
+}
 
 
 export default router;
