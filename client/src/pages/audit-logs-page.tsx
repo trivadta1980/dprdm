@@ -143,9 +143,18 @@ export default function AuditLogsPage() {
   });
 
   // Fetch audit log statistics
-  const { data: stats, isLoading: isLoadingStats } = useQuery({
+  const { data: stats, isLoading: isLoadingStats, isError: isErrorStats } = useQuery({
     queryKey: ["/api/audit-logs/stats"],
     refetchOnWindowFocus: false,
+    retry: 1,
+    // Initialize with default values to prevent errors
+    initialData: {
+      totalActions: 0,
+      userActions: 0,
+      dataChanges: 0,
+      systemEvents: 0,
+      recentActions: []
+    }
   });
 
   // Format the timestamp to a readable format
