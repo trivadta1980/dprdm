@@ -62,6 +62,8 @@ export async function logCrudEvent(
     'unknown';
 
   // Build audit log data
+  // We use the original field names for DB storage but add frontendCompatible context
+  // that will help with debugging field mapping issues
   const auditData: InsertAuditLog = {
     userId: req.user.id,
     username: req.user.username,
@@ -78,7 +80,13 @@ export async function logCrudEvent(
       method: req.method,
       path: req.path,
       query: req.query,
-      sessionId: req.sessionID
+      sessionID: req.sessionID,
+      // Store frontend-compatible field names in additionalContext for debugging
+      frontendCompatible: {
+        userIp: typeof ipAddress === 'string' ? ipAddress : ipAddress[0],
+        entityType: module,
+        details: changeSummary || createChangeSummary(actionType, module, entityName)
+      }
     }
   };
 
@@ -102,14 +110,24 @@ export async function logSystemEvent(
   entityName?: string,
   details?: Record<string, any>
 ) {
+  const changeSummary = `System ${actionType.toLowerCase()} operation on ${module.toLowerCase()}`;
+  
   const auditData: InsertAuditLog = {
     username: "SYSTEM",
     actionType,
     module,
     entityId: entityId?.toString() || '',
     entityName: entityName || "System Operation",
-    changeSummary: `System ${actionType.toLowerCase()} operation on ${module.toLowerCase()}`,
-    additionalContext: details
+    changeSummary,
+    additionalContext: {
+      ...details,
+      // Store frontend-compatible field names in additionalContext for debugging
+      frontendCompatible: {
+        userIp: "system",
+        entityType: module,
+        details: changeSummary
+      }
+    }
   };
 
   return await logAuditEvent(auditData);
