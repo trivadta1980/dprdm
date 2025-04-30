@@ -38,7 +38,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication and user management routes
   setupAuth(app);
 
-  const upload = multer({ storage: multer.memoryStorage() });
+  // Configure multer with 1MB file size limit
+  const upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 1024 * 1024 // 1MB file size limit
+    }
+  });
 
   // Admin-only routes for user management
   app.get("/api/users", async (req, res) => {

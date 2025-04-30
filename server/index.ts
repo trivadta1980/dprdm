@@ -11,8 +11,10 @@ import { db } from './db';
 import { closeDriver, isNeo4jAvailable } from './neo4j';
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Increase JSON payload limit to 1MB
+app.use(express.json({ limit: '1mb' }));
+// Increase URL-encoded payload limit to 1MB
+app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 
 // Add JSON content type header for all /api routes
 app.use('/api', (req, res, next) => {
