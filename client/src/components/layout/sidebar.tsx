@@ -245,39 +245,55 @@ export function Sidebar({ className }: SidebarProps) {
                 
                 // If it's a section with children
                 if (item.type === 'section' && item.children && item.children.length > 0) {
+                  // Get section ID based on title (for use with expandedSections state)
+                  const sectionId = item.title.toLowerCase().replace(/\s+/g, '');
+                  const isExpanded = expandedSections[sectionId];
+                  
                   return (
                     <div key={`section-${index}`} className="mb-2">
-                      {/* Section header */}
-                      <div className="flex items-center px-2 py-1.5 text-sm font-semibold text-muted-foreground">
-                        <Icon className="mr-2 h-4 w-4" />
-                        {item.title}
-                      </div>
+                      {/* Clickable section header */}
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-between px-2 py-1.5 text-sm font-semibold text-muted-foreground hover:bg-muted/50"
+                        onClick={() => toggleSection(sectionId)}
+                      >
+                        <div className="flex items-center">
+                          <Icon className="mr-2 h-4 w-4" />
+                          {item.title}
+                        </div>
+                        {isExpanded ? 
+                          <ChevronDown className="h-4 w-4" /> : 
+                          <ChevronRight className="h-4 w-4" />
+                        }
+                      </Button>
                       
-                      {/* Section children indented */}
-                      <div className="ml-4 space-y-1 mt-1">
-                        {item.children.map((child) => {
-                          const ChildIcon = child.icon;
-                          return (
-                            <EnhancedTooltip
-                              key={child.href}
-                              content={child.tooltip || child.title}
-                              side="right"
-                              align="center"
-                            >
-                              <Button
-                                variant={location === child.href ? "secondary" : "ghost"}
-                                className="w-full justify-start"
-                                asChild
+                      {/* Section children indented - only show when expanded */}
+                      {isExpanded && (
+                        <div className="ml-4 space-y-1 mt-1">
+                          {item.children.map((child) => {
+                            const ChildIcon = child.icon;
+                            return (
+                              <EnhancedTooltip
+                                key={child.href}
+                                content={child.tooltip || child.title}
+                                side="right"
+                                align="center"
                               >
-                                <Link href={child.href}>
-                                  <ChildIcon className="mr-2 h-4 w-4" />
-                                  {child.title}
-                                </Link>
-                              </Button>
-                            </EnhancedTooltip>
-                          );
-                        })}
-                      </div>
+                                <Button
+                                  variant={location === child.href ? "secondary" : "ghost"}
+                                  className="w-full justify-start"
+                                  asChild
+                                >
+                                  <Link href={child.href}>
+                                    <ChildIcon className="mr-2 h-4 w-4" />
+                                    {child.title}
+                                  </Link>
+                                </Button>
+                              </EnhancedTooltip>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   );
                 }
